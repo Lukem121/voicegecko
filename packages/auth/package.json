@@ -19,10 +19,11 @@
   },
   "dependencies": {
     "@acme/db": "workspace:*",
-    "@better-auth/expo": "1.2.9",
-    "@t3-oss/env-nextjs": "^0.13.6",
-    "better-auth": "1.2.9",
-    "next": "^15.3.3",
+    "@better-auth/expo": "1.2.12",
+    "@daveyplate/better-auth-tauri": "^0.0.24",
+    "@t3-oss/env-nextjs": "^0.13.8",
+    "better-auth": "1.2.12",
+    "next": "^15.3.4",
     "react": "catalog:react19",
     "react-dom": "catalog:react19",
     "zod": "catalog:"
