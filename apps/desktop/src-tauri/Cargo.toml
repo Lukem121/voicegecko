@@ -1,0 +1,30 @@
+[package]
+name = "desktop"
+version = "0.1.0"
+description = "A Tauri App"
+authors = ["you"]
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+crate-type = ["staticlib", "cdylib", "lib"]
+name = "app_lib"
+
+[build-dependencies]
+tauri-build = {version = "2.3.0", features = [] }
+reqwest = { version = "0.12", features = ["blocking"] }
+sha1 = "0.10"
+
+[dependencies]
+serde = {version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+tauri = { version = "2.6.2", features = ["tray-icon"] }
+tauri-plugin-deep-link = "2.4.0"
+tauri-plugin-http = "2.5.0"
+tauri-plugin-os = "2.3.0"
+tauri-plugin-shell = "2.3.0"
+tauri-plugin-store = "2.3.0"
+
+[target."cfg(not(any(target_os = \"android\", target_os = \"ios\")))".dependencies]
+tauri-plugin-single-instance = "2.3.0"
