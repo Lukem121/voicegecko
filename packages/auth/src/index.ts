@@ -1,5 +1,6 @@
 import type { BetterAuthOptions } from "better-auth";
 import { expo } from "@better-auth/expo";
+import { tauri } from "@daveyplate/better-auth-tauri/plugin";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { oAuthProxy } from "better-auth/plugins";
@@ -29,6 +30,13 @@ export function initAuth(options: {
         productionURL: options.productionUrl,
       }),
       expo(),
+      tauri({
+        scheme: "voicegecko", // Your app's deep link scheme
+        callbackURL: "/", // Optional: Where to redirect after auth (default: "/")
+        successText: "Authentication successful! You can close this window.", // Optional
+        successURL: "/auth/success", // Optional: Custom success page URL that will receive a ?tauriRedirect search parameter
+        debugLogs: true, // Optional: Enable debug logs
+      }),
     ],
     socialProviders: {
       discord: {

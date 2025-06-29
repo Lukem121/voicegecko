@@ -1,0 +1,10 @@
+[workspace]
+members = [
+    "apps/desktop/src-tauri"
+]
+
+# Explicitly tell Cargo this is a workspace-only file
+[workspace.package]
+version = "0.1.0"
+authors = ["Luke Askew"]
+edition = "2025"
