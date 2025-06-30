@@ -2,7 +2,6 @@
 @source "../../../apps/**/*.{ts,tsx}";
 @source "../../../components/**/*.{ts,tsx}";
 @source "../**/*.{ts,tsx}";
-@source "../node_modules/@daveyplate/better-auth-ui";
 
 @import "tw-animate-css";
 
