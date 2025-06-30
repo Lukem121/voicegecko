@@ -45,7 +45,7 @@ export function initAuth(options: {
         redirectURI: `${options.baseUrl}/api/auth/callback/discord`, // This was productionUrl but it was causing issues with the redirect URI in dev
       },
     },
-    trustedOrigins: ["expo://"],
+    trustedOrigins: ["expo://", "voicegecko://"],
   } satisfies BetterAuthOptions;
 
   return betterAuth(config);

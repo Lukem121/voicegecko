@@ -16,7 +16,7 @@ const baseUrl =
 
 export const auth = initAuth({
   baseUrl,
-  productionUrl: `https://${env.VERCEL_PROJECT_PRODUCTION_URL ?? "turbo.tcake3.gg"}`,
+  productionUrl: `https://${env.VERCEL_PROJECT_PRODUCTION_URL ?? "voicegecko.io"}`,
   secret: env.AUTH_SECRET,
   discordClientId: env.AUTH_DISCORD_ID,
   discordClientSecret: env.AUTH_DISCORD_SECRET,
