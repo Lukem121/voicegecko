@@ -6,11 +6,11 @@ import pathAliases from "vite-tsconfig-paths";
 // https://vitejs.dev/config/
 export default defineConfig(async () => ({
   plugins: [
-    react(),
     tanstackRouter({
       target: "react",
       autoCodeSplitting: true,
     }),
+    react(),
     pathAliases(),
   ],
 

@@ -7,25 +7,31 @@ import { open } from "@tauri-apps/plugin-shell";
 import { deleteToken, setToken } from "~/stores/auth";
 import { trpc } from "~/trpc";
 import { getAPIUrl } from "~/util/api";
+import { openUrl } from "@tauri-apps/plugin-opener";
 
 export const signIn = () =>
-  new Promise<string>((res) => {
-    const signInUrl = `${getAPIUrl()}/api/auth/signin?redirect=acme://login`;
+  new Promise<string>((res, rej) => {
+    const signInUrl = `${getAPIUrl()}/api/auth/signin?redirect=voicegecko://login`;
 
-    void open(signInUrl);
-    // onOpenUrlj(console.log).finally(console.log);
+    await openUrl(signInUrl);
     void listen<string>("session-token", (e) => {
       console.log(e);
       const url = new URL(e.payload);
       const sessionToken = url.searchParams.get("session_token");
-      if (!sessionToken) return;
+      if (!sessionToken) {
+        rej(new Error("No session token received"));
+        return;
+      }
       void setToken(sessionToken);
       res(sessionToken);
     });
   });
 
 export const useUser = () => {
-  const { data: session } = useQuery(trpc.auth.getSession.queryOptions());
+  const { data: session, error } = useQuery(
+    trpc.auth.getSession.queryOptions(),
+  );
+  if (error) return null;
   return session?.user ?? null;
 };
 
@@ -47,16 +53,14 @@ export const useSignIn = () => {
 };
 
 export const useSignOut = () => {
-  const utils = api.useUtils();
-  const signOut = api.auth.signOut.useMutation();
+  const queryClient = useQueryClient();
   const signOut = useMutation(trpc.auth.signOut);
   const router = useRouter();
 
   return async () => {
-    const res = await signOut.mutateAsync();
-    if (!res.success) return;
+    await signOut.mutateAsync();
     await deleteToken();
-    await utils.invalidate();
+    await queryClient.invalidateQueries();
     return router.navigate({ to: "/" });
   };
 };
