@@ -1,6 +1,7 @@
 import { useBetterAuthTauri } from "@daveyplate/better-auth-tauri/react";
 import { createRootRoute, Outlet } from "@tanstack/react-router";
 
+import { AuthUIProvider } from "~/providers/auth-ui";
 import { authClient } from "../auth/client";
 import { useAuthSync } from "../hooks/auth";
 
@@ -31,7 +32,9 @@ function RouteLayout() {
 
   return (
     <>
-      <Outlet />
+      <AuthUIProvider>
+        <Outlet />
+      </AuthUIProvider>
     </>
   );
 }

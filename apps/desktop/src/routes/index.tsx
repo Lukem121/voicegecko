@@ -1,6 +1,6 @@
 import { signInSocial } from "@daveyplate/better-auth-tauri";
 import { useMutation } from "@tanstack/react-query";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 
 import { Button } from "@acme/ui/components/button";
 
@@ -54,7 +54,9 @@ const Home = () => {
   return (
     <>
       <main className="container h-screen py-16">
-        <Button>Click me</Button>
+        <Link to="/auth/$pathname" params={{ pathname: "sign-in" }}>
+          Sign in
+        </Link>
         {session ? (
           <div>
             <button onClick={handleSignOut}>Sign Out</button>
