@@ -1,66 +1,88 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect } from "react";
 import { useRouter } from "@tanstack/react-router";
-import { listen } from "@tauri-apps/api/event";
 import { isRegistered, register } from "@tauri-apps/plugin-deep-link";
-import { open } from "@tauri-apps/plugin-shell";
-
-import { deleteToken, setToken } from "~/stores/auth";
-import { trpc } from "~/trpc";
-import { getAPIUrl } from "~/util/api";
 import { openUrl } from "@tauri-apps/plugin-opener";
 
-export const signIn = () =>
-  new Promise<string>((res, rej) => {
-    const signInUrl = `${getAPIUrl()}/api/auth/signin?redirect=voicegecko://login`;
+import { authClient } from "~/auth/client";
+import { clearSession, setSessionMetadata, setToken } from "~/stores/auth";
+import { getAPIUrl } from "~/util/api";
 
-    await openUrl(signInUrl);
-    void listen<string>("session-token", (e) => {
-      console.log(e);
-      const url = new URL(e.payload);
-      const sessionToken = url.searchParams.get("session_token");
-      if (!sessionToken) {
-        rej(new Error("No session token received"));
-        return;
-      }
-      void setToken(sessionToken);
-      res(sessionToken);
-    });
-  });
+export const signIn = async () => {
+  const signInUrl = `${getAPIUrl()}/api/auth/signin?redirect=voicegecko://login`;
+  await openUrl(signInUrl);
+};
 
 export const useUser = () => {
-  const { data: session, error } = useQuery(
-    trpc.auth.getSession.queryOptions(),
-  );
-  if (error) return null;
-  return session?.user ?? null;
+  const session = authClient.useSession();
+  return session.data?.user ?? null;
+};
+
+/**
+ * Custom hook to sync better-auth session with Tauri store
+ * This enables fast, synchronous token access for tRPC headers
+ */
+export const useAuthSync = () => {
+  const { data: session, isPending } = authClient.useSession();
+
+  useEffect(() => {
+    const syncSession = async () => {
+      if (isPending) {
+        console.log("⏳ Session loading...");
+        return;
+      }
+
+      console.log("🔄 Syncing session:", {
+        hasSession: !!session,
+        hasUser: !!session?.user,
+        hasToken: !!session?.session.token,
+        userId: session?.user.id,
+      });
+
+      if (session?.session.token) {
+        // Session exists - cache the token and metadata
+        console.log("✅ Valid session found, caching token...");
+        await setToken(session.session.token);
+        await setSessionMetadata({
+          userId: session.user.id,
+          expiresAt: session.session.expiresAt.toISOString(),
+        });
+      } else {
+        // No session - clear the store
+        console.log("❌ No valid session, clearing store...");
+        await clearSession();
+      }
+    };
+
+    void syncSession();
+  }, [session, isPending]);
+
+  return {
+    session,
+    isPending,
+    isAuthenticated: !!session?.user,
+  };
 };
 
 export const useSignIn = () => {
-  const queryClient = useQueryClient();
   const router = useRouter();
-
   return async () => {
-    if (!(await isRegistered("acme"))) {
-      await register("acme");
-      console.log('Registered "acme"');
+    if (!(await isRegistered("voicegecko"))) {
+      await register("voicegecko");
+      console.log('Registered "voicegecko"');
     }
 
     await signIn();
-    const myQueryKey = trpc.auth.getSession.queryKey();
-    await queryClient.invalidateQueries({ queryKey: myQueryKey });
     return router.navigate({ to: "/" });
   };
 };
 
 export const useSignOut = () => {
-  const queryClient = useQueryClient();
-  const signOut = useMutation(trpc.auth.signOut);
   const router = useRouter();
 
   return async () => {
-    await signOut.mutateAsync();
-    await deleteToken();
-    await queryClient.invalidateQueries();
+    console.log("🚪 Signing out...");
+    await authClient.signOut();
+    await clearSession(); // Clear all session data from store
     return router.navigate({ to: "/" });
   };
 };
