@@ -1,10 +1,11 @@
 {
-  "extends": "@acme/tsconfig/internal-package.json",
+  "extends": "@acme/tsconfig/react-library.json",
   "compilerOptions": {
-    "lib": ["ES2022", "dom", "dom.iterable"],
-    "jsx": "preserve",
-    "rootDir": "."
+    "baseUrl": ".",
+    "paths": {
+      "@acme/ui/*": ["./src/*"]
+    }
   },
-  "include": ["src"],
-  "exclude": ["node_modules"]
+  "include": ["."],
+  "exclude": ["node_modules", "dist"]
 }

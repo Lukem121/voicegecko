@@ -21,6 +21,7 @@
     "@acme/auth": "workspace:*",
     "@acme/ui": "workspace:*",
     "@daveyplate/better-auth-tauri": "^0.0.24",
+    "@tailwindcss/vite": "^4.1.11",
     "@tanstack/react-query": "catalog:",
     "@tanstack/react-router": "^1.123.0",
     "@tanstack/router-devtools": "^1.123.0",
@@ -36,7 +37,8 @@
     "@trpc/tanstack-react-query": "catalog:",
     "react": "19.1.0",
     "react-dom": "19.1.0",
-    "superjson": "2.2.2"
+    "superjson": "2.2.2",
+    "tailwindcss": "catalog:"
   },
   "devDependencies": {
     "@acme/db": "workspace:*",
