@@ -11,7 +11,7 @@ function RouteLayout() {
   useBetterAuthTauri({
     authClient,
     scheme: "voicegecko",
-    debugLogs: false,
+    debugLogs: true,
     onRequest: (href) => {
       console.log("Auth request:", href);
     },

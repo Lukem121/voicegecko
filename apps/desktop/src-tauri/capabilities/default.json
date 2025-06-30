@@ -21,9 +21,13 @@
     "shell:default",
     "store:default",
     "os:default",
+    "opener:default",
     {
       "identifier": "http:default",
       "allow": [
+        {
+          "url": "http://localhost:3000/*"
+        },
         {
           "url": "https://*.voicegecko.io"
         }
