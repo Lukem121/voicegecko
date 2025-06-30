@@ -1,16 +1,17 @@
 import { signInSocial } from "@daveyplate/better-auth-tauri";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import { createAuthClient } from "better-auth/react";
 
 import { authClient } from "~/auth/client";
-import { trpc } from "~/trpc";
+import { useTRPC } from "~/trpc";
 
 export const Route = createFileRoute("/")({
   component: () => <Home />,
 });
 
 const Home = () => {
+  const trpc = useTRPC();
+
   const secretMessage = useMutation(
     trpc.auth.getSecretMessage.mutationOptions({
       onSuccess: (data) => {

@@ -7,6 +7,14 @@ pub fn run() {
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_store::Builder::new().build())
         .plugin(tauri_plugin_deep_link::init())
+        .plugin(tauri_plugin_single_instance::init(|_app, argv, _cwd| {
+            // With the deep-link feature enabled, the plugin automatically forwards 
+            // deep links to the deep link system, so we just need to log for debugging
+            if argv.len() > 1 {
+                let url = &argv[1];
+                println!("Single instance received URL: {} (automatically forwarded to deep link system)", url);
+            }
+        }))
         .setup(|app| {
             #[cfg(any(windows, target_os = "linux"))]
             {

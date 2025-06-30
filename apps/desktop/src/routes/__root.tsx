@@ -2,12 +2,16 @@ import { useBetterAuthTauri } from "@daveyplate/better-auth-tauri/react";
 import { createRootRoute, Outlet } from "@tanstack/react-router";
 
 import { authClient } from "../auth/client";
+import { useAuthSync } from "../hooks/auth";
 
 export const Route = createRootRoute({
   component: RouteLayout,
 });
 
 function RouteLayout() {
+  // Sync better-auth session with Tauri store for performance
+  const { isAuthenticated } = useAuthSync();
+
   useBetterAuthTauri({
     authClient,
     scheme: "voicegecko",
@@ -17,7 +21,7 @@ function RouteLayout() {
     },
     onSuccess: (callbackURL) => {
       console.log("Auth successful", callbackURL);
-      // Navigate or update UI as needed
+      // The useAuthSync hook will automatically sync the new session
     },
     onError: (error) => {
       console.error("Auth error:", error);
