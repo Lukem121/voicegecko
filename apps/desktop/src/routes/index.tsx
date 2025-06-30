@@ -2,6 +2,8 @@ import { signInSocial } from "@daveyplate/better-auth-tauri";
 import { useMutation } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 
+import { Button } from "@acme/ui/components/button";
+
 import { authClient } from "~/auth/client";
 import { useTRPC } from "~/trpc";
 
@@ -52,6 +54,7 @@ const Home = () => {
   return (
     <>
       <main className="container h-screen py-16">
+        <Button>Click me</Button>
         {session ? (
           <div>
             <button onClick={handleSignOut}>Sign Out</button>

@@ -1,10 +1,11 @@
 import { StrictMode } from "react";
-// import "../node_modules/@acme/ui/styles/globals.css"; // Hack for now
+
+import "@acme/ui/globals.css";
 
 import { createRouter, RouterProvider } from "@tanstack/react-router";
 import ReactDOM from "react-dom/client";
 
-import { ThemeProvider } from "@acme/ui/theme";
+import { ThemeProvider } from "@acme/ui/components/theme";
 
 // Import the generated route tree
 import { routeTree } from "~/routeTree.gen";
