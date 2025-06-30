@@ -1,39 +1,41 @@
-import { Suspense } from "react";
+import { signInSocial } from "@daveyplate/better-auth-tauri";
 import { createFileRoute } from "@tanstack/react-router";
+import { createAuthClient } from "better-auth/react";
 
-import { AuthShowcase } from "~/components/auth-showcase";
-import { CreatePostForm, PostCardSkeleton, PostList } from "~/components/posts";
-
-const Home = () => {
-  return (
-    <>
-      <main className="container h-screen py-16">
-        <div className="flex flex-col items-center justify-center gap-4">
-          <h1 className="text-5xl font-extrabold tracking-tight sm:text-[5rem]">
-            Create <span className="text-primary">T3</span> Turbo
-          </h1>
-          <AuthShowcase />
-
-          <CreatePostForm />
-          <div className="w-full max-w-2xl overflow-y-scroll">
-            <Suspense
-              fallback={
-                <div className="flex w-full flex-col gap-4">
-                  <PostCardSkeleton />
-                  <PostCardSkeleton />
-                  <PostCardSkeleton />
-                </div>
-              }
-            >
-              <PostList />
-            </Suspense>
-          </div>
-        </div>
-      </main>
-    </>
-  );
-};
+import { authClient } from "~/auth/client";
 
 export const Route = createFileRoute("/")({
   component: () => <Home />,
 });
+
+const Home = () => {
+  const handleClick = async () => {
+    const res = await signInSocial({
+      authClient,
+      provider: "discord",
+      callbackURL: "/",
+    });
+
+    console.log("signInSocial result", res);
+  };
+
+  const {
+    data: session,
+    isPending, //loading state
+    error, //error object
+    refetch, //refetch the session
+  } = authClient.useSession();
+
+  return (
+    <>
+      <main className="container h-screen py-16">
+        <button onClick={handleClick}>Sign in with Discord</button>
+        <br />
+        <button onClick={() => refetch()}>Refetch</button>
+        <br />
+        {/* Display session data */}
+        <pre>{JSON.stringify({ session, isPending, error }, null, 2)}</pre>
+      </main>
+    </>
+  );
+};

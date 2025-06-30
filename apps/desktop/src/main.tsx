@@ -1,16 +1,15 @@
 import { StrictMode } from "react";
+// import "../node_modules/@acme/ui/styles/globals.css"; // Hack for now
+
+import { QueryClientProvider } from "@tanstack/react-query";
 import { createRouter, RouterProvider } from "@tanstack/react-router";
 import ReactDOM from "react-dom/client";
+
+import { ThemeProvider } from "@acme/ui/theme";
 
 // Import the generated route tree
 import { routeTree } from "~/routeTree.gen";
 import { queryClient } from "~/trpc";
-
-import "../node_modules/@acme/ui/styles/globals.css"; // Hack for now
-
-import { QueryClientProvider } from "@tanstack/react-query";
-
-import { ThemeProvider } from "@acme/ui/theme";
 
 // Create a new router instance
 const router = createRouter({ routeTree });
