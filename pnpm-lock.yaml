@@ -99,6 +99,9 @@ importers:
       '@tauri-apps/plugin-http':
         specifier: ~2.5.0
         version: 2.5.0
+      '@tauri-apps/plugin-opener':
+        specifier: ~2.4.0
+        version: 2.4.0
       '@tauri-apps/plugin-os':
         specifier: ~2.3.0
         version: 2.3.0
