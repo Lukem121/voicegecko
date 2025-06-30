@@ -18,7 +18,8 @@
     "jsx": "react-jsx",
     "tsBuildInfoFile": "node_modules/.cache/tsbuildinfo.json",
     "paths": {
-      "~/*": ["./src/*"]
+      "~/*": ["./src/*"],
+      "@acme/ui/*": ["../../packages/ui/src/*"]
     }
   },
   "include": ["*.ts", "src", "src/routes/index.tsx"],
