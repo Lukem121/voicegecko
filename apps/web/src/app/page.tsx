@@ -7,6 +7,7 @@ import {
   PostCardSkeleton,
   PostList,
 } from "./_components/posts";
+import Test from "./_components/test";
 
 export default function HomePage() {
   prefetch(trpc.post.all.queryOptions());
@@ -35,6 +36,7 @@ export default function HomePage() {
             </Suspense>
           </div>
         </div>
+        <Test />
       </main>
     </HydrateClient>
   );

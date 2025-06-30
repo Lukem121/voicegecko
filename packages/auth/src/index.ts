@@ -21,6 +21,12 @@ export function initAuth(options: {
     }),
     baseURL: options.baseUrl,
     secret: options.secret,
+    session: {
+      cookieCache: {
+        enabled: true,
+        maxAge: 5 * 60, // Cache duration: 5 minutes
+      },
+    },
     plugins: [
       oAuthProxy({
         /**
@@ -45,7 +51,12 @@ export function initAuth(options: {
         redirectURI: `${options.baseUrl}/api/auth/callback/discord`, // This was productionUrl but it was causing issues with the redirect URI in dev
       },
     },
-    trustedOrigins: ["expo://", "voicegecko://"],
+    trustedOrigins: [
+      "expo://",
+      "voicegecko://",
+      "http://localhost:1420", // Tauri desktop app
+      "http://127.0.0.1:1420", // Alternative localhost format
+    ],
   } satisfies BetterAuthOptions;
 
   return betterAuth(config);
