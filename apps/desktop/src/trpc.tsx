@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState } from "react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
@@ -56,7 +55,7 @@ export function TRPCReactProvider(props: React.PropsWithChildren) {
   return (
     <QueryClientProvider client={queryClient}>
       <TRPCProvider trpcClient={trpcClient} queryClient={queryClient}>
-        {props.children as any}
+        {props.children}
       </TRPCProvider>
     </QueryClientProvider>
   );

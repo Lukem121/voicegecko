@@ -5,11 +5,10 @@ import "@acme/ui/globals.css";
 import { createRouter, RouterProvider } from "@tanstack/react-router";
 import ReactDOM from "react-dom/client";
 
-import { ThemeProvider } from "@acme/ui/components/theme";
-
 // Import the generated route tree
 import { routeTree } from "~/routeTree.gen";
 import { TRPCReactProvider } from "~/trpc";
+import { ThemeProvider } from "./providers/theme";
 
 // Create a new router instance
 const router = createRouter({ routeTree });
@@ -30,7 +29,7 @@ if (!rootElement.innerHTML) {
   const root = ReactDOM.createRoot(rootElement);
   root.render(
     <StrictMode>
-      <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+      <ThemeProvider>
         <TRPCReactProvider>
           <RouterProvider router={router} />
         </TRPCReactProvider>
