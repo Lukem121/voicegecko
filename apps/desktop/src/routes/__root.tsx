@@ -9,6 +9,8 @@ export const Route = createRootRoute({
 });
 
 function RouteLayout() {
+  const { refetch } = authClient.useSession();
+
   // Sync better-auth session with Tauri store for performance
   useAuthSync();
 
@@ -21,6 +23,7 @@ function RouteLayout() {
     },
     onSuccess: (callbackURL) => {
       console.log("Auth successful", callbackURL);
+      refetch();
       // The useAuthSync hook will automatically sync the new session
     },
     onError: (error) => {
