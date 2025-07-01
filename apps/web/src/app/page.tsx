@@ -15,7 +15,6 @@ export default function HomePage() {
             Create <span className="text-primary">T3</span> Turbo
           </h1>
           <AuthShowcase />
-
           <div className="w-full max-w-2xl overflow-y-scroll"></div>
         </div>
         <Test />
