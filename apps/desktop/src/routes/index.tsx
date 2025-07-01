@@ -54,18 +54,14 @@ const Home = () => {
   return (
     <>
       <main className="container h-screen py-16">
-        <Link to="/auth/$pathname" params={{ pathname: "sign-in" }}>
-          Sign in
-        </Link>
+        <Link to="/auth/sign-in">Sign in</Link>
         {session ? (
           <div>
             <button onClick={handleSignOut}>Sign Out</button>
             <br />
             <p>Welcome back! You are signed in.</p>
           </div>
-        ) : (
-          <button onClick={handleClick}>Sign in with Discord</button>
-        )}
+        ) : null}
         <br />
         <button onClick={() => refetch()}>Refetch</button>
         <br />
