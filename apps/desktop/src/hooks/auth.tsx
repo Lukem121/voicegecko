@@ -18,6 +18,18 @@ export const useUser = () => {
 };
 
 /**
+ * Check if user is authenticated (for use in components)
+ */
+export const useIsAuthenticated = () => {
+  const { data: session, isPending } = authClient.useSession();
+  return {
+    isAuthenticated: !!session?.user,
+    isLoading: isPending,
+    user: session?.user || null,
+  };
+};
+
+/**
  * Custom hook to sync better-auth session with Tauri store
  * This enables fast, synchronous token access for tRPC headers
  */
@@ -83,6 +95,6 @@ export const useSignOut = () => {
     console.log("🚪 Signing out...");
     await authClient.signOut();
     await clearSession(); // Clear all session data from store
-    return router.navigate({ to: "/" });
+    return router.navigate({ to: "/auth/sign-in" });
   };
 };

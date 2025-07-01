@@ -1,18 +1,24 @@
-import { signInSocial } from "@daveyplate/better-auth-tauri";
 import { useMutation } from "@tanstack/react-query";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 
 import { Button } from "@acme/ui/components/button";
 
-import { authClient } from "~/auth/client";
+import { AuthGuard } from "~/components/auth-guard";
+import { useSignOut, useUser } from "~/hooks/auth";
 import { useTRPC } from "~/trpc";
 
 export const Route = createFileRoute("/")({
-  component: () => <Home />,
+  component: () => (
+    <AuthGuard>
+      <Home />
+    </AuthGuard>
+  ),
 });
 
 const Home = () => {
   const trpc = useTRPC();
+  const user = useUser();
+  const signOut = useSignOut();
 
   const secretMessage = useMutation(
     trpc.auth.getSecretMessage.mutationOptions({
@@ -25,54 +31,74 @@ const Home = () => {
     }),
   );
 
-  const handleClick = async () => {
-    const res = await signInSocial({
-      authClient,
-      provider: "discord",
-      callbackURL: "/",
-    });
-
-    console.log("signInSocial result", res);
-  };
-
-  const handleSignOut = async () => {
-    try {
-      await authClient.signOut();
-      console.log("Successfully signed out");
-    } catch (error) {
-      console.error("Sign out error:", error);
-    }
-  };
-
-  const {
-    data: session,
-    isPending, //loading state
-    error, //error object
-    refetch, //refetch the session
-  } = authClient.useSession();
-
   return (
-    <>
-      <main className="container h-screen py-16">
-        <Link to="/auth/sign-in">Sign in</Link>
-        {session ? (
+    <main className="container h-screen py-16">
+      <div className="mx-auto max-w-2xl space-y-6">
+        <div className="text-center">
+          <h1 className="mb-4 text-3xl font-bold">Welcome to Your App!</h1>
+          <p className="mb-6 text-gray-600">
+            You are successfully authenticated and can access the full
+            application.
+          </p>
+        </div>
+
+        {/* User Info Section */}
+        <div className="rounded-lg bg-gray-50 p-6 text-black">
+          <h2 className="mb-4 text-xl font-semibold">User Information</h2>
+          {user ? (
+            <div className="space-y-2">
+              <p>
+                <strong>Name:</strong> {user.name}
+              </p>
+              <p>
+                <strong>Email:</strong> {user.email}
+              </p>
+              <p>
+                <strong>User ID:</strong> {user.id}
+              </p>
+              <p>
+                <strong>Email Verified:</strong>{" "}
+                {user.emailVerified ? "Yes" : "No"}
+              </p>
+            </div>
+          ) : (
+            <p>Loading user information...</p>
+          )}
+        </div>
+
+        {/* Actions Section */}
+        <div className="space-y-4">
           <div>
-            <button onClick={handleSignOut}>Sign Out</button>
-            <br />
-            <p>Welcome back! You are signed in.</p>
+            <Button
+              onClick={() =>
+                secretMessage.mutate({
+                  message: "Hello from authenticated user!",
+                })
+              }
+              disabled={secretMessage.isPending}
+            >
+              {secretMessage.isPending ? "Loading..." : "Test Protected API"}
+            </Button>
+
+            {secretMessage.data && (
+              <div className="mt-2 rounded border border-green-200 bg-green-50 p-3">
+                <strong>API Response:</strong>{" "}
+                {JSON.stringify(secretMessage.data, null, 2)}
+              </div>
+            )}
+
+            {secretMessage.error && (
+              <div className="mt-2 rounded border border-red-200 bg-red-50 p-3">
+                <strong>API Error:</strong> {secretMessage.error.message}
+              </div>
+            )}
           </div>
-        ) : null}
-        <br />
-        <button onClick={() => refetch()}>Refetch</button>
-        <br />
-        <button onClick={() => secretMessage.mutate({ message: "Hello" })}>
-          Refetch secret message
-        </button>
-        <br />
-        {/* Display session data */}
-        <pre>{JSON.stringify({ session, isPending, error }, null, 2)}</pre>
-        <pre>{JSON.stringify(secretMessage.data, null, 2)}</pre>
-      </main>
-    </>
+
+          <Button onClick={signOut} variant="outline" className="w-full">
+            Sign Out
+          </Button>
+        </div>
+      </div>
+    </main>
   );
 };

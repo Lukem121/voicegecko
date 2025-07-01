@@ -24,10 +24,14 @@
     "@trpc/client": "catalog:",
     "@trpc/server": "catalog:",
     "@trpc/tanstack-react-query": "catalog:",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
+    "lucide-react": "^0.475.0",
     "next": "^15.3.4",
     "react": "catalog:react19",
     "react-dom": "catalog:react19",
     "superjson": "2.2.2",
+    "tailwind-merge": "^3.3.1",
     "zod": "catalog:"
   },
   "devDependencies": {
@@ -43,6 +47,7 @@
     "jiti": "^2.4.2",
     "prettier": "catalog:",
     "tailwindcss": "catalog:",
+    "tw-animate-css": "^1.3.4",
     "typescript": "catalog:"
   },
   "prettier": "@acme/prettier-config"
