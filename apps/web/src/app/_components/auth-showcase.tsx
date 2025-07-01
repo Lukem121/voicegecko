@@ -1,7 +1,7 @@
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
-import { Button } from "@acme/ui/button";
+import { Button } from "@acme/ui/components/button";
 
 import { auth, getSession } from "~/auth/server";
 
