@@ -1,7 +1,6 @@
 import { useBetterAuthTauri } from "@daveyplate/better-auth-tauri/react";
 import { createRootRoute, Outlet } from "@tanstack/react-router";
 
-import { AuthUIProvider } from "~/providers/auth-ui";
 import { authClient } from "../auth/client";
 import { useAuthSync } from "../hooks/auth";
 
@@ -11,7 +10,7 @@ export const Route = createRootRoute({
 
 function RouteLayout() {
   // Sync better-auth session with Tauri store for performance
-  const { isAuthenticated } = useAuthSync();
+  useAuthSync();
 
   useBetterAuthTauri({
     authClient,
@@ -32,9 +31,7 @@ function RouteLayout() {
 
   return (
     <>
-      <AuthUIProvider>
-        <Outlet />
-      </AuthUIProvider>
+      <Outlet />
     </>
   );
 }
