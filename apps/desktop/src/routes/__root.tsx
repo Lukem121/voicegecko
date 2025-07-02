@@ -1,10 +1,21 @@
 import { useBetterAuthTauri } from "@daveyplate/better-auth-tauri/react";
-import { createRootRoute, Outlet } from "@tanstack/react-router";
+import { createRootRouteWithContext, Outlet } from "@tanstack/react-router";
+
+import type { Session } from "@acme/auth";
 
 import { authClient } from "../auth/client";
 import { useAuthSync } from "../hooks/auth";
 
-export const Route = createRootRoute({
+// Define the router context interface
+interface MyRouterContext {
+  auth: {
+    isAuthenticated: boolean;
+    isLoading: boolean;
+    session: Session | null;
+  };
+}
+
+export const Route = createRootRouteWithContext<MyRouterContext>()({
   component: RouteLayout,
 });
 

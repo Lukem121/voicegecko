@@ -10,14 +10,21 @@ import { useIsAuthenticated } from "~/hooks/auth";
 const SignIn = () => {
   const { isAuthenticated, isLoading } = useIsAuthenticated();
   const router = useRouter();
+  const search = Route.useSearch();
 
   useEffect(() => {
-    // Redirect authenticated users to home page
+    // Redirect authenticated users to the redirect URL or home page
     if (!isLoading && isAuthenticated) {
-      console.log("✅ User already authenticated, redirecting to home");
-      router.navigate({ to: "/" });
+      console.log("✅ User already authenticated, redirecting");
+      const redirectTo = search.redirect || "/";
+      // Use router.history.push for full URL redirects as recommended by TanStack Router docs
+      if (search.redirect) {
+        router.history.push(search.redirect);
+      } else {
+        router.navigate({ to: "/" });
+      }
     }
-  }, [isAuthenticated, isLoading, router]);
+  }, [isAuthenticated, isLoading, router, search.redirect]);
 
   const handleSignIn = async () => {
     try {
@@ -35,7 +42,7 @@ const SignIn = () => {
   if (isLoading) {
     return (
       <div className="flex h-screen items-center justify-center">
-        <div className="text-lg">Checking authentication...</div>
+        <div className="text-lg">Checking authentication... 2</div>
       </div>
     );
   }
@@ -71,5 +78,10 @@ const SignIn = () => {
 };
 
 export const Route = createFileRoute("/auth/sign-in")({
+  validateSearch: (search: Record<string, unknown>) => {
+    return {
+      redirect: (search.redirect as string) || "",
+    };
+  },
   component: SignIn,
 });

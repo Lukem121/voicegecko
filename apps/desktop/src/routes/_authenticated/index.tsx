@@ -3,17 +3,8 @@ import { createFileRoute } from "@tanstack/react-router";
 
 import { Button } from "@acme/ui/components/button";
 
-import { AuthGuard } from "~/components/auth-guard";
 import { useSignOut, useUser } from "~/hooks/auth";
 import { useTRPC } from "~/trpc";
-
-export const Route = createFileRoute("/")({
-  component: () => (
-    <AuthGuard>
-      <Home />
-    </AuthGuard>
-  ),
-});
 
 const Home = () => {
   const trpc = useTRPC();
@@ -102,3 +93,7 @@ const Home = () => {
     </main>
   );
 };
+
+export const Route = createFileRoute("/_authenticated/")({
+  component: Home,
+});
