@@ -11,7 +11,7 @@
   },
   "iconLibrary": "lucide",
   "aliases": {
-    "components": "@acme/ui/components",
+    "components": "@acme/ui/components/ui",
     "utils": "@acme/ui/lib/utils",
     "hooks": "@acme/ui/hooks",
     "lib": "@acme/ui/lib",
