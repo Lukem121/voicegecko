@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { signInSocial } from "@daveyplate/better-auth-tauri";
 import { createFileRoute, useRouter } from "@tanstack/react-router";
 
-import { Button } from "@acme/ui/components/button";
+import { Button } from "@acme/ui/components/ui/button";
 
 import { authClient } from "~/auth/client";
 import { useIsAuthenticated } from "~/hooks/auth";

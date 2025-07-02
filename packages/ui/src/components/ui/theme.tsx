@@ -8,7 +8,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@acme/ui/components/dropdown-menu";
+} from "@acme/ui/components/ui/dropdown-menu";
 
 import { Button } from "./button";
 
