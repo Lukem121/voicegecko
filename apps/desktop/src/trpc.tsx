@@ -10,7 +10,7 @@ import SuperJSON from "superjson";
 
 import type { AppRouter } from "@acme/api";
 
-import { getToken } from "~/stores/auth";
+import { getAPIUrl } from "~/utils/api";
 
 const queryClient = new QueryClient();
 
@@ -27,17 +27,10 @@ export function TRPCReactProvider(props: React.PropsWithChildren) {
         }),
         httpBatchStreamLink({
           transformer: SuperJSON,
-          url: getBaseUrl() + "/api/trpc",
-          async headers() {
+          url: getAPIUrl() + "/api/trpc",
+          headers() {
             const headers = new Headers();
             headers.set("x-trpc-source", "tauri-desktop");
-
-            // Get cached token from Tauri store
-            const token = await getToken();
-            if (token) {
-              headers.set("Cookie", `better-auth.session_token=${token}`);
-            }
-
             return headers;
           },
           // Enable credentials for cross-origin cookie support
@@ -60,7 +53,3 @@ export function TRPCReactProvider(props: React.PropsWithChildren) {
     </QueryClientProvider>
   );
 }
-
-const getBaseUrl = () => {
-  return import.meta.env.VITE_API_URL as string;
-};

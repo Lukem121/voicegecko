@@ -4,14 +4,13 @@ import { createRootRouteWithContext, Outlet } from "@tanstack/react-router";
 import type { Session } from "@acme/auth";
 
 import { authClient } from "../auth/client";
-import { useAuthSync } from "../hooks/auth";
 
 // Define the router context interface
 interface MyRouterContext {
   auth: {
     isAuthenticated: boolean;
     isLoading: boolean;
-    session: Session | null;
+    user: Session["user"] | null;
   };
 }
 
@@ -21,9 +20,6 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
 
 function RouteLayout() {
   const { refetch } = authClient.useSession();
-
-  // Sync better-auth session with Tauri store for performance
-  useAuthSync();
 
   useBetterAuthTauri({
     authClient,
@@ -35,7 +31,6 @@ function RouteLayout() {
     onSuccess: (callbackURL) => {
       console.log("Auth successful", callbackURL);
       refetch();
-      // The useAuthSync hook will automatically sync the new session
     },
     onError: (error) => {
       console.error("Auth error:", error);
