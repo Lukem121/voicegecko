@@ -6,7 +6,6 @@ export const Route = createFileRoute("/_authenticated")({
   beforeLoad: ({ context, location }) => {
     // Check if user is authenticated
     if (!context.auth.isLoading && !context.auth.isAuthenticated) {
-      console.log("🚫 User not authenticated, redirecting to sign-in");
       throw redirect({
         to: "/auth/sign-in",
         search: {
@@ -20,11 +19,13 @@ export const Route = createFileRoute("/_authenticated")({
 });
 
 function AuthenticatedLayout() {
+  const authContext = Route.useRouteContext().auth;
+
   // Show loading state while checking authentication
-  if (Route.useRouteContext().auth.isLoading) {
+  if (authContext.isLoading) {
     return (
       <div className="flex h-screen items-center justify-center">
-        <div className="text-lg">Checking authentication... 3</div>
+        <div className="text-lg">Checking authentication...</div>
       </div>
     );
   }
