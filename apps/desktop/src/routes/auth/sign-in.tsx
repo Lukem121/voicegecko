@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { signInSocial } from "@daveyplate/better-auth-tauri";
-import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
+import { createFileRoute, useRouter } from "@tanstack/react-router";
 
 import { Button } from "@acme/ui/components/button";
 
@@ -16,12 +16,10 @@ const SignIn = () => {
     // Redirect authenticated users to the redirect URL or home page
     if (!isLoading && isAuthenticated) {
       console.log("✅ User already authenticated, redirecting");
-      const redirectTo = search.redirect || "/";
-      // Use router.history.push for full URL redirects as recommended by TanStack Router docs
       if (search.redirect) {
         router.history.push(search.redirect);
       } else {
-        router.navigate({ to: "/" });
+        void router.navigate({ to: "/" });
       }
     }
   }, [isAuthenticated, isLoading, router, search.redirect]);
