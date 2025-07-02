@@ -4,10 +4,9 @@ import { createFileRoute } from "@tanstack/react-router";
 import { Button } from "@acme/ui/components/ui/button";
 
 import { useSignOut, useUser } from "~/hooks/auth";
-import { useTRPC } from "~/trpc";
+import { trpc } from "~/trpc";
 
 const Home = () => {
-  const trpc = useTRPC();
   const user = useUser();
   const signOut = useSignOut();
 
