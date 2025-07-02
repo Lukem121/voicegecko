@@ -5,7 +5,7 @@ import { openUrl } from "@tauri-apps/plugin-opener";
 
 import { authClient } from "~/auth/client";
 import { clearSession, setSessionMetadata, setToken } from "~/stores/auth";
-import { getAPIUrl } from "~/util/api";
+import { getAPIUrl } from "~/utils/api";
 
 export const signIn = async () => {
   const signInUrl = `${getAPIUrl()}/api/auth/signin?redirect=voicegecko://login`;
@@ -95,6 +95,6 @@ export const useSignOut = () => {
     console.log("🚪 Signing out...");
     await authClient.signOut();
     await clearSession(); // Clear all session data from store
-    return router.navigate({ to: "/auth/sign-in" });
+    return router.navigate({ to: "/auth/sign-in", search: { redirect: "/" } });
   };
 };
