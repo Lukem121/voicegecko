@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { signInSocial } from "@daveyplate/better-auth-tauri";
-import { createFileRoute, useRouter } from "@tanstack/react-router";
+import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 
 import { Button } from "@acme/ui/components/button";
 
@@ -42,7 +42,7 @@ const SignIn = () => {
   if (isLoading) {
     return (
       <div className="flex h-screen items-center justify-center">
-        <div className="text-lg">Checking authentication... 2</div>
+        <div className="text-lg">Checking authentication...</div>
       </div>
     );
   }
@@ -65,7 +65,6 @@ const SignIn = () => {
             <Button onClick={handleSignIn} className="w-full" size="lg">
               Sign in with Discord
             </Button>
-
             <p className="text-center text-sm text-gray-500">
               By signing in, you agree to our terms of service and privacy
               policy.

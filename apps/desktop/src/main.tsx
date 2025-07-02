@@ -1,4 +1,4 @@
-import { StrictMode } from "react";
+import { StrictMode, useEffect } from "react";
 
 import "@acme/ui/globals.css";
 
@@ -15,9 +15,11 @@ import { ThemeProvider } from "./providers/theme";
 const router = createRouter({
   routeTree,
   context: {
-    // auth will initially be undefined
-    // We'll be passing down the auth state from within a React component
-    auth: undefined!,
+    auth: {
+      isAuthenticated: false,
+      isLoading: true,
+      user: null,
+    },
   },
 });
 
@@ -30,6 +32,12 @@ declare module "@tanstack/react-router" {
 
 function InnerApp() {
   const auth = useIsAuthenticated();
+
+  // Invalidate context when auth state changes
+  useEffect(() => {
+    void router.invalidate();
+  }, [auth.isAuthenticated, auth.isLoading]);
+
   return <RouterProvider router={router} context={{ auth }} />;
 }
 
