@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/only-throw-error */
 
 import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
+import { LucideLoader2 } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated")({
   beforeLoad: ({ context, location }) => {
@@ -23,9 +24,10 @@ function AuthenticatedLayout() {
 
   // Show loading state while checking authentication
   if (authContext.isLoading) {
+    console.log("Checking authentication...");
     return (
       <div className="flex h-screen items-center justify-center">
-        <div className="text-lg">Checking authentication...</div>
+        <LucideLoader2 className="h-4 w-4 animate-spin" />
       </div>
     );
   }
