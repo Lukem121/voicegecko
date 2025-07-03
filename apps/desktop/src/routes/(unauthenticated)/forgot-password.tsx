@@ -1,16 +1,19 @@
-'use client';
+"use client";
 
-import { authClient } from '@repo/auth/client';
-import { ForgotPasswordSchema } from '@repo/auth/schemas/auth.schema';
-import { getAuthErrorMessage } from '@repo/auth/utils/auth-error-messages';
-import { Button } from '@repo/design-system/components/ui/button';
+import type { z } from "zod";
+import { useState } from "react";
+import Link from "next/link";
+import { authClient } from "@repo/auth/client";
+import { ForgotPasswordSchema } from "@repo/auth/schemas/auth.schema";
+import { getAuthErrorMessage } from "@repo/auth/utils/auth-error-messages";
+import { Button } from "@repo/design-system/components/ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@repo/design-system/components/ui/card';
+} from "@repo/design-system/components/ui/card";
 import {
   Form,
   FormControl,
@@ -19,16 +22,24 @@ import {
   FormLabel,
   FormMessage,
   useForm,
-} from '@repo/design-system/components/ui/form';
-import { Input } from '@repo/design-system/components/ui/input';
-import { Loader } from 'lucide-react';
-import Link from 'next/link';
-import { useState } from 'react';
-import type { z } from 'zod';
-import { APP_ROUTES } from '../../utils/app-routes';
-import TermsAndPrivacyNotice from '../components/terms-and-privacy-notice';
+} from "@repo/design-system/components/ui/form";
+import { Input } from "@repo/design-system/components/ui/input";
+import { createFileRoute } from "@tanstack/react-router";
+import { Loader } from "lucide-react";
 
-export default function ForgotPassword() {
+import { APP_ROUTES } from "../../utils/app-routes";
+import TermsAndPrivacyNotice from "./components/terms-and-privacy-notice";
+
+export const Route = createFileRoute("/(unauthenticated)/forgot-password")({
+  validateSearch: (search: Record<string, unknown>) => {
+    return {
+      redirect: (search.redirect as string | undefined) ?? null,
+    };
+  },
+  component: ForgotPassword,
+});
+
+function ForgotPassword() {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [isSuccess, setIsSuccess] = useState<boolean>(false);
@@ -36,7 +47,7 @@ export default function ForgotPassword() {
   const form = useForm({
     schema: ForgotPasswordSchema,
     defaultValues: {
-      email: '',
+      email: "",
     },
   });
 
@@ -57,7 +68,7 @@ export default function ForgotPassword() {
       const { code, message } = error;
 
       if (code) {
-        const errorMessage = getAuthErrorMessage(code, 'en', message);
+        const errorMessage = getAuthErrorMessage(code, "en", message);
         setError(errorMessage);
       }
 
@@ -69,7 +80,7 @@ export default function ForgotPassword() {
 
   return (
     <>
-      <div className={'flex flex-col gap-6'}>
+      <div className={"flex flex-col gap-6"}>
         <Card>
           <CardHeader className="text-center">
             <CardTitle className="text-xl">Forgot your password?</CardTitle>
@@ -104,13 +115,13 @@ export default function ForgotPassword() {
                         )}
                       />
                       {isSuccess && (
-                        <p className="font-medium text-[0.8rem] text-green-600">
+                        <p className="text-[0.8rem] font-medium text-green-600">
                           If an account exists, we have sent you an email to
                           reset your password.
                         </p>
                       )}
                       {error !== null && (
-                        <p className="font-medium text-[0.8rem] text-red-600">
+                        <p className="text-[0.8rem] font-medium text-red-600">
                           {error}
                         </p>
                       )}
@@ -121,14 +132,14 @@ export default function ForgotPassword() {
                       disabled={isLoading || isSuccess}
                     >
                       {isLoading ? (
-                        <Loader className={'animate-spin'} />
+                        <Loader className={"animate-spin"} />
                       ) : (
-                        'Reset Password'
+                        "Reset Password"
                       )}
                     </Button>
                   </div>
                   <div className="text-center text-sm">
-                    Already have an account?{' '}
+                    Already have an account?{" "}
                     <Link
                       href={APP_ROUTES.AUTH.SIGN_IN}
                       className="underline underline-offset-4"
