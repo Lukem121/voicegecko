@@ -36,19 +36,11 @@ export function useSocialAuth({
     setIsLoading((prev) => ({ ...prev, [provider]: true }));
     setError(null);
 
-    const { error } = await authClient.signIn.social({
+    const { error } = await signInSocial({
+      authClient,
       provider,
       callbackURL,
       errorCallbackURL: "/authentication-error",
-      fetchOptions: {
-        onError: ({ error }) => setError(error.message),
-      },
-    });
-
-    await signInSocial({
-      authClient,
-      provider: "discord",
-      callbackURL: "/",
       fetchOptions: {
         onError: ({ error }) => setError(error.message),
       },
