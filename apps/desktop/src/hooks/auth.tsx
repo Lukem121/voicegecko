@@ -3,7 +3,7 @@ import { isRegistered, register } from "@tauri-apps/plugin-deep-link";
 import { openUrl } from "@tauri-apps/plugin-opener";
 
 import { authClient } from "~/auth/client";
-import { getAPIUrl } from "~/utils/api";
+import { getAPIUrl } from "~/utils/get-api-url";
 
 export const signIn = async () => {
   const signInUrl = `${getAPIUrl()}/api/auth/signin?redirect=voicegecko://login`;

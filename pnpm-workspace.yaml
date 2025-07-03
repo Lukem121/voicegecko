@@ -22,6 +22,7 @@ catalogs:
     '@types/react-dom': ^19.1.5
 
 onlyBuiltDependencies:
+  - '@tailwindcss/oxide'
   - bufferutil
   - core-js
   - core-js-pure
