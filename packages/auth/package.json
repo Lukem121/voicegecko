@@ -7,8 +7,8 @@
     ".": "./src/index.ts",
     "./middleware": "./src/middleware.ts",
     "./client": "./src/client.ts",
-    "./schemas": "./src/schemas/*.ts",
-    "./utils": "./src/utils/*.ts",
+    "./schemas": "./src/schemas/index.ts",
+    "./utils": "./src/utils/index.ts",
     "./env": "./env.ts"
   },
   "license": "MIT",

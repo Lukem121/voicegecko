@@ -12,6 +12,9 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
 import { Route as AuthSignInRouteImport } from './routes/auth/sign-in'
+import { Route as unauthenticatedSignUpRouteImport } from './routes/(unauthenticated)/sign-up'
+import { Route as unauthenticatedSignInRouteImport } from './routes/(unauthenticated)/sign-in'
+import { Route as unauthenticatedForgotPasswordRouteImport } from './routes/(unauthenticated)/forgot-password'
 
 const AuthenticatedRoute = AuthenticatedRouteImport.update({
   id: '/_authenticated',
@@ -27,31 +30,71 @@ const AuthSignInRoute = AuthSignInRouteImport.update({
   path: '/auth/sign-in',
   getParentRoute: () => rootRouteImport,
 } as any)
+const unauthenticatedSignUpRoute = unauthenticatedSignUpRouteImport.update({
+  id: '/(unauthenticated)/sign-up',
+  path: '/sign-up',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const unauthenticatedSignInRoute = unauthenticatedSignInRouteImport.update({
+  id: '/(unauthenticated)/sign-in',
+  path: '/sign-in',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const unauthenticatedForgotPasswordRoute =
+  unauthenticatedForgotPasswordRouteImport.update({
+    id: '/(unauthenticated)/forgot-password',
+    path: '/forgot-password',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
+  '/forgot-password': typeof unauthenticatedForgotPasswordRoute
+  '/sign-in': typeof unauthenticatedSignInRoute
+  '/sign-up': typeof unauthenticatedSignUpRoute
   '/auth/sign-in': typeof AuthSignInRoute
   '/': typeof AuthenticatedIndexRoute
 }
 export interface FileRoutesByTo {
+  '/forgot-password': typeof unauthenticatedForgotPasswordRoute
+  '/sign-in': typeof unauthenticatedSignInRoute
+  '/sign-up': typeof unauthenticatedSignUpRoute
   '/auth/sign-in': typeof AuthSignInRoute
   '/': typeof AuthenticatedIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_authenticated': typeof AuthenticatedRouteWithChildren
+  '/(unauthenticated)/forgot-password': typeof unauthenticatedForgotPasswordRoute
+  '/(unauthenticated)/sign-in': typeof unauthenticatedSignInRoute
+  '/(unauthenticated)/sign-up': typeof unauthenticatedSignUpRoute
   '/auth/sign-in': typeof AuthSignInRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/auth/sign-in' | '/'
+  fullPaths:
+    | '/forgot-password'
+    | '/sign-in'
+    | '/sign-up'
+    | '/auth/sign-in'
+    | '/'
   fileRoutesByTo: FileRoutesByTo
-  to: '/auth/sign-in' | '/'
-  id: '__root__' | '/_authenticated' | '/auth/sign-in' | '/_authenticated/'
+  to: '/forgot-password' | '/sign-in' | '/sign-up' | '/auth/sign-in' | '/'
+  id:
+    | '__root__'
+    | '/_authenticated'
+    | '/(unauthenticated)/forgot-password'
+    | '/(unauthenticated)/sign-in'
+    | '/(unauthenticated)/sign-up'
+    | '/auth/sign-in'
+    | '/_authenticated/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
+  unauthenticatedForgotPasswordRoute: typeof unauthenticatedForgotPasswordRoute
+  unauthenticatedSignInRoute: typeof unauthenticatedSignInRoute
+  unauthenticatedSignUpRoute: typeof unauthenticatedSignUpRoute
   AuthSignInRoute: typeof AuthSignInRoute
 }
 
@@ -78,6 +121,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthSignInRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/(unauthenticated)/sign-up': {
+      id: '/(unauthenticated)/sign-up'
+      path: '/sign-up'
+      fullPath: '/sign-up'
+      preLoaderRoute: typeof unauthenticatedSignUpRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/(unauthenticated)/sign-in': {
+      id: '/(unauthenticated)/sign-in'
+      path: '/sign-in'
+      fullPath: '/sign-in'
+      preLoaderRoute: typeof unauthenticatedSignInRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/(unauthenticated)/forgot-password': {
+      id: '/(unauthenticated)/forgot-password'
+      path: '/forgot-password'
+      fullPath: '/forgot-password'
+      preLoaderRoute: typeof unauthenticatedForgotPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -95,6 +159,9 @@ const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
 
 const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
+  unauthenticatedForgotPasswordRoute: unauthenticatedForgotPasswordRoute,
+  unauthenticatedSignInRoute: unauthenticatedSignInRoute,
+  unauthenticatedSignUpRoute: unauthenticatedSignUpRoute,
   AuthSignInRoute: AuthSignInRoute,
 }
 export const routeTree = rootRouteImport
