@@ -38,7 +38,8 @@
   },
   "bundle": {
     "active": true,
-    "targets": "all"
+    "targets": "all",
+    "icon": ["icons/icon.ico"]
   },
   "$schema": "../../../node_modules/@tauri-apps/cli/schema.json"
 }

@@ -7,4 +7,5 @@ members = [
 [workspace.package]
 version = "0.1.0"
 authors = ["Luke Askew"]
-edition = "2025"
+edition = "2021"
+resolver = "2"
