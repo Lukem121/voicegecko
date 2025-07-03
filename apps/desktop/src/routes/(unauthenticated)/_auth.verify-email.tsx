@@ -66,8 +66,11 @@ const useVerification = (email: string | null, redirect: string) => {
     }));
 
     try {
+      // Use deep link URL for email verification callback
+      const deepLinkCallbackURL = `voicegecko://verify-success?redirect=${encodeURIComponent(redirect)}`;
+
       await authClient.sendVerificationEmail(
-        { email, callbackURL: redirect },
+        { email, callbackURL: deepLinkCallbackURL },
         {
           onSuccess: () => {
             setState((prev) => ({
@@ -138,12 +141,12 @@ function VerifyEmail() {
 
   return (
     <main className="flex flex-col gap-6">
-      <Card>
+      <Card className="w-full max-w-sm">
         <CardHeader className="text-center">
           <CardTitle className="text-xl">Verify Your Email</CardTitle>
           <CardDescription>
             We have sent you an email with a link to verify your email and sign
-            in.
+            in. The verification link will redirect you back to the app.
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col items-center gap-4">
