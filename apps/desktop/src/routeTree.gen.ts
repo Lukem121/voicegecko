@@ -19,8 +19,6 @@ import { Route as unauthenticatedAuthVerifySuccessRouteImport } from './routes/(
 import { Route as unauthenticatedAuthVerifyEmailRouteImport } from './routes/(unauthenticated)/_auth.verify-email'
 import { Route as unauthenticatedAuthSignUpRouteImport } from './routes/(unauthenticated)/_auth.sign-up'
 import { Route as unauthenticatedAuthSignInRouteImport } from './routes/(unauthenticated)/_auth.sign-in'
-import { Route as unauthenticatedAuthResetPasswordRouteImport } from './routes/(unauthenticated)/_auth.reset-password'
-import { Route as unauthenticatedAuthForgotPasswordRouteImport } from './routes/(unauthenticated)/_auth.forgot-password'
 import { Route as unauthenticatedAuthAuthenticationErrorRouteImport } from './routes/(unauthenticated)/_auth.authentication-error'
 import { Route as unauthenticatedAuthLegalTermsRouteImport } from './routes/(unauthenticated)/_auth.legal/terms'
 import { Route as unauthenticatedAuthLegalPrivacyRouteImport } from './routes/(unauthenticated)/_auth.legal/privacy'
@@ -73,18 +71,6 @@ const unauthenticatedAuthSignInRoute =
     path: '/sign-in',
     getParentRoute: () => unauthenticatedAuthRoute,
   } as any)
-const unauthenticatedAuthResetPasswordRoute =
-  unauthenticatedAuthResetPasswordRouteImport.update({
-    id: '/reset-password',
-    path: '/reset-password',
-    getParentRoute: () => unauthenticatedAuthRoute,
-  } as any)
-const unauthenticatedAuthForgotPasswordRoute =
-  unauthenticatedAuthForgotPasswordRouteImport.update({
-    id: '/forgot-password',
-    path: '/forgot-password',
-    getParentRoute: () => unauthenticatedAuthRoute,
-  } as any)
 const unauthenticatedAuthAuthenticationErrorRoute =
   unauthenticatedAuthAuthenticationErrorRouteImport.update({
     id: '/authentication-error',
@@ -108,8 +94,6 @@ export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedIndexRoute
   '/auth/sign-in': typeof AuthSignInRoute
   '/authentication-error': typeof unauthenticatedAuthAuthenticationErrorRoute
-  '/forgot-password': typeof unauthenticatedAuthForgotPasswordRoute
-  '/reset-password': typeof unauthenticatedAuthResetPasswordRoute
   '/sign-in': typeof unauthenticatedAuthSignInRoute
   '/sign-up': typeof unauthenticatedAuthSignUpRoute
   '/verify-email': typeof unauthenticatedAuthVerifyEmailRoute
@@ -121,8 +105,6 @@ export interface FileRoutesByTo {
   '/': typeof AuthenticatedIndexRoute
   '/auth/sign-in': typeof AuthSignInRoute
   '/authentication-error': typeof unauthenticatedAuthAuthenticationErrorRoute
-  '/forgot-password': typeof unauthenticatedAuthForgotPasswordRoute
-  '/reset-password': typeof unauthenticatedAuthResetPasswordRoute
   '/sign-in': typeof unauthenticatedAuthSignInRoute
   '/sign-up': typeof unauthenticatedAuthSignUpRoute
   '/verify-email': typeof unauthenticatedAuthVerifyEmailRoute
@@ -138,8 +120,6 @@ export interface FileRoutesById {
   '/auth/sign-in': typeof AuthSignInRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
   '/(unauthenticated)/_auth/authentication-error': typeof unauthenticatedAuthAuthenticationErrorRoute
-  '/(unauthenticated)/_auth/forgot-password': typeof unauthenticatedAuthForgotPasswordRoute
-  '/(unauthenticated)/_auth/reset-password': typeof unauthenticatedAuthResetPasswordRoute
   '/(unauthenticated)/_auth/sign-in': typeof unauthenticatedAuthSignInRoute
   '/(unauthenticated)/_auth/sign-up': typeof unauthenticatedAuthSignUpRoute
   '/(unauthenticated)/_auth/verify-email': typeof unauthenticatedAuthVerifyEmailRoute
@@ -153,8 +133,6 @@ export interface FileRouteTypes {
     | '/'
     | '/auth/sign-in'
     | '/authentication-error'
-    | '/forgot-password'
-    | '/reset-password'
     | '/sign-in'
     | '/sign-up'
     | '/verify-email'
@@ -166,8 +144,6 @@ export interface FileRouteTypes {
     | '/'
     | '/auth/sign-in'
     | '/authentication-error'
-    | '/forgot-password'
-    | '/reset-password'
     | '/sign-in'
     | '/sign-up'
     | '/verify-email'
@@ -182,8 +158,6 @@ export interface FileRouteTypes {
     | '/auth/sign-in'
     | '/_authenticated/'
     | '/(unauthenticated)/_auth/authentication-error'
-    | '/(unauthenticated)/_auth/forgot-password'
-    | '/(unauthenticated)/_auth/reset-password'
     | '/(unauthenticated)/_auth/sign-in'
     | '/(unauthenticated)/_auth/sign-up'
     | '/(unauthenticated)/_auth/verify-email'
@@ -263,20 +237,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof unauthenticatedAuthSignInRouteImport
       parentRoute: typeof unauthenticatedAuthRoute
     }
-    '/(unauthenticated)/_auth/reset-password': {
-      id: '/(unauthenticated)/_auth/reset-password'
-      path: '/reset-password'
-      fullPath: '/reset-password'
-      preLoaderRoute: typeof unauthenticatedAuthResetPasswordRouteImport
-      parentRoute: typeof unauthenticatedAuthRoute
-    }
-    '/(unauthenticated)/_auth/forgot-password': {
-      id: '/(unauthenticated)/_auth/forgot-password'
-      path: '/forgot-password'
-      fullPath: '/forgot-password'
-      preLoaderRoute: typeof unauthenticatedAuthForgotPasswordRouteImport
-      parentRoute: typeof unauthenticatedAuthRoute
-    }
     '/(unauthenticated)/_auth/authentication-error': {
       id: '/(unauthenticated)/_auth/authentication-error'
       path: '/authentication-error'
@@ -315,8 +275,6 @@ const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
 
 interface unauthenticatedAuthRouteChildren {
   unauthenticatedAuthAuthenticationErrorRoute: typeof unauthenticatedAuthAuthenticationErrorRoute
-  unauthenticatedAuthForgotPasswordRoute: typeof unauthenticatedAuthForgotPasswordRoute
-  unauthenticatedAuthResetPasswordRoute: typeof unauthenticatedAuthResetPasswordRoute
   unauthenticatedAuthSignInRoute: typeof unauthenticatedAuthSignInRoute
   unauthenticatedAuthSignUpRoute: typeof unauthenticatedAuthSignUpRoute
   unauthenticatedAuthVerifyEmailRoute: typeof unauthenticatedAuthVerifyEmailRoute
@@ -328,9 +286,6 @@ interface unauthenticatedAuthRouteChildren {
 const unauthenticatedAuthRouteChildren: unauthenticatedAuthRouteChildren = {
   unauthenticatedAuthAuthenticationErrorRoute:
     unauthenticatedAuthAuthenticationErrorRoute,
-  unauthenticatedAuthForgotPasswordRoute:
-    unauthenticatedAuthForgotPasswordRoute,
-  unauthenticatedAuthResetPasswordRoute: unauthenticatedAuthResetPasswordRoute,
   unauthenticatedAuthSignInRoute: unauthenticatedAuthSignInRoute,
   unauthenticatedAuthSignUpRoute: unauthenticatedAuthSignUpRoute,
   unauthenticatedAuthVerifyEmailRoute: unauthenticatedAuthVerifyEmailRoute,

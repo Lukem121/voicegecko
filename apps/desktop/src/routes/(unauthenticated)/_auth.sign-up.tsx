@@ -1,5 +1,4 @@
 import type { z } from "zod/v4";
-import { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { Loader } from "lucide-react";
