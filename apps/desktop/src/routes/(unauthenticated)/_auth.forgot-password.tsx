@@ -1,11 +1,9 @@
 import type { z } from "zod/v4";
-import { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Loader } from "lucide-react";
 
 import { ForgotPasswordSchema } from "@acme/auth/schemas";
-import { getAuthErrorMessage } from "@acme/auth/utils";
 import { Button } from "@acme/ui/components/ui/button";
 import {
   Card,
@@ -25,17 +23,17 @@ import {
 } from "@acme/ui/components/ui/form";
 import { Input } from "@acme/ui/components/ui/input";
 
-import { authClient } from "~/auth/client";
 import TermsAndPrivacyNotice from "./-components/terms-and-privacy-notice";
+import { useForgotPassword } from "./-hooks/use-forgot-password";
 
-export const Route = createFileRoute("/(unauthenticated)/_auth/forgot-password")({
+export const Route = createFileRoute(
+  "/(unauthenticated)/_auth/forgot-password",
+)({
   component: ForgotPassword,
 });
 
 function ForgotPassword() {
-  const [error, setError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [isSuccess, setIsSuccess] = useState<boolean>(false);
+  const { isLoading, isSuccess, error, requestReset } = useForgotPassword();
 
   const form = useForm({
     resolver: zodResolver(ForgotPasswordSchema),
@@ -45,30 +43,7 @@ function ForgotPassword() {
   });
 
   const onSubmit = async (values: z.infer<typeof ForgotPasswordSchema>) => {
-    setIsLoading(true);
-
-    const { error } = await authClient.forgetPassword({
-      email: values.email,
-      redirectTo: "/reset-password",
-      fetchOptions: {
-        onSuccess: () => {
-          setIsSuccess(true);
-        },
-      },
-    });
-
-    if (error) {
-      const { code, message } = error;
-
-      if (code) {
-        const errorMessage = getAuthErrorMessage(code, "en", message);
-        setError(errorMessage);
-      }
-
-      setIsSuccess(false);
-    }
-
-    setIsLoading(false);
+    await requestReset(values);
   };
 
   return (
