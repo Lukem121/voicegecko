@@ -12,9 +12,14 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
 import { Route as AuthSignInRouteImport } from './routes/auth/sign-in'
-import { Route as unauthenticatedSignUpRouteImport } from './routes/(unauthenticated)/sign-up'
-import { Route as unauthenticatedSignInRouteImport } from './routes/(unauthenticated)/sign-in'
-import { Route as unauthenticatedForgotPasswordRouteImport } from './routes/(unauthenticated)/forgot-password'
+import { Route as unauthenticatedAuthVerifyEmailRouteImport } from './routes/(unauthenticated)/_auth.verify-email'
+import { Route as unauthenticatedAuthSignUpRouteImport } from './routes/(unauthenticated)/_auth.sign-up'
+import { Route as unauthenticatedAuthSignInRouteImport } from './routes/(unauthenticated)/_auth.sign-in'
+import { Route as unauthenticatedAuthResetPasswordRouteImport } from './routes/(unauthenticated)/_auth.reset-password'
+import { Route as unauthenticatedAuthForgotPasswordRouteImport } from './routes/(unauthenticated)/_auth.forgot-password'
+import { Route as unauthenticatedAuthAuthenticationErrorRouteImport } from './routes/(unauthenticated)/_auth.authentication-error'
+import { Route as unauthenticatedAuthLegalTermsRouteImport } from './routes/(unauthenticated)/_auth.legal/terms'
+import { Route as unauthenticatedAuthLegalPrivacyRouteImport } from './routes/(unauthenticated)/_auth.legal/privacy'
 
 const AuthenticatedRoute = AuthenticatedRouteImport.update({
   id: '/_authenticated',
@@ -30,72 +35,144 @@ const AuthSignInRoute = AuthSignInRouteImport.update({
   path: '/auth/sign-in',
   getParentRoute: () => rootRouteImport,
 } as any)
-const unauthenticatedSignUpRoute = unauthenticatedSignUpRouteImport.update({
-  id: '/(unauthenticated)/sign-up',
-  path: '/sign-up',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const unauthenticatedSignInRoute = unauthenticatedSignInRouteImport.update({
-  id: '/(unauthenticated)/sign-in',
-  path: '/sign-in',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const unauthenticatedForgotPasswordRoute =
-  unauthenticatedForgotPasswordRouteImport.update({
-    id: '/(unauthenticated)/forgot-password',
+const unauthenticatedAuthVerifyEmailRoute =
+  unauthenticatedAuthVerifyEmailRouteImport.update({
+    id: '/(unauthenticated)/_auth/verify-email',
+    path: '/verify-email',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const unauthenticatedAuthSignUpRoute =
+  unauthenticatedAuthSignUpRouteImport.update({
+    id: '/(unauthenticated)/_auth/sign-up',
+    path: '/sign-up',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const unauthenticatedAuthSignInRoute =
+  unauthenticatedAuthSignInRouteImport.update({
+    id: '/(unauthenticated)/_auth/sign-in',
+    path: '/sign-in',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const unauthenticatedAuthResetPasswordRoute =
+  unauthenticatedAuthResetPasswordRouteImport.update({
+    id: '/(unauthenticated)/_auth/reset-password',
+    path: '/reset-password',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const unauthenticatedAuthForgotPasswordRoute =
+  unauthenticatedAuthForgotPasswordRouteImport.update({
+    id: '/(unauthenticated)/_auth/forgot-password',
     path: '/forgot-password',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const unauthenticatedAuthAuthenticationErrorRoute =
+  unauthenticatedAuthAuthenticationErrorRouteImport.update({
+    id: '/(unauthenticated)/_auth/authentication-error',
+    path: '/authentication-error',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const unauthenticatedAuthLegalTermsRoute =
+  unauthenticatedAuthLegalTermsRouteImport.update({
+    id: '/(unauthenticated)/_auth/legal/terms',
+    path: '/legal/terms',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const unauthenticatedAuthLegalPrivacyRoute =
+  unauthenticatedAuthLegalPrivacyRouteImport.update({
+    id: '/(unauthenticated)/_auth/legal/privacy',
+    path: '/legal/privacy',
     getParentRoute: () => rootRouteImport,
   } as any)
 
 export interface FileRoutesByFullPath {
-  '/forgot-password': typeof unauthenticatedForgotPasswordRoute
-  '/sign-in': typeof unauthenticatedSignInRoute
-  '/sign-up': typeof unauthenticatedSignUpRoute
   '/auth/sign-in': typeof AuthSignInRoute
   '/': typeof AuthenticatedIndexRoute
+  '/authentication-error': typeof unauthenticatedAuthAuthenticationErrorRoute
+  '/forgot-password': typeof unauthenticatedAuthForgotPasswordRoute
+  '/reset-password': typeof unauthenticatedAuthResetPasswordRoute
+  '/sign-in': typeof unauthenticatedAuthSignInRoute
+  '/sign-up': typeof unauthenticatedAuthSignUpRoute
+  '/verify-email': typeof unauthenticatedAuthVerifyEmailRoute
+  '/legal/privacy': typeof unauthenticatedAuthLegalPrivacyRoute
+  '/legal/terms': typeof unauthenticatedAuthLegalTermsRoute
 }
 export interface FileRoutesByTo {
-  '/forgot-password': typeof unauthenticatedForgotPasswordRoute
-  '/sign-in': typeof unauthenticatedSignInRoute
-  '/sign-up': typeof unauthenticatedSignUpRoute
   '/auth/sign-in': typeof AuthSignInRoute
   '/': typeof AuthenticatedIndexRoute
+  '/authentication-error': typeof unauthenticatedAuthAuthenticationErrorRoute
+  '/forgot-password': typeof unauthenticatedAuthForgotPasswordRoute
+  '/reset-password': typeof unauthenticatedAuthResetPasswordRoute
+  '/sign-in': typeof unauthenticatedAuthSignInRoute
+  '/sign-up': typeof unauthenticatedAuthSignUpRoute
+  '/verify-email': typeof unauthenticatedAuthVerifyEmailRoute
+  '/legal/privacy': typeof unauthenticatedAuthLegalPrivacyRoute
+  '/legal/terms': typeof unauthenticatedAuthLegalTermsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_authenticated': typeof AuthenticatedRouteWithChildren
-  '/(unauthenticated)/forgot-password': typeof unauthenticatedForgotPasswordRoute
-  '/(unauthenticated)/sign-in': typeof unauthenticatedSignInRoute
-  '/(unauthenticated)/sign-up': typeof unauthenticatedSignUpRoute
   '/auth/sign-in': typeof AuthSignInRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
+  '/(unauthenticated)/_auth/authentication-error': typeof unauthenticatedAuthAuthenticationErrorRoute
+  '/(unauthenticated)/_auth/forgot-password': typeof unauthenticatedAuthForgotPasswordRoute
+  '/(unauthenticated)/_auth/reset-password': typeof unauthenticatedAuthResetPasswordRoute
+  '/(unauthenticated)/_auth/sign-in': typeof unauthenticatedAuthSignInRoute
+  '/(unauthenticated)/_auth/sign-up': typeof unauthenticatedAuthSignUpRoute
+  '/(unauthenticated)/_auth/verify-email': typeof unauthenticatedAuthVerifyEmailRoute
+  '/(unauthenticated)/_auth/legal/privacy': typeof unauthenticatedAuthLegalPrivacyRoute
+  '/(unauthenticated)/_auth/legal/terms': typeof unauthenticatedAuthLegalTermsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    | '/forgot-password'
-    | '/sign-in'
-    | '/sign-up'
     | '/auth/sign-in'
     | '/'
+    | '/authentication-error'
+    | '/forgot-password'
+    | '/reset-password'
+    | '/sign-in'
+    | '/sign-up'
+    | '/verify-email'
+    | '/legal/privacy'
+    | '/legal/terms'
   fileRoutesByTo: FileRoutesByTo
-  to: '/forgot-password' | '/sign-in' | '/sign-up' | '/auth/sign-in' | '/'
+  to:
+    | '/auth/sign-in'
+    | '/'
+    | '/authentication-error'
+    | '/forgot-password'
+    | '/reset-password'
+    | '/sign-in'
+    | '/sign-up'
+    | '/verify-email'
+    | '/legal/privacy'
+    | '/legal/terms'
   id:
     | '__root__'
     | '/_authenticated'
-    | '/(unauthenticated)/forgot-password'
-    | '/(unauthenticated)/sign-in'
-    | '/(unauthenticated)/sign-up'
     | '/auth/sign-in'
     | '/_authenticated/'
+    | '/(unauthenticated)/_auth/authentication-error'
+    | '/(unauthenticated)/_auth/forgot-password'
+    | '/(unauthenticated)/_auth/reset-password'
+    | '/(unauthenticated)/_auth/sign-in'
+    | '/(unauthenticated)/_auth/sign-up'
+    | '/(unauthenticated)/_auth/verify-email'
+    | '/(unauthenticated)/_auth/legal/privacy'
+    | '/(unauthenticated)/_auth/legal/terms'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
-  unauthenticatedForgotPasswordRoute: typeof unauthenticatedForgotPasswordRoute
-  unauthenticatedSignInRoute: typeof unauthenticatedSignInRoute
-  unauthenticatedSignUpRoute: typeof unauthenticatedSignUpRoute
   AuthSignInRoute: typeof AuthSignInRoute
+  unauthenticatedAuthAuthenticationErrorRoute: typeof unauthenticatedAuthAuthenticationErrorRoute
+  unauthenticatedAuthForgotPasswordRoute: typeof unauthenticatedAuthForgotPasswordRoute
+  unauthenticatedAuthResetPasswordRoute: typeof unauthenticatedAuthResetPasswordRoute
+  unauthenticatedAuthSignInRoute: typeof unauthenticatedAuthSignInRoute
+  unauthenticatedAuthSignUpRoute: typeof unauthenticatedAuthSignUpRoute
+  unauthenticatedAuthVerifyEmailRoute: typeof unauthenticatedAuthVerifyEmailRoute
+  unauthenticatedAuthLegalPrivacyRoute: typeof unauthenticatedAuthLegalPrivacyRoute
+  unauthenticatedAuthLegalTermsRoute: typeof unauthenticatedAuthLegalTermsRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -121,25 +198,60 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthSignInRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/(unauthenticated)/sign-up': {
-      id: '/(unauthenticated)/sign-up'
+    '/(unauthenticated)/_auth/verify-email': {
+      id: '/(unauthenticated)/_auth/verify-email'
+      path: '/verify-email'
+      fullPath: '/verify-email'
+      preLoaderRoute: typeof unauthenticatedAuthVerifyEmailRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/(unauthenticated)/_auth/sign-up': {
+      id: '/(unauthenticated)/_auth/sign-up'
       path: '/sign-up'
       fullPath: '/sign-up'
-      preLoaderRoute: typeof unauthenticatedSignUpRouteImport
+      preLoaderRoute: typeof unauthenticatedAuthSignUpRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/(unauthenticated)/sign-in': {
-      id: '/(unauthenticated)/sign-in'
+    '/(unauthenticated)/_auth/sign-in': {
+      id: '/(unauthenticated)/_auth/sign-in'
       path: '/sign-in'
       fullPath: '/sign-in'
-      preLoaderRoute: typeof unauthenticatedSignInRouteImport
+      preLoaderRoute: typeof unauthenticatedAuthSignInRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/(unauthenticated)/forgot-password': {
-      id: '/(unauthenticated)/forgot-password'
+    '/(unauthenticated)/_auth/reset-password': {
+      id: '/(unauthenticated)/_auth/reset-password'
+      path: '/reset-password'
+      fullPath: '/reset-password'
+      preLoaderRoute: typeof unauthenticatedAuthResetPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/(unauthenticated)/_auth/forgot-password': {
+      id: '/(unauthenticated)/_auth/forgot-password'
       path: '/forgot-password'
       fullPath: '/forgot-password'
-      preLoaderRoute: typeof unauthenticatedForgotPasswordRouteImport
+      preLoaderRoute: typeof unauthenticatedAuthForgotPasswordRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/(unauthenticated)/_auth/authentication-error': {
+      id: '/(unauthenticated)/_auth/authentication-error'
+      path: '/authentication-error'
+      fullPath: '/authentication-error'
+      preLoaderRoute: typeof unauthenticatedAuthAuthenticationErrorRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/(unauthenticated)/_auth/legal/terms': {
+      id: '/(unauthenticated)/_auth/legal/terms'
+      path: '/legal/terms'
+      fullPath: '/legal/terms'
+      preLoaderRoute: typeof unauthenticatedAuthLegalTermsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/(unauthenticated)/_auth/legal/privacy': {
+      id: '/(unauthenticated)/_auth/legal/privacy'
+      path: '/legal/privacy'
+      fullPath: '/legal/privacy'
+      preLoaderRoute: typeof unauthenticatedAuthLegalPrivacyRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -159,10 +271,17 @@ const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
 
 const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
-  unauthenticatedForgotPasswordRoute: unauthenticatedForgotPasswordRoute,
-  unauthenticatedSignInRoute: unauthenticatedSignInRoute,
-  unauthenticatedSignUpRoute: unauthenticatedSignUpRoute,
   AuthSignInRoute: AuthSignInRoute,
+  unauthenticatedAuthAuthenticationErrorRoute:
+    unauthenticatedAuthAuthenticationErrorRoute,
+  unauthenticatedAuthForgotPasswordRoute:
+    unauthenticatedAuthForgotPasswordRoute,
+  unauthenticatedAuthResetPasswordRoute: unauthenticatedAuthResetPasswordRoute,
+  unauthenticatedAuthSignInRoute: unauthenticatedAuthSignInRoute,
+  unauthenticatedAuthSignUpRoute: unauthenticatedAuthSignUpRoute,
+  unauthenticatedAuthVerifyEmailRoute: unauthenticatedAuthVerifyEmailRoute,
+  unauthenticatedAuthLegalPrivacyRoute: unauthenticatedAuthLegalPrivacyRoute,
+  unauthenticatedAuthLegalTermsRoute: unauthenticatedAuthLegalTermsRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

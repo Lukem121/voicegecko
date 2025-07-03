@@ -1,8 +1,8 @@
-import { z } from "zod";
+import { z } from "zod/v4";
 
 import { usernameSchema } from "./username.schema";
 
-const email = z.string().email("Please enter a valid email address");
+const email = z.email("Please enter a valid email address");
 
 export const passwordSchema = z
   .string()

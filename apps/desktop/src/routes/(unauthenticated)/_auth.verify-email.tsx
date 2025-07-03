@@ -1,19 +1,28 @@
-'use client';
+import { useCallback, useEffect, useState } from "react";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { Loader } from "lucide-react";
 
-import { authClient } from '@repo/auth/client';
-import { Button } from '@repo/design-system/components/ui/button';
+import { Button } from "@acme/ui/components/ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@repo/design-system/components/ui/card';
-import { Loader } from 'lucide-react';
-import Link from 'next/link';
-import { parseAsString, useQueryState } from 'nuqs';
-import { useCallback, useEffect, useState } from 'react';
-import { APP_ROUTES } from '../../utils/app-routes';
+} from "@acme/ui/components/ui/card";
+
+import { authClient } from "~/auth/client";
+
+export const Route = createFileRoute("/(unauthenticated)/_auth/verify-email")({
+  validateSearch: (search: Record<string, unknown>) => {
+    return {
+      redirect: search.redirect as string,
+      email: search.email as string,
+    };
+  },
+  component: VerifyEmail,
+});
+
 // Constants
 const COUNTDOWN_TIME = 30;
 
@@ -63,7 +72,7 @@ const useVerification = (email: string | null, redirect: string) => {
           onSuccess: () => {
             setState((prev) => ({
               ...prev,
-              message: 'Verification email has been resent.',
+              message: "Verification email has been resent.",
               isLoading: false,
             }));
             startCountdown();
@@ -73,16 +82,16 @@ const useVerification = (email: string | null, redirect: string) => {
               ...prev,
               error:
                 error.error.message ||
-                'Failed to send verification email. Please try again.',
+                "Failed to send verification email. Please try again.",
               isLoading: false,
             }));
           },
-        }
+        },
       );
     } catch {
       setState((prev) => ({
         ...prev,
-        error: 'An unexpected error occurred. Please try again.',
+        error: "An unexpected error occurred. Please try again.",
         isLoading: false,
       }));
     }
@@ -121,12 +130,10 @@ const useVerification = (email: string | null, redirect: string) => {
 };
 
 // Main component
-export default function VerifyEmail() {
-  const [email] = useQueryState('email');
-  const [redirect] = useQueryState(
-    'redirect',
-    parseAsString.withDefault(APP_ROUTES.HOME)
-  );
+function VerifyEmail() {
+  const search = Route.useSearch();
+  const email = search.email;
+  const redirect = search.redirect;
   const { state, handleResend } = useVerification(email, redirect);
 
   return (
@@ -142,7 +149,7 @@ export default function VerifyEmail() {
         <CardContent className="flex flex-col items-center gap-4">
           {state.message && (
             <output
-              className="text-center text-green-600 text-sm"
+              className="text-center text-sm text-green-600"
               aria-live="polite"
             >
               {state.message}
@@ -150,7 +157,7 @@ export default function VerifyEmail() {
           )}
           {state.error && (
             <p
-              className="text-center text-red-600 text-sm"
+              className="text-center text-sm text-red-600"
               role="alert"
               aria-live="assertive"
             >
@@ -171,14 +178,15 @@ export default function VerifyEmail() {
                   <span className="sr-only">Sending verification email...</span>
                 </>
               ) : (
-                'Resend Verification Email'
+                "Resend Verification Email"
               )}
               {state.resendDisabled && !state.isLoading && ` (${state.timer}s)`}
             </Button>
           )}
           <Link
-            href={APP_ROUTES.AUTH.SIGN_IN}
-            className="mt-4 text-sm hover:underline focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+            to="/sign-in"
+            search={{ redirect }}
+            className="focus:ring-primary mt-4 text-sm hover:underline focus:ring-2 focus:ring-offset-2 focus:outline-none"
           >
             Back to Sign In
           </Link>

@@ -1,19 +1,19 @@
-"use client";
-
-import type { z } from "zod";
+import type { z } from "zod/v4";
 import { useState } from "react";
-import Link from "next/link";
-import { authClient } from "@repo/auth/client";
-import { ForgotPasswordSchema } from "@repo/auth/schemas/auth.schema";
-import { getAuthErrorMessage } from "@repo/auth/utils/auth-error-messages";
-import { Button } from "@repo/design-system/components/ui/button";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { Loader } from "lucide-react";
+
+import { ForgotPasswordSchema } from "@acme/auth/schemas";
+import { getAuthErrorMessage } from "@acme/auth/utils";
+import { Button } from "@acme/ui/components/ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@repo/design-system/components/ui/card";
+} from "@acme/ui/components/ui/card";
 import {
   Form,
   FormControl,
@@ -22,20 +22,13 @@ import {
   FormLabel,
   FormMessage,
   useForm,
-} from "@repo/design-system/components/ui/form";
-import { Input } from "@repo/design-system/components/ui/input";
-import { createFileRoute } from "@tanstack/react-router";
-import { Loader } from "lucide-react";
+} from "@acme/ui/components/ui/form";
+import { Input } from "@acme/ui/components/ui/input";
 
-import { APP_ROUTES } from "../../utils/app-routes";
-import TermsAndPrivacyNotice from "./components/terms-and-privacy-notice";
+import { authClient } from "~/auth/client";
+import TermsAndPrivacyNotice from "./-components/terms-and-privacy-notice";
 
-export const Route = createFileRoute("/(unauthenticated)/forgot-password")({
-  validateSearch: (search: Record<string, unknown>) => {
-    return {
-      redirect: (search.redirect as string | undefined) ?? null,
-    };
-  },
+export const Route = createFileRoute("/(unauthenticated)/_auth/forgot-password")({
   component: ForgotPassword,
 });
 
@@ -45,7 +38,7 @@ function ForgotPassword() {
   const [isSuccess, setIsSuccess] = useState<boolean>(false);
 
   const form = useForm({
-    schema: ForgotPasswordSchema,
+    resolver: zodResolver(ForgotPasswordSchema),
     defaultValues: {
       email: "",
     },
@@ -56,7 +49,7 @@ function ForgotPassword() {
 
     const { error } = await authClient.forgetPassword({
       email: values.email,
-      redirectTo: APP_ROUTES.AUTH.RESET_PASSWORD,
+      redirectTo: "/reset-password",
       fetchOptions: {
         onSuccess: () => {
           setIsSuccess(true);
@@ -141,7 +134,8 @@ function ForgotPassword() {
                   <div className="text-center text-sm">
                     Already have an account?{" "}
                     <Link
-                      href={APP_ROUTES.AUTH.SIGN_IN}
+                      to="/sign-in"
+                      search={{ redirect: null }}
                       className="underline underline-offset-4"
                     >
                       Sign in

@@ -47,6 +47,6 @@ export const useSignOut = () => {
   return async () => {
     console.log("🚪 Signing out...");
     await authClient.signOut();
-    return router.navigate({ to: "/auth/sign-in", search: { redirect: "" } });
+    return router.navigate({ to: "/sign-in", search: { redirect: null } });
   };
 };

@@ -1,5 +1,3 @@
-"use client";
-
 import { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
@@ -30,11 +28,11 @@ import { Input } from "@acme/ui/components/ui/input";
 import { authClient } from "~/auth/client";
 import { trpc } from "~/trpc";
 import { countdown } from "../../utils/countdown";
-import { SocialSignInButton } from "./components/social-sign-in-button";
-import TermsAndPrivacyNotice from "./components/terms-and-privacy-notice";
-import { useSocialAuth } from "./hooks/use-social-auth";
+import { SocialSignInButton } from "./-components/social-sign-in-button";
+import TermsAndPrivacyNotice from "./-components/terms-and-privacy-notice";
+import { useSocialAuth } from "./-hooks/use-social-auth";
 
-export const Route = createFileRoute("/(unauthenticated)/sign-in")({
+export const Route = createFileRoute("/(unauthenticated)/_auth/sign-in")({
   validateSearch: (search: Record<string, unknown>) => {
     return {
       redirect: (search.redirect as string | undefined) ?? null,

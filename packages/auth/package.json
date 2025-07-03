@@ -11,7 +11,6 @@
     "./utils": "./src/utils/index.ts",
     "./env": "./env.ts"
   },
-  "license": "MIT",
   "scripts": {
     "clean": "git clean -xdf .cache .turbo dist node_modules",
     "format": "prettier --check . --ignore-path ../../.gitignore",
@@ -21,6 +20,7 @@
   },
   "dependencies": {
     "@acme/db": "workspace:*",
+    "@acme/email": "workspace:*",
     "@better-auth/expo": "1.2.12",
     "@daveyplate/better-auth-tauri": "^0.0.24",
     "@t3-oss/env-nextjs": "^0.13.8",
