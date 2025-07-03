@@ -1,8 +1,12 @@
-import { Outlet } from "@tanstack/react-router";
+import { createFileRoute, Outlet } from "@tanstack/react-router";
 
 import PollingAuthWrapper from "./-components/polling-wrapper";
 
-export default function AuthLayout() {
+export const Route = createFileRoute("/(unauthenticated)/_auth")({
+  component: AuthLayout,
+});
+
+function AuthLayout() {
   return (
     <div className="relative grid h-dvh flex-col items-center justify-center lg:max-w-none lg:px-0">
       <div className="absolute top-0 left-0 -z-10 h-full w-full overflow-hidden">
