@@ -3,9 +3,22 @@ import { expo } from "@better-auth/expo";
 import { tauri } from "@daveyplate/better-auth-tauri/plugin";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { oAuthProxy } from "better-auth/plugins";
+import {
+  admin as adminPlugin,
+  oAuthProxy,
+  phoneNumber,
+  twoFactor,
+  username,
+} from "better-auth/plugins";
 
 import { db } from "@acme/db/client";
+import {
+  sendResetPasswordEmail,
+  sendVerificationEmail,
+} from "@acme/email/emails";
+
+import { checkBannedMiddleware } from "./middleware/check-banned-middleware";
+import { usernameValidator } from "./schemas/username.schema";
 
 export function initAuth(options: {
   baseUrl: string;
@@ -16,6 +29,12 @@ export function initAuth(options: {
   discordClientSecret: string;
 }) {
   const config = {
+    appName: "Voice Gecko",
+    account: {
+      accountLinking: {
+        enabled: true,
+      },
+    },
     database: drizzleAdapter(db, {
       provider: "pg",
     }),
@@ -43,12 +62,40 @@ export function initAuth(options: {
         successURL: "/auth/success", // Optional: Custom success page URL that will receive a ?tauriRedirect search parameter
         debugLogs: true, // Optional: Enable debug logs
       }),
+      adminPlugin(),
+      phoneNumber(),
+      twoFactor(),
+      username({
+        usernameValidator,
+      }),
     ],
+    hooks: {
+      after: checkBannedMiddleware,
+    },
+    emailVerification: {
+      autoSignInAfterVerification: true,
+      sendVerificationEmail: sendVerificationEmail,
+    },
+    emailAndPassword: {
+      enabled: true,
+      autoSignIn: true,
+      requireEmailVerification: true,
+      sendResetPassword: sendResetPasswordEmail,
+    },
     socialProviders: {
       discord: {
         clientId: options.discordClientId,
         clientSecret: options.discordClientSecret,
         redirectURI: `${options.baseUrl}/api/auth/callback/discord`, // This was productionUrl but it was causing issues with the redirect URI in dev
+        mapProfileToUser: (profile: {
+          username: string;
+          verified: boolean;
+        }) => {
+          return {
+            username: profile.username,
+            emailVerified: profile.verified,
+          };
+        },
       },
     },
     trustedOrigins: [

@@ -1,21 +1,19 @@
-"use client";
-
-import type { z } from "zod";
+import type { z } from "zod/v4";
 import { useState } from "react";
-import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
-import { APP_ROUTES, buildUrl } from "@/app/utils/app-routes";
-import { authClient } from "@repo/auth/client";
-import { SignUpSchema } from "@repo/auth/schemas/auth.schema";
-import { getAuthErrorMessage } from "@repo/auth/utils/auth-error-messages";
-import SMMHubXLogo from "@repo/design-system/components/smmhubx-logo";
-import { Button } from "@repo/design-system/components/ui/button";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
+import { Loader } from "lucide-react";
+
+import { SignUpSchema } from "@acme/auth/schemas";
+import { getAuthErrorMessage } from "@acme/auth/utils";
+import VoiceGeckoLogo from "@acme/ui/components/logos/voice-gecko";
+import { Button } from "@acme/ui/components/ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
-} from "@repo/design-system/components/ui/card";
+} from "@acme/ui/components/ui/card";
 import {
   Form,
   FormControl,
@@ -24,16 +22,15 @@ import {
   FormLabel,
   FormMessage,
   useForm,
-} from "@repo/design-system/components/ui/form";
-import { Input } from "@repo/design-system/components/ui/input";
-import { createFileRoute } from "@tanstack/react-router";
-import { Loader } from "lucide-react";
+} from "@acme/ui/components/ui/form";
+import { Input } from "@acme/ui/components/ui/input";
 
-import { SocialSignInButton } from "./components/social-sign-in-button";
-import TermsAndPrivacyNotice from "./components/terms-and-privacy-notice";
-import { useSocialAuth } from "./hooks/use-social-auth";
+import { authClient } from "~/auth/client";
+import { SocialSignInButton } from "./-components/social-sign-in-button";
+import TermsAndPrivacyNotice from "./-components/terms-and-privacy-notice";
+import { useSocialAuth } from "./-hooks/use-social-auth";
 
-export const Route = createFileRoute("/(unauthenticated)/sign-up")({
+export const Route = createFileRoute("/(unauthenticated)/_auth/sign-up")({
   validateSearch: (search: Record<string, unknown>) => {
     return {
       redirect: (search.redirect as string | undefined) ?? null,
@@ -65,8 +62,8 @@ interface LoadingState {
 
 function SignUp() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const callbackURL = searchParams.get("redirect") ?? APP_ROUTES.HOME;
+  const search = Route.useSearch();
+  const callbackURL = search.redirect ?? "/";
 
   const [isLoading, setIsLoading] = useState<LoadingState>({
     email: false,
@@ -86,7 +83,7 @@ function SignUp() {
   const [error, setError] = useState<string | null>(null);
 
   const form = useForm({
-    schema: SignUpSchema,
+    resolver: zodResolver(SignUpSchema),
     defaultValues: {
       email: "",
       username: "",
@@ -105,9 +102,10 @@ function SignUp() {
       password: values.password,
       fetchOptions: {
         onSuccess: () => {
-          router.push(
-            buildUrl(APP_ROUTES.AUTH.VERIFY_EMAIL, { email: values.email }),
-          );
+          void router.navigate({
+            to: "/verify-email",
+            search: { email: values.email, redirect: callbackURL },
+          });
         },
         onRequest: () => {
           setError(null);
@@ -148,10 +146,10 @@ function SignUp() {
       <div className={"flex flex-col gap-4"}>
         <Card>
           <CardHeader className="items-start">
-            <SMMHubXLogo className="h-10" />
+            <VoiceGeckoLogo className="h-10" />
             <CardDescription>
               sign up to continue to{" "}
-              <span className="font-mono font-bold">smmhubx</span>
+              <span className="font-mono font-bold">voicegecko</span>
             </CardDescription>
           </CardHeader>
 
@@ -303,7 +301,8 @@ function SignUp() {
                   <div className="text-center text-sm">
                     Already have an account?{" "}
                     <Link
-                      href={APP_ROUTES.AUTH.SIGN_IN}
+                      to="/sign-in"
+                      search={{ redirect: callbackURL }}
                       className="underline underline-offset-4"
                     >
                       Sign in
