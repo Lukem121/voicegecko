@@ -1,5 +1,13 @@
 import { useState } from "react";
-import { signInSocial } from "@daveyplate/better-auth-tauri";
+import {
+  handleAuthDeepLink,
+  setupBetterAuthTauri,
+  SetupBetterAuthTauriOptions,
+  signInSocial,
+  SignInSocialProps,
+  SocialSignInParams,
+} from "@daveyplate/better-auth-tauri";
+import { useBetterAuthTauri } from "@daveyplate/better-auth-tauri/react";
 
 import { authClient } from "~/auth/client";
 

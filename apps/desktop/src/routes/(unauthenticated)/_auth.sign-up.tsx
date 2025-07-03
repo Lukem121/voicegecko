@@ -5,7 +5,6 @@ import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { Loader } from "lucide-react";
 
 import { SignUpSchema } from "@acme/auth/schemas";
-import { getAuthErrorMessage } from "@acme/auth/utils";
 import VoiceGeckoLogo from "@acme/ui/components/logos/voice-gecko";
 import { Button } from "@acme/ui/components/ui/button";
 import {
@@ -25,9 +24,9 @@ import {
 } from "@acme/ui/components/ui/form";
 import { Input } from "@acme/ui/components/ui/input";
 
-import { authClient } from "~/auth/client";
 import { SocialSignInButton } from "./-components/social-sign-in-button";
 import TermsAndPrivacyNotice from "./-components/terms-and-privacy-notice";
+import { useEmailSignup } from "./-hooks/use-email-signup";
 import { useSocialAuth } from "./-hooks/use-social-auth";
 
 export const Route = createFileRoute("/(unauthenticated)/_auth/sign-up")({
@@ -39,48 +38,41 @@ export const Route = createFileRoute("/(unauthenticated)/_auth/sign-up")({
   component: SignUp,
 });
 
-const isEmailError = (code: string) => {
-  if (code === "USER_ALREADY_EXISTS") {
-    return true;
-  }
-  if (code.toLowerCase().includes("email")) {
-    return true;
-  }
-  return false;
+const isEmailError = (error: string) => {
+  return (
+    error.toLowerCase().includes("email") ||
+    error.toLowerCase().includes("user_already_exists")
+  );
 };
 
-const isUsernameError = (code: string) => {
-  if (code.toLowerCase().includes("username")) {
-    return true;
-  }
-  return false;
+const isUsernameError = (error: string) => {
+  return error.toLowerCase().includes("username");
 };
-
-interface LoadingState {
-  email: boolean;
-}
 
 function SignUp() {
   const router = useRouter();
   const search = Route.useSearch();
   const callbackURL = search.redirect ?? "/";
 
-  const [isLoading, setIsLoading] = useState<LoadingState>({
-    email: false,
-  });
-
   const {
     signIn: handleSocialSignIn,
     isLoading: socialLoading,
-    error: providerError,
+    error: socialError,
     loading: isSocialLoading,
   } = useSocialAuth({
     callbackURL,
   });
 
-  const loading = isLoading.email || isSocialLoading;
+  const {
+    signUp: handleEmailSignup,
+    isLoading: emailLoading,
+    error: emailError,
+  } = useEmailSignup({
+    callbackURL,
+  });
 
-  const [error, setError] = useState<string | null>(null);
+  const loading = emailLoading || isSocialLoading;
+  const error = emailError || socialError;
 
   const form = useForm({
     resolver: zodResolver(SignUpSchema),
@@ -94,50 +86,26 @@ function SignUp() {
   });
 
   const onSubmit = async (values: z.infer<typeof SignUpSchema>) => {
-    const { error } = await authClient.signUp.email({
-      callbackURL,
-      email: values.email,
-      username: values.username,
-      name: values.name,
-      password: values.password,
-      fetchOptions: {
-        onSuccess: () => {
-          void router.navigate({
-            to: "/verify-email",
-            search: { email: values.email, redirect: callbackURL },
+    const { success } = await handleEmailSignup(values);
+
+    if (success) {
+      void router.navigate({
+        to: "/verify-email",
+        search: { email: values.email, redirect: callbackURL },
+      });
+    } else {
+      // Handle field-specific errors
+      if (emailError) {
+        if (isUsernameError(emailError)) {
+          form.setError("username", {
+            message: emailError,
           });
-        },
-        onRequest: () => {
-          setError(null);
-          setIsLoading((prev) => ({ ...prev, email: true }));
-        },
-      },
-    });
-
-    if (!error) {
-      return;
-    }
-
-    setIsLoading((prev) => ({ ...prev, email: false }));
-
-    if (error.code) {
-      const errorMessage = getAuthErrorMessage(error.code, "en");
-
-      if (isUsernameError(error.code)) {
-        form.setError("username", {
-          message: errorMessage,
-        });
-        return;
+        } else if (isEmailError(emailError)) {
+          form.setError("email", {
+            message: emailError,
+          });
+        }
       }
-
-      if (isEmailError(error.code)) {
-        form.setError("email", {
-          message: errorMessage,
-        });
-        return;
-      }
-
-      setError(errorMessage);
     }
   };
 
@@ -266,14 +234,16 @@ function SignUp() {
                           </FormItem>
                         )}
                       />
-                      {error !== null && (
-                        <p className="text-[0.8rem] font-medium text-red-600">
-                          {error}
-                        </p>
-                      )}
+                      {error &&
+                        !form.formState.errors.email &&
+                        !form.formState.errors.username && (
+                          <p className="text-[0.8rem] font-medium text-red-600">
+                            {error}
+                          </p>
+                        )}
                     </div>
                     <Button type="submit" className="w-full" disabled={loading}>
-                      {isLoading.email ? (
+                      {emailLoading ? (
                         <Loader className={"animate-spin"} />
                       ) : (
                         "Sign Up"
@@ -292,9 +262,9 @@ function SignUp() {
                       onClick={() => handleSocialSignIn("discord")}
                       disabled={loading}
                     />
-                    {providerError && (
+                    {socialError && (
                       <p className="text-center text-[0.8rem] font-medium text-red-600">
-                        {providerError}
+                        {socialError}
                       </p>
                     )}
                   </div>

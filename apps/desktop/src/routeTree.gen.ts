@@ -15,6 +15,7 @@ import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
 import { Route as AuthSignInRouteImport } from './routes/auth/sign-in'
 import { Route as unauthenticatedAuthRouteImport } from './routes/(unauthenticated)/_auth'
+import { Route as unauthenticatedAuthVerifySuccessRouteImport } from './routes/(unauthenticated)/_auth.verify-success'
 import { Route as unauthenticatedAuthVerifyEmailRouteImport } from './routes/(unauthenticated)/_auth.verify-email'
 import { Route as unauthenticatedAuthSignUpRouteImport } from './routes/(unauthenticated)/_auth.sign-up'
 import { Route as unauthenticatedAuthSignInRouteImport } from './routes/(unauthenticated)/_auth.sign-in'
@@ -48,6 +49,12 @@ const unauthenticatedAuthRoute = unauthenticatedAuthRouteImport.update({
   id: '/_auth',
   getParentRoute: () => unauthenticatedRoute,
 } as any)
+const unauthenticatedAuthVerifySuccessRoute =
+  unauthenticatedAuthVerifySuccessRouteImport.update({
+    id: '/verify-success',
+    path: '/verify-success',
+    getParentRoute: () => unauthenticatedAuthRoute,
+  } as any)
 const unauthenticatedAuthVerifyEmailRoute =
   unauthenticatedAuthVerifyEmailRouteImport.update({
     id: '/verify-email',
@@ -106,6 +113,7 @@ export interface FileRoutesByFullPath {
   '/sign-in': typeof unauthenticatedAuthSignInRoute
   '/sign-up': typeof unauthenticatedAuthSignUpRoute
   '/verify-email': typeof unauthenticatedAuthVerifyEmailRoute
+  '/verify-success': typeof unauthenticatedAuthVerifySuccessRoute
   '/legal/privacy': typeof unauthenticatedAuthLegalPrivacyRoute
   '/legal/terms': typeof unauthenticatedAuthLegalTermsRoute
 }
@@ -118,6 +126,7 @@ export interface FileRoutesByTo {
   '/sign-in': typeof unauthenticatedAuthSignInRoute
   '/sign-up': typeof unauthenticatedAuthSignUpRoute
   '/verify-email': typeof unauthenticatedAuthVerifyEmailRoute
+  '/verify-success': typeof unauthenticatedAuthVerifySuccessRoute
   '/legal/privacy': typeof unauthenticatedAuthLegalPrivacyRoute
   '/legal/terms': typeof unauthenticatedAuthLegalTermsRoute
 }
@@ -134,6 +143,7 @@ export interface FileRoutesById {
   '/(unauthenticated)/_auth/sign-in': typeof unauthenticatedAuthSignInRoute
   '/(unauthenticated)/_auth/sign-up': typeof unauthenticatedAuthSignUpRoute
   '/(unauthenticated)/_auth/verify-email': typeof unauthenticatedAuthVerifyEmailRoute
+  '/(unauthenticated)/_auth/verify-success': typeof unauthenticatedAuthVerifySuccessRoute
   '/(unauthenticated)/_auth/legal/privacy': typeof unauthenticatedAuthLegalPrivacyRoute
   '/(unauthenticated)/_auth/legal/terms': typeof unauthenticatedAuthLegalTermsRoute
 }
@@ -148,6 +158,7 @@ export interface FileRouteTypes {
     | '/sign-in'
     | '/sign-up'
     | '/verify-email'
+    | '/verify-success'
     | '/legal/privacy'
     | '/legal/terms'
   fileRoutesByTo: FileRoutesByTo
@@ -160,6 +171,7 @@ export interface FileRouteTypes {
     | '/sign-in'
     | '/sign-up'
     | '/verify-email'
+    | '/verify-success'
     | '/legal/privacy'
     | '/legal/terms'
   id:
@@ -175,6 +187,7 @@ export interface FileRouteTypes {
     | '/(unauthenticated)/_auth/sign-in'
     | '/(unauthenticated)/_auth/sign-up'
     | '/(unauthenticated)/_auth/verify-email'
+    | '/(unauthenticated)/_auth/verify-success'
     | '/(unauthenticated)/_auth/legal/privacy'
     | '/(unauthenticated)/_auth/legal/terms'
   fileRoutesById: FileRoutesById
@@ -221,6 +234,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof unauthenticatedAuthRouteImport
       parentRoute: typeof unauthenticatedRoute
+    }
+    '/(unauthenticated)/_auth/verify-success': {
+      id: '/(unauthenticated)/_auth/verify-success'
+      path: '/verify-success'
+      fullPath: '/verify-success'
+      preLoaderRoute: typeof unauthenticatedAuthVerifySuccessRouteImport
+      parentRoute: typeof unauthenticatedAuthRoute
     }
     '/(unauthenticated)/_auth/verify-email': {
       id: '/(unauthenticated)/_auth/verify-email'
@@ -300,6 +320,7 @@ interface unauthenticatedAuthRouteChildren {
   unauthenticatedAuthSignInRoute: typeof unauthenticatedAuthSignInRoute
   unauthenticatedAuthSignUpRoute: typeof unauthenticatedAuthSignUpRoute
   unauthenticatedAuthVerifyEmailRoute: typeof unauthenticatedAuthVerifyEmailRoute
+  unauthenticatedAuthVerifySuccessRoute: typeof unauthenticatedAuthVerifySuccessRoute
   unauthenticatedAuthLegalPrivacyRoute: typeof unauthenticatedAuthLegalPrivacyRoute
   unauthenticatedAuthLegalTermsRoute: typeof unauthenticatedAuthLegalTermsRoute
 }
@@ -313,6 +334,7 @@ const unauthenticatedAuthRouteChildren: unauthenticatedAuthRouteChildren = {
   unauthenticatedAuthSignInRoute: unauthenticatedAuthSignInRoute,
   unauthenticatedAuthSignUpRoute: unauthenticatedAuthSignUpRoute,
   unauthenticatedAuthVerifyEmailRoute: unauthenticatedAuthVerifyEmailRoute,
+  unauthenticatedAuthVerifySuccessRoute: unauthenticatedAuthVerifySuccessRoute,
   unauthenticatedAuthLegalPrivacyRoute: unauthenticatedAuthLegalPrivacyRoute,
   unauthenticatedAuthLegalTermsRoute: unauthenticatedAuthLegalTermsRoute,
 }
