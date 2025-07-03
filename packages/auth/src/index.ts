@@ -12,10 +12,7 @@ import {
 } from "better-auth/plugins";
 
 import { db } from "@acme/db/client";
-import {
-  sendResetPasswordEmail,
-  sendVerificationEmail,
-} from "@acme/email/emails";
+import { sendResetPasswordEmail, sendVerificationEmail } from "@acme/email";
 
 import { checkBannedMiddleware } from "./middleware/check-banned-middleware";
 import { usernameValidator } from "./schemas/username.schema";

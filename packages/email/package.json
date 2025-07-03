@@ -2,13 +2,16 @@
   "name": "@acme/email",
   "version": "0.0.0",
   "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "default": "./src/index.ts"
+    }
+  },
   "scripts": {
+    "build": "tsc",
     "clean": "git clean -xdf .cache .turbo dist node_modules",
     "typecheck": "tsc --noEmit --emitDeclarationOnly false"
-  },
-  "exports": {
-    ".": "./index.ts",
-    "./emails": "./emails/index.ts"
   },
   "dependencies": {
     "@react-email/components": "0.1.1",
