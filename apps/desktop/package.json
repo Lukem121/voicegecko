@@ -53,8 +53,8 @@
     "@types/react": "catalog:react19",
     "@types/react-dom": "catalog:react19",
     "@vitejs/plugin-react": "^4.6.0",
-    "eslint": "^9.30.0",
-    "prettier": "^3.6.2",
+    "eslint": "catalog:",
+    "prettier": "catalog:",
     "typescript": "catalog:",
     "vite": "^7.0.0",
     "vite-tsconfig-paths": "^5.1.4"
