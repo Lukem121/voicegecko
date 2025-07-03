@@ -2,6 +2,7 @@ import { useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
+import { openUrl } from "@tauri-apps/plugin-opener";
 import { Loader } from "lucide-react";
 
 import { SignInSchema } from "@acme/auth/schemas";
@@ -27,6 +28,7 @@ import { Input } from "@acme/ui/components/ui/input";
 
 import { authClient } from "~/auth/client";
 import { trpc } from "~/trpc";
+import { getAPIUrl } from "~/utils/get-api-url";
 import { countdown } from "../../utils/countdown";
 import { SocialSignInButton } from "./-components/social-sign-in-button";
 import TermsAndPrivacyNotice from "./-components/terms-and-privacy-notice";
@@ -173,13 +175,16 @@ function SignIn() {
                       <FormItem>
                         <div className="flex items-center justify-between">
                           <FormLabel htmlFor="password">Password</FormLabel>
-                          <Link
-                            to="/forgot-password"
-                            search={{ redirect: callbackURL }}
-                            className="text-primary focus:ring-primary text-xs hover:underline focus:ring-2 focus:outline-none sm:text-sm"
+                          <a
+                            onClick={() => {
+                              void openUrl(
+                                `${getAPIUrl()}/auth/forgot-password`,
+                              );
+                            }}
+                            className="text-primary focus:ring-primary cursor-pointer text-xs hover:underline focus:ring-2 focus:outline-none sm:text-sm"
                           >
                             Forgot password?
-                          </Link>
+                          </a>
                         </div>
                         <FormControl>
                           <Input
