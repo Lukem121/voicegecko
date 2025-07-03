@@ -1,10 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
+import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { Loader } from "lucide-react";
 
 import { SignInSchema } from "@acme/auth/schemas";
@@ -35,6 +34,15 @@ import { SocialSignInButton } from "./components/social-sign-in-button";
 import TermsAndPrivacyNotice from "./components/terms-and-privacy-notice";
 import { useSocialAuth } from "./hooks/use-social-auth";
 
+export const Route = createFileRoute("/(unauthenticated)/sign-in")({
+  validateSearch: (search: Record<string, unknown>) => {
+    return {
+      redirect: (search.redirect as string | undefined) ?? null,
+    };
+  },
+  component: SignIn,
+});
+
 // Types
 interface SignInFormValues {
   email: string;
@@ -45,12 +53,12 @@ interface LoadingState {
   email: boolean;
 }
 
-export default function SignIn() {
+function SignIn() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const callbackURL = searchParams.get("redirect") ?? APP_ROUTES.HOME;
+  const search = Route.useSearch();
+  const callbackURL = search.redirect ?? "/";
 
-  const getBanStatus = useMutation(trpc.user.getBanStatus.mutationOptions());
+  const getBanStatus = useMutation(trpc.auth.getBanStatus.mutationOptions());
 
   const [isLoading, setIsLoading] = useState<LoadingState>({
     email: false,
@@ -84,7 +92,7 @@ export default function SignIn() {
       email: values.email,
       password: values.password,
       fetchOptions: {
-        onSuccess: () => router.push(callbackURL),
+        onSuccess: () => router.navigate({ to: callbackURL }),
       },
     });
 
@@ -97,14 +105,13 @@ export default function SignIn() {
     if (error.code === "FAILED_TO_CREATE_SESSION") {
       const status = await getBanStatus.mutateAsync(values.email);
 
-      if (!status.ok) {
+      if (!status) {
         setError("An unexpected error occurred.");
-
         return;
       }
 
-      if (status.value.isBanned) {
-        setError(formatBanMessage(status.value.reason, status.value.expiresAt));
+      if (status.isBanned) {
+        setError(formatBanMessage(status.reason, status.expiresAt));
         return;
       }
     }
@@ -122,10 +129,10 @@ export default function SignIn() {
       <div className="flex flex-col gap-6">
         <Card className="shadow-lg">
           <CardHeader className="space-y-3">
-            <VoiceGeckoLogo className="h-10" aria-label="SMMHubX Logo" />
+            <VoiceGeckoLogo className="h-10" aria-label="VoiceGecko Logo" />
             <CardDescription className="text-center">
               Sign in to continue to{" "}
-              <span className="font-mono font-bold">smmhubx</span>
+              <span className="font-mono font-bold">VoiceGecko</span>
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -166,7 +173,8 @@ export default function SignIn() {
                         <div className="flex items-center justify-between">
                           <FormLabel htmlFor="password">Password</FormLabel>
                           <Link
-                            href={APP_ROUTES.AUTH.FORGOT_PASSWORD}
+                            to="/forgot-password"
+                            search={{ redirect: callbackURL }}
                             className="text-primary focus:ring-primary text-xs hover:underline focus:ring-2 focus:outline-none sm:text-sm"
                           >
                             Forgot password?
@@ -241,7 +249,8 @@ export default function SignIn() {
                   <div className="text-center text-sm">
                     Don&apos;t have an account?{" "}
                     <Link
-                      href={APP_ROUTES.AUTH.SIGN_UP}
+                      to="/sign-up"
+                      search={{ redirect: callbackURL }}
                       className="text-primary focus:ring-primary hover:underline focus:ring-2 focus:outline-none"
                     >
                       Sign up

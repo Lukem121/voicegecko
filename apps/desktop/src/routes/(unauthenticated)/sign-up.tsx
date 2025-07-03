@@ -1,17 +1,21 @@
-'use client';
+"use client";
 
-import { APP_ROUTES, buildUrl } from '@/app/utils/app-routes';
-import { authClient } from '@repo/auth/client';
-import { SignUpSchema } from '@repo/auth/schemas/auth.schema';
-import { getAuthErrorMessage } from '@repo/auth/utils/auth-error-messages';
-import SMMHubXLogo from '@repo/design-system/components/smmhubx-logo';
-import { Button } from '@repo/design-system/components/ui/button';
+import type { z } from "zod";
+import { useState } from "react";
+import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
+import { APP_ROUTES, buildUrl } from "@/app/utils/app-routes";
+import { authClient } from "@repo/auth/client";
+import { SignUpSchema } from "@repo/auth/schemas/auth.schema";
+import { getAuthErrorMessage } from "@repo/auth/utils/auth-error-messages";
+import SMMHubXLogo from "@repo/design-system/components/smmhubx-logo";
+import { Button } from "@repo/design-system/components/ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
-} from '@repo/design-system/components/ui/card';
+} from "@repo/design-system/components/ui/card";
 import {
   Form,
   FormControl,
@@ -20,29 +24,36 @@ import {
   FormLabel,
   FormMessage,
   useForm,
-} from '@repo/design-system/components/ui/form';
-import { Input } from '@repo/design-system/components/ui/input';
-import { Loader } from 'lucide-react';
-import Link from 'next/link';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { useState } from 'react';
-import type { z } from 'zod';
-import { SocialSignInButton } from '../components/social-sign-in-button';
-import TermsAndPrivacyNotice from '../components/terms-and-privacy-notice';
-import { useSocialAuth } from '../hooks/use-social-auth';
+} from "@repo/design-system/components/ui/form";
+import { Input } from "@repo/design-system/components/ui/input";
+import { createFileRoute } from "@tanstack/react-router";
+import { Loader } from "lucide-react";
+
+import { SocialSignInButton } from "./components/social-sign-in-button";
+import TermsAndPrivacyNotice from "./components/terms-and-privacy-notice";
+import { useSocialAuth } from "./hooks/use-social-auth";
+
+export const Route = createFileRoute("/(unauthenticated)/sign-up")({
+  validateSearch: (search: Record<string, unknown>) => {
+    return {
+      redirect: (search.redirect as string | undefined) ?? null,
+    };
+  },
+  component: SignUp,
+});
 
 const isEmailError = (code: string) => {
-  if (code === 'USER_ALREADY_EXISTS') {
+  if (code === "USER_ALREADY_EXISTS") {
     return true;
   }
-  if (code.toLowerCase().includes('email')) {
+  if (code.toLowerCase().includes("email")) {
     return true;
   }
   return false;
 };
 
 const isUsernameError = (code: string) => {
-  if (code.toLowerCase().includes('username')) {
+  if (code.toLowerCase().includes("username")) {
     return true;
   }
   return false;
@@ -52,10 +63,10 @@ interface LoadingState {
   email: boolean;
 }
 
-export default function SignUp() {
+function SignUp() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const callbackURL = searchParams.get('redirect') ?? APP_ROUTES.HOME;
+  const callbackURL = searchParams.get("redirect") ?? APP_ROUTES.HOME;
 
   const [isLoading, setIsLoading] = useState<LoadingState>({
     email: false,
@@ -77,11 +88,11 @@ export default function SignUp() {
   const form = useForm({
     schema: SignUpSchema,
     defaultValues: {
-      email: '',
-      username: '',
-      name: '',
-      password: '',
-      passwordConfirmation: '',
+      email: "",
+      username: "",
+      name: "",
+      password: "",
+      passwordConfirmation: "",
     },
   });
 
@@ -95,7 +106,7 @@ export default function SignUp() {
       fetchOptions: {
         onSuccess: () => {
           router.push(
-            buildUrl(APP_ROUTES.AUTH.VERIFY_EMAIL, { email: values.email })
+            buildUrl(APP_ROUTES.AUTH.VERIFY_EMAIL, { email: values.email }),
           );
         },
         onRequest: () => {
@@ -112,17 +123,17 @@ export default function SignUp() {
     setIsLoading((prev) => ({ ...prev, email: false }));
 
     if (error.code) {
-      const errorMessage = getAuthErrorMessage(error.code, 'en');
+      const errorMessage = getAuthErrorMessage(error.code, "en");
 
       if (isUsernameError(error.code)) {
-        form.setError('username', {
+        form.setError("username", {
           message: errorMessage,
         });
         return;
       }
 
       if (isEmailError(error.code)) {
-        form.setError('email', {
+        form.setError("email", {
           message: errorMessage,
         });
         return;
@@ -134,13 +145,13 @@ export default function SignUp() {
 
   return (
     <>
-      <div className={'flex flex-col gap-4'}>
+      <div className={"flex flex-col gap-4"}>
         <Card>
           <CardHeader className="items-start">
             <SMMHubXLogo className="h-10" />
             <CardDescription>
-              sign up to continue to{' '}
-              <span className="font-bold font-mono">smmhubx</span>
+              sign up to continue to{" "}
+              <span className="font-mono font-bold">smmhubx</span>
             </CardDescription>
           </CardHeader>
 
@@ -258,21 +269,21 @@ export default function SignUp() {
                         )}
                       />
                       {error !== null && (
-                        <p className="font-medium text-[0.8rem] text-red-600">
+                        <p className="text-[0.8rem] font-medium text-red-600">
                           {error}
                         </p>
                       )}
                     </div>
                     <Button type="submit" className="w-full" disabled={loading}>
                       {isLoading.email ? (
-                        <Loader className={'animate-spin'} />
+                        <Loader className={"animate-spin"} />
                       ) : (
-                        'Sign Up'
+                        "Sign Up"
                       )}
                     </Button>
                   </div>
-                  <div className="relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-border after:border-t">
-                    <span className="relative z-10 bg-background px-2 text-muted-foreground">
+                  <div className="after:border-border relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t">
+                    <span className="bg-background text-muted-foreground relative z-10 px-2">
                       Or continue with
                     </span>
                   </div>
@@ -280,17 +291,17 @@ export default function SignUp() {
                     <SocialSignInButton
                       provider="discord"
                       isLoading={socialLoading.discord}
-                      onClick={() => handleSocialSignIn('discord')}
+                      onClick={() => handleSocialSignIn("discord")}
                       disabled={loading}
                     />
                     {providerError && (
-                      <p className="text-center font-medium text-[0.8rem] text-red-600">
+                      <p className="text-center text-[0.8rem] font-medium text-red-600">
                         {providerError}
                       </p>
                     )}
                   </div>
                   <div className="text-center text-sm">
-                    Already have an account?{' '}
+                    Already have an account?{" "}
                     <Link
                       href={APP_ROUTES.AUTH.SIGN_IN}
                       className="underline underline-offset-4"
