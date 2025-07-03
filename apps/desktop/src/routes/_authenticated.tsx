@@ -7,7 +7,7 @@ export const Route = createFileRoute("/_authenticated")({
     // Check if user is authenticated
     if (!context.auth.isLoading && !context.auth.isAuthenticated) {
       throw redirect({
-        to: "/auth/sign-in",
+        to: "/sign-in",
         search: {
           // Use the current location to power a redirect after login
           redirect: location.href,

@@ -1,6 +1,6 @@
 import { Outlet } from "@tanstack/react-router";
 
-import PollingAuthWrapper from "./components/polling-wrapper";
+import PollingAuthWrapper from "./-components/polling-wrapper";
 
 export default function AuthLayout() {
   return (

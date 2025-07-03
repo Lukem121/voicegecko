@@ -1,17 +1,15 @@
-'use client';
+import type { ReactNode } from "react";
+import { useEffect } from "react";
+import { useRouter } from "@tanstack/react-router";
 
-import { APP_ROUTES } from '@/app/utils/app-routes';
-import { authClient } from '@repo/auth/client';
-import { useRouter } from 'next/navigation';
-import type { ReactNode } from 'react';
-import { useEffect } from 'react';
-import { usePolling } from '../hooks/use-polling-refresh';
+import { authClient } from "~/auth/client";
+import { usePolling } from "../-hooks/use-polling-refresh";
 
 const POLL_INTERVAL = 5000;
 
-type PollingAuthWrapperProps = {
+interface PollingAuthWrapperProps {
   readonly children: ReactNode;
-};
+}
 
 export default function PollingAuthWrapper({
   children,
@@ -21,7 +19,8 @@ export default function PollingAuthWrapper({
 
   useEffect(() => {
     if (auth.data?.session !== undefined) {
-      router.push(APP_ROUTES.HOME);
+      console.log("Navigating to / from polling wrapper");
+      void router.navigate({ to: "/" });
     }
   }, [auth.data?.session, router]);
 

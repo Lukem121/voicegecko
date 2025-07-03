@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from "zod/v4";
 
 // List of restricted usernames by category
 const restrictedUsernamesByCategory = {
@@ -20,76 +20,70 @@ export const usernameSchema = z
   .string()
   .trim()
   .toLowerCase()
-  .min(3, "Username must be at least 3 characters long")
-  .max(20, "Username must be less than 20 characters long")
-  .regex(
-    /^[a-z0-9_]+$/,
-    "Username can only contain letters, numbers, and underscores",
-  )
-  .superRefine((username, ctx) => {
-    // Check for special characters at start/end
+  .min(3, { error: "Username must be at least 3 characters long" })
+  .max(20, { error: "Username must be less than 20 characters long" })
+  .regex(/^[a-z0-9_]+$/, {
+    error: "Username can only contain letters, numbers, and underscores",
+  })
+  .check((ctx) => {
+    const username = ctx.value;
+
     if (
       username.startsWith("_") ||
       username.startsWith("-") ||
       username.endsWith("_") ||
       username.endsWith("-")
     ) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+      ctx.issues.push({
+        input: username,
+        code: "custom",
         message: "Username cannot start or end with an underscore or hyphen",
       });
-      return false;
     }
 
-    // No adjacent underscores
     if (username.includes("__")) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+      ctx.issues.push({
+        input: username,
+        code: "custom",
         message: "Username cannot contain adjacent underscores",
       });
-      return false;
     }
 
-    // Check for excessive character repetition
     const repeatedCharRegex = /(.)\1{4,}/;
     if (repeatedCharRegex.test(username)) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+      ctx.issues.push({
+        input: username,
+        code: "custom",
         message:
           "Username cannot contain more than 4 repeated characters in a row",
       });
-      return false;
     }
 
-    // Prevent entirely numeric usernames
     if (/^\d+$/.test(username)) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+      ctx.issues.push({
+        input: username,
+        code: "custom",
         message: "Username cannot consist of only numbers",
       });
-      return false;
     }
 
-    // Require at least one letter
     if (!/[a-z]/.test(username)) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+      ctx.issues.push({
+        input: username,
+        code: "custom",
         message: "Username must contain at least one letter",
       });
-      return false;
     }
 
-    // Check exact matches
     const exactMatch = restrictedUsernames.find((word) => username === word);
     if (exactMatch) {
-      ctx.addIssue({
-        code: z.ZodIssueCode.custom,
+      ctx.issues.push({
+        input: username,
+        code: "custom",
         message: `Username cannot be '${exactMatch}'`,
       });
-      return false;
     }
 
-    // Check for contained words
     for (const [_, words] of Object.entries(restrictedUsernamesByCategory)) {
       const containedWord = words.find(
         (word) =>
@@ -99,15 +93,13 @@ export const usernameSchema = z
       );
 
       if (containedWord) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
+        ctx.issues.push({
+          input: username,
+          code: "custom",
           message: `Username cannot contain '${containedWord}'`,
         });
-        return false;
       }
     }
-
-    return true;
   });
 
 export type Username = z.infer<typeof usernameSchema>;

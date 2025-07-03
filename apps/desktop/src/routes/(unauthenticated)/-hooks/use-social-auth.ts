@@ -1,9 +1,9 @@
-import { APP_ROUTES } from '@/app/utils/app-routes';
-import { authClient } from '@repo/auth/client';
-import { log } from '@repo/observability/log';
-import { useState } from 'react';
+import { useState } from "react";
+import { signInSocial } from "@daveyplate/better-auth-tauri";
 
-export type SocialProvider = 'discord' | 'google';
+import { authClient } from "~/auth/client";
+
+export type SocialProvider = "discord" | "google";
 
 interface LoadingState {
   discord: boolean;
@@ -39,16 +39,25 @@ export function useSocialAuth({
     const { error } = await authClient.signIn.social({
       provider,
       callbackURL,
-      errorCallbackURL: APP_ROUTES.AUTH.ERROR,
+      errorCallbackURL: "/authentication-error",
+      fetchOptions: {
+        onError: ({ error }) => setError(error.message),
+      },
+    });
+
+    await signInSocial({
+      authClient,
+      provider: "discord",
+      callbackURL: "/",
       fetchOptions: {
         onError: ({ error }) => setError(error.message),
       },
     });
 
     if (error) {
-      log.error('use-social-auth', { error });
+      console.error("use-social-auth", { error });
       setIsLoading((prev) => ({ ...prev, [provider]: false }));
-      setError(error.message ?? 'An unexpected error occurred.');
+      setError(error.message ?? "An unexpected error occurred.");
       return;
     }
   };

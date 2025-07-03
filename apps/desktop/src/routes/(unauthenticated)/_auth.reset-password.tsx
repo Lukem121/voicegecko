@@ -1,16 +1,19 @@
-'use client';
+import type { z } from "zod/v4";
+import { useState } from "react";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { createFileRoute, useRouter } from "@tanstack/react-router";
+import { Loader } from "lucide-react";
 
-import { authClient } from '@repo/auth/client';
-import { ResetPasswordSchema } from '@repo/auth/schemas/auth.schema';
-import { getAuthErrorMessage } from '@repo/auth/utils/auth-error-messages';
-import { Button } from '@repo/design-system/components/ui/button';
+import { ResetPasswordSchema } from "@acme/auth/schemas";
+import { getAuthErrorMessage } from "@acme/auth/utils";
+import { Button } from "@acme/ui/components/ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@repo/design-system/components/ui/card';
+} from "@acme/ui/components/ui/card";
 import {
   Form,
   FormControl,
@@ -19,31 +22,36 @@ import {
   FormLabel,
   FormMessage,
   useForm,
-} from '@repo/design-system/components/ui/form';
-import { Input } from '@repo/design-system/components/ui/input';
-import { toast } from '@repo/design-system/components/ui/sonner';
-import { Loader } from 'lucide-react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { useState } from 'react';
-import type { z } from 'zod';
-import { APP_ROUTES } from '../../utils/app-routes';
+} from "@acme/ui/components/ui/form";
+import { Input } from "@acme/ui/components/ui/input";
+
+import { authClient } from "~/auth/client";
+
+export const Route = createFileRoute("/(unauthenticated)/_auth/reset-password")({
+  validateSearch: (search: Record<string, unknown>) => {
+    return {
+      token: search.token as string,
+    };
+  },
+  component: ResetPassword,
+});
 
 type FormValues = z.infer<typeof ResetPasswordSchema>;
 
-export default function ResetPasswordPage() {
+function ResetPassword() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const token = searchParams.get('token');
+  const search = Route.useSearch();
+  const token = search.token;
 
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [isSuccess, setIsSuccess] = useState<boolean>(false);
 
   const form = useForm({
-    schema: ResetPasswordSchema,
+    resolver: zodResolver(ResetPasswordSchema),
     defaultValues: {
-      password: '',
-      passwordConfirmation: '',
+      password: "",
+      passwordConfirmation: "",
     },
   });
 
@@ -53,7 +61,7 @@ export default function ResetPasswordPage() {
     setIsSuccess(false);
 
     if (!token) {
-      setError(getAuthErrorMessage('INVALID_TOKEN', 'en'));
+      setError(getAuthErrorMessage("INVALID_TOKEN", "en"));
       return;
     }
 
@@ -61,9 +69,8 @@ export default function ResetPasswordPage() {
       newPassword: values.password,
       token: token,
       fetchOptions: {
-        onSuccess: () => {
-          router.push(APP_ROUTES.AUTH.SIGN_IN);
-          toast.success('Password reset successful, please sign in.');
+        onSuccess: async () => {
+          await router.navigate({ to: "/sign-in", search: { redirect: null } });
           setIsSuccess(true);
         },
       },
@@ -72,7 +79,7 @@ export default function ResetPasswordPage() {
     if (error) {
       const { code, message } = error;
       if (code) {
-        const errorMessage = getAuthErrorMessage(code, 'en', message);
+        const errorMessage = getAuthErrorMessage(code, "en", message);
         setError(errorMessage);
       }
     }
@@ -81,7 +88,7 @@ export default function ResetPasswordPage() {
   };
 
   return (
-    <div className={'flex flex-col gap-6'}>
+    <div className={"flex flex-col gap-6"}>
       <Card>
         <CardHeader className="text-center">
           <CardTitle className="text-xl">Reset your password</CardTitle>
@@ -140,7 +147,7 @@ export default function ResetPasswordPage() {
                       )}
                     />
                     {error !== null && (
-                      <p className="font-medium text-[0.8rem] text-red-600">
+                      <p className="text-[0.8rem] font-medium text-red-600">
                         {error}
                       </p>
                     )}
@@ -151,9 +158,9 @@ export default function ResetPasswordPage() {
                     disabled={isLoading || isSuccess}
                   >
                     {isLoading ? (
-                      <Loader className={'animate-spin'} />
+                      <Loader className={"animate-spin"} />
                     ) : (
-                      'Reset Password'
+                      "Reset Password"
                     )}
                   </Button>
                 </div>
