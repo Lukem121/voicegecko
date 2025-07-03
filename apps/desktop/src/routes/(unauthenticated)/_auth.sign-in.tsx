@@ -127,7 +127,10 @@ function SignIn() {
       <div className="flex flex-col gap-6">
         <Card className="shadow-lg">
           <CardHeader className="space-y-3">
-            <VoiceGeckoLogo className="h-10" aria-label="VoiceGecko Logo" />
+            <VoiceGeckoLogo
+              className="mx-auto h-10"
+              aria-label="VoiceGecko Logo"
+            />
             <CardDescription className="text-center">
               Sign in to continue to{" "}
               <span className="font-mono font-bold">VoiceGecko</span>
