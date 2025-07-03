@@ -1,5 +1,5 @@
 {
-  "name": "create-t3-turbo",
+  "name": "voicegecko",
   "private": true,
   "engines": {
     "node": ">=22.14.0",
