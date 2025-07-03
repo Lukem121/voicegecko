@@ -3,7 +3,7 @@ import type { ReactElement } from "react";
 import { render } from "@react-email/components";
 import sendgrid from "@sendgrid/mail";
 
-import { keys } from "./keys";
+import { keys } from "./env";
 
 sendgrid.setApiKey(keys().SENDGRID_API_KEY);
 
