@@ -15,7 +15,7 @@ function AuthLayout() {
           aria-hidden="true"
         >
           <div
-            className="to-primary-muted relative left-[calc(50%)] aspect-[1155/678] w-[36.125rem] -translate-x-1/2 rotate-[45deg] bg-gradient-to-tr from-[#10672C] via-[#10672C]/60 via-[#10672C]/80 to-[#10672C]/40 opacity-25 sm:left-[calc(50%-30rem)] sm:w-[72.1875rem]"
+            className="to-primary-muted relative left-[calc(50%)] aspect-[1155/678] w-[36.125rem] -translate-x-1/2 rotate-[45deg] bg-gradient-to-tr from-[#6E9C4A] via-[#6E9C4A]/60 via-[#6E9C4A]/80 to-[#6E9C4A]/40 opacity-25 sm:left-[calc(50%-30rem)] sm:w-[72.1875rem]"
             style={{
               clipPath: "polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)",
             }}
@@ -26,7 +26,7 @@ function AuthLayout() {
           aria-hidden="true"
         >
           <div
-            className="relative left-[calc(50%+3rem)] aspect-[1155/678] w-[36.125rem] -translate-x-1/2 bg-gradient-to-tr from-[#10672C]/70 via-[#10672C]/60 via-[#10672C]/85 to-[#10672C]/90 opacity-25 sm:left-[calc(50%+36rem)] sm:w-[72.1875rem]"
+            className="relative left-[calc(50%+3rem)] aspect-[1155/678] w-[36.125rem] -translate-x-1/2 bg-gradient-to-tr from-[#6E9C4A]/70 via-[#6E9C4A]/60 via-[#6E9C4A]/85 to-[#6E9C4A]/90 opacity-25 sm:left-[calc(50%+36rem)] sm:w-[72.1875rem]"
             style={{
               clipPath: "polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)",
             }}
