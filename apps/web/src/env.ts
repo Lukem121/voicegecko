@@ -1,6 +1,6 @@
 import { createEnv } from "@t3-oss/env-nextjs";
 import { vercel } from "@t3-oss/env-nextjs/presets-zod";
-import { z } from "zod/v4";
+import { z } from "zod";
 
 import { authEnv } from "@acme/auth/env";
 
@@ -17,6 +17,14 @@ export const env = createEnv({
    */
   server: {
     DATABASE_URL: z.string().url(),
+
+    // GitHub updater configuration
+    GITHUB_TOKEN: z.string().min(1, "GitHub token is required for updater"),
+    GITHUB_OWNER: z.string().min(1, "GitHub repository owner is required"),
+    GITHUB_REPO: z.string().min(1, "GitHub repository name is required"),
+
+    // Optional: Cache TTL in seconds (default 5 minutes)
+    UPDATER_CACHE_TTL: z.coerce.number().optional().default(300),
   },
 
   /**
@@ -31,7 +39,6 @@ export const env = createEnv({
    */
   experimental__runtimeEnv: {
     NODE_ENV: process.env.NODE_ENV,
-
     // NEXT_PUBLIC_CLIENTVAR: process.env.NEXT_PUBLIC_CLIENTVAR,
   },
   skipValidation:
