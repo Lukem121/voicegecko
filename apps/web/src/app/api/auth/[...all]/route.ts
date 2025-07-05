@@ -1,6 +1,6 @@
 import type { NextRequest } from "next/server";
 
-import { auth } from "~/auth/server";
+import { serverAuth } from "@acme/auth";
 
 /**
  * Configure CORS headers for auth endpoints
@@ -39,7 +39,7 @@ export const OPTIONS = (req: NextRequest) => {
 
 const createHandler = () => {
   return async (req: NextRequest) => {
-    const response = await auth.handler(req);
+    const response = await serverAuth.handler(req);
     setCorsHeaders(response, req);
     return response;
   };

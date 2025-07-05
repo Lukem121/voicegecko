@@ -2,8 +2,7 @@ import type { NextRequest } from "next/server";
 import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
 
 import { appRouter, createTRPCContext } from "@acme/api";
-
-import { auth } from "~/auth/server";
+import { serverAuth } from "@acme/auth";
 
 // Configuration constants
 const ALLOWED_ORIGINS = [
@@ -84,7 +83,7 @@ const handler = async (request: NextRequest) => {
     createContext: () =>
       createTRPCContext({
         headers: request.headers,
-        auth,
+        auth: serverAuth,
       }),
     onError: ({ error, path }) => {
       console.error(`❌ tRPC Error on '${path}':`, error);
