@@ -4,6 +4,8 @@ import { createRootRouteWithContext, Outlet } from "@tanstack/react-router";
 import type { Session } from "@acme/auth";
 import { authClient } from "@acme/auth/client";
 
+import { AppUpdater } from "~/components/updater";
+
 // Define the router context interface
 interface MyRouterContext {
   auth: {
@@ -40,6 +42,7 @@ function RouteLayout() {
   return (
     <>
       <Outlet />
+      <AppUpdater />
     </>
   );
 }
