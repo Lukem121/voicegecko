@@ -89,7 +89,12 @@ export function useUpdater(): UpdaterState & UpdaterActions {
             }
             break;
           case "Finished":
-            setState((prev) => ({ ...prev, downloadProgress: 100 }));
+            setState((prev) => ({
+              ...prev,
+              downloadProgress: 100,
+              isDownloading: false,
+              isInstalling: true,
+            }));
             break;
         }
       });
@@ -98,29 +103,27 @@ export function useUpdater(): UpdaterState & UpdaterActions {
         ...prev,
         error:
           error instanceof Error ? error.message : "Failed to download update",
+        isDownloading: false,
       }));
-    } finally {
-      setState((prev) => ({ ...prev, isDownloading: false }));
     }
   }, [state.update]);
 
   const installUpdate = useCallback(async () => {
-    if (!state.update) return;
-
     setState((prev) => ({ ...prev, isInstalling: true, error: null }));
 
     try {
-      await state.update.install();
       await relaunch();
     } catch (error) {
       setState((prev) => ({
         ...prev,
         error:
-          error instanceof Error ? error.message : "Failed to install update",
+          error instanceof Error
+            ? error.message
+            : "Failed to restart application",
         isInstalling: false,
       }));
     }
-  }, [state.update]);
+  }, []);
 
   const dismissUpdate = useCallback(() => {
     setState((prev) => ({

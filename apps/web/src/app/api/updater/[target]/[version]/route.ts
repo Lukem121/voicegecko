@@ -42,7 +42,7 @@ const PLATFORM_MAPPINGS: Record<string, TauriTarget> = {
  * Serves update information for Tauri applications by fetching from GitHub releases
  * and transforming to the expected Tauri updater JSON format.
  *
- * @param target - Platform target (e.g., "windows-x86_64", "linux-x86_64", "darwin-x86_64")
+ * @param target - Platform target (e.g., "windows", "linux", "darwin" or full names)
  * @param version - Current version of the application
  */
 export async function GET(
@@ -148,7 +148,7 @@ async function fetchLatestRelease(): Promise<GitHubRelease | null> {
     });
 
     if (latestResponse.ok) {
-      return latestResponse.json() as Promise<GitHubRelease>;
+      return latestResponse.json();
     }
   } catch {
     // Silently fallback to all releases
@@ -175,9 +175,9 @@ async function fetchLatestRelease(): Promise<GitHubRelease | null> {
     );
   }
 
-  const allReleases = (await allResponse.json()) as GitHubRelease[] | null;
+  const allReleases = (await allResponse.json()) as GitHubRelease[];
 
-  if (!allReleases || allReleases.length === 0) {
+  if (!allReleases?.length) {
     return null;
   }
 
@@ -186,11 +186,7 @@ async function fetchLatestRelease(): Promise<GitHubRelease | null> {
   const latestRelease =
     publishedReleases.length > 0 ? publishedReleases[0] : allReleases[0];
 
-  if (!latestRelease) {
-    return null;
-  }
-
-  return latestRelease;
+  return latestRelease || null;
 }
 
 /**
@@ -289,20 +285,12 @@ function buildTauriResponse(
  * Normalize version string (remove leading 'v' or 'app-v' if present)
  */
 function normalizeVersion(version: string): string {
-  // Handle common version prefixes
   if (version.startsWith("app-v")) {
     return version.slice(5); // Remove 'app-v'
   } else if (version.startsWith("v")) {
     return version.slice(1); // Remove 'v'
   }
   return version;
-}
-
-/**
- * Check if target is a valid Tauri target
- */
-function isValidTauriTarget(target: string): target is TauriTarget {
-  return Object.keys(PLATFORM_FILE_EXTENSIONS).includes(target);
 }
 
 /**
