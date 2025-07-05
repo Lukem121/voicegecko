@@ -145,9 +145,6 @@ importers:
         specifier: 'catalog:'
         version: 4.1.11
     devDependencies:
-      '@acme/db':
-        specifier: workspace:*
-        version: link:../../packages/db
       '@acme/eslint-config':
         specifier: workspace:*
         version: link:../../tooling/eslint

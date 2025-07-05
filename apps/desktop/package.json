@@ -44,7 +44,6 @@
     "tailwindcss": "catalog:"
   },
   "devDependencies": {
-    "@acme/db": "workspace:*",
     "@acme/eslint-config": "workspace:*",
     "@acme/prettier-config": "workspace:*",
     "@acme/tailwind-config": "workspace:*",
