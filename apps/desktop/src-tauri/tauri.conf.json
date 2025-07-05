@@ -38,6 +38,7 @@
     "updater": {
       "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEUyQTlDMDc3NUNCOTdCRTEKUldUaGU3bGNkOENwNHVleGV3OEhXMTNpTUozaG82S0VSbFVKTnpVeTBkZWRhaGFuazhLL2dxWUkK",
       "endpoints": [
+        "http://localhost:3000/api/updater/{{target}}/{{current_version}}",
         "https://voicegecko.io/api/updater/{{target}}/{{current_version}}"
       ]
     }

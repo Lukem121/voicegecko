@@ -5,6 +5,8 @@ export interface GitHubRelease {
   name: string;
   body: string;
   published_at: string;
+  prerelease: boolean;
+  draft: boolean;
   assets: GitHubAsset[];
 }
 

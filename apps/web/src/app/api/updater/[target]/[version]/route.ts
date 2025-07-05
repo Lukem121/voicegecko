@@ -16,19 +16,25 @@ import { PLATFORM_FILE_EXTENSIONS } from "~/types/updater";
 const GITHUB_TOKEN = env.GITHUB_TOKEN;
 const GITHUB_OWNER = env.GITHUB_OWNER;
 const GITHUB_REPO = env.GITHUB_REPO;
-const CACHE_TTL = env.UPDATER_CACHE_TTL;
-
-// Response caching
-const cache = new Map<
-  string,
-  { data: TauriUpdaterResponse; timestamp: number }
->();
 
 // Validation schemas
 const paramsSchema = z.object({
   target: z.string().min(1),
   version: z.string().min(1),
 });
+
+// Platform mappings for simplified names that Tauri might send
+const PLATFORM_MAPPINGS: Record<string, TauriTarget> = {
+  windows: "windows-x86_64",
+  linux: "linux-x86_64",
+  darwin: "darwin-x86_64",
+  macos: "darwin-x86_64",
+  // Keep existing full names as well
+  "windows-x86_64": "windows-x86_64",
+  "linux-x86_64": "linux-x86_64",
+  "darwin-x86_64": "darwin-x86_64",
+  "darwin-aarch64": "darwin-aarch64",
+} as const;
 
 /**
  * GET /api/updater/[target]/[version]
@@ -41,7 +47,7 @@ const paramsSchema = z.object({
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: { target: string; version: string } },
+  { params }: { params: Promise<{ target: string; version: string }> },
 ) {
   try {
     // Validate environment configuration
@@ -52,8 +58,10 @@ export async function GET(
       );
     }
 
+    const resolvedParams = await params;
+
     // Validate request parameters
-    const result = paramsSchema.safeParse(params);
+    const result = paramsSchema.safeParse(resolvedParams);
     if (!result.success) {
       return createErrorResponse(
         "INVALID_PLATFORM",
@@ -63,26 +71,16 @@ export async function GET(
 
     const { target, version: currentVersion } = result.data;
 
-    // Validate target platform
-    if (!isValidTauriTarget(target)) {
+    // Map platform to standardized target
+    const mappedTarget = mapPlatformTarget(target);
+    if (!mappedTarget) {
       return createErrorResponse(
         "INVALID_PLATFORM",
-        `Unsupported platform: ${target}. Supported platforms: ${Object.keys(PLATFORM_FILE_EXTENSIONS).join(", ")}`,
+        `Unsupported platform: ${target}. Supported platforms: ${Object.keys(PLATFORM_MAPPINGS).join(", ")}`,
       );
     }
 
-    // Check cache first
-    const cacheKey = `${target}-${currentVersion}`;
-    const cachedData = cache.get(cacheKey);
-    if (cachedData && Date.now() - cachedData.timestamp < CACHE_TTL * 1000) {
-      console.log(`[Updater] Cache hit for ${cacheKey}`);
-      return NextResponse.json(cachedData.data);
-    }
-
     // Fetch latest release from GitHub
-    console.log(
-      `[Updater] Fetching latest release for ${GITHUB_OWNER}/${GITHUB_REPO}`,
-    );
     const release = await fetchLatestRelease();
 
     if (!release) {
@@ -96,32 +94,22 @@ export async function GET(
     if (
       normalizeVersion(release.tag_name) === normalizeVersion(currentVersion)
     ) {
-      console.log(
-        `[Updater] Client is already on latest version: ${currentVersion}`,
-      );
       return new NextResponse(null, { status: 204 }); // No content - no update available
     }
 
     // Process assets for the requested platform
-    const processedAssets = await processReleaseAssets(release, target);
+    const processedAssets = await processReleaseAssets(release, mappedTarget);
 
     if (processedAssets.length === 0) {
       return createErrorResponse(
         "NO_RELEASE_FOUND",
-        `No compatible assets found for platform: ${target}`,
+        `No compatible assets found for platform: ${mappedTarget}`,
       );
     }
 
     // Build Tauri updater response
     const updaterResponse = buildTauriResponse(release, processedAssets);
 
-    // Cache the response
-    cache.set(cacheKey, {
-      data: updaterResponse,
-      timestamp: Date.now(),
-    });
-
-    console.log(`[Updater] Serving update ${release.tag_name} for ${target}`);
     return NextResponse.json(updaterResponse);
   } catch (error) {
     console.error("[Updater] API Error:", error);
@@ -143,30 +131,66 @@ export async function GET(
 
 /**
  * Fetch the latest release from GitHub API
+ * In development, this will also consider draft releases
  */
 async function fetchLatestRelease(): Promise<GitHubRelease | null> {
-  const url = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/releases/latest`;
+  // First try the /releases/latest endpoint (excludes drafts)
+  const latestUrl = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/releases/latest`;
 
-  const response = await fetch(url, {
+  try {
+    const latestResponse = await fetch(latestUrl, {
+      headers: {
+        Authorization: `Bearer ${GITHUB_TOKEN}`,
+        Accept: "application/vnd.github+json",
+        "X-GitHub-Api-Version": "2022-11-28",
+        "User-Agent": "VoiceGecko-Updater/1.0",
+      },
+    });
+
+    if (latestResponse.ok) {
+      return latestResponse.json() as Promise<GitHubRelease>;
+    }
+  } catch {
+    // Silently fallback to all releases
+  }
+
+  // Fallback: fetch all releases and find the latest (includes drafts for development)
+  const allReleasesUrl = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/releases`;
+
+  const allResponse = await fetch(allReleasesUrl, {
     headers: {
       Authorization: `Bearer ${GITHUB_TOKEN}`,
       Accept: "application/vnd.github+json",
       "X-GitHub-Api-Version": "2022-11-28",
       "User-Agent": "VoiceGecko-Updater/1.0",
     },
-    next: { revalidate: CACHE_TTL }, // Next.js cache revalidation
   });
 
-  if (!response.ok) {
-    if (response.status === 404) {
+  if (!allResponse.ok) {
+    if (allResponse.status === 404) {
       return null;
     }
     throw new Error(
-      `GitHub API error: ${response.status} ${response.statusText}`,
+      `GitHub API error: ${allResponse.status} ${allResponse.statusText}`,
     );
   }
 
-  return response.json() as Promise<GitHubRelease>;
+  const allReleases = (await allResponse.json()) as GitHubRelease[] | null;
+
+  if (!allReleases || allReleases.length === 0) {
+    return null;
+  }
+
+  // Find the latest release (published releases first, then drafts if needed)
+  const publishedReleases = allReleases.filter((release) => !release.draft);
+  const latestRelease =
+    publishedReleases.length > 0 ? publishedReleases[0] : allReleases[0];
+
+  if (!latestRelease) {
+    return null;
+  }
+
+  return latestRelease;
 }
 
 /**
@@ -191,7 +215,6 @@ async function processReleaseAssets(
     );
 
     if (!signatureAsset) {
-      console.warn(`[Updater] No signature found for ${binaryAsset.name}`);
       continue;
     }
 
@@ -206,11 +229,8 @@ async function processReleaseAssets(
         url: binaryAsset.browser_download_url,
         signature,
       });
-    } catch (error) {
-      console.error(
-        `[Updater] Failed to fetch signature for ${binaryAsset.name}:`,
-        error,
-      );
+    } catch {
+      // Skip assets that fail signature fetch
     }
   }
 
@@ -248,7 +268,6 @@ function buildTauriResponse(
 
   for (const asset of assets) {
     if (!asset.signature) {
-      console.warn(`[Updater] No signature found for ${asset.url}`);
       continue;
     }
 
@@ -267,10 +286,16 @@ function buildTauriResponse(
 }
 
 /**
- * Normalize version string (remove leading 'v' if present)
+ * Normalize version string (remove leading 'v' or 'app-v' if present)
  */
 function normalizeVersion(version: string): string {
-  return version.startsWith("v") ? version.slice(1) : version;
+  // Handle common version prefixes
+  if (version.startsWith("app-v")) {
+    return version.slice(5); // Remove 'app-v'
+  } else if (version.startsWith("v")) {
+    return version.slice(1); // Remove 'v'
+  }
+  return version;
 }
 
 /**
@@ -278,6 +303,13 @@ function normalizeVersion(version: string): string {
  */
 function isValidTauriTarget(target: string): target is TauriTarget {
   return Object.keys(PLATFORM_FILE_EXTENSIONS).includes(target);
+}
+
+/**
+ * Map platform name to standardized Tauri target
+ */
+function mapPlatformTarget(target: string): TauriTarget | null {
+  return PLATFORM_MAPPINGS[target] || null;
 }
 
 /**
