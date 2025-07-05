@@ -35,7 +35,6 @@ function RouteLayout() {
     },
     onError: (error) => {
       console.error("Auth error:", error);
-      // Show error notification
     },
   });
 
