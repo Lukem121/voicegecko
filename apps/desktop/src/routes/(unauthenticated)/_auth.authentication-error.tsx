@@ -1,51 +1,54 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 
-import { getAuthErrorMessage } from "@acme/auth/utils";
+import VoiceGeckoLogo from "@acme/ui/components/logos/voice-gecko";
+import { Button } from "@acme/ui/components/ui/button";
 import {
   Card,
   CardContent,
+  CardDescription,
   CardHeader,
-  CardTitle,
 } from "@acme/ui/components/ui/card";
 
-export const Route = createFileRoute("/(unauthenticated)/_auth/authentication-error")(
-  {
-    validateSearch: (search: Record<string, unknown>) => {
-      return {
-        error: search.error as string,
-      };
-    },
-    component: AuthErrorPage,
-  },
-);
+import { getClientAuthErrorMessage } from "~/utils/client-error-messages";
 
-function AuthErrorPage() {
+export const Route = createFileRoute(
+  "/(unauthenticated)/_auth/authentication-error",
+)({
+  validateSearch: (search: Record<string, unknown>) => {
+    return {
+      error: (search.error as string | undefined) ?? null,
+    };
+  },
+  component: AuthenticationError,
+});
+
+function AuthenticationError() {
   const search = Route.useSearch();
-  const errorCode = search.error as string;
-  const errorMessage = getAuthErrorMessage(errorCode, "en");
+  const error = search.error;
+
+  const message = error
+    ? getClientAuthErrorMessage(error, "en")
+    : "An authentication error occurred.";
 
   return (
-    <main className="flex flex-col gap-6 px-4">
-      <Card>
-        <CardHeader className="text-center">
-          <CardTitle className="text-xl">Authentication Error</CardTitle>
+    <main className="container mx-auto max-w-md px-4 py-8">
+      <Card className="shadow-lg">
+        <CardHeader className="space-y-3">
+          <VoiceGeckoLogo
+            className="mx-auto h-10"
+            aria-label="VoiceGecko Logo"
+          />
+          <CardDescription className="text-center">
+            Authentication Error
+          </CardDescription>
         </CardHeader>
-        <CardContent className="flex flex-col items-center gap-4">
-          <p
-            className="text-center text-sm text-balance text-red-600"
-            role="alert"
-            aria-live="assertive"
-          >
-            {errorMessage}
-          </p>
-
-          <Link
-            to="/sign-in"
-            search={{ redirect: null }}
-            className="focus:ring-primary mt-4 text-sm hover:underline focus:ring-2 focus:ring-offset-2 focus:outline-none"
-          >
-            Back to Sign In
-          </Link>
+        <CardContent className="space-y-6">
+          <div className="text-center">
+            <p className="text-red-500">{message}</p>
+          </div>
+          <Button className="w-full" onClick={() => window.location.reload()}>
+            Try Again
+          </Button>
         </CardContent>
       </Card>
     </main>

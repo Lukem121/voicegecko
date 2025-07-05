@@ -7,7 +7,6 @@ import { Loader } from "lucide-react";
 
 import { authClient } from "@acme/auth/client";
 import { SignInSchema } from "@acme/auth/schemas";
-import { getAuthErrorMessage } from "@acme/auth/utils";
 import VoiceGeckoLogo from "@acme/ui/components/logos/voice-gecko";
 import { Button } from "@acme/ui/components/ui/button";
 import {
@@ -28,6 +27,7 @@ import {
 import { Input } from "@acme/ui/components/ui/input";
 
 import { trpc } from "~/trpc";
+import { getClientAuthErrorMessage } from "~/utils/client-error-messages";
 import { getAPIUrl } from "~/utils/get-api-url";
 import { countdown } from "../../utils/countdown";
 import { SocialSignInButton } from "./-components/social-sign-in-button";
@@ -117,7 +117,7 @@ function SignIn() {
     }
 
     if (error.code) {
-      setError(getAuthErrorMessage(error.code, "en"));
+      setError(getClientAuthErrorMessage(error.code, "en"));
       return;
     }
 

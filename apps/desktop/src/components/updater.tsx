@@ -92,9 +92,15 @@ export function AppUpdater() {
           )}
 
           {isInstalling && (
-            <div className="flex items-center gap-2">
-              <RefreshCw className="h-4 w-4 animate-spin" />
-              <span className="text-sm">Installing update...</span>
+            <div className="space-y-2">
+              <div className="flex items-center gap-2">
+                <RefreshCw className="h-4 w-4 animate-spin" />
+                <span className="text-sm">Installing update...</span>
+              </div>
+              <p className="text-muted-foreground text-xs">
+                The app will restart automatically once installation is
+                complete.
+              </p>
             </div>
           )}
 
@@ -107,13 +113,28 @@ export function AppUpdater() {
               <X className="mr-1 h-4 w-4" />
               Later
             </Button>
-            <Button
-              onClick={downloadUpdate}
-              disabled={isDownloading || isInstalling}
-            >
-              <Download className="mr-1 h-4 w-4" />
-              {isDownloading ? "Downloading..." : "Update Now"}
-            </Button>
+
+            {/* Show different buttons based on the current state */}
+            {!isDownloading && !isInstalling && (
+              <Button onClick={downloadUpdate}>
+                <Download className="mr-1 h-4 w-4" />
+                Update Now
+              </Button>
+            )}
+
+            {isDownloading && (
+              <Button disabled>
+                <Download className="mr-1 h-4 w-4" />
+                Downloading...
+              </Button>
+            )}
+
+            {isInstalling && (
+              <Button onClick={installUpdate}>
+                <RefreshCw className="mr-1 h-4 w-4" />
+                Restart App
+              </Button>
+            )}
           </DialogFooter>
         </DialogContent>
       </Dialog>
