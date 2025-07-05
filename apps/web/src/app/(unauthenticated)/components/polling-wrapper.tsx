@@ -1,10 +1,13 @@
+"use client";
+
 import type { ReactNode } from "react";
 import { useEffect } from "react";
-import { useRouter } from "@tanstack/react-router";
+import { useRouter } from "next/navigation";
 
 import { authClient } from "@acme/auth/client";
 
-import { usePolling } from "../-hooks/use-polling-refresh";
+import { APP_ROUTES } from "~/utils/app-routes";
+import { usePolling } from "../hooks/use-polling-refresh";
 
 const POLL_INTERVAL = 5000;
 
@@ -20,8 +23,7 @@ export default function PollingAuthWrapper({
 
   useEffect(() => {
     if (auth.data?.session !== undefined) {
-      console.log("Navigating to / from polling wrapper");
-      void router.navigate({ to: "/" });
+      router.push(APP_ROUTES.HOME);
     }
   }, [auth.data?.session, router]);
 
