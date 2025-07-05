@@ -1,8 +1,10 @@
+"use client";
+
 import { useState } from "react";
+import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useMutation } from "@tanstack/react-query";
-import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
-import { openUrl } from "@tauri-apps/plugin-opener";
 import { Loader } from "lucide-react";
 
 import { authClient } from "@acme/auth/client";
@@ -27,21 +29,12 @@ import {
 } from "@acme/ui/components/ui/form";
 import { Input } from "@acme/ui/components/ui/input";
 
-import { trpc } from "~/trpc";
-import { getAPIUrl } from "~/utils/get-api-url";
-import { countdown } from "../../utils/countdown";
-import { SocialSignInButton } from "./-components/social-sign-in-button";
-import TermsAndPrivacyNotice from "./-components/terms-and-privacy-notice";
-import { useSocialAuth } from "./-hooks/use-social-auth";
-
-export const Route = createFileRoute("/(unauthenticated)/_auth/sign-in")({
-  validateSearch: (search: Record<string, unknown>) => {
-    return {
-      redirect: (search.redirect as string | undefined) ?? null,
-    };
-  },
-  component: SignIn,
-});
+import { useTRPC } from "~/trpc/react";
+import { APP_ROUTES } from "~/utils/app-routes";
+import { countdown } from "~/utils/countdown";
+import { SocialSignInButton } from "../components/social-sign-in-button";
+import TermsAndPrivacyNotice from "../components/terms-and-privacy-notice";
+import { useSocialAuth } from "../hooks/use-social-auth";
 
 // Types
 interface SignInFormValues {
@@ -53,10 +46,11 @@ interface LoadingState {
   email: boolean;
 }
 
-function SignIn() {
+export default function SignIn() {
+  const trpc = useTRPC();
   const router = useRouter();
-  const search = Route.useSearch();
-  const callbackURL = search.redirect ?? "/";
+  const searchParams = useSearchParams();
+  const callbackURL = searchParams.get("redirect") ?? APP_ROUTES.HOME;
 
   const getBanStatus = useMutation(trpc.auth.getBanStatus.mutationOptions());
 
@@ -92,7 +86,7 @@ function SignIn() {
       email: values.email,
       password: values.password,
       fetchOptions: {
-        onSuccess: () => router.navigate({ to: callbackURL }),
+        onSuccess: () => router.push(callbackURL),
       },
     });
 
@@ -129,13 +123,10 @@ function SignIn() {
       <div className="flex flex-col gap-6">
         <Card className="shadow-lg">
           <CardHeader className="space-y-3">
-            <VoiceGeckoLogo
-              className="mx-auto h-10"
-              aria-label="VoiceGecko Logo"
-            />
+            <VoiceGeckoLogo className="h-10" aria-label="Voice Gecko Logo" />
             <CardDescription className="text-center">
               Sign in to continue to{" "}
-              <span className="font-mono font-bold">VoiceGecko</span>
+              <span className="font-mono font-bold">voicegecko</span>
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -175,16 +166,12 @@ function SignIn() {
                       <FormItem>
                         <div className="flex items-center justify-between">
                           <FormLabel htmlFor="password">Password</FormLabel>
-                          <a
-                            onClick={() => {
-                              void openUrl(
-                                `${getAPIUrl()}/auth/forgot-password`,
-                              );
-                            }}
-                            className="text-primary focus:ring-primary cursor-pointer text-xs hover:underline focus:ring-2 focus:outline-none sm:text-sm"
+                          <Link
+                            href={APP_ROUTES.AUTH.FORGOT_PASSWORD}
+                            className="text-primary focus:ring-primary text-xs hover:underline focus:ring-2 focus:outline-none sm:text-sm"
                           >
                             Forgot password?
-                          </a>
+                          </Link>
                         </div>
                         <FormControl>
                           <Input
@@ -255,8 +242,7 @@ function SignIn() {
                   <div className="text-center text-sm">
                     Don&apos;t have an account?{" "}
                     <Link
-                      to="/sign-up"
-                      search={{ redirect: callbackURL }}
+                      href={APP_ROUTES.AUTH.SIGN_UP}
                       className="text-primary focus:ring-primary hover:underline focus:ring-2 focus:outline-none"
                     >
                       Sign up

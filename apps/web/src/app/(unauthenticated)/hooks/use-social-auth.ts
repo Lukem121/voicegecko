@@ -1,15 +1,8 @@
 import { useState } from "react";
-import {
-  handleAuthDeepLink,
-  setupBetterAuthTauri,
-  SetupBetterAuthTauriOptions,
-  signInSocial,
-  SignInSocialProps,
-  SocialSignInParams,
-} from "@daveyplate/better-auth-tauri";
-import { useBetterAuthTauri } from "@daveyplate/better-auth-tauri/react";
 
 import { authClient } from "@acme/auth/client";
+
+import { APP_ROUTES } from "~/utils/app-routes";
 
 export type SocialProvider = "discord" | "google";
 
@@ -44,18 +37,16 @@ export function useSocialAuth({
     setIsLoading((prev) => ({ ...prev, [provider]: true }));
     setError(null);
 
-    const { error } = await signInSocial({
-      authClient,
+    const { error } = await authClient.signIn.social({
       provider,
       callbackURL,
-      errorCallbackURL: "/authentication-error",
+      errorCallbackURL: APP_ROUTES.AUTH.ERROR,
       fetchOptions: {
         onError: ({ error }) => setError(error.message),
       },
     });
 
     if (error) {
-      console.error("use-social-auth", { error });
       setIsLoading((prev) => ({ ...prev, [provider]: false }));
       setError(error.message ?? "An unexpected error occurred.");
       return;

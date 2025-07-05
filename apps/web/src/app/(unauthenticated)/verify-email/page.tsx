@@ -1,6 +1,9 @@
+"use client";
+
 import { useCallback, useEffect, useState } from "react";
-import { createFileRoute, Link } from "@tanstack/react-router";
+import Link from "next/link";
 import { Loader } from "lucide-react";
+import { parseAsString, useQueryState } from "nuqs";
 
 import { authClient } from "@acme/auth/client";
 import { Button } from "@acme/ui/components/ui/button";
@@ -12,15 +15,7 @@ import {
   CardTitle,
 } from "@acme/ui/components/ui/card";
 
-export const Route = createFileRoute("/(unauthenticated)/_auth/verify-email")({
-  validateSearch: (search: Record<string, unknown>) => {
-    return {
-      redirect: search.redirect as string,
-      email: search.email as string,
-    };
-  },
-  component: VerifyEmail,
-});
+import { APP_ROUTES } from "~/utils/app-routes";
 
 // Constants
 const COUNTDOWN_TIME = 30;
@@ -65,11 +60,8 @@ const useVerification = (email: string | null, redirect: string) => {
     }));
 
     try {
-      // Use deep link URL for email verification callback
-      const deepLinkCallbackURL = `voicegecko://verify-success?redirect=${encodeURIComponent(redirect)}`;
-
       await authClient.sendVerificationEmail(
-        { email, callbackURL: deepLinkCallbackURL },
+        { email, callbackURL: redirect },
         {
           onSuccess: () => {
             setState((prev) => ({
@@ -132,20 +124,22 @@ const useVerification = (email: string | null, redirect: string) => {
 };
 
 // Main component
-function VerifyEmail() {
-  const search = Route.useSearch();
-  const email = search.email;
-  const redirect = search.redirect;
+export default function VerifyEmail() {
+  const [email] = useQueryState("email");
+  const [redirect] = useQueryState(
+    "redirect",
+    parseAsString.withDefault(APP_ROUTES.HOME),
+  );
   const { state, handleResend } = useVerification(email, redirect);
 
   return (
     <main className="flex flex-col gap-6">
-      <Card className="w-full max-w-sm">
+      <Card>
         <CardHeader className="text-center">
           <CardTitle className="text-xl">Verify Your Email</CardTitle>
           <CardDescription>
             We have sent you an email with a link to verify your email and sign
-            in. The verification link will redirect you back to the app.
+            in.
           </CardDescription>
         </CardHeader>
         <CardContent className="flex flex-col items-center gap-4">
@@ -186,8 +180,7 @@ function VerifyEmail() {
             </Button>
           )}
           <Link
-            to="/sign-in"
-            search={{ redirect }}
+            href={APP_ROUTES.AUTH.SIGN_IN}
             className="focus:ring-primary mt-4 text-sm hover:underline focus:ring-2 focus:ring-offset-2 focus:outline-none"
           >
             Back to Sign In
