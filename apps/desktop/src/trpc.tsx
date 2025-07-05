@@ -5,7 +5,6 @@ import superjson from "superjson";
 
 import type { AppRouter } from "@acme/api";
 
-// Create a properly configured QueryClient instance
 export const queryClient = new QueryClient();
 
 const trpcClient = createTRPCClient<AppRouter>({
