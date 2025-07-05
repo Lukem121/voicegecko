@@ -3,7 +3,8 @@ import { useState } from "react";
 
 import type { SignUpSchema } from "@acme/auth/schemas";
 import { authClient } from "@acme/auth/client";
-import { getAuthErrorMessage } from "@acme/auth/utils";
+
+import { getClientAuthErrorMessage } from "~/utils/client-error-messages";
 
 interface UseEmailSignupOptions {
   callbackURL: string;
@@ -51,7 +52,7 @@ export function useEmailSignup({
             console.error("use-email-signup", { error });
 
             if (error.code) {
-              const errorMessage = getAuthErrorMessage(error.code, "en");
+              const errorMessage = getClientAuthErrorMessage(error.code, "en");
               setError(errorMessage);
               onError?.(errorMessage);
             } else {
@@ -68,7 +69,10 @@ export function useEmailSignup({
         console.error("use-email-signup", { error: signUpError });
 
         if (signUpError.code) {
-          const errorMessage = getAuthErrorMessage(signUpError.code, "en");
+          const errorMessage = getClientAuthErrorMessage(
+            signUpError.code,
+            "en",
+          );
           setError(errorMessage);
           onError?.(errorMessage);
         } else {
@@ -98,4 +102,37 @@ export function useEmailSignup({
     error,
     signUp,
   };
+}
+
+const formatBanMessage = (reason: string | null, expires: Date | null) => {
+  let errorMessage = "You have been banned.";
+  if (reason && expires) {
+    errorMessage = `You have been banned for ${reason}, expires in ${countdown(expires)}.`;
+  } else if (reason) {
+    errorMessage = `You have been banned for ${reason}.`;
+  } else if (expires) {
+    errorMessage = `You have been banned for ${countdown(expires)}.`;
+  }
+  return errorMessage;
+};
+
+function countdown(expires: Date): string {
+  const now = new Date();
+  const diff = expires.getTime() - now.getTime();
+
+  if (diff <= 0) {
+    return "expired";
+  }
+
+  const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+  const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+  const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+
+  if (days > 0) {
+    return `${days} day${days === 1 ? "" : "s"}`;
+  } else if (hours > 0) {
+    return `${hours} hour${hours === 1 ? "" : "s"}`;
+  } else {
+    return `${minutes} minute${minutes === 1 ? "" : "s"}`;
+  }
 }
