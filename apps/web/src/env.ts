@@ -22,9 +22,6 @@ export const env = createEnv({
     GITHUB_TOKEN: z.string().min(1, "GitHub token is required for updater"),
     GITHUB_OWNER: z.string().min(1, "GitHub repository owner is required"),
     GITHUB_REPO: z.string().min(1, "GitHub repository name is required"),
-
-    // Optional: Cache TTL in seconds (default 5 minutes)
-    UPDATER_CACHE_TTL: z.coerce.number().optional().default(300),
   },
 
   /**
