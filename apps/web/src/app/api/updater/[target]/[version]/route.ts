@@ -1,3 +1,4 @@
+import { log } from "console";
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { z } from "zod";
@@ -71,6 +72,9 @@ export async function GET(
 
     const { target, version: currentVersion } = result.data;
 
+    console.log("currentVersion", currentVersion);
+    console.log("target", target);
+
     // Map platform to standardized target
     const mappedTarget = mapPlatformTarget(target);
     if (!mappedTarget) {
@@ -82,6 +86,8 @@ export async function GET(
 
     // Fetch latest release from GitHub
     const release = await fetchLatestRelease();
+
+    console.log("release", release);
 
     if (!release) {
       return createErrorResponse(
@@ -97,8 +103,15 @@ export async function GET(
       return new NextResponse(null, { status: 204 }); // No content - no update available
     }
 
+    console.log("release.tag_name", release.tag_name);
+    console.log("currentVersion", currentVersion);
+    console.log("mappedTarget", mappedTarget);
+
     // Process assets for the requested platform
     const processedAssets = await processReleaseAssets(release, mappedTarget);
+
+    console.log("processedAssets length", processedAssets.length);
+    console.log("processedAssets", processedAssets);
 
     if (processedAssets.length === 0) {
       return createErrorResponse(
