@@ -1,6 +1,6 @@
-import type { initAuth } from "..";
+import type { serverAuth } from "..";
 
-export type AuthErrorCodes = keyof ReturnType<typeof initAuth>["$ERROR_CODES"];
+export type AuthErrorCodes = keyof (typeof serverAuth)["$ERROR_CODES"];
 
 type ExtendedErrorCodes =
   | AuthErrorCodes
