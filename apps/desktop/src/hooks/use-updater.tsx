@@ -133,7 +133,7 @@ export function useUpdater(): UpdaterState & UpdaterActions {
 
   // Check for updates on mount
   useEffect(() => {
-    checkForUpdates();
+    void checkForUpdates();
   }, [checkForUpdates]);
 
   return {
