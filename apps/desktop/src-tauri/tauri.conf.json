@@ -33,13 +33,18 @@
       ],
       "desktop": {
         "schemes": ["voicegecko"]
+      },
+      "updater": {
+        "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEUyQTlDMDc3NUNCOTdCRTEKUldUaGU3bGNkOENwNHVleGV3OEhXMTNpTUozaG82S0VSbFVKTnpVeTBkZWRhaGFuazhLL2dxWUkK",
+        "endpoints": ["https://my.app.updater/{{target}}/{{current_version}}"]
       }
     }
   },
   "bundle": {
     "active": true,
     "targets": "all",
-    "icon": ["icons/icon.ico"]
+    "icon": ["icons/icon.ico"],
+    "createUpdaterArtifacts": true
   },
   "$schema": "../../../node_modules/@tauri-apps/cli/schema.json"
 }
