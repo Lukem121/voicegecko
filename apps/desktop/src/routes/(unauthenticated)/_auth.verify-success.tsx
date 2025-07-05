@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { CheckCircle2, Loader2 } from "lucide-react";
 
+import { authClient } from "@acme/auth/client";
 import VoiceGeckoLogo from "@acme/ui/components/logos/voice-gecko";
 import { Button } from "@acme/ui/components/ui/button";
 import {
@@ -11,8 +12,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@acme/ui/components/ui/card";
-
-import { authClient } from "~/auth/client";
 
 export const Route = createFileRoute("/(unauthenticated)/_auth/verify-success")(
   {

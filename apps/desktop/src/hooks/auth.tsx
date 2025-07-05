@@ -2,7 +2,8 @@ import { useRouter } from "@tanstack/react-router";
 import { isRegistered, register } from "@tauri-apps/plugin-deep-link";
 import { openUrl } from "@tauri-apps/plugin-opener";
 
-import { authClient } from "~/auth/client";
+import { authClient } from "@acme/auth/client";
+
 import { getAPIUrl } from "~/utils/get-api-url";
 
 export const signIn = async () => {
