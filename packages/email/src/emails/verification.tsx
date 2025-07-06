@@ -1,6 +1,4 @@
-import * as React from "react";
-
-import { sendEmail } from "../index";
+import { sendEmail } from "../lib/send-email";
 import LinkTemplate from "../templates/link";
 
 type UserWithEmail = {
