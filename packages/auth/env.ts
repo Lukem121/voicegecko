@@ -12,7 +12,12 @@ export function authEnv() {
           : z.string().min(1).optional(),
       NODE_ENV: z.enum(["development", "production"]).optional(),
     },
-    experimental__runtimeEnv: {},
+    experimental__runtimeEnv: {
+      AUTH_DISCORD_ID: process.env.AUTH_DISCORD_ID,
+      AUTH_DISCORD_SECRET: process.env.AUTH_DISCORD_SECRET,
+      AUTH_SECRET: process.env.AUTH_SECRET,
+      NODE_ENV: process.env.NODE_ENV,
+    },
     skipValidation:
       !!process.env.CI || process.env.npm_lifecycle_event === "lint",
   });
