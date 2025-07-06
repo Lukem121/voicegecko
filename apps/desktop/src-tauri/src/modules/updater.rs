@@ -3,14 +3,15 @@ use tauri_plugin_updater::UpdaterExt;
 
 /// Determine if the app should use local development server
 fn should_use_local_dev() -> bool {
-    std::env::var("USE_LOCAL_UPDATER").unwrap_or_default() == "false"
+    let is_debug = cfg!(debug_assertions);
+    println!("Debug assertions enabled: {}", is_debug);
+    is_debug
 }
 
 /// Setup custom updater configuration
-/// 
 /// This function configures the Tauri updater to use either:
-/// - Local development server (localhost:3000) when USE_LOCAL_UPDATER=true
-/// - Production server (voicegecko.io) by default
+/// - Local development server (localhost:3000) when compiled in debug mode
+/// - Production server (voicegecko.io) when compiled in release mode
 pub fn setup_updater(app: &App) -> Result<(), Box<dyn std::error::Error>> {
     let use_local = should_use_local_dev();
     let update_url = if use_local {
@@ -21,7 +22,7 @@ pub fn setup_updater(app: &App) -> Result<(), Box<dyn std::error::Error>> {
 
     println!(
         "Setting up updater with environment: {}", 
-        if use_local { "local development" } else { "production" }
+        if use_local { "local development (debug build)" } else { "production (release build)" }
     );
     println!("Update URL: {}", update_url);
 
@@ -40,8 +41,15 @@ mod tests {
 
     #[test]
     fn test_local_dev_detection() {
-        // This would test the environment variable detection
-        // You can expand this as needed
-        assert!(!should_use_local_dev()); // Default should be false
+        // In test builds, debug_assertions is typically enabled
+        // This test validates the function works correctly
+        let result = should_use_local_dev();
+        
+        // The result should match the compile-time debug_assertions setting
+        #[cfg(debug_assertions)]
+        assert!(result);
+        
+        #[cfg(not(debug_assertions))]
+        assert!(!result);
     }
 } 
