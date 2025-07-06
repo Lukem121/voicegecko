@@ -2,12 +2,10 @@ import { useRouter } from "@tanstack/react-router";
 import { isRegistered, register } from "@tauri-apps/plugin-deep-link";
 import { openUrl } from "@tauri-apps/plugin-opener";
 
-import { authClient } from "@acme/auth/client";
-
-import { getAPIUrl } from "~/utils/get-api-url";
+import { authClient } from "~/lib/client";
 
 export const signIn = async () => {
-  const signInUrl = `${getAPIUrl()}/api/auth/signin?redirect=voicegecko://login`;
+  const signInUrl = `${import.meta.env.VITE_API_URL}/api/auth/signin?redirect=voicegecko://login`;
   await openUrl(signInUrl);
 };
 

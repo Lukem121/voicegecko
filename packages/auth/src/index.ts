@@ -1,4 +1,3 @@
-import type { BetterAuthOptions } from "better-auth";
 import { expo } from "@better-auth/expo";
 import { tauri } from "@daveyplate/better-auth-tauri/plugin";
 import { betterAuth } from "better-auth";

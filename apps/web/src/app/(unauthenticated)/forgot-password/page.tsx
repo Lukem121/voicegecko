@@ -6,7 +6,6 @@ import Link from "next/link";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader } from "lucide-react";
 
-import { authClient } from "@acme/auth/client";
 import { ForgotPasswordSchema } from "@acme/auth/schemas";
 import { getAuthErrorMessage } from "@acme/auth/utils";
 import { Button } from "@acme/ui/components/ui/button";
@@ -28,6 +27,7 @@ import {
 } from "@acme/ui/components/ui/form";
 import { Input } from "@acme/ui/components/ui/input";
 
+import { authClient } from "~/lib/client";
 import { APP_ROUTES } from "~/utils/app-routes";
 import TermsAndPrivacyNotice from "../components/terms-and-privacy-notice";
 

@@ -2,8 +2,8 @@ import type { z } from "zod/v4";
 import { useState } from "react";
 
 import type { SignUpSchema } from "@acme/auth/schemas";
-import { authClient } from "@acme/auth/client";
 
+import { authClient } from "~/lib/client";
 import { getClientAuthErrorMessage } from "~/utils/client-error-messages";
 
 interface UseEmailSignupOptions {
