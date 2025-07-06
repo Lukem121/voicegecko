@@ -82,7 +82,7 @@ jobs:
           $RELEASE_RESPONSE = gh release create $TAG_NAME --repo "Lukem121/voicegecko-releases" --title "App v$VERSION" --notes "See the assets to download this version and install."
 
           # Upload all built artifacts to the public repository
-          $ARTIFACTS = Get-ChildItem -Path "apps/desktop/src-tauri/target/release/bundle" -Recurse -File | Where-Object { $_.Extension -in @('.msi', '.exe', '.sig') }
+          $ARTIFACTS = Get-ChildItem -Path "target/release/bundle" -Recurse -File | Where-Object { $_.Extension -in @('.msi', '.exe', '.sig') }
 
           foreach ($artifact in $ARTIFACTS) {
             gh release upload $TAG_NAME $artifact.FullName --repo "Lukem121/voicegecko-releases"
