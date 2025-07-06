@@ -6,7 +6,7 @@ export const keys = () =>
     server: {
       SENDGRID_API_KEY: z.string().min(1).startsWith("SG."),
     },
-    runtimeEnv: {
+    experimental__runtimeEnv: {
       SENDGRID_API_KEY: process.env.SENDGRID_API_KEY,
     },
   });
