@@ -64,7 +64,26 @@ jobs:
           tagName: app-v__VERSION__ # the action automatically replaces \_\_VERSION\_\_ with the app version.
           releaseName: "App v__VERSION__"
           releaseBody: "See the assets to download this version and install."
-          releaseDraft: true
+          releaseDraft: false
           prerelease: false
           args: ${{ matrix.args }}
           projectPath: apps/desktop
+
+      # Publish to separate public releases repository
+      - name: Create Release in Public Repository
+        env:
+          GITHUB_TOKEN: ${{ secrets.RELEASES_REPO_TOKEN }}
+        run: |
+          # Get the version from the package.json
+          $VERSION = (Get-Content "apps/desktop/package.json" | ConvertFrom-Json).version
+          $TAG_NAME = "app-v$VERSION"
+
+          # Create release in public repository
+          $RELEASE_RESPONSE = gh release create $TAG_NAME --repo "Lukem121/voicegecko-releases" --title "App v$VERSION" --notes "See the assets to download this version and install."
+
+          # Upload all built artifacts to the public repository
+          $ARTIFACTS = Get-ChildItem -Path "apps/desktop/src-tauri/target/release/bundle" -Recurse -File | Where-Object { $_.Extension -in @('.msi', '.exe', '.sig') }
+
+          foreach ($artifact in $ARTIFACTS) {
+            gh release upload $TAG_NAME $artifact.FullName --repo "Lukem121/voicegecko-releases"
+          }

@@ -33,6 +33,9 @@
         },
         {
           "url": "https://*.voicegecko.io"
+        },
+        {
+          "url": "https://github.com/Lukem121/voicegecko-releases/*"
         }
       ]
     }

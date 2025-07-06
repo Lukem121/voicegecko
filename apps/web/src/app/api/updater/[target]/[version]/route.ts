@@ -45,8 +45,6 @@ const requestParamsSchema = z.object({
   version: z.string().min(1),
 });
 
-type RequestParams = z.infer<typeof requestParamsSchema>;
-
 // ===== CUSTOM ERRORS =====
 
 abstract class UpdaterServiceError extends Error {
@@ -103,15 +101,18 @@ class GitHubService {
 
       Logger.info("Found latest published release", { version: data.tag_name });
       return data as GitHubRelease;
-    } catch (error: any) {
-      if (error.status === 404) {
+    } catch (error) {
+      if (error instanceof Error && "status" in error && error.status === 404) {
         Logger.info("No published releases found, checking drafts");
         return this.getLatestReleaseIncludingDrafts();
       }
-      throw new GitHubApiError(
-        `Failed to fetch latest release: ${error.message}`,
-        error,
-      );
+      if (error instanceof Error) {
+        throw new GitHubApiError(
+          `Failed to fetch latest release: ${error.message}`,
+          error,
+        );
+      }
+      throw new GitHubApiError("Failed to fetch latest release", error);
     }
   }
 
@@ -124,11 +125,14 @@ class GitHubService {
       });
 
       return releases.length > 0 ? (releases[0] as GitHubRelease) : null;
-    } catch (error: any) {
-      throw new GitHubApiError(
-        `Failed to fetch releases: ${error.message}`,
-        error,
-      );
+    } catch (error) {
+      if (error instanceof Error) {
+        throw new GitHubApiError(
+          `Failed to fetch releases: ${error.message}`,
+          error,
+        );
+      }
+      throw new GitHubApiError("Failed to fetch releases", error);
     }
   }
 
@@ -144,11 +148,14 @@ class GitHubService {
       });
 
       return this.convertDataToString(data);
-    } catch (error: any) {
-      throw new GitHubApiError(
-        `Failed to fetch signature: ${error.message}`,
-        error,
-      );
+    } catch (error) {
+      if (error instanceof Error) {
+        throw new GitHubApiError(
+          `Failed to fetch signature: ${error.message}`,
+          error,
+        );
+      }
+      throw new GitHubApiError("Failed to fetch signature", error);
     }
   }
 
@@ -391,7 +398,7 @@ class Logger {
   }
 
   static debug(message: string, context?: LogContext): void {
-    if (process.env.NODE_ENV === "development") {
+    if (env.NODE_ENV === "development") {
       console.debug(this.formatMessage("DEBUG", message, context));
     }
   }
