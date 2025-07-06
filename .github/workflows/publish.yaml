@@ -78,60 +78,12 @@ jobs:
           $VERSION = (Get-Content "apps/desktop/package.json" | ConvertFrom-Json).version
           $TAG_NAME = "app-v$VERSION"
 
-          # Debug: Check if build directories exist
-          Write-Host "Checking build directories..."
-          $TARGET_DIR = "apps/desktop/src-tauri/target"
-          $RELEASE_DIR = "$TARGET_DIR/release"
-          $BUNDLE_DIR = "$RELEASE_DIR/bundle"
-
-          Write-Host "Target directory exists: $(Test-Path $TARGET_DIR)"
-          Write-Host "Release directory exists: $(Test-Path $RELEASE_DIR)"
-          Write-Host "Bundle directory exists: $(Test-Path $BUNDLE_DIR)"
-
-          if (Test-Path $TARGET_DIR) {
-            Write-Host "Contents of target directory:"
-            Get-ChildItem $TARGET_DIR -Recurse | Select-Object FullName | Format-Table -AutoSize
-          }
-
-          # Check if bundle directory exists before proceeding
-          if (-not (Test-Path $BUNDLE_DIR)) {
-            Write-Error "Bundle directory not found at $BUNDLE_DIR. Tauri build may have failed."
-            exit 1
-          }
-
-          # Find all built artifacts
-          $ARTIFACTS = Get-ChildItem -Path $BUNDLE_DIR -Recurse -File | Where-Object { $_.Extension -in @('.msi', '.exe', '.sig') }
-
-          if ($ARTIFACTS.Count -eq 0) {
-            Write-Error "No artifacts found in $BUNDLE_DIR"
-            Write-Host "Contents of bundle directory:"
-            Get-ChildItem $BUNDLE_DIR -Recurse | Select-Object FullName | Format-Table -AutoSize
-            exit 1
-          }
-
-          Write-Host "Found $($ARTIFACTS.Count) artifacts to upload:"
-          foreach ($artifact in $ARTIFACTS) {
-            Write-Host "  - $($artifact.Name) ($($artifact.Length) bytes)"
-          }
-
           # Create release in public repository
-          Write-Host "Creating release $TAG_NAME in voicegecko-releases repository..."
-          gh release create $TAG_NAME --repo "Lukem121/voicegecko-releases" --title "App v$VERSION" --notes "See the assets to download this version and install."
-
-          if ($LASTEXITCODE -ne 0) {
-            Write-Error "Failed to create release"
-            exit 1
-          }
+          $RELEASE_RESPONSE = gh release create $TAG_NAME --repo "Lukem121/voicegecko-releases" --title "App v$VERSION" --notes "See the assets to download this version and install."
 
           # Upload all built artifacts to the public repository
-          foreach ($artifact in $ARTIFACTS) {
-            Write-Host "Uploading $($artifact.Name)..."
-            gh release upload $TAG_NAME $artifact.FullName --repo "Lukem121/voicegecko-releases"
-            
-            if ($LASTEXITCODE -ne 0) {
-              Write-Error "Failed to upload $($artifact.Name)"
-              exit 1
-            }
-          }
+          $ARTIFACTS = Get-ChildItem -Path "target/release/bundle" -Recurse -File | Where-Object { $_.Extension -in @('.msi', '.exe', '.sig') }
 
-          Write-Host "Successfully created release and uploaded all artifacts!"
+          foreach ($artifact in $ARTIFACTS) {
+            gh release upload $TAG_NAME $artifact.FullName --repo "Lukem121/voicegecko-releases"
+          }
