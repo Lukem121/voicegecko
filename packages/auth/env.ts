@@ -11,6 +11,7 @@ export function authEnv() {
           ? z.string().min(1)
           : z.string().min(1).optional(),
       NODE_ENV: z.enum(["development", "production"]).optional(),
+      VOICEGECKO_API_URL: z.string().min(1),
     },
     experimental__runtimeEnv: {},
     skipValidation:

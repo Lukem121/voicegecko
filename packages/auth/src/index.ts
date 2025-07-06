@@ -40,8 +40,8 @@ export const serverAuth = betterAuth({
       /**
        * Auto-inference blocked by https://github.com/better-auth/better-auth/pull/2891
        */
-      currentURL: "http://localhost:3000",
-      productionURL: "https://voicegecko.io",
+      currentURL: authEnv().VOICEGECKO_API_URL,
+      productionURL: authEnv().VOICEGECKO_API_URL,
     }),
     expo(),
     tauri({
