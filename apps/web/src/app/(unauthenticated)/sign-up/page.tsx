@@ -7,7 +7,6 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader } from "lucide-react";
 
-import { authClient } from "@acme/auth/client";
 import { SignUpSchema } from "@acme/auth/schemas";
 import { getAuthErrorMessage } from "@acme/auth/utils";
 import VoiceGeckoLogo from "@acme/ui/components/logos/voice-gecko";
@@ -29,6 +28,7 @@ import {
 } from "@acme/ui/components/ui/form";
 import { Input } from "@acme/ui/components/ui/input";
 
+import { authClient } from "~/lib/client";
 import { APP_ROUTES, buildUrl } from "~/utils/app-routes";
 import { SocialSignInButton } from "../components/social-sign-in-button";
 import TermsAndPrivacyNotice from "../components/terms-and-privacy-notice";

@@ -5,7 +5,6 @@ import Link from "next/link";
 import { Loader } from "lucide-react";
 import { parseAsString, useQueryState } from "nuqs";
 
-import { authClient } from "@acme/auth/client";
 import { Button } from "@acme/ui/components/ui/button";
 import {
   Card,
@@ -15,6 +14,7 @@ import {
   CardTitle,
 } from "@acme/ui/components/ui/card";
 
+import { authClient } from "~/lib/client";
 import { APP_ROUTES } from "~/utils/app-routes";
 
 // Constants
