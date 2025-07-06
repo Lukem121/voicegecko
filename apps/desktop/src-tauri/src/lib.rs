@@ -24,6 +24,7 @@ pub fn run() {
             let window = app.get_webview_window("main").unwrap();
             window.set_focus().unwrap();
         }))
+        .plugin(tauri_plugin_updater::Builder::new().build())
         .setup(|app| {
             #[cfg(any(windows, target_os = "linux"))]
             {
