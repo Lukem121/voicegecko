@@ -13,6 +13,7 @@ const setCorsHeaders = (res: Response, req?: NextRequest) => {
   const allowedOrigins = [
     "http://localhost:1420", // Tauri desktop app
     "http://localhost:3000", // Next.js web app
+    "https://voicegecko.io", // VoiceGecko.io web app
     "http://127.0.0.1:1420", // Alternative localhost format
     "http://127.0.0.1:3000", // Alternative localhost format
   ];
