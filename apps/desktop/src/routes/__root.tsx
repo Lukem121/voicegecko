@@ -5,6 +5,7 @@ import type { Session } from "@acme/auth";
 import { authClient } from "@acme/auth/client";
 
 import { AppUpdater } from "~/components/updater";
+import { VersionDisplay } from "~/components/version-display";
 
 // Define the router context interface
 interface MyRouterContext {
@@ -42,6 +43,7 @@ function RouteLayout() {
     <>
       <Outlet />
       <AppUpdater />
+      <VersionDisplay />
     </>
   );
 }
