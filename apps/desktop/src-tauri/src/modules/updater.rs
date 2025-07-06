@@ -3,7 +3,7 @@ use tauri_plugin_updater::UpdaterExt;
 
 /// Determine if the app should use local development server
 fn should_use_local_dev() -> bool {
-    std::env::var("USE_LOCAL_UPDATER").unwrap_or_default() == "true"
+    std::env::var("USE_LOCAL_UPDATER").unwrap_or_default() == "false"
 }
 
 /// Setup custom updater configuration
