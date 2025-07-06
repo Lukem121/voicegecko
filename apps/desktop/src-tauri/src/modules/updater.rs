@@ -9,9 +9,6 @@ fn should_use_local_dev() -> bool {
 }
 
 /// Setup custom updater configuration
-/// This function configures the Tauri updater to use either:
-/// - Local development server (localhost:3000) when compiled in debug mode
-/// - Production server (voicegecko.io) when compiled in release mode
 pub fn setup_updater(app: &App) -> Result<(), Box<dyn std::error::Error>> {
     let use_local = should_use_local_dev();
     let update_url = if use_local {

@@ -21,6 +21,7 @@ export const env = createEnv({
     GITHUB_OWNER: z.string().min(1, "GitHub repository owner is required"),
     GITHUB_REPO: z.string().min(1, "GitHub repository name is required"),
     SENDGRID_API_KEY: z.string().min(1).startsWith("SG."),
+    VOICEGECKO_API_URL: z.string().min(1),
   },
 
   /**
