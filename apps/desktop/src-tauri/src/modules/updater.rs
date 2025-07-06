@@ -1,5 +1,6 @@
 use tauri::App;
 use tauri_plugin_updater::UpdaterExt;
+use url::Url;
 
 /// Determine if the app should use local development server
 fn should_use_local_dev() -> bool {
@@ -11,22 +12,21 @@ fn should_use_local_dev() -> bool {
 /// Setup custom updater configuration
 pub fn setup_updater(app: &App) -> Result<(), Box<dyn std::error::Error>> {
     let use_local = should_use_local_dev();
-    let update_url = if use_local {
-        "http://localhost:3000/api/updater/{{target}}/{{current_version}}"
-    } else {
-        "https://voicegecko.io/api/updater/{{target}}/{{current_version}}"
-    };
+   
+    let host = if use_local { "http://localhost:3000" } else { "https://voicegecko.io" };
 
     println!(
         "Setting up updater with environment: {}", 
         if use_local { "local development (debug build)" } else { "production (release build)" }
     );
+    
+    let update_url_string = format!("{host}/api/updater/{{{{target}}}}/{{{{current_version}}}}");
+    let update_url = Url::parse(&update_url_string)?;
     println!("Update URL: {}", update_url);
 
-    let parsed_url = update_url.parse()?;
     let _update = app
         .updater_builder()
-        .endpoints(vec![parsed_url])?
+        .endpoints(vec![update_url])?
         .build()?;
 
     Ok(())
