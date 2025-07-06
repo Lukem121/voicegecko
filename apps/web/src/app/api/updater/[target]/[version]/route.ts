@@ -310,7 +310,7 @@ function normalizeVersion(version: string): string {
  * Map platform name to standardized Tauri target
  */
 function mapPlatformTarget(target: string): TauriTarget | null {
-  return PLATFORM_MAPPINGS[target] || null;
+  return PLATFORM_MAPPINGS[target] ?? null;
 }
 
 /**
