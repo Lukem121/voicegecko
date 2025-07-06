@@ -19,7 +19,9 @@ jobs:
           #   args: "--target x86_64-apple-darwin"
           # - platform: "ubuntu-22.04"
           #   args: ""
-          - platform: "windows-latest"
+          # - platform: "windows-latest"
+          #   args: ""
+          - platform: "self-hosted"
             args: ""
 
     runs-on: ${{ matrix.platform }}
