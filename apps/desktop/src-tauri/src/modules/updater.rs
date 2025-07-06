@@ -5,7 +5,7 @@ use tauri_plugin_updater::UpdaterExt;
 fn should_use_local_dev() -> bool {
     let is_debug = cfg!(debug_assertions);
     println!("Debug assertions enabled: {}", is_debug);
-    is_debug
+    is_debug    
 }
 
 /// Setup custom updater configuration
