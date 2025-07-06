@@ -25,6 +25,9 @@ jobs:
             args: ""
 
     runs-on: ${{ matrix.platform }}
+    defaults:
+      run:
+        shell: powershell
     steps:
       - uses: actions/checkout@v4
 
