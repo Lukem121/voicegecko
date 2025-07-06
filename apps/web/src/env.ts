@@ -20,6 +20,7 @@ export const env = createEnv({
     GITHUB_TOKEN: z.string().min(1, "GitHub token is required for updater"),
     GITHUB_OWNER: z.string().min(1, "GitHub repository owner is required"),
     GITHUB_REPO: z.string().min(1, "GitHub repository name is required"),
+    SENDGRID_API_KEY: z.string().min(1).startsWith("SG."),
   },
 
   /**
