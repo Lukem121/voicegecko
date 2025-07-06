@@ -2,10 +2,10 @@ import { useBetterAuthTauri } from "@daveyplate/better-auth-tauri/react";
 import { createRootRouteWithContext, Outlet } from "@tanstack/react-router";
 
 import type { Session } from "@acme/auth";
-import { authClient } from "@acme/auth/client";
 
 import { AppUpdater } from "~/components/updater";
 import { VersionDisplay } from "~/components/version-display";
+import { authClient } from "~/lib/client";
 
 // Define the router context interface
 interface MyRouterContext {

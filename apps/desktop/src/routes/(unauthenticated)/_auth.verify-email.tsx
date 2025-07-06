@@ -2,7 +2,6 @@ import { useCallback, useEffect, useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Loader } from "lucide-react";
 
-import { authClient } from "@acme/auth/client";
 import { Button } from "@acme/ui/components/ui/button";
 import {
   Card,
@@ -11,6 +10,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@acme/ui/components/ui/card";
+
+import { authClient } from "~/lib/client";
 
 export const Route = createFileRoute("/(unauthenticated)/_auth/verify-email")({
   validateSearch: (search: Record<string, unknown>) => {

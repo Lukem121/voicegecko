@@ -9,7 +9,7 @@ import {
 } from "@daveyplate/better-auth-tauri";
 import { useBetterAuthTauri } from "@daveyplate/better-auth-tauri/react";
 
-import { authClient } from "@acme/auth/client";
+import { authClient } from "~/lib/client";
 
 export type SocialProvider = "discord" | "google";
 

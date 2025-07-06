@@ -2,8 +2,7 @@ import type { ReactNode } from "react";
 import { useEffect } from "react";
 import { useRouter } from "@tanstack/react-router";
 
-import { authClient } from "@acme/auth/client";
-
+import { authClient } from "~/lib/client";
 import { usePolling } from "../-hooks/use-polling-refresh";
 
 const POLL_INTERVAL = 5000;
