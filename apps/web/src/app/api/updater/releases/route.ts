@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { Octokit } from "@octokit/rest";
 
 import type { GitHubRelease, TauriTarget } from "~/types/updater";
 import { env } from "~/env";
@@ -8,6 +9,12 @@ import { PLATFORM_FILE_EXTENSIONS } from "~/types/updater";
 const GITHUB_TOKEN = env.GITHUB_TOKEN;
 const GITHUB_OWNER = env.GITHUB_OWNER;
 const GITHUB_REPO = env.GITHUB_REPO;
+
+// Initialize GitHub client
+const octokit = new Octokit({
+  auth: GITHUB_TOKEN,
+  userAgent: "VoiceGecko-Updater/1.0",
+});
 
 /**
  * GET /api/updater/releases
@@ -160,28 +167,22 @@ export async function GET() {
 }
 
 /**
- * Fetch all releases from GitHub API
+ * Fetch all releases from GitHub API using Octokit
  */
 async function fetchAllReleases(): Promise<GitHubRelease[] | null> {
-  const url = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/releases`;
+  try {
+    const { data: releases } = await octokit.rest.repos.listReleases({
+      owner: GITHUB_OWNER,
+      repo: GITHUB_REPO,
+    });
 
-  const response = await fetch(url, {
-    headers: {
-      Authorization: `Bearer ${GITHUB_TOKEN}`,
-      Accept: "application/vnd.github+json",
-      "X-GitHub-Api-Version": "2022-11-28",
-      "User-Agent": "VoiceGecko-Updater/1.0",
-    },
-  });
-
-  if (!response.ok) {
-    if (response.status === 404) {
+    return releases as GitHubRelease[];
+  } catch (error: any) {
+    if (error.status === 404) {
       return null;
     }
     throw new Error(
-      `GitHub API error: ${response.status} ${response.statusText}`,
+      `GitHub API error: ${error.status} ${error.message || "Unknown error"}`,
     );
   }
-
-  return response.json() as Promise<GitHubRelease[]>;
 }
