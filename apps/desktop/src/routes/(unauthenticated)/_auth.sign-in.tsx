@@ -5,7 +5,6 @@ import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { Loader } from "lucide-react";
 
-import { authClient } from "@acme/auth/client";
 import { SignInSchema } from "@acme/auth/schemas";
 import VoiceGeckoLogo from "@acme/ui/components/logos/voice-gecko";
 import { Button } from "@acme/ui/components/ui/button";
@@ -26,9 +25,9 @@ import {
 } from "@acme/ui/components/ui/form";
 import { Input } from "@acme/ui/components/ui/input";
 
+import { authClient } from "~/lib/client";
 import { trpc } from "~/trpc";
 import { getClientAuthErrorMessage } from "~/utils/client-error-messages";
-import { getAPIUrl } from "~/utils/get-api-url";
 import { countdown } from "../../utils/countdown";
 import { SocialSignInButton } from "./-components/social-sign-in-button";
 import TermsAndPrivacyNotice from "./-components/terms-and-privacy-notice";
@@ -178,7 +177,7 @@ function SignIn() {
                           <a
                             onClick={() => {
                               void openUrl(
-                                `${getAPIUrl()}/auth/forgot-password`,
+                                `${import.meta.env.VITE_API_URL}/auth/forgot-password`,
                               );
                             }}
                             className="text-primary focus:ring-primary cursor-pointer text-xs hover:underline focus:ring-2 focus:outline-none sm:text-sm"

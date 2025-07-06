@@ -6,7 +6,6 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Loader } from "lucide-react";
 
-import { authClient } from "@acme/auth/client";
 import { ResetPasswordSchema } from "@acme/auth/schemas";
 import { getAuthErrorMessage } from "@acme/auth/utils";
 import { Button } from "@acme/ui/components/ui/button";
@@ -29,6 +28,7 @@ import {
 import { Input } from "@acme/ui/components/ui/input";
 import { toast } from "@acme/ui/components/ui/sonner";
 
+import { authClient } from "~/lib/client";
 import { APP_ROUTES } from "~/utils/app-routes";
 
 type FormValues = z.infer<typeof ResetPasswordSchema>;

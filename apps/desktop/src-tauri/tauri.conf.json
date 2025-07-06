@@ -1,6 +1,6 @@
 {
   "productName": "Voice Gecko",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "identifier": "com.voice-gecko.desktop",
   "build": {
     "frontendDist": "../dist",
@@ -36,7 +36,12 @@
       }
     },
     "updater": {
-      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEUyQTlDMDc3NUNCOTdCRTEKUldUaGU3bGNkOENwNHVleGV3OEhXMTNpTUozaG82S0VSbFVKTnpVeTBkZWRhaGFuazhLL2dxWUkK"
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEUyQTlDMDc3NUNCOTdCRTEKUldUaGU3bGNkOENwNHVleGV3OEhXMTNpTUozaG82S0VSbFVKTnpVeTBkZWRhaGFuazhLL2dxWUkK",
+      "dangerousInsecureTransportProtocol": true,
+      "endpoints": [
+        "http://localhost:3000/api/updater/{{target}}/{{current_version}}",
+        "https://voicegecko.io/api/updater/{{target}}/{{current_version}}"
+      ]
     }
   },
   "bundle": {

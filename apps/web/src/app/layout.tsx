@@ -10,26 +10,20 @@ import { TRPCReactProvider } from "~/trpc/react";
 
 import "@acme/ui/globals.css";
 
-import { env } from "~/env";
-
 export const metadata: Metadata = {
-  metadataBase: new URL(
-    env.VERCEL_ENV === "production"
-      ? "https://turbo.t3.gg"
-      : "http://localhost:3000",
-  ),
-  title: "Create T3 Turbo",
-  description: "Simple monorepo with shared backend for web & mobile apps",
+  metadataBase: new URL("https://www.voicegecko.io"),
+  title: "Voice Gecko",
+  description: "Voice Gecko is a voice to text platform.",
   openGraph: {
-    title: "Create T3 Turbo",
-    description: "Simple monorepo with shared backend for web & mobile apps",
-    url: "https://create-t3-turbo.vercel.app",
-    siteName: "Create T3 Turbo",
+    title: "Voice Gecko",
+    description: "Voice Gecko is a voice to text platform.",
+    url: "https://www.voicegecko.io",
+    siteName: "Voice Gecko",
   },
   twitter: {
     card: "summary_large_image",
-    site: "@jullerino",
-    creator: "@jullerino",
+    site: "@voicegecko",
+    creator: "@voicegecko",
   },
 };
 

@@ -2,10 +2,10 @@ import { useEffect } from "react";
 import { signInSocial } from "@daveyplate/better-auth-tauri";
 import { createFileRoute, useRouter } from "@tanstack/react-router";
 
-import { authClient } from "@acme/auth/client";
 import { Button } from "@acme/ui/components/ui/button";
 
 import { useIsAuthenticated } from "~/hooks/auth";
+import { authClient } from "~/lib/client";
 
 const SignIn = () => {
   const { isAuthenticated, isLoading } = useIsAuthenticated();
