@@ -34,6 +34,8 @@ export function useUpdater(): UpdaterState & UpdaterActions {
   const checkForUpdates = useCallback(async () => {
     setState((prev) => ({ ...prev, isChecking: true, error: null }));
 
+    console.log("checking for updates");
+
     try {
       const update = await check();
 
@@ -45,6 +47,8 @@ export function useUpdater(): UpdaterState & UpdaterActions {
         }));
       }
     } catch (error) {
+      console.log("use-updater error", error);
+
       setState((prev) => ({
         ...prev,
         error:
