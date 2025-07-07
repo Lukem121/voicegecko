@@ -11,6 +11,7 @@ export interface UpdaterState {
   update: Update | null;
   error: string | null;
   downloadProgress: number;
+  isCritical: boolean; // Whether the current update is critical/forced
 }
 
 export interface UpdaterActions {
@@ -29,6 +30,7 @@ export function useUpdater(): UpdaterState & UpdaterActions {
     update: null,
     error: null,
     downloadProgress: 0,
+    isCritical: false,
   });
 
   const checkForUpdates = useCallback(async () => {
@@ -39,11 +41,23 @@ export function useUpdater(): UpdaterState & UpdaterActions {
     try {
       const update = await check();
 
+      console.log("update", update);
+
       if (update) {
+        console.log("rawJson", update.rawJson);
+        const isCritical = update.rawJson.critical === true;
+
+        console.log("Update found:", {
+          version: update.version,
+          critical: isCritical,
+          rawJsonCritical: update.rawJson.critical,
+        });
+
         setState((prev) => ({
           ...prev,
           updateAvailable: true,
           update,
+          isCritical,
         }));
       }
     } catch (error) {
@@ -130,18 +144,46 @@ export function useUpdater(): UpdaterState & UpdaterActions {
   }, []);
 
   const dismissUpdate = useCallback(() => {
-    setState((prev) => ({
-      ...prev,
-      updateAvailable: false,
-      update: null,
-      error: null,
-    }));
+    setState((prev) => {
+      // Prevent dismissing critical updates
+      if (prev.isCritical) {
+        console.warn("Cannot dismiss critical update");
+        return prev;
+      }
+
+      return {
+        ...prev,
+        updateAvailable: false,
+        update: null,
+        error: null,
+        isCritical: false,
+      };
+    });
   }, []);
 
   // Check for updates on mount
   useEffect(() => {
     void checkForUpdates();
   }, [checkForUpdates]);
+
+  // Auto-start download for critical updates
+  useEffect(() => {
+    if (
+      state.isCritical &&
+      state.updateAvailable &&
+      !state.isDownloading &&
+      !state.isInstalling
+    ) {
+      console.log("Critical update detected - starting download automatically");
+      void downloadUpdate();
+    }
+  }, [
+    state.isCritical,
+    state.updateAvailable,
+    state.isDownloading,
+    state.isInstalling,
+    downloadUpdate,
+  ]);
 
   return {
     ...state,

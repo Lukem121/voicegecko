@@ -298,6 +298,55 @@ class UpdaterService {
 
 // ===== UTILITIES =====
 
+class CriticalUpdateDetector {
+  /**
+   * Detects if a GitHub release should be treated as a critical/forced update
+   * based on release tags, title, or body content
+   */
+  static isCriticalUpdate(release: GitHubRelease): boolean {
+    // Check for critical indicators in tag name
+    const criticalTagPatterns = [
+      /critical/i,
+      /security/i,
+      /urgent/i,
+      /hotfix/i,
+      /emergency/i,
+    ];
+
+    // Check tag name for critical patterns
+    if (criticalTagPatterns.some((pattern) => pattern.test(release.tag_name))) {
+      return true;
+    }
+
+    // Check release title for critical patterns
+    if (
+      release.name &&
+      criticalTagPatterns.some((pattern) => pattern.test(release.name))
+    ) {
+      return true;
+    }
+
+    // Check release body for critical indicators
+    if (release.body) {
+      const criticalBodyPatterns = [
+        /🚨/,
+        /critical.*update/i,
+        /security.*fix/i,
+        /urgent.*update/i,
+        /mandatory.*update/i,
+        /forced.*update/i,
+        /breaking.*change/i,
+      ];
+
+      if (criticalBodyPatterns.some((pattern) => pattern.test(release.body))) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+}
+
 class VersionUtils {
   static normalize(version: string): string {
     if (version.startsWith("app-v")) {
@@ -336,11 +385,22 @@ class ResponseBuilder {
       }
     }
 
+    // Detect if this is a critical update
+    const isCritical = CriticalUpdateDetector.isCriticalUpdate(release);
+
+    if (isCritical) {
+      Logger.info("Critical update detected", {
+        version: release.tag_name,
+        reason: "Release contains critical update indicators",
+      });
+    }
+
     return {
       version: VersionUtils.normalize(release.tag_name),
       notes: release.body || undefined,
       pub_date: release.published_at,
       platforms,
+      critical: isCritical,
     };
   }
 
