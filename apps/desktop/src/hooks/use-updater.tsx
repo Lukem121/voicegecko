@@ -12,6 +12,7 @@ export interface UpdaterState {
   error: string | null;
   downloadProgress: number;
   isCritical: boolean; // Whether the current update is critical/forced
+  userAcknowledged: boolean; // Whether user has acknowledged critical update
 }
 
 export interface UpdaterActions {
@@ -19,6 +20,7 @@ export interface UpdaterActions {
   downloadUpdate: () => Promise<void>;
   installUpdate: () => Promise<void>;
   dismissUpdate: () => void;
+  acknowledgeCriticalUpdate: () => void;
 }
 
 export function useUpdater(): UpdaterState & UpdaterActions {
@@ -31,10 +33,16 @@ export function useUpdater(): UpdaterState & UpdaterActions {
     error: null,
     downloadProgress: 0,
     isCritical: false,
+    userAcknowledged: false,
   });
 
   const checkForUpdates = useCallback(async () => {
-    setState((prev) => ({ ...prev, isChecking: true, error: null }));
+    setState((prev) => ({
+      ...prev,
+      isChecking: true,
+      error: null,
+      userAcknowledged: false,
+    }));
 
     console.log("checking for updates");
 
@@ -157,8 +165,16 @@ export function useUpdater(): UpdaterState & UpdaterActions {
         update: null,
         error: null,
         isCritical: false,
+        userAcknowledged: false,
       };
     });
+  }, []);
+
+  const acknowledgeCriticalUpdate = useCallback(() => {
+    setState((prev) => ({
+      ...prev,
+      userAcknowledged: true,
+    }));
   }, []);
 
   // Check for updates on mount
@@ -166,20 +182,24 @@ export function useUpdater(): UpdaterState & UpdaterActions {
     void checkForUpdates();
   }, [checkForUpdates]);
 
-  // Auto-start download for critical updates
+  // Auto-start download for critical updates after user acknowledgment
   useEffect(() => {
     if (
       state.isCritical &&
       state.updateAvailable &&
+      state.userAcknowledged &&
       !state.isDownloading &&
       !state.isInstalling
     ) {
-      console.log("Critical update detected - starting download automatically");
+      console.log(
+        "Critical update acknowledged - starting download automatically",
+      );
       void downloadUpdate();
     }
   }, [
     state.isCritical,
     state.updateAvailable,
+    state.userAcknowledged,
     state.isDownloading,
     state.isInstalling,
     downloadUpdate,
@@ -191,5 +211,6 @@ export function useUpdater(): UpdaterState & UpdaterActions {
     downloadUpdate,
     installUpdate,
     dismissUpdate,
+    acknowledgeCriticalUpdate,
   };
 }

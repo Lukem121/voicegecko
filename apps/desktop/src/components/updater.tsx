@@ -25,17 +25,50 @@ export function AppUpdater() {
     error,
     update,
     isCritical,
+    userAcknowledged,
     checkForUpdates,
     downloadUpdate,
     installUpdate,
     dismissUpdate,
+    acknowledgeCriticalUpdate,
   } = useUpdater();
+
+  /**
+   * Critical Update Flow:
+   * 1. Update detected (isCritical=true) → Show initial prompt overlay
+   * 2. User clicks "Install Security Update" → acknowledgeCriticalUpdate() called
+   * 3. Auto-download starts → Show progress overlay
+   * 4. Download complete → Auto-install starts → Show installing overlay
+   * 5. Install complete → App restarts automatically
+   *
+   * Error handling: If any step fails, show error overlay with retry option
+   */
+
+  // Debug logging
+  console.log("AppUpdater render:", {
+    updateAvailable,
+    isCritical,
+    userAcknowledged,
+    isDownloading,
+    isInstalling,
+    error,
+    version: update?.version,
+  });
 
   // Show full-screen overlay for critical updates (detected, in progress, or with errors)
   if (
     isCritical &&
     (updateAvailable || isDownloading || isInstalling || error)
   ) {
+    console.log("Showing CriticalUpdateOverlay");
+    const showInitialPrompt =
+      updateAvailable &&
+      !userAcknowledged &&
+      !isDownloading &&
+      !isInstalling &&
+      !error;
+    console.log("showInitialPrompt:", showInitialPrompt);
+
     return (
       <CriticalUpdateOverlay
         isDownloading={isDownloading}
@@ -44,6 +77,8 @@ export function AppUpdater() {
         version={update?.version ?? "Unknown"}
         error={error}
         onRetry={checkForUpdates}
+        showInitialPrompt={showInitialPrompt}
+        onStartUpdate={acknowledgeCriticalUpdate}
       />
     );
   }
