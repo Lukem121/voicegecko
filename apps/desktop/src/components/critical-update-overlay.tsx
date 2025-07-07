@@ -17,6 +17,8 @@ interface CriticalUpdateOverlayProps {
   version: string;
   error?: string | null;
   onRetry?: () => void;
+  onStartUpdate?: () => void;
+  showInitialPrompt?: boolean;
 }
 
 export function CriticalUpdateOverlay({
@@ -26,6 +28,8 @@ export function CriticalUpdateOverlay({
   version,
   error,
   onRetry,
+  onStartUpdate,
+  showInitialPrompt,
 }: CriticalUpdateOverlayProps) {
   return (
     <div className="bg-background fixed inset-0 z-50 flex items-center justify-center">
@@ -72,21 +76,48 @@ export function CriticalUpdateOverlay({
               </div>
 
               <CardDescription className="min-h-[1.25rem] text-center">
-                {error
-                  ? "Update encountered an issue"
-                  : `${
-                      isInstalling
-                        ? "Installing Update"
-                        : isDownloading
-                          ? "Downloading Update"
-                          : "Preparing Update"
-                    }: ${version}`}
+                {showInitialPrompt
+                  ? "Review and install security update"
+                  : error
+                    ? "Update encountered an issue"
+                    : `${
+                        isInstalling
+                          ? "Installing Update"
+                          : isDownloading
+                            ? "Downloading Update"
+                            : "Preparing Update"
+                      }: ${version}`}
               </CardDescription>
             </CardHeader>
 
             <CardContent>
+              {/* Initial prompt state */}
+              {showInitialPrompt && (
+                <div className="space-y-4 text-center">
+                  <div className="space-y-2">
+                    <h3 className="font-medium">
+                      Critical Security Update Required
+                    </h3>
+                    <p className="text-muted-foreground text-sm leading-relaxed">
+                      The update will download automatically and restart the app
+                      when complete.
+                    </p>
+                  </div>
+
+                  {onStartUpdate && (
+                    <Button
+                      onClick={onStartUpdate}
+                      className="w-full"
+                      size="sm"
+                    >
+                      Install Security Update
+                    </Button>
+                  )}
+                </div>
+              )}
+
               {/* Progress section */}
-              {isDownloading && (
+              {!showInitialPrompt && isDownloading && (
                 <div className="space-y-3">
                   <Progress value={downloadProgress} className="h-2" />
                   <div className="text-muted-foreground flex justify-between text-xs">
@@ -97,7 +128,7 @@ export function CriticalUpdateOverlay({
               )}
 
               {/* Loading indicator for installing/preparing */}
-              {!isDownloading && !error && (
+              {!showInitialPrompt && !isDownloading && !error && (
                 <div className="flex items-center justify-center py-6">
                   <div className="flex space-x-1">
                     <div className="h-1.5 w-1.5 animate-pulse rounded-full bg-slate-300 [animation-delay:0ms] [animation-duration:1.5s]"></div>
@@ -108,7 +139,7 @@ export function CriticalUpdateOverlay({
               )}
 
               {/* Error state */}
-              {error && (
+              {!showInitialPrompt && error && (
                 <div className="space-y-4">
                   <div className="bg-destructive/10 rounded-md p-3 text-sm text-red-600">
                     {error}
