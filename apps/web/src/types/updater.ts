@@ -25,6 +25,7 @@ export interface TauriUpdaterResponse {
   notes?: string;
   pub_date?: string;
   platforms: Record<string, TauriPlatformData>;
+  critical?: boolean;
 }
 
 export interface TauriPlatformData {
