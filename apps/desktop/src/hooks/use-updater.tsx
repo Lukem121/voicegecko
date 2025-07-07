@@ -11,6 +11,8 @@ export interface UpdaterState {
   update: Update | null;
   error: string | null;
   downloadProgress: number;
+  isCritical: boolean; // Whether the current update is critical/forced
+  userAcknowledged: boolean; // Whether user has acknowledged critical update
 }
 
 export interface UpdaterActions {
@@ -18,6 +20,7 @@ export interface UpdaterActions {
   downloadUpdate: () => Promise<void>;
   installUpdate: () => Promise<void>;
   dismissUpdate: () => void;
+  acknowledgeCriticalUpdate: () => void;
 }
 
 export function useUpdater(): UpdaterState & UpdaterActions {
@@ -29,21 +32,40 @@ export function useUpdater(): UpdaterState & UpdaterActions {
     update: null,
     error: null,
     downloadProgress: 0,
+    isCritical: false,
+    userAcknowledged: false,
   });
 
   const checkForUpdates = useCallback(async () => {
-    setState((prev) => ({ ...prev, isChecking: true, error: null }));
+    setState((prev) => ({
+      ...prev,
+      isChecking: true,
+      error: null,
+      userAcknowledged: false,
+    }));
 
     console.log("checking for updates");
 
     try {
       const update = await check();
 
+      console.log("update", update);
+
       if (update) {
+        console.log("rawJson", update.rawJson);
+        const isCritical = update.rawJson.critical === true;
+
+        console.log("Update found:", {
+          version: update.version,
+          critical: isCritical,
+          rawJsonCritical: update.rawJson.critical,
+        });
+
         setState((prev) => ({
           ...prev,
           updateAvailable: true,
           update,
+          isCritical,
         }));
       }
     } catch (error) {
@@ -130,11 +152,28 @@ export function useUpdater(): UpdaterState & UpdaterActions {
   }, []);
 
   const dismissUpdate = useCallback(() => {
+    setState((prev) => {
+      // Prevent dismissing critical updates
+      if (prev.isCritical) {
+        console.warn("Cannot dismiss critical update");
+        return prev;
+      }
+
+      return {
+        ...prev,
+        updateAvailable: false,
+        update: null,
+        error: null,
+        isCritical: false,
+        userAcknowledged: false,
+      };
+    });
+  }, []);
+
+  const acknowledgeCriticalUpdate = useCallback(() => {
     setState((prev) => ({
       ...prev,
-      updateAvailable: false,
-      update: null,
-      error: null,
+      userAcknowledged: true,
     }));
   }, []);
 
@@ -143,11 +182,35 @@ export function useUpdater(): UpdaterState & UpdaterActions {
     void checkForUpdates();
   }, [checkForUpdates]);
 
+  // Auto-start download for critical updates after user acknowledgment
+  useEffect(() => {
+    if (
+      state.isCritical &&
+      state.updateAvailable &&
+      state.userAcknowledged &&
+      !state.isDownloading &&
+      !state.isInstalling
+    ) {
+      console.log(
+        "Critical update acknowledged - starting download automatically",
+      );
+      void downloadUpdate();
+    }
+  }, [
+    state.isCritical,
+    state.updateAvailable,
+    state.userAcknowledged,
+    state.isDownloading,
+    state.isInstalling,
+    downloadUpdate,
+  ]);
+
   return {
     ...state,
     checkForUpdates,
     downloadUpdate,
     installUpdate,
     dismissUpdate,
+    acknowledgeCriticalUpdate,
   };
 }
