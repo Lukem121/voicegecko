@@ -32,5 +32,9 @@ function AuthenticatedLayout() {
   }
 
   // User is authenticated, render the protected content
-  return <Outlet />;
+  return (
+    <>
+      <Outlet />
+    </>
+  );
 }
