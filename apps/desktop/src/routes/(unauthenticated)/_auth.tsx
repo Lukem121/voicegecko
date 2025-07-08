@@ -1,10 +1,24 @@
-import { createFileRoute, Outlet } from "@tanstack/react-router";
+import { useEffect } from "react";
+import { createFileRoute, Outlet, useRouter } from "@tanstack/react-router";
+
+import { useIsAuthenticated } from "~/hooks/auth";
 
 export const Route = createFileRoute("/(unauthenticated)/_auth")({
   component: AuthLayout,
 });
 
 function AuthLayout() {
+  const router = useRouter();
+  const auth = useIsAuthenticated();
+
+  // If user is authenticated, redirect away from auth pages
+  useEffect(() => {
+    console.log("Auth layout useEffect", auth.isAuthenticated, auth.isLoading);
+    if (auth.isAuthenticated && !auth.isLoading) {
+      void router.navigate({ to: "/" });
+    }
+  }, [auth.isAuthenticated, auth.isLoading, router]);
+
   return (
     <div className="relative grid h-dvh flex-col items-center justify-center lg:max-w-none lg:px-0">
       <div className="absolute top-0 left-0 -z-10 h-full w-full overflow-hidden">

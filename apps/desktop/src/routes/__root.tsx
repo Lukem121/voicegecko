@@ -1,11 +1,15 @@
 import { useState } from "react";
-import { createRootRouteWithContext, Outlet } from "@tanstack/react-router";
+import {
+  createRootRouteWithContext,
+  Outlet,
+  useRouter,
+} from "@tanstack/react-router";
 
 import type { Session } from "@acme/auth";
 
 import { AppUpdater } from "~/components/updater";
 import { VersionDisplay } from "~/components/version-display";
-import { useIsAuthenticated } from "~/hooks/auth";
+import { useIsAuthenticated, useSignOut } from "~/hooks/auth";
 import { authClient } from "~/lib/client";
 
 // Define the router context interface
@@ -22,9 +26,11 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
 });
 
 function RouteLayout() {
+  const router = useRouter();
   const [state, setState] = useState(0);
   const auth = useIsAuthenticated();
   const { refetch } = authClient.useSession();
+  const signOut = useSignOut();
 
   return (
     <>
@@ -33,6 +39,8 @@ function RouteLayout() {
       <button onClick={() => setState((prev) => prev + 1)}>
         State: {state}
       </button>
+      <button onClick={() => router.invalidate()}>Invalidate</button>
+      <button onClick={() => signOut()}>Sign Out</button>
       <Outlet />
       <AppUpdater />
       <VersionDisplay />

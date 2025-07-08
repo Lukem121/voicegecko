@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useRouter } from "@tanstack/react-router";
 import { isRegistered, register } from "@tauri-apps/plugin-deep-link";
 import { openUrl } from "@tauri-apps/plugin-opener";
@@ -18,7 +19,15 @@ export const useUser = () => {
  * Check if user is authenticated (for use in components)
  */
 export const useIsAuthenticated = () => {
-  const { data: session, isPending } = authClient.useSession();
+  const { data: session, isPending, error } = authClient.useSession();
+
+  console.log("useIsAuthenticated", session, isPending, error);
+
+  useEffect(() => {
+    if (error) {
+      console.error("Auth error", error);
+    }
+  }, [error]);
 
   return {
     isAuthenticated: !!session?.user,

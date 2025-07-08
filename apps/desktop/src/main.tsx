@@ -35,11 +35,7 @@ declare module "@tanstack/react-router" {
 
 function InnerApp() {
   const auth = useIsAuthenticated();
-
-  const handleAuthSuccess = async () => {
-    await router.invalidate();
-    await router.navigate({ to: "/" });
-  };
+  const session = authClient.useSession();
 
   useBetterAuthTauri({
     authClient,
@@ -50,17 +46,17 @@ function InnerApp() {
     },
     onSuccess: (callbackURL) => {
       console.log("✅ Auth successful, callback URL:", callbackURL);
-      void handleAuthSuccess();
+      session.refetch();
     },
     onError: (error) => {
       console.error("❌ Auth error:", error);
     },
   });
 
-  // Invalidate context when auth state changes
   useEffect(() => {
+    console.log("Auth state changed", session.data, session.isPending);
     void router.invalidate();
-  }, [auth.isAuthenticated, auth.isLoading]);
+  }, [session.data, session.isPending]);
 
   return <RouterProvider router={router} context={{ auth }} />;
 }
