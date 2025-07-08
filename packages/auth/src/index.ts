@@ -45,11 +45,8 @@ export const serverAuth = betterAuth({
     }),
     expo(),
     tauri({
-      scheme: "voicegecko", // Your app's deep link scheme
-      callbackURL: "/", // Optional: Where to redirect after auth (default: "/")
-      successText: "Authentication successful! You can close this window.", // Optional
-      successURL: "/auth/success", // Optional: Custom success page URL that will receive a ?tauriRedirect search parameter
-      debugLogs: true, // Optional: Enable debug logs
+      scheme: "voicegecko",
+      debugLogs: true,
     }),
     adminPlugin(),
     phoneNumber(),

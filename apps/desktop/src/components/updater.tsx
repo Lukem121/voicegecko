@@ -33,28 +33,6 @@ export function AppUpdater() {
     acknowledgeCriticalUpdate,
   } = useUpdater();
 
-  /**
-   * Critical Update Flow:
-   * 1. Update detected (isCritical=true) → Show initial prompt overlay
-   * 2. User clicks "Install Security Update" → acknowledgeCriticalUpdate() called
-   * 3. Auto-download starts → Show progress overlay
-   * 4. Download complete → Auto-install starts → Show installing overlay
-   * 5. Install complete → App restarts automatically
-   *
-   * Error handling: If any step fails, show error overlay with retry option
-   */
-
-  // Debug logging
-  console.log("AppUpdater render:", {
-    updateAvailable,
-    isCritical,
-    userAcknowledged,
-    isDownloading,
-    isInstalling,
-    error,
-    version: update?.version,
-  });
-
   // Show full-screen overlay for critical updates (detected, in progress, or with errors)
   if (
     isCritical &&
@@ -80,18 +58,6 @@ export function AppUpdater() {
         showInitialPrompt={showInitialPrompt}
         onStartUpdate={acknowledgeCriticalUpdate}
       />
-    );
-  }
-
-  // Show loading state during check
-  if (isChecking) {
-    return (
-      <div className="bg-background fixed right-4 bottom-4 rounded-lg border p-4 shadow-lg">
-        <div className="flex items-center gap-2">
-          <RefreshCw className="h-4 w-4 animate-spin" />
-          <span className="text-sm">Checking for updates...</span>
-        </div>
-      </div>
     );
   }
 

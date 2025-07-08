@@ -58,9 +58,7 @@ function SignUp() {
     isLoading: socialLoading,
     error: socialError,
     loading: isSocialLoading,
-  } = useSocialAuth({
-    callbackURL,
-  });
+  } = useSocialAuth(); // Remove callbackURL - let Tauri plugin handle deep links
 
   const {
     signUp: handleEmailSignup,

@@ -1,7 +1,10 @@
 import { StrictMode, useEffect } from "react";
 
+import { authClient } from "~/lib/client";
+
 import "@acme/ui/globals.css";
 
+import { useBetterAuthTauri } from "@daveyplate/better-auth-tauri/react";
 import { createRouter, RouterProvider } from "@tanstack/react-router";
 import ReactDOM from "react-dom/client";
 
@@ -32,6 +35,27 @@ declare module "@tanstack/react-router" {
 
 function InnerApp() {
   const auth = useIsAuthenticated();
+
+  const handleAuthSuccess = async () => {
+    await router.invalidate();
+    await router.navigate({ to: "/" });
+  };
+
+  useBetterAuthTauri({
+    authClient,
+    scheme: "voicegecko",
+    debugLogs: true,
+    onRequest: (href) => {
+      console.log("🔄 Auth request:", href);
+    },
+    onSuccess: (callbackURL) => {
+      console.log("✅ Auth successful, callback URL:", callbackURL);
+      void handleAuthSuccess();
+    },
+    onError: (error) => {
+      console.error("❌ Auth error:", error);
+    },
+  });
 
   // Invalidate context when auth state changes
   useEffect(() => {
