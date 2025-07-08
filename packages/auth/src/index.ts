@@ -107,8 +107,12 @@ export const serverAuth = betterAuth({
   trustedOrigins: [
     "expo://",
     "voicegecko://",
+
     "http://localhost:1420", // Tauri desktop app
-    "http://127.0.0.1:1420", // Alternative localhost format
+    "http://tauri.localhost", // Tauri desktop app
+    "http://localhost:3000", // Next.js app
+
+    "https://voicegecko.io",
   ],
 });
 
