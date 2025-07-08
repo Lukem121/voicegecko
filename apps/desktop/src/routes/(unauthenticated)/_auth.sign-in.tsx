@@ -69,9 +69,7 @@ function SignIn() {
     isLoading: socialLoading,
     error: providerError,
     loading: isSocialLoading,
-  } = useSocialAuth({
-    callbackURL,
-  });
+  } = useSocialAuth(); // Remove callbackURL - let Tauri plugin handle deep links
 
   const loading = isLoading.email || isSocialLoading;
 
@@ -135,6 +133,7 @@ function SignIn() {
             <CardDescription className="text-center">
               Sign in to continue to{" "}
               <span className="font-mono font-bold">VoiceGecko</span>
+              <Link to="/">Test</Link>
             </CardDescription>
           </CardHeader>
           <CardContent>

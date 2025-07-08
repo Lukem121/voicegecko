@@ -1,7 +1,5 @@
 import { createFileRoute, Outlet } from "@tanstack/react-router";
 
-import PollingAuthWrapper from "./-components/polling-wrapper";
-
 export const Route = createFileRoute("/(unauthenticated)/_auth")({
   component: AuthLayout,
 });
@@ -35,9 +33,7 @@ function AuthLayout() {
       </div>
       <div className="lg:p-8">
         <div className="mx-auto flex w-full max-w-[400px] flex-col justify-center space-y-6">
-          <PollingAuthWrapper>
-            <Outlet />
-          </PollingAuthWrapper>
+          <Outlet />
         </div>
       </div>
     </div>

@@ -1,13 +1,5 @@
 import { useState } from "react";
-import {
-  handleAuthDeepLink,
-  setupBetterAuthTauri,
-  SetupBetterAuthTauriOptions,
-  signInSocial,
-  SignInSocialProps,
-  SocialSignInParams,
-} from "@daveyplate/better-auth-tauri";
-import { useBetterAuthTauri } from "@daveyplate/better-auth-tauri/react";
+import { signInSocial } from "@daveyplate/better-auth-tauri";
 
 import { authClient } from "~/lib/client";
 
@@ -18,10 +10,6 @@ interface LoadingState {
   google: boolean;
 }
 
-interface UseSocialAuthOptions {
-  callbackURL: string;
-}
-
 interface UseSocialAuthReturn {
   isLoading: LoadingState;
   error: string | null;
@@ -29,9 +17,7 @@ interface UseSocialAuthReturn {
   loading: boolean;
 }
 
-export function useSocialAuth({
-  callbackURL,
-}: UseSocialAuthOptions): UseSocialAuthReturn {
+export function useSocialAuth(): UseSocialAuthReturn {
   const [isLoading, setIsLoading] = useState<LoadingState>({
     discord: false,
     google: false,
@@ -47,7 +33,6 @@ export function useSocialAuth({
     const { error } = await signInSocial({
       authClient,
       provider,
-      callbackURL,
       errorCallbackURL: "/authentication-error",
       fetchOptions: {
         onError: ({ error }) => setError(error.message),
