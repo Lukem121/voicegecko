@@ -13,15 +13,14 @@ import { createFileRoute } from '@tanstack/react-router'
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
-import { Route as AuthSignInRouteImport } from './routes/auth/sign-in'
 import { Route as unauthenticatedAuthRouteImport } from './routes/(unauthenticated)/_auth'
+import { Route as unauthenticatedLegalTermsRouteImport } from './routes/(unauthenticated)/legal/terms'
+import { Route as unauthenticatedLegalPrivacyRouteImport } from './routes/(unauthenticated)/legal/privacy'
 import { Route as unauthenticatedAuthVerifySuccessRouteImport } from './routes/(unauthenticated)/_auth.verify-success'
 import { Route as unauthenticatedAuthVerifyEmailRouteImport } from './routes/(unauthenticated)/_auth.verify-email'
 import { Route as unauthenticatedAuthSignUpRouteImport } from './routes/(unauthenticated)/_auth.sign-up'
 import { Route as unauthenticatedAuthSignInRouteImport } from './routes/(unauthenticated)/_auth.sign-in'
 import { Route as unauthenticatedAuthAuthenticationErrorRouteImport } from './routes/(unauthenticated)/_auth.authentication-error'
-import { Route as unauthenticatedAuthLegalTermsRouteImport } from './routes/(unauthenticated)/_auth.legal/terms'
-import { Route as unauthenticatedAuthLegalPrivacyRouteImport } from './routes/(unauthenticated)/_auth.legal/privacy'
 
 const unauthenticatedRouteImport = createFileRoute('/(unauthenticated)')()
 
@@ -38,15 +37,22 @@ const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
-const AuthSignInRoute = AuthSignInRouteImport.update({
-  id: '/auth/sign-in',
-  path: '/auth/sign-in',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const unauthenticatedAuthRoute = unauthenticatedAuthRouteImport.update({
   id: '/_auth',
   getParentRoute: () => unauthenticatedRoute,
 } as any)
+const unauthenticatedLegalTermsRoute =
+  unauthenticatedLegalTermsRouteImport.update({
+    id: '/legal/terms',
+    path: '/legal/terms',
+    getParentRoute: () => unauthenticatedRoute,
+  } as any)
+const unauthenticatedLegalPrivacyRoute =
+  unauthenticatedLegalPrivacyRouteImport.update({
+    id: '/legal/privacy',
+    path: '/legal/privacy',
+    getParentRoute: () => unauthenticatedRoute,
+  } as any)
 const unauthenticatedAuthVerifySuccessRoute =
   unauthenticatedAuthVerifySuccessRouteImport.update({
     id: '/verify-success',
@@ -77,61 +83,45 @@ const unauthenticatedAuthAuthenticationErrorRoute =
     path: '/authentication-error',
     getParentRoute: () => unauthenticatedAuthRoute,
   } as any)
-const unauthenticatedAuthLegalTermsRoute =
-  unauthenticatedAuthLegalTermsRouteImport.update({
-    id: '/legal/terms',
-    path: '/legal/terms',
-    getParentRoute: () => unauthenticatedAuthRoute,
-  } as any)
-const unauthenticatedAuthLegalPrivacyRoute =
-  unauthenticatedAuthLegalPrivacyRouteImport.update({
-    id: '/legal/privacy',
-    path: '/legal/privacy',
-    getParentRoute: () => unauthenticatedAuthRoute,
-  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedIndexRoute
-  '/auth/sign-in': typeof AuthSignInRoute
   '/authentication-error': typeof unauthenticatedAuthAuthenticationErrorRoute
   '/sign-in': typeof unauthenticatedAuthSignInRoute
   '/sign-up': typeof unauthenticatedAuthSignUpRoute
   '/verify-email': typeof unauthenticatedAuthVerifyEmailRoute
   '/verify-success': typeof unauthenticatedAuthVerifySuccessRoute
-  '/legal/privacy': typeof unauthenticatedAuthLegalPrivacyRoute
-  '/legal/terms': typeof unauthenticatedAuthLegalTermsRoute
+  '/legal/privacy': typeof unauthenticatedLegalPrivacyRoute
+  '/legal/terms': typeof unauthenticatedLegalTermsRoute
 }
 export interface FileRoutesByTo {
   '/': typeof AuthenticatedIndexRoute
-  '/auth/sign-in': typeof AuthSignInRoute
   '/authentication-error': typeof unauthenticatedAuthAuthenticationErrorRoute
   '/sign-in': typeof unauthenticatedAuthSignInRoute
   '/sign-up': typeof unauthenticatedAuthSignUpRoute
   '/verify-email': typeof unauthenticatedAuthVerifyEmailRoute
   '/verify-success': typeof unauthenticatedAuthVerifySuccessRoute
-  '/legal/privacy': typeof unauthenticatedAuthLegalPrivacyRoute
-  '/legal/terms': typeof unauthenticatedAuthLegalTermsRoute
+  '/legal/privacy': typeof unauthenticatedLegalPrivacyRoute
+  '/legal/terms': typeof unauthenticatedLegalTermsRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/(unauthenticated)': typeof unauthenticatedRouteWithChildren
   '/(unauthenticated)/_auth': typeof unauthenticatedAuthRouteWithChildren
-  '/auth/sign-in': typeof AuthSignInRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
   '/(unauthenticated)/_auth/authentication-error': typeof unauthenticatedAuthAuthenticationErrorRoute
   '/(unauthenticated)/_auth/sign-in': typeof unauthenticatedAuthSignInRoute
   '/(unauthenticated)/_auth/sign-up': typeof unauthenticatedAuthSignUpRoute
   '/(unauthenticated)/_auth/verify-email': typeof unauthenticatedAuthVerifyEmailRoute
   '/(unauthenticated)/_auth/verify-success': typeof unauthenticatedAuthVerifySuccessRoute
-  '/(unauthenticated)/_auth/legal/privacy': typeof unauthenticatedAuthLegalPrivacyRoute
-  '/(unauthenticated)/_auth/legal/terms': typeof unauthenticatedAuthLegalTermsRoute
+  '/(unauthenticated)/legal/privacy': typeof unauthenticatedLegalPrivacyRoute
+  '/(unauthenticated)/legal/terms': typeof unauthenticatedLegalTermsRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
-    | '/auth/sign-in'
     | '/authentication-error'
     | '/sign-in'
     | '/sign-up'
@@ -142,7 +132,6 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
-    | '/auth/sign-in'
     | '/authentication-error'
     | '/sign-in'
     | '/sign-up'
@@ -155,21 +144,19 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/(unauthenticated)'
     | '/(unauthenticated)/_auth'
-    | '/auth/sign-in'
     | '/_authenticated/'
     | '/(unauthenticated)/_auth/authentication-error'
     | '/(unauthenticated)/_auth/sign-in'
     | '/(unauthenticated)/_auth/sign-up'
     | '/(unauthenticated)/_auth/verify-email'
     | '/(unauthenticated)/_auth/verify-success'
-    | '/(unauthenticated)/_auth/legal/privacy'
-    | '/(unauthenticated)/_auth/legal/terms'
+    | '/(unauthenticated)/legal/privacy'
+    | '/(unauthenticated)/legal/terms'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
   unauthenticatedRoute: typeof unauthenticatedRouteWithChildren
-  AuthSignInRoute: typeof AuthSignInRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -195,18 +182,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
-    '/auth/sign-in': {
-      id: '/auth/sign-in'
-      path: '/auth/sign-in'
-      fullPath: '/auth/sign-in'
-      preLoaderRoute: typeof AuthSignInRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/(unauthenticated)/_auth': {
       id: '/(unauthenticated)/_auth'
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof unauthenticatedAuthRouteImport
+      parentRoute: typeof unauthenticatedRoute
+    }
+    '/(unauthenticated)/legal/terms': {
+      id: '/(unauthenticated)/legal/terms'
+      path: '/legal/terms'
+      fullPath: '/legal/terms'
+      preLoaderRoute: typeof unauthenticatedLegalTermsRouteImport
+      parentRoute: typeof unauthenticatedRoute
+    }
+    '/(unauthenticated)/legal/privacy': {
+      id: '/(unauthenticated)/legal/privacy'
+      path: '/legal/privacy'
+      fullPath: '/legal/privacy'
+      preLoaderRoute: typeof unauthenticatedLegalPrivacyRouteImport
       parentRoute: typeof unauthenticatedRoute
     }
     '/(unauthenticated)/_auth/verify-success': {
@@ -244,20 +238,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof unauthenticatedAuthAuthenticationErrorRouteImport
       parentRoute: typeof unauthenticatedAuthRoute
     }
-    '/(unauthenticated)/_auth/legal/terms': {
-      id: '/(unauthenticated)/_auth/legal/terms'
-      path: '/legal/terms'
-      fullPath: '/legal/terms'
-      preLoaderRoute: typeof unauthenticatedAuthLegalTermsRouteImport
-      parentRoute: typeof unauthenticatedAuthRoute
-    }
-    '/(unauthenticated)/_auth/legal/privacy': {
-      id: '/(unauthenticated)/_auth/legal/privacy'
-      path: '/legal/privacy'
-      fullPath: '/legal/privacy'
-      preLoaderRoute: typeof unauthenticatedAuthLegalPrivacyRouteImport
-      parentRoute: typeof unauthenticatedAuthRoute
-    }
   }
 }
 
@@ -279,8 +259,6 @@ interface unauthenticatedAuthRouteChildren {
   unauthenticatedAuthSignUpRoute: typeof unauthenticatedAuthSignUpRoute
   unauthenticatedAuthVerifyEmailRoute: typeof unauthenticatedAuthVerifyEmailRoute
   unauthenticatedAuthVerifySuccessRoute: typeof unauthenticatedAuthVerifySuccessRoute
-  unauthenticatedAuthLegalPrivacyRoute: typeof unauthenticatedAuthLegalPrivacyRoute
-  unauthenticatedAuthLegalTermsRoute: typeof unauthenticatedAuthLegalTermsRoute
 }
 
 const unauthenticatedAuthRouteChildren: unauthenticatedAuthRouteChildren = {
@@ -290,8 +268,6 @@ const unauthenticatedAuthRouteChildren: unauthenticatedAuthRouteChildren = {
   unauthenticatedAuthSignUpRoute: unauthenticatedAuthSignUpRoute,
   unauthenticatedAuthVerifyEmailRoute: unauthenticatedAuthVerifyEmailRoute,
   unauthenticatedAuthVerifySuccessRoute: unauthenticatedAuthVerifySuccessRoute,
-  unauthenticatedAuthLegalPrivacyRoute: unauthenticatedAuthLegalPrivacyRoute,
-  unauthenticatedAuthLegalTermsRoute: unauthenticatedAuthLegalTermsRoute,
 }
 
 const unauthenticatedAuthRouteWithChildren =
@@ -299,10 +275,14 @@ const unauthenticatedAuthRouteWithChildren =
 
 interface unauthenticatedRouteChildren {
   unauthenticatedAuthRoute: typeof unauthenticatedAuthRouteWithChildren
+  unauthenticatedLegalPrivacyRoute: typeof unauthenticatedLegalPrivacyRoute
+  unauthenticatedLegalTermsRoute: typeof unauthenticatedLegalTermsRoute
 }
 
 const unauthenticatedRouteChildren: unauthenticatedRouteChildren = {
   unauthenticatedAuthRoute: unauthenticatedAuthRouteWithChildren,
+  unauthenticatedLegalPrivacyRoute: unauthenticatedLegalPrivacyRoute,
+  unauthenticatedLegalTermsRoute: unauthenticatedLegalTermsRoute,
 }
 
 const unauthenticatedRouteWithChildren = unauthenticatedRoute._addFileChildren(
@@ -312,7 +292,6 @@ const unauthenticatedRouteWithChildren = unauthenticatedRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
   unauthenticatedRoute: unauthenticatedRouteWithChildren,
-  AuthSignInRoute: AuthSignInRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

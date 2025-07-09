@@ -1,11 +1,9 @@
-import { useBetterAuthTauri } from "@daveyplate/better-auth-tauri/react";
 import { createRootRouteWithContext, Outlet } from "@tanstack/react-router";
 
 import type { Session } from "@acme/auth";
 
 import { AppUpdater } from "~/components/updater";
 import { VersionDisplay } from "~/components/version-display";
-import { authClient } from "~/lib/client";
 
 // Define the router context interface
 interface MyRouterContext {
@@ -21,24 +19,6 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
 });
 
 function RouteLayout() {
-  const { refetch } = authClient.useSession();
-
-  useBetterAuthTauri({
-    authClient,
-    scheme: "voicegecko",
-    debugLogs: true,
-    onRequest: (href) => {
-      console.log("Auth request:", href);
-    },
-    onSuccess: (callbackURL) => {
-      console.log("Auth successful", callbackURL);
-      refetch();
-    },
-    onError: (error) => {
-      console.error("Auth error:", error);
-    },
-  });
-
   return (
     <>
       <Outlet />

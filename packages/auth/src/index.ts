@@ -35,6 +35,22 @@ export const serverAuth = betterAuth({
       maxAge: 5 * 60, // Cache duration: 5 minutes
     },
   },
+  advanced: {
+    cookies: {
+      session_token: {
+        attributes: {
+          sameSite: "none",
+          secure: true,
+        },
+      },
+      session_data: {
+        attributes: {
+          sameSite: "none",
+          secure: true,
+        },
+      },
+    },
+  },
   plugins: [
     oAuthProxy({
       /**
@@ -45,11 +61,8 @@ export const serverAuth = betterAuth({
     }),
     expo(),
     tauri({
-      scheme: "voicegecko", // Your app's deep link scheme
-      callbackURL: "/", // Optional: Where to redirect after auth (default: "/")
-      successText: "Authentication successful! You can close this window.", // Optional
-      successURL: "/auth/success", // Optional: Custom success page URL that will receive a ?tauriRedirect search parameter
-      debugLogs: true, // Optional: Enable debug logs
+      scheme: "voicegecko",
+      debugLogs: true,
     }),
     adminPlugin(),
     phoneNumber(),
@@ -110,8 +123,12 @@ export const serverAuth = betterAuth({
   trustedOrigins: [
     "expo://",
     "voicegecko://",
+
+    "http://localhost:3000", // Next.js app
     "http://localhost:1420", // Tauri desktop app
-    "http://127.0.0.1:1420", // Alternative localhost format
+    "http://tauri.localhost", // Tauri desktop app
+
+    "https://voicegecko.io",
   ],
 });
 
