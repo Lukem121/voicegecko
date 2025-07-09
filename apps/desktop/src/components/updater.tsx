@@ -28,7 +28,6 @@ export function AppUpdater() {
     userAcknowledged,
     checkForUpdates,
     downloadUpdate,
-    installUpdate,
     dismissUpdate,
     acknowledgeCriticalUpdate,
   } = useUpdater();
@@ -188,17 +187,6 @@ export function AppUpdater() {
               >
                 <Download className="mr-1 h-4 w-4" />
                 Downloading...
-              </Button>
-            )}
-
-            {isInstalling && (
-              <Button
-                onClick={installUpdate}
-                variant={isCritical ? "destructive" : "default"}
-                className={isCritical ? "w-full" : ""}
-              >
-                <RefreshCw className="mr-1 h-4 w-4" />
-                Restart App
               </Button>
             )}
           </DialogFooter>

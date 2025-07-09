@@ -18,7 +18,6 @@ export interface UpdaterState {
 export interface UpdaterActions {
   checkForUpdates: () => Promise<void>;
   downloadUpdate: () => Promise<void>;
-  installUpdate: () => Promise<void>;
   dismissUpdate: () => void;
   acknowledgeCriticalUpdate: () => void;
 }
@@ -124,32 +123,21 @@ export function useUpdater(): UpdaterState & UpdaterActions {
             break;
         }
       });
+
+      // After downloadAndInstall completes, the update is installed
+      // and we should immediately relaunch - no user action required
+      console.log("update installed");
+      await relaunch();
     } catch (error) {
       setState((prev) => ({
         ...prev,
         error:
           error instanceof Error ? error.message : "Failed to download update",
         isDownloading: false,
-      }));
-    }
-  }, [state.update]);
-
-  const installUpdate = useCallback(async () => {
-    setState((prev) => ({ ...prev, isInstalling: true, error: null }));
-
-    try {
-      await relaunch();
-    } catch (error) {
-      setState((prev) => ({
-        ...prev,
-        error:
-          error instanceof Error
-            ? error.message
-            : "Failed to restart application",
         isInstalling: false,
       }));
     }
-  }, []);
+  }, [state.update]);
 
   const dismissUpdate = useCallback(() => {
     setState((prev) => {
@@ -209,7 +197,6 @@ export function useUpdater(): UpdaterState & UpdaterActions {
     ...state,
     checkForUpdates,
     downloadUpdate,
-    installUpdate,
     dismissUpdate,
     acknowledgeCriticalUpdate,
   };
