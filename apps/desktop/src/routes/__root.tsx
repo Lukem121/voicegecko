@@ -2,7 +2,6 @@ import { createRootRouteWithContext, Outlet } from "@tanstack/react-router";
 
 import type { Session } from "@acme/auth";
 
-import { AppUpdater } from "~/components/updater";
 import { VersionDisplay } from "~/components/version-display";
 
 // Define the router context interface
@@ -22,7 +21,6 @@ function RouteLayout() {
   return (
     <>
       <Outlet />
-      <AppUpdater />
       <VersionDisplay />
     </>
   );
