@@ -25,6 +25,8 @@ const unprotectedRoutes: string[] = [
 const addCorsHeaders = (response: NextResponse, request: NextRequest) => {
   const origin = request.headers.get("origin");
 
+  console.log("Origin:", origin);
+
   // Allow any origin
   if (origin) {
     response.headers.set("Access-Control-Allow-Origin", origin);
@@ -95,10 +97,10 @@ export default function middleware(request: NextRequest) {
   return isCrossOrigin ? addCorsHeaders(response, request) : response;
 }
 
+// Include API routes and all page routes
+// Exclude only static assets and Next.js internals
 export const config = {
   matcher: [
-    // Include API routes and all page routes
-    // Exclude only static assets and Next.js internals
     "/((?!_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt|ingest/static|ingest/decide|ingest|monitoring|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)",
   ],
 };
