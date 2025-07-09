@@ -35,6 +35,22 @@ export const serverAuth = betterAuth({
       maxAge: 5 * 60, // Cache duration: 5 minutes
     },
   },
+  advanced: {
+    cookies: {
+      session_token: {
+        attributes: {
+          sameSite: "none",
+          secure: true,
+        },
+      },
+      session_data: {
+        attributes: {
+          sameSite: "none",
+          secure: true,
+        },
+      },
+    },
+  },
   plugins: [
     oAuthProxy({
       /**
@@ -108,9 +124,9 @@ export const serverAuth = betterAuth({
     "expo://",
     "voicegecko://",
 
+    "http://localhost:3000", // Next.js app
     "http://localhost:1420", // Tauri desktop app
     "http://tauri.localhost", // Tauri desktop app
-    "http://localhost:3000", // Next.js app
 
     "https://voicegecko.io",
   ],
