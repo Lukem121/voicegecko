@@ -1,4 +1,4 @@
-import { StrictMode, useEffect } from "react";
+import { StrictMode, useEffect, useState } from "react";
 
 import { authClient } from "~/lib/client";
 
@@ -8,6 +8,7 @@ import { useBetterAuthTauri } from "@daveyplate/better-auth-tauri/react";
 import { createRouter, RouterProvider } from "@tanstack/react-router";
 import ReactDOM from "react-dom/client";
 
+import { AppLauncher } from "~/components/app-launcher";
 import { useIsAuthenticated } from "~/hooks/auth";
 // Import the generated route tree
 import { routeTree } from "~/routeTree.gen";
@@ -61,6 +62,21 @@ function InnerApp() {
   return <RouterProvider router={router} context={{ auth }} />;
 }
 
+function App() {
+  const [isAppReady, setIsAppReady] = useState(false);
+
+  // Show launcher/updater first, then main app
+  if (!isAppReady) {
+    return <AppLauncher onReady={() => setIsAppReady(true)} />;
+  }
+
+  return (
+    <TRPCReactProvider>
+      <InnerApp />
+    </TRPCReactProvider>
+  );
+}
+
 // Render the app
 const rootElement = document.getElementById("root");
 
@@ -71,9 +87,7 @@ if (!rootElement.innerHTML) {
   root.render(
     <StrictMode>
       <ThemeProvider>
-        <TRPCReactProvider>
-          <InnerApp />
-        </TRPCReactProvider>
+        <App />
       </ThemeProvider>
     </StrictMode>,
   );
