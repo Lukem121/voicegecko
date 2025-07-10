@@ -12,7 +12,7 @@ export default {
     extend: {
       fontFamily: {
         sans: ["var(--font-sans)", ...tailwind.fontFamily.sans],
-        mono: [...tailwind.fontFamily.mono],
+        mono: ["var(--font-mono)", ...tailwind.fontFamily.mono],
       },
     },
   },
