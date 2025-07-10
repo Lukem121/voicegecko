@@ -1,0 +1,28 @@
+/* JetBrains Mono - Variable Font */
+@font-face {
+  font-family: "JetBrains Mono";
+  src: url("../assets/fonts/JetBrains_Mono/JetBrainsMono-VariableFont_wght.ttf")
+    format("truetype");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "JetBrains Mono";
+  src: url("../assets/fonts/JetBrains_Mono/JetBrainsMono-Italic-VariableFont_wght.ttf")
+    format("truetype");
+  font-weight: 100 900;
+  font-style: italic;
+  font-display: swap;
+}
+
+/* Outfit - Variable Font */
+@font-face {
+  font-family: "Outfit";
+  src: url("../assets/fonts/Outfit/Outfit-VariableFont_wght.ttf")
+    format("truetype");
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
