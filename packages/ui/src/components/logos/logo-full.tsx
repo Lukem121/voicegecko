@@ -1,4 +1,4 @@
-export default function VoiceGeckoLogo({ className }: { className?: string }) {
+export default function LogoFull({ className }: { className?: string }) {
   return (
     <svg
       fill="none"

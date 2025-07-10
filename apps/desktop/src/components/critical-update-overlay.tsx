@@ -1,6 +1,6 @@
 import { RefreshCw, Shield } from "lucide-react";
 
-import VoiceGeckoLogo from "@acme/ui/components/logos/voice-gecko";
+import LogoFull from "@acme/ui/components/logos/logo-full";
 import { Button } from "@acme/ui/components/ui/button";
 import {
   Card,
@@ -62,10 +62,7 @@ export function CriticalUpdateOverlay({
         <div className="flex flex-col gap-6">
           <Card className="shadow-lg">
             <CardHeader className="space-y-3">
-              <VoiceGeckoLogo
-                className="mx-auto h-10"
-                aria-label="VoiceGecko Logo"
-              />
+              <LogoFull className="mx-auto h-10" aria-label="VoiceGecko Logo" />
 
               {/* Security badge */}
               <div className="flex justify-center">

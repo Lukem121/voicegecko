@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { relaunch } from "@tauri-apps/plugin-process";
 import { check } from "@tauri-apps/plugin-updater";
 
-import VoiceGeckoLogo from "@acme/ui/components/logos/voice-gecko";
+import LogoFull from "@acme/ui/components/logos/logo-full";
 import { Progress } from "@acme/ui/components/ui/progress";
 
 import { initializeApp as initApp } from "~/lib/initialize-app";
@@ -134,7 +134,7 @@ export function AppLauncher({ onReady }: AppLauncherProps) {
       <div className="w-full max-w-sm space-y-8 px-4">
         {/* Logo */}
         <div className="flex justify-center">
-          <VoiceGeckoLogo className="h-12" aria-label="Voice Gecko" />
+          <LogoFull className="h-12" aria-label="Voice Gecko" />
         </div>
 
         {/* Status and Progress */}
