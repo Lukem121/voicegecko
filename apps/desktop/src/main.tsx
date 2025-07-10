@@ -3,6 +3,7 @@ import { StrictMode, useEffect, useState } from "react";
 import { authClient } from "~/lib/client";
 
 import "@acme/ui/globals.css";
+import "~/styles/fonts.css";
 
 import { useBetterAuthTauri } from "@daveyplate/better-auth-tauri/react";
 import { createRouter, RouterProvider } from "@tanstack/react-router";
