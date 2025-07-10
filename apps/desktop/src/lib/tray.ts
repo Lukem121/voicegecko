@@ -57,7 +57,6 @@ export const tray = await TrayIcon.new({
   action: async (event) => {
     switch (event.type) {
       case "DoubleClick":
-        // Double-click: always show and focus window
         if (event.button === "Left") {
           console.log("🔄 Double-clicked tray icon - showing window");
           await showAndFocusWindow();
