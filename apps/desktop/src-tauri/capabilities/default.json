@@ -13,6 +13,11 @@
     "core:image:default",
     "core:menu:default",
     "core:tray:default",
+    "core:window:allow-hide",
+    "core:window:allow-show",
+    "core:app:allow-default-window-icon",
+    "core:window:allow-unminimize",
+    "core:window:allow-set-focus",
     "deep-link:allow-register",
     "deep-link:allow-get-current",
     "deep-link:allow-is-registered",
@@ -25,6 +30,9 @@
     "updater:default",
     "process:default",
     "process:allow-restart",
+    "autostart:allow-enable",
+    "autostart:allow-disable",
+    "autostart:allow-is-enabled",
     {
       "identifier": "http:default",
       "allow": [
