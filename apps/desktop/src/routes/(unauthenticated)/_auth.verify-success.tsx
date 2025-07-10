@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { createFileRoute, useRouter } from "@tanstack/react-router";
 import { CheckCircle2, Loader2 } from "lucide-react";
 
-import VoiceGeckoLogo from "@acme/ui/components/logos/voice-gecko";
+import LogoFull from "@acme/ui/components/logos/logo-full";
 import { Button } from "@acme/ui/components/ui/button";
 import {
   Card,
@@ -51,10 +51,7 @@ function VerifySuccess() {
       <div className="flex flex-col gap-6">
         <Card className="shadow-lg">
           <CardHeader className="space-y-3 text-center">
-            <VoiceGeckoLogo
-              className="mx-auto h-10"
-              aria-label="VoiceGecko Logo"
-            />
+            <LogoFull className="mx-auto h-10" aria-label="VoiceGecko Logo" />
             <div className="flex items-center justify-center">
               <CheckCircle2 className="mr-2 h-6 w-6 text-green-500" />
               <CardTitle className="text-xl">Email Verified!</CardTitle>
