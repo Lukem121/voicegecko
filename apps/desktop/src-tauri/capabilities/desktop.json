@@ -10,6 +10,8 @@
   ],
   "permissions": [
     "updater:default",
-    "autostart:default"
+    "autostart:default",
+    "global-shortcut:default",
+    "global-shortcut:default"
   ]
 }
