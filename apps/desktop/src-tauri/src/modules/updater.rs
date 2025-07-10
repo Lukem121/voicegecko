@@ -6,28 +6,33 @@ use url::Url;
 fn should_use_local_dev() -> bool {
     let is_debug = cfg!(debug_assertions);
     println!("Debug assertions enabled: {}", is_debug);
-    is_debug    
+    is_debug
 }
 
 /// Setup custom updater configuration
 pub fn setup_updater(app: &App) -> Result<(), Box<dyn std::error::Error>> {
     let use_local = should_use_local_dev();
-   
-    let host = if use_local { "http://localhost:3000" } else { "https://voicegecko.io" };
+
+    let host = if use_local {
+        "http://localhost:3000"
+    } else {
+        "https://voicegecko.io"
+    };
 
     println!(
-        "Setting up updater with environment: {}", 
-        if use_local { "local development (debug build)" } else { "production (release build)" }
+        "Setting up updater with environment: {}",
+        if use_local {
+            "local development (debug build)"
+        } else {
+            "production (release build)"
+        }
     );
-    
+
     let update_url_string = format!("{host}/api/updater/{{{{target}}}}/{{{{current_version}}}}");
     let update_url = Url::parse(&update_url_string)?;
     println!("Update URL: {}", update_url);
 
-    let _update = app
-        .updater_builder()
-        .endpoints(vec![update_url])?
-        .build()?;
+    let _update = app.updater_builder().endpoints(vec![update_url])?.build()?;
 
     Ok(())
 }
@@ -41,12 +46,12 @@ mod tests {
         // In test builds, debug_assertions is typically enabled
         // This test validates the function works correctly
         let result = should_use_local_dev();
-        
+
         // The result should match the compile-time debug_assertions setting
         #[cfg(debug_assertions)]
         assert!(result);
-        
+
         #[cfg(not(debug_assertions))]
         assert!(!result);
     }
-} 
+}

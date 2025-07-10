@@ -5,6 +5,8 @@ import { check } from "@tauri-apps/plugin-updater";
 import VoiceGeckoLogo from "@acme/ui/components/logos/voice-gecko";
 import { Progress } from "@acme/ui/components/ui/progress";
 
+import { initializeApp as initApp } from "~/lib/initialize-app";
+
 interface AppLauncherProps {
   onReady: () => void;
 }
@@ -20,6 +22,11 @@ export function AppLauncher({ onReady }: AppLauncherProps) {
 
     async function initializeApp() {
       try {
+        // Step 0: Initialize app settings (auto-start, etc.)
+        setStatus("Initializing application...");
+        setProgress(10);
+        await initApp();
+
         // Step 1: Check for updates
         setStatus("Checking for updates...");
         setProgress(20);
