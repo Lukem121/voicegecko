@@ -15,7 +15,8 @@ import {
   User2,
 } from "lucide-react";
 
-import VoiceGeckoLogo from "@acme/ui/components/logos/voice-gecko";
+import LogoFull from "@acme/ui/components/logos/logo-full";
+import LogoSquare from "@acme/ui/components/logos/logo-square";
 import {
   Avatar,
   AvatarFallback,
@@ -151,7 +152,7 @@ export function AppSidebar() {
             <SidebarMenuButton size="lg" asChild>
               <Link to="/">
                 <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
-                  <VoiceGeckoLogo className="size-4" />
+                  <LogoSquare />
                 </div>
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-semibold">VoiceGecko</span>

@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import VoiceGeckoLogo from "@acme/ui/components/logos/voice-gecko";
+import LogoFull from "@acme/ui/components/logos/logo-full";
 import { Button } from "@acme/ui/components/ui/button";
 import {
   Card,
@@ -34,10 +34,7 @@ function AuthenticationError() {
     <main className="container mx-auto max-w-md px-4 py-8">
       <Card className="shadow-lg">
         <CardHeader className="space-y-3">
-          <VoiceGeckoLogo
-            className="mx-auto h-10"
-            aria-label="VoiceGecko Logo"
-          />
+          <LogoFull className="mx-auto h-10" aria-label="VoiceGecko Logo" />
           <CardDescription className="text-center">
             Authentication Error
           </CardDescription>
