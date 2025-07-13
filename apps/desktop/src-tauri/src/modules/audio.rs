@@ -180,13 +180,13 @@ pub fn play_notification_sound(
     let sound_path = app
         .path()
         .resolve(
-            &format!("sounds/notification/{}", sound_name),
+            format!("resources/sounds/notification/{}", sound_name),
             tauri::path::BaseDirectory::Resource,
         )
         .map_err(|e| e.to_string())?;
 
     let file = BufReader::new(
-        File::open(sound_path.clone())
+        File::open(&sound_path)
             .map_err(|e| format!("Failed to open sound file at {:?}: {}", sound_path, e))?,
     );
 
