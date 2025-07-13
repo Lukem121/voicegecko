@@ -5,6 +5,7 @@ mod modules;
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
+        .manage(modules::audio::AudioState::new())
         .plugin(tauri_plugin_global_shortcut::Builder::new().build())
         .plugin(tauri_plugin_autostart::init(tauri_plugin_autostart::MacosLauncher::LaunchAgent, None))
         .plugin(tauri_plugin_process::init())
@@ -27,6 +28,12 @@ pub fn run() {
             window.set_focus().unwrap();
         }))
         .plugin(tauri_plugin_updater::Builder::new().build())
+        .invoke_handler(tauri::generate_handler![
+            modules::audio::list_audio_devices,
+            modules::audio::start_recording,
+            modules::audio::stop_recording,
+            modules::audio::play_notification_sound
+        ])
         .setup(|app| {
             #[cfg(any(windows, target_os = "linux"))]
             {

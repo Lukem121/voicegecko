@@ -1,4 +1,7 @@
+import { useEffect } from "react";
 import { createFileRoute } from "@tanstack/react-router";
+import { invoke } from "@tauri-apps/api/core";
+import { LazyStore } from "@tauri-apps/plugin-store";
 import { Globe, Keyboard, Mic, Palette, Settings, Shield } from "lucide-react";
 
 import { Button } from "@acme/ui/components/ui/button";
@@ -10,13 +13,81 @@ import {
   CardTitle,
 } from "@acme/ui/components/ui/card";
 import { Label } from "@acme/ui/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@acme/ui/components/ui/select";
 import { Switch } from "@acme/ui/components/ui/switch";
+
+import type {
+  AudioDevice,
+  NotificationSound,
+} from "~/hooks/use-recording-store";
+import { useRecordingStore } from "~/hooks/use-recording-store";
 
 export const Route = createFileRoute("/_authenticated/settings")({
   component: SettingsPage,
 });
 
+const store = new LazyStore("settings.dat");
+
 function SettingsPage() {
+  const {
+    devices,
+    selectedDevice,
+    selectedSound,
+    setDevices,
+    setSelectedDevice,
+    setSelectedSound,
+  } = useRecordingStore();
+
+  useEffect(() => {
+    async function loadSettings() {
+      const savedDevice = await store.get<AudioDevice>("selectedDevice");
+      if (savedDevice) {
+        setSelectedDevice(savedDevice);
+      }
+      const savedSound = await store.get<NotificationSound>("selectedSound");
+      if (savedSound) {
+        setSelectedSound(savedSound);
+      }
+    }
+
+    async function getDevices() {
+      try {
+        const audioDevices = await invoke<AudioDevice[]>("list_audio_devices");
+        setDevices(audioDevices);
+        if (!selectedDevice && audioDevices.length > 0) {
+          const defaultDevice =
+            audioDevices.find((d) => d.name.includes("Default")) ??
+            audioDevices[0];
+          if (defaultDevice) {
+            setSelectedDevice(defaultDevice);
+          }
+        }
+      } catch (error) {
+        console.error("Failed to get audio devices:", error);
+      }
+    }
+
+    void loadSettings();
+    void getDevices();
+  }, [setDevices, setSelectedDevice, setSelectedSound, selectedDevice]);
+
+  const handleDeviceChange = (deviceName: string) => {
+    const device = devices.find((d) => d.name === deviceName) ?? null;
+    setSelectedDevice(device);
+    void store.set("selectedDevice", device);
+  };
+
+  const handleSoundChange = (sound: NotificationSound) => {
+    setSelectedSound(sound);
+    void store.set("selectedSound", sound);
+  };
+
   return (
     <div className="flex flex-1 flex-col gap-4">
       <div className="flex items-center justify-between">
@@ -79,9 +150,21 @@ function SettingsPage() {
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label>Default Microphone</Label>
-              <Button variant="outline" className="w-full justify-start">
-                Built-in Microphone
-              </Button>
+              <Select
+                value={selectedDevice?.name}
+                onValueChange={handleDeviceChange}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a microphone" />
+                </SelectTrigger>
+                <SelectContent>
+                  {devices.map((device) => (
+                    <SelectItem key={device.name} value={device.name}>
+                      {device.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="flex items-center justify-between">
@@ -96,23 +179,22 @@ function SettingsPage() {
 
             <div className="space-y-2">
               <Label>Recording Stop/Start Sound</Label>
-              <Button variant="outline" className="w-full justify-start">
-                Chime (Default)
-              </Button>
-              <div className="mt-2 grid grid-cols-2 gap-2">
-                <Button variant="outline" size="sm" className="text-xs">
-                  🔔 Chime
-                </Button>
-                <Button variant="outline" size="sm" className="text-xs">
-                  📢 Beep
-                </Button>
-                <Button variant="outline" size="sm" className="text-xs">
-                  🎵 Tone
-                </Button>
-                <Button variant="outline" size="sm" className="text-xs">
-                  🔇 Silent
-                </Button>
-              </div>
+              <Select
+                value={selectedSound}
+                onValueChange={(value) =>
+                  handleSoundChange(value as NotificationSound)
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a sound" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="chime">🔔 Chime</SelectItem>
+                  <SelectItem value="beep">📢 Beep</SelectItem>
+                  <SelectItem value="tone">🎵 Tone</SelectItem>
+                  <SelectItem value="silent">🔇 Silent</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="flex items-center justify-between">

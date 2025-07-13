@@ -48,7 +48,8 @@
     "active": true,
     "targets": "all",
     "icon": ["icons/icon.ico"],
-    "createUpdaterArtifacts": true
+    "createUpdaterArtifacts": true,
+    "resources": ["resources/**/*"]
   },
   "$schema": "../../../node_modules/@tauri-apps/cli/schema.json"
 }
