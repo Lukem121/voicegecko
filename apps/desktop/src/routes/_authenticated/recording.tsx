@@ -22,6 +22,7 @@ function RecordingPage() {
         if (selectedSound !== "silent") {
           await invoke("play_notification_sound", {
             soundName: `${selectedSound}.mp3`,
+            variant: "Start",
           });
         }
         await invoke("start_recording", { device: selectedDevice?.name });
@@ -33,6 +34,7 @@ function RecordingPage() {
         if (selectedSound !== "silent") {
           await invoke("play_notification_sound", {
             soundName: `${selectedSound}.mp3`,
+            variant: "End",
           });
         }
         await invoke("stop_recording");
