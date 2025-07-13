@@ -22,6 +22,7 @@ import { Route as AuthenticatedHistoryRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedBillingRouteImport } from './routes/_authenticated/billing'
 import { Route as unauthenticatedAuthRouteImport } from './routes/(unauthenticated)/_auth'
 import { Route as AuthenticatedSettingsIndexRouteImport } from './routes/_authenticated/settings/index'
+import { Route as AuthenticatedSettingsTranscriptionRouteImport } from './routes/_authenticated/settings/transcription'
 import { Route as AuthenticatedSettingsShortcutsRouteImport } from './routes/_authenticated/settings/shortcuts'
 import { Route as AuthenticatedSettingsModelsRouteImport } from './routes/_authenticated/settings/models'
 import { Route as AuthenticatedSettingsLanguageRouteImport } from './routes/_authenticated/settings/language'
@@ -93,6 +94,12 @@ const AuthenticatedSettingsIndexRoute =
   AuthenticatedSettingsIndexRouteImport.update({
     id: '/',
     path: '/',
+    getParentRoute: () => AuthenticatedSettingsRoute,
+  } as any)
+const AuthenticatedSettingsTranscriptionRoute =
+  AuthenticatedSettingsTranscriptionRouteImport.update({
+    id: '/transcription',
+    path: '/transcription',
     getParentRoute: () => AuthenticatedSettingsRoute,
   } as any)
 const AuthenticatedSettingsShortcutsRoute =
@@ -175,6 +182,7 @@ export interface FileRoutesByFullPath {
   '/settings/language': typeof AuthenticatedSettingsLanguageRoute
   '/settings/models': typeof AuthenticatedSettingsModelsRoute
   '/settings/shortcuts': typeof AuthenticatedSettingsShortcutsRoute
+  '/settings/transcription': typeof AuthenticatedSettingsTranscriptionRoute
   '/settings/': typeof AuthenticatedSettingsIndexRoute
 }
 export interface FileRoutesByTo {
@@ -195,6 +203,7 @@ export interface FileRoutesByTo {
   '/settings/language': typeof AuthenticatedSettingsLanguageRoute
   '/settings/models': typeof AuthenticatedSettingsModelsRoute
   '/settings/shortcuts': typeof AuthenticatedSettingsShortcutsRoute
+  '/settings/transcription': typeof AuthenticatedSettingsTranscriptionRoute
   '/settings': typeof AuthenticatedSettingsIndexRoute
 }
 export interface FileRoutesById {
@@ -220,6 +229,7 @@ export interface FileRoutesById {
   '/_authenticated/settings/language': typeof AuthenticatedSettingsLanguageRoute
   '/_authenticated/settings/models': typeof AuthenticatedSettingsModelsRoute
   '/_authenticated/settings/shortcuts': typeof AuthenticatedSettingsShortcutsRoute
+  '/_authenticated/settings/transcription': typeof AuthenticatedSettingsTranscriptionRoute
   '/_authenticated/settings/': typeof AuthenticatedSettingsIndexRoute
 }
 export interface FileRouteTypes {
@@ -243,6 +253,7 @@ export interface FileRouteTypes {
     | '/settings/language'
     | '/settings/models'
     | '/settings/shortcuts'
+    | '/settings/transcription'
     | '/settings/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -263,6 +274,7 @@ export interface FileRouteTypes {
     | '/settings/language'
     | '/settings/models'
     | '/settings/shortcuts'
+    | '/settings/transcription'
     | '/settings'
   id:
     | '__root__'
@@ -287,6 +299,7 @@ export interface FileRouteTypes {
     | '/_authenticated/settings/language'
     | '/_authenticated/settings/models'
     | '/_authenticated/settings/shortcuts'
+    | '/_authenticated/settings/transcription'
     | '/_authenticated/settings/'
   fileRoutesById: FileRoutesById
 }
@@ -381,6 +394,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSettingsIndexRouteImport
       parentRoute: typeof AuthenticatedSettingsRoute
     }
+    '/_authenticated/settings/transcription': {
+      id: '/_authenticated/settings/transcription'
+      path: '/transcription'
+      fullPath: '/settings/transcription'
+      preLoaderRoute: typeof AuthenticatedSettingsTranscriptionRouteImport
+      parentRoute: typeof AuthenticatedSettingsRoute
+    }
     '/_authenticated/settings/shortcuts': {
       id: '/_authenticated/settings/shortcuts'
       path: '/shortcuts'
@@ -458,6 +478,7 @@ interface AuthenticatedSettingsRouteChildren {
   AuthenticatedSettingsLanguageRoute: typeof AuthenticatedSettingsLanguageRoute
   AuthenticatedSettingsModelsRoute: typeof AuthenticatedSettingsModelsRoute
   AuthenticatedSettingsShortcutsRoute: typeof AuthenticatedSettingsShortcutsRoute
+  AuthenticatedSettingsTranscriptionRoute: typeof AuthenticatedSettingsTranscriptionRoute
   AuthenticatedSettingsIndexRoute: typeof AuthenticatedSettingsIndexRoute
 }
 
@@ -465,6 +486,8 @@ const AuthenticatedSettingsRouteChildren: AuthenticatedSettingsRouteChildren = {
   AuthenticatedSettingsLanguageRoute: AuthenticatedSettingsLanguageRoute,
   AuthenticatedSettingsModelsRoute: AuthenticatedSettingsModelsRoute,
   AuthenticatedSettingsShortcutsRoute: AuthenticatedSettingsShortcutsRoute,
+  AuthenticatedSettingsTranscriptionRoute:
+    AuthenticatedSettingsTranscriptionRoute,
   AuthenticatedSettingsIndexRoute: AuthenticatedSettingsIndexRoute,
 }
 
