@@ -1045,6 +1045,7 @@ dependencies = [
 name = "desktop"
 version = "0.0.6"
 dependencies = [
+ "async-trait",
  "cpal",
  "crossbeam-channel",
  "futures-util",

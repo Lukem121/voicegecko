@@ -29,7 +29,6 @@ function RecordingPage() {
             soundName: `${selectedSound}.mp3`,
             variant: "Start",
           });
-          // Add a delay to prevent the sound from being recorded
           await new Promise((resolve) => setTimeout(resolve, 500));
         }
         await invoke("start_recording", { device: selectedDevice?.name });
@@ -57,8 +56,7 @@ function RecordingPage() {
           return;
         }
 
-        const newTranscript = await invoke<string>("transcribe", {
-          modelId,
+        const newTranscript = await invoke<string>("transcribe_audio", {
           audioPath,
         });
 
