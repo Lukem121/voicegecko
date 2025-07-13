@@ -17,55 +17,29 @@ export const Route = createFileRoute("/_authenticated/shortcuts")({
 function ShortcutsPage() {
   const shortcuts = [
     {
-      category: "Recording",
+      category: "Recording Controls",
       items: [
-        { keys: ["Space"], description: "Start/Stop recording" },
-        { keys: ["Shift", "Space"], description: "Pause/Resume recording" },
-        { keys: ["Cmd", "R"], description: "New recording" },
-        { keys: ["Cmd", "S"], description: "Save current recording" },
+        {
+          keys: ["Ctrl", "⊞"],
+          description: "Push to dictate (hold to record)",
+        },
+        {
+          keys: ["Ctrl", "Shift", "X"],
+          description: "Toggle recording on/off",
+        },
       ],
     },
     {
-      category: "Navigation",
+      category: "Post-Processing",
       items: [
-        { keys: ["Cmd", "1"], description: "Go to Dashboard" },
-        { keys: ["Cmd", "2"], description: "Go to Transcriptions" },
-        { keys: ["Cmd", "3"], description: "Go to Recording" },
-        { keys: ["Cmd", "4"], description: "Go to History" },
-        { keys: ["Cmd", "5"], description: "Go to Projects" },
-        { keys: ["Cmd", "B"], description: "Toggle sidebar" },
-      ],
-    },
-    {
-      category: "Transcription",
-      items: [
-        { keys: ["Cmd", "T"], description: "New transcription" },
-        { keys: ["Cmd", "E"], description: "Export transcription" },
-        { keys: ["Cmd", "F"], description: "Find in transcription" },
-        { keys: ["Cmd", "D"], description: "Duplicate transcription" },
-        { keys: ["Delete"], description: "Delete selected transcription" },
-      ],
-    },
-    {
-      category: "General",
-      items: [
-        { keys: ["Cmd", ","], description: "Open preferences" },
-        { keys: ["Cmd", "K"], description: "Open command palette" },
-        { keys: ["Cmd", "Shift", "P"], description: "Command palette" },
-        { keys: ["Cmd", "?"], description: "Show keyboard shortcuts" },
-        { keys: ["Cmd", "Q"], description: "Quit application" },
-        { keys: ["Cmd", "N"], description: "New window" },
-        { keys: ["Cmd", "W"], description: "Close window" },
-      ],
-    },
-    {
-      category: "File Operations",
-      items: [
-        { keys: ["Cmd", "O"], description: "Open file" },
-        { keys: ["Cmd", "Shift", "O"], description: "Open recent file" },
-        { keys: ["Cmd", "I"], description: "Import audio file" },
-        { keys: ["Cmd", "Shift", "E"], description: "Export all" },
-        { keys: ["Cmd", "Shift", "S"], description: "Save as" },
+        {
+          keys: ["Ctrl", "Shift", "R"],
+          description: "Open most recent transcription",
+        },
+        { keys: ["Ctrl", "1"], description: "Quick apply - Business style" },
+        { keys: ["Ctrl", "2"], description: "Quick apply - Casual style" },
+        { keys: ["Ctrl", "3"], description: "Quick apply - Grammar fix" },
+        { keys: ["Ctrl", "P"], description: "Open post-processing menu" },
       ],
     },
   ];
@@ -93,16 +67,10 @@ function ShortcutsPage() {
                 {category.category}
               </CardTitle>
               <CardDescription>
-                {category.category === "Recording" &&
+                {category.category === "Recording Controls" &&
                   "Control your recording sessions"}
-                {category.category === "Navigation" &&
-                  "Navigate around the application"}
-                {category.category === "Transcription" &&
-                  "Manage your transcriptions"}
-                {category.category === "General" &&
-                  "General application shortcuts"}
-                {category.category === "File Operations" &&
-                  "File management operations"}
+                {category.category === "Post-Processing" &&
+                  "Process and enhance your transcriptions"}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -120,10 +88,14 @@ function ShortcutsPage() {
                             variant="outline"
                             className="px-2 py-1 font-mono text-xs"
                           >
-                            {key === "Cmd" ? (
+                            {key === "Ctrl" ? (
                               <div className="flex items-center gap-1">
                                 <Command className="h-3 w-3" />
-                                <span>Cmd</span>
+                                <span>Ctrl</span>
+                              </div>
+                            ) : key === "⊞" ? (
+                              <div className="flex items-center gap-1">
+                                <span>⊞</span>
                               </div>
                             ) : (
                               key
@@ -159,31 +131,31 @@ function ShortcutsPage() {
         <CardContent>
           <div className="grid gap-4 md:grid-cols-2">
             <div className="space-y-2">
-              <h4 className="font-medium">⌨️ Custom Shortcuts</h4>
+              <h4 className="font-medium">🎙️ Push to Dictate</h4>
               <p className="text-muted-foreground text-sm">
-                You can customize keyboard shortcuts in the Settings page to
-                match your workflow.
+                Hold Ctrl + Windows key to record. Release to stop and
+                automatically process the transcription.
+              </p>
+            </div>
+            <div className="space-y-2">
+              <h4 className="font-medium">🔄 Toggle Mode</h4>
+              <p className="text-muted-foreground text-sm">
+                Use Ctrl + Shift + X for hands-free recording. Press once to
+                start, again to stop.
+              </p>
+            </div>
+            <div className="space-y-2">
+              <h4 className="font-medium">⚡ Quick Processing</h4>
+              <p className="text-muted-foreground text-sm">
+                Use Ctrl + 1/2/3 to quickly apply different text styles without
+                opening menus.
               </p>
             </div>
             <div className="space-y-2">
               <h4 className="font-medium">🎯 Context Aware</h4>
               <p className="text-muted-foreground text-sm">
-                Some shortcuts work differently depending on what you're
-                currently doing.
-              </p>
-            </div>
-            <div className="space-y-2">
-              <h4 className="font-medium">🔄 Global vs Local</h4>
-              <p className="text-muted-foreground text-sm">
-                Global shortcuts work anywhere in the app, while local shortcuts
-                are page-specific.
-              </p>
-            </div>
-            <div className="space-y-2">
-              <h4 className="font-medium">💡 Learning Mode</h4>
-              <p className="text-muted-foreground text-sm">
-                Enable tooltip hints in settings to see shortcuts when hovering
-                over buttons.
+                Some shortcuts work differently depending on whether you're
+                recording, transcribing, or editing.
               </p>
             </div>
           </div>
