@@ -23,11 +23,7 @@ pub struct AudioState {
 }
 
 impl AudioState {
-    pub fn new() -> Self {
-        let (_stream, stream_handle) = rodio::OutputStream::try_default().unwrap();
-        let sink = Sink::try_new(&stream_handle).unwrap();
-        // Leak the stream handle to keep it alive for sound playback
-        std::mem::forget(stream_handle);
+    pub fn new(sink: Sink) -> Self {
         Self {
             sink: Arc::new(Mutex::new(sink)),
             recording_thread: Arc::new(Mutex::new(None)),
