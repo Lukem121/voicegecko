@@ -58,6 +58,11 @@ const data = {
       isActive: true,
     },
     {
+      title: "Recording",
+      url: "/recording",
+      icon: Mic,
+    },
+    {
       title: "Transcriptions",
       url: "/transcriptions",
       icon: FileText,
@@ -76,25 +81,7 @@ const data = {
         },
       ],
     },
-    {
-      title: "Recording",
-      url: "/recording",
-      icon: Mic,
-      items: [
-        {
-          title: "New Recording",
-          url: "/recording/new",
-        },
-        {
-          title: "Voice Training",
-          url: "/recording/training",
-        },
-        {
-          title: "Audio Settings",
-          url: "/recording/settings",
-        },
-      ],
-    },
+
     {
       title: "History",
       url: "/history",
@@ -125,11 +112,20 @@ const data = {
       title: "Settings",
       url: "/settings",
       icon: Settings2,
-    },
-    {
-      title: "Keyboard Shortcuts",
-      url: "/shortcuts",
-      icon: Keyboard,
+      items: [
+        {
+          title: "Models",
+          url: "/settings/models",
+        },
+        {
+          title: "Language",
+          url: "/settings/language",
+        },
+        {
+          title: "Keyboard Shortcuts",
+          url: "/settings/shortcuts",
+        },
+      ],
     },
     {
       title: "Help & Support",
@@ -174,7 +170,11 @@ export function AppSidebar() {
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton
                     asChild
-                    isActive={location.pathname === item.url}
+                    isActive={
+                      item.url === "/"
+                        ? location.pathname === item.url
+                        : location.pathname.startsWith(item.url)
+                    }
                   >
                     <Link to={item.url}>
                       <item.icon />
@@ -210,13 +210,33 @@ export function AppSidebar() {
                   <SidebarMenuButton
                     asChild
                     size="sm"
-                    isActive={location.pathname === item.url}
+                    isActive={
+                      item.url === "/"
+                        ? location.pathname === item.url
+                        : location.pathname.startsWith(item.url)
+                    }
                   >
                     <Link to={item.url}>
                       <item.icon />
                       <span>{item.title}</span>
                     </Link>
                   </SidebarMenuButton>
+                  {item.items?.length ? (
+                    <SidebarMenuSub>
+                      {item.items.map((subItem) => (
+                        <SidebarMenuSubItem key={subItem.title}>
+                          <SidebarMenuSubButton
+                            asChild
+                            isActive={location.pathname === subItem.url}
+                          >
+                            <Link to={subItem.url}>
+                              <span>{subItem.title}</span>
+                            </Link>
+                          </SidebarMenuSubButton>
+                        </SidebarMenuSubItem>
+                      ))}
+                    </SidebarMenuSub>
+                  ) : null}
                 </SidebarMenuItem>
               ))}
             </SidebarMenu>

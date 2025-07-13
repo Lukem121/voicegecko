@@ -10,7 +10,7 @@ import {
   CardTitle,
 } from "@acme/ui/components/ui/card";
 
-export const Route = createFileRoute("/_authenticated/shortcuts")({
+export const Route = createFileRoute("/_authenticated/settings/shortcuts")({
   component: ShortcutsPage,
 });
 
@@ -46,17 +46,6 @@ function ShortcutsPage() {
 
   return (
     <div className="flex flex-1 flex-col gap-4">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">
-            Keyboard Shortcuts
-          </h1>
-          <p className="text-muted-foreground">
-            Speed up your workflow with these keyboard shortcuts
-          </p>
-        </div>
-      </div>
-
       {/* Shortcut Categories */}
       <div className="grid gap-6">
         {shortcuts.map((category) => (
