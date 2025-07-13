@@ -2,7 +2,15 @@ import { useEffect, useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
-import { CheckCircle, Cloud, Download, Server, Trash2 } from "lucide-react";
+import {
+  CheckCircle,
+  Cloud,
+  Cpu,
+  Download,
+  Save,
+  Server,
+  Trash2,
+} from "lucide-react";
 import { toast } from "sonner";
 
 import { Badge } from "@acme/ui/components/ui/badge";
@@ -11,42 +19,50 @@ import {
   Card,
   CardContent,
   CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
 } from "@acme/ui/components/ui/card";
+import { Label } from "@acme/ui/components/ui/label";
 import { Progress } from "@acme/ui/components/ui/progress";
 import { RadioGroup, RadioGroupItem } from "@acme/ui/components/ui/radio-group";
+import { Switch } from "@acme/ui/components/ui/switch";
+
+export const Route = createFileRoute("/_authenticated/settings/models")({
+  component: SettingsModelsPage,
+});
 
 // Define types to match Rust structs
+type ModelStatus = "NotDownloaded" | { Downloading: number } | "Downloaded";
+
 interface Model {
   name: string;
   description: string;
   size: string;
   ram: string;
   status: ModelStatus;
+  sha: string;
+  url: string;
   recommended: boolean;
 }
-
-type ModelStatus = "NotDownloaded" | { Downloading: number } | "Downloaded";
-
-export const Route = createFileRoute("/_authenticated/settings/models")({
-  component: SettingsModelsPage,
-});
 
 function SettingsModelsPage() {
   const [selected, setSelected] = useState("cloud");
   const [initialSelected, setInitialSelected] = useState("cloud");
   const [models, setModels] = useState<Record<string, Model>>({});
+  const [cacheEnabled, setCacheEnabled] = useState(true);
 
   const hasChanges = selected !== initialSelected;
 
   const fetchModels = async () => {
     try {
-      const [fetchedModels, previouslySelected] = await Promise.all([
+      const [fetchedModels, previouslySelected, cache] = await Promise.all([
         invoke<Record<string, Model>>("list_models"),
         invoke<string | null>("get_selected_model"),
+        invoke<boolean>("get_model_cache_enabled"),
       ]);
       setModels(fetchedModels);
+      setCacheEnabled(cache);
       if (previouslySelected) {
         setSelected(previouslySelected);
         setInitialSelected(previouslySelected);
@@ -63,20 +79,12 @@ function SettingsModelsPage() {
       "model-download-progress",
       (event) => {
         const [modelId, progress] = event.payload;
-
         setModels((prev) => {
           const model = prev[modelId];
-
-          if (!model) {
-            return prev;
-          }
-
+          if (!model) return prev;
           return {
             ...prev,
-            [modelId]: {
-              ...model,
-              status: { Downloading: progress },
-            },
+            [modelId]: { ...model, status: { Downloading: progress } },
           };
         });
       },
@@ -105,20 +113,18 @@ function SettingsModelsPage() {
   }, []);
 
   const sortedModels = useMemo(() => {
-    const modelSortOrder = ["tiny", "small", "base", "medium", "large"];
-    const getBaseName = (id: string) => id.split(/[-.]/)[0] ?? "";
-
+    const modelSortOrder = [
+      "tiny.en",
+      "base.en",
+      "small.en",
+      "medium.en",
+      "large-v3",
+    ];
     return Object.entries(models).sort(([idA], [idB]) => {
-      const baseA = getBaseName(idA);
-      const baseB = getBaseName(idB);
-      const indexA = modelSortOrder.indexOf(baseA);
-      const indexB = modelSortOrder.indexOf(baseB);
-
+      const indexA = modelSortOrder.indexOf(idA);
+      const indexB = modelSortOrder.indexOf(idB);
       if (indexA !== -1 && indexB !== -1) {
-        if (indexA !== indexB) {
-          return indexA - indexB;
-        }
-        return idA.localeCompare(idB);
+        return indexA - indexB;
       }
       if (indexA !== -1) return -1;
       if (indexB !== -1) return 1;
@@ -126,30 +132,49 @@ function SettingsModelsPage() {
     });
   }, [models]);
 
-  const handleDownload = async (id: string) => {
-    try {
-      await invoke("download_model", { modelId: id });
-      toast.info(`Downloading ${id} model...`);
-    } catch (error) {
-      toast.error("Failed to start download", { description: error as string });
-    }
-  };
-
-  const handleDelete = async (id: string) => {
-    try {
-      await invoke("delete_model", { modelId: id });
-    } catch (error) {
-      toast.error("Failed to delete model", { description: error as string });
-    }
-  };
-
   const handleSave = async () => {
     try {
       await invoke("set_selected_model", { modelId: selected });
       setInitialSelected(selected);
       toast.success("Settings saved successfully!");
     } catch (error) {
-      toast.error("Failed to save settings", { description: error as string });
+      toast.error("Failed to save settings", {
+        description: error as string,
+      });
+    }
+  };
+
+  const handleToggleCache = async (enabled: boolean) => {
+    try {
+      await invoke("set_model_cache_enabled", { enabled });
+      setCacheEnabled(enabled);
+      toast.success(
+        `Model caching ${enabled ? "enabled" : "disabled"} successfully!`,
+      );
+    } catch (error) {
+      toast.error("Failed to update cache settings", {
+        description: error as string,
+      });
+    }
+  };
+
+  const handleDownload = async (modelId: string) => {
+    try {
+      await invoke("download_model", { modelId });
+    } catch (error) {
+      toast.error(`Failed to download model ${modelId}`, {
+        description: error as string,
+      });
+    }
+  };
+
+  const handleDelete = async (modelId: string) => {
+    try {
+      await invoke("delete_model", { modelId });
+    } catch (error) {
+      toast.error(`Failed to delete model ${modelId}`, {
+        description: error as string,
+      });
     }
   };
 
@@ -211,9 +236,27 @@ function SettingsModelsPage() {
             </div>
 
             {/* Local Models Section */}
-            <div>
-              <h3 className="mb-4 text-lg font-medium">Local Models</h3>
-              <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <Cpu className="h-8 w-8 text-green-500" />
+                  <div>
+                    <h4 className="font-semibold">Local Models</h4>
+                    <p className="text-muted-foreground text-sm">
+                      Run directly on your machine. No internet required.
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    id="cache-models"
+                    checked={cacheEnabled}
+                    onCheckedChange={handleToggleCache}
+                  />
+                  <Label htmlFor="cache-models">Cache models in memory</Label>
+                </div>
+              </div>
+              <div className="grid gap-4 md:grid-cols-2">
                 {sortedModels.map(([id, model]) => (
                   <label
                     key={id}
@@ -224,7 +267,7 @@ function SettingsModelsPage() {
                         : "border-border"
                     } ${
                       getModelStatus(model.status) !== "downloaded"
-                        ? "bg-muted/50 cursor-not-allowed"
+                        ? "bg-muted/50"
                         : ""
                     }`}
                   >
@@ -233,9 +276,7 @@ function SettingsModelsPage() {
                         <Server className="text-muted-foreground h-6 w-6" />
                         <span className="font-semibold">{model.name}</span>
                         {model.recommended && (
-                          <Badge variant="secondary">
-                            Recommended for your machine
-                          </Badge>
+                          <Badge variant="secondary">Recommended</Badge>
                         )}
                       </div>
                       <RadioGroupItem
@@ -261,8 +302,8 @@ function SettingsModelsPage() {
                             </div>
                             <Button
                               variant="outline"
-                              size="icon-small"
-                              className="hover:bg-destructive text-muted-foreground"
+                              size="sm"
+                              className="hover:bg-destructive h-8 w-8 p-0"
                               onClick={(e) => {
                                 e.preventDefault();
                                 void handleDelete(id);
@@ -287,10 +328,10 @@ function SettingsModelsPage() {
                           </Button>
                         )}
                         {getModelStatus(model.status) === "downloading" && (
-                          <div className="flex items-center gap-2">
+                          <div className="flex w-full items-center gap-2">
                             <Progress
                               value={getProgress(model.status)}
-                              className="w-full"
+                              className="h-2"
                             />
                             <span className="text-muted-foreground text-xs">
                               {getProgress(model.status)}%
@@ -305,12 +346,15 @@ function SettingsModelsPage() {
             </div>
           </RadioGroup>
         </CardContent>
+        {hasChanges && (
+          <CardFooter className="flex justify-end">
+            <Button onClick={handleSave}>
+              <Save className="mr-2 h-4 w-4" />
+              Save Changes
+            </Button>
+          </CardFooter>
+        )}
       </Card>
-      <div className="flex justify-end">
-        <Button size="lg" disabled={!hasChanges} onClick={handleSave}>
-          Save Changes
-        </Button>
-      </div>
     </div>
   );
 }

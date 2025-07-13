@@ -45,7 +45,11 @@ pub fn run() {
             modules::model_manager::get_selected_model,
             modules::model_manager::set_selected_model,
             modules::model_manager::get_active_model_id,
-            modules::transcription::transcribe
+            modules::transcription::transcribe_audio,
+            modules::settings::get_model_cache_enabled,
+            modules::settings::set_model_cache_enabled,
+            modules::settings::get_transcription_config,
+            modules::settings::set_transcription_config
         ])
         .setup(|app| {
             let (_stream, stream_handle) = rodio::OutputStream::try_default().unwrap();
@@ -55,7 +59,11 @@ pub fn run() {
             let model_manager_state = modules::model_manager::ModelManagerState::new();
             model_manager_state.init(&app.handle())?;
             app.manage(model_manager_state);
-            
+
+            let transcription_service =
+                modules::transcription_service::TranscriptionService::new();
+            app.manage(transcription_service);
+
             // Keep the stream alive for the duration of the app
             std::mem::forget(_stream);
             std::mem::forget(stream_handle);
