@@ -2,7 +2,15 @@ import { useEffect } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { invoke } from "@tauri-apps/api/core";
 import { LazyStore } from "@tauri-apps/plugin-store";
-import { Globe, Keyboard, Mic, Palette, Settings, Shield } from "lucide-react";
+import {
+  Globe,
+  Keyboard,
+  Mic,
+  Palette,
+  Settings,
+  Shield,
+  Volume2,
+} from "lucide-react";
 
 import { Button } from "@acme/ui/components/ui/button";
 import {
@@ -20,6 +28,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@acme/ui/components/ui/select";
+import { Slider } from "@acme/ui/components/ui/slider";
 import { Switch } from "@acme/ui/components/ui/switch";
 
 import type {
@@ -39,9 +48,11 @@ function SettingsPage() {
     devices,
     selectedDevice,
     selectedSound,
+    volume,
     setDevices,
     setSelectedDevice,
     setSelectedSound,
+    setVolume,
   } = useRecordingStore();
 
   useEffect(() => {
@@ -53,6 +64,11 @@ function SettingsPage() {
       const savedSound = await store.get<NotificationSound>("selectedSound");
       if (savedSound) {
         setSelectedSound(savedSound);
+      }
+      const savedVolume = await store.get<number>("volume");
+      if (savedVolume !== null) {
+        setVolume(savedVolume ?? 1.0);
+        void invoke("set_volume", { volume: savedVolume });
       }
     }
 
@@ -75,7 +91,13 @@ function SettingsPage() {
 
     void loadSettings();
     void getDevices();
-  }, [setDevices, setSelectedDevice, setSelectedSound, selectedDevice]);
+  }, [
+    setDevices,
+    setSelectedDevice,
+    setSelectedSound,
+    setVolume,
+    selectedDevice,
+  ]);
 
   const handleDeviceChange = (deviceName: string) => {
     const device = devices.find((d) => d.name === deviceName) ?? null;
@@ -86,6 +108,22 @@ function SettingsPage() {
   const handleSoundChange = (sound: NotificationSound) => {
     setSelectedSound(sound);
     void store.set("selectedSound", sound);
+  };
+
+  const handleVolumeChange = (newVolume: number[]) => {
+    const vol = newVolume[0] ?? 1.0;
+    setVolume(vol);
+    void store.set("volume", vol);
+    void invoke("set_volume", { volume: vol });
+  };
+
+  const handleTestSound = () => {
+    if (selectedSound !== "silent") {
+      void invoke("play_notification_sound", {
+        soundName: `${selectedSound}.mp3`,
+        variant: "Start",
+      });
+    }
   };
 
   return (
@@ -195,6 +233,26 @@ function SettingsPage() {
                   <SelectItem value="silent">🔇 Silent</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Notification Volume</Label>
+              <div className="flex items-center gap-2">
+                <Slider
+                  value={[volume]}
+                  onValueChange={handleVolumeChange}
+                  max={1}
+                  step={0.1}
+                />
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="h-8 w-8"
+                  onClick={handleTestSound}
+                >
+                  <Volume2 className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
 
             <div className="flex items-center justify-between">

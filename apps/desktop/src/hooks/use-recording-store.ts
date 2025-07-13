@@ -12,11 +12,13 @@ interface RecordingState {
   devices: AudioDevice[];
   selectedDevice: AudioDevice | null;
   selectedSound: NotificationSound;
+  volume: number;
   error: string | null;
   setStatus: (status: RecordingStatus) => void;
   setDevices: (devices: AudioDevice[]) => void;
   setSelectedDevice: (device: AudioDevice | null) => void;
   setSelectedSound: (sound: NotificationSound) => void;
+  setVolume: (volume: number) => void;
   setError: (error: string | null) => void;
 }
 
@@ -25,10 +27,12 @@ export const useRecordingStore = create<RecordingState>((set) => ({
   devices: [],
   selectedDevice: null,
   selectedSound: "chime",
+  volume: 1.0,
   error: null,
   setStatus: (status) => set({ status }),
   setDevices: (devices) => set({ devices }),
   setSelectedDevice: (device) => set({ selectedDevice: device }),
   setSelectedSound: (sound) => set({ selectedSound: sound }),
+  setVolume: (volume) => set({ volume }),
   setError: (error) => set({ error }),
 }));
