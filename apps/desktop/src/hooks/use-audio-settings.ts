@@ -10,7 +10,7 @@ import type {
 import { useRecordingStore } from "./use-recording-store";
 
 const SETTINGS_VERSION = 1;
-const store = new LazyStore("settings.dat");
+const store = new LazyStore("settings.json");
 
 export function useAudioSettings() {
   const {
