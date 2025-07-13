@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { CheckCircle, Cloud, Download, Server } from "lucide-react";
+import { CheckCircle, Cloud, Download, Server, Trash2 } from "lucide-react";
 
 import { Badge } from "@acme/ui/components/ui/badge";
 import { Button } from "@acme/ui/components/ui/button";
@@ -89,6 +89,19 @@ function SettingsModelsPage() {
         model.id === id ? { ...model, status: "downloading" } : model,
       ),
     );
+  };
+
+  const handleDelete = (id: string) => {
+    setModels((prevModels) =>
+      prevModels.map((model) =>
+        model.id === id
+          ? { ...model, status: "not_downloaded", progress: 0 }
+          : model,
+      ),
+    );
+    if (selected === id) {
+      setSelected("cloud");
+    }
   };
 
   const handleSave = () => {
@@ -206,9 +219,22 @@ function SettingsModelsPage() {
                       </div>
                       <div className="w-32 text-right">
                         {model.status === "downloaded" && (
-                          <div className="flex items-center justify-end gap-2 text-sm font-medium text-green-500">
-                            <CheckCircle className="h-4 w-4" />
-                            <span>Ready</span>
+                          <div className="flex items-center justify-end gap-2">
+                            <div className="text-primary flex items-center gap-2 text-sm font-medium">
+                              <CheckCircle className="h-4 w-4" />
+                              <span>Ready</span>
+                            </div>
+                            <Button
+                              variant="outline"
+                              size="icon-small"
+                              className="hover:bg-destructive text-muted-foreground"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                handleDelete(model.id);
+                              }}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
                           </div>
                         )}
                         {model.status === "not_downloaded" && (
