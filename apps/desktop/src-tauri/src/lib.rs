@@ -37,7 +37,8 @@ pub fn run() {
             modules::audio::list_audio_devices,
             modules::audio::start_recording,
             modules::audio::stop_recording,
-            modules::audio::play_notification_sound
+            modules::audio::play_notification_sound,
+            modules::audio::set_volume
         ])
         .setup(|app| {
             let (_stream, stream_handle) = rodio::OutputStream::try_default().unwrap();
