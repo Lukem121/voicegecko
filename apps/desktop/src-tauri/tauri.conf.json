@@ -1,7 +1,7 @@
 {
   "productName": "Voice Gecko",
   "version": "0.0.6",
-  "identifier": "com.voice-gecko.desktop",
+  "identifier": "com.voicegecko.desktop",
   "build": {
     "frontendDist": "../dist",
     "devUrl": "http://localhost:1420",
