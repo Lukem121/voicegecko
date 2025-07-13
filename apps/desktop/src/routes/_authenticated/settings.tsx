@@ -10,7 +10,6 @@ import {
   CardTitle,
 } from "@acme/ui/components/ui/card";
 import { Label } from "@acme/ui/components/ui/label";
-import { Separator } from "@acme/ui/components/ui/separator";
 import { Switch } from "@acme/ui/components/ui/switch";
 
 export const Route = createFileRoute("/_authenticated/settings")({
