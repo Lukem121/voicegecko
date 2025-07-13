@@ -22,7 +22,6 @@ import { Route as AuthenticatedNotificationsRouteImport } from './routes/_authen
 import { Route as AuthenticatedHistoryRouteImport } from './routes/_authenticated/history'
 import { Route as AuthenticatedBillingRouteImport } from './routes/_authenticated/billing'
 import { Route as unauthenticatedAuthRouteImport } from './routes/(unauthenticated)/_auth'
-import { Route as AuthenticatedRecordingNewRouteImport } from './routes/_authenticated/recording.new'
 import { Route as unauthenticatedLegalTermsRouteImport } from './routes/(unauthenticated)/legal/terms'
 import { Route as unauthenticatedLegalPrivacyRouteImport } from './routes/(unauthenticated)/legal/privacy'
 import { Route as unauthenticatedAuthVerifySuccessRouteImport } from './routes/(unauthenticated)/_auth.verify-success'
@@ -92,12 +91,6 @@ const unauthenticatedAuthRoute = unauthenticatedAuthRouteImport.update({
   id: '/_auth',
   getParentRoute: () => unauthenticatedRoute,
 } as any)
-const AuthenticatedRecordingNewRoute =
-  AuthenticatedRecordingNewRouteImport.update({
-    id: '/new',
-    path: '/new',
-    getParentRoute: () => AuthenticatedRecordingRoute,
-  } as any)
 const unauthenticatedLegalTermsRoute =
   unauthenticatedLegalTermsRouteImport.update({
     id: '/legal/terms',
@@ -147,7 +140,7 @@ export interface FileRoutesByFullPath {
   '/history': typeof AuthenticatedHistoryRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
   '/profile': typeof AuthenticatedProfileRoute
-  '/recording': typeof AuthenticatedRecordingRouteWithChildren
+  '/recording': typeof AuthenticatedRecordingRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/shortcuts': typeof AuthenticatedShortcutsRoute
   '/transcriptions': typeof AuthenticatedTranscriptionsRoute
@@ -158,7 +151,6 @@ export interface FileRoutesByFullPath {
   '/verify-success': typeof unauthenticatedAuthVerifySuccessRoute
   '/legal/privacy': typeof unauthenticatedLegalPrivacyRoute
   '/legal/terms': typeof unauthenticatedLegalTermsRoute
-  '/recording/new': typeof AuthenticatedRecordingNewRoute
 }
 export interface FileRoutesByTo {
   '/': typeof AuthenticatedIndexRoute
@@ -166,7 +158,7 @@ export interface FileRoutesByTo {
   '/history': typeof AuthenticatedHistoryRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
   '/profile': typeof AuthenticatedProfileRoute
-  '/recording': typeof AuthenticatedRecordingRouteWithChildren
+  '/recording': typeof AuthenticatedRecordingRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/shortcuts': typeof AuthenticatedShortcutsRoute
   '/transcriptions': typeof AuthenticatedTranscriptionsRoute
@@ -177,7 +169,6 @@ export interface FileRoutesByTo {
   '/verify-success': typeof unauthenticatedAuthVerifySuccessRoute
   '/legal/privacy': typeof unauthenticatedLegalPrivacyRoute
   '/legal/terms': typeof unauthenticatedLegalTermsRoute
-  '/recording/new': typeof AuthenticatedRecordingNewRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -188,7 +179,7 @@ export interface FileRoutesById {
   '/_authenticated/history': typeof AuthenticatedHistoryRoute
   '/_authenticated/notifications': typeof AuthenticatedNotificationsRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
-  '/_authenticated/recording': typeof AuthenticatedRecordingRouteWithChildren
+  '/_authenticated/recording': typeof AuthenticatedRecordingRoute
   '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/shortcuts': typeof AuthenticatedShortcutsRoute
   '/_authenticated/transcriptions': typeof AuthenticatedTranscriptionsRoute
@@ -200,7 +191,6 @@ export interface FileRoutesById {
   '/(unauthenticated)/_auth/verify-success': typeof unauthenticatedAuthVerifySuccessRoute
   '/(unauthenticated)/legal/privacy': typeof unauthenticatedLegalPrivacyRoute
   '/(unauthenticated)/legal/terms': typeof unauthenticatedLegalTermsRoute
-  '/_authenticated/recording/new': typeof AuthenticatedRecordingNewRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -221,7 +211,6 @@ export interface FileRouteTypes {
     | '/verify-success'
     | '/legal/privacy'
     | '/legal/terms'
-    | '/recording/new'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -240,7 +229,6 @@ export interface FileRouteTypes {
     | '/verify-success'
     | '/legal/privacy'
     | '/legal/terms'
-    | '/recording/new'
   id:
     | '__root__'
     | '/_authenticated'
@@ -262,7 +250,6 @@ export interface FileRouteTypes {
     | '/(unauthenticated)/_auth/verify-success'
     | '/(unauthenticated)/legal/privacy'
     | '/(unauthenticated)/legal/terms'
-    | '/_authenticated/recording/new'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -356,13 +343,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof unauthenticatedAuthRouteImport
       parentRoute: typeof unauthenticatedRoute
     }
-    '/_authenticated/recording/new': {
-      id: '/_authenticated/recording/new'
-      path: '/new'
-      fullPath: '/recording/new'
-      preLoaderRoute: typeof AuthenticatedRecordingNewRouteImport
-      parentRoute: typeof AuthenticatedRecordingRoute
-    }
     '/(unauthenticated)/legal/terms': {
       id: '/(unauthenticated)/legal/terms'
       path: '/legal/terms'
@@ -415,26 +395,12 @@ declare module '@tanstack/react-router' {
   }
 }
 
-interface AuthenticatedRecordingRouteChildren {
-  AuthenticatedRecordingNewRoute: typeof AuthenticatedRecordingNewRoute
-}
-
-const AuthenticatedRecordingRouteChildren: AuthenticatedRecordingRouteChildren =
-  {
-    AuthenticatedRecordingNewRoute: AuthenticatedRecordingNewRoute,
-  }
-
-const AuthenticatedRecordingRouteWithChildren =
-  AuthenticatedRecordingRoute._addFileChildren(
-    AuthenticatedRecordingRouteChildren,
-  )
-
 interface AuthenticatedRouteChildren {
   AuthenticatedBillingRoute: typeof AuthenticatedBillingRoute
   AuthenticatedHistoryRoute: typeof AuthenticatedHistoryRoute
   AuthenticatedNotificationsRoute: typeof AuthenticatedNotificationsRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
-  AuthenticatedRecordingRoute: typeof AuthenticatedRecordingRouteWithChildren
+  AuthenticatedRecordingRoute: typeof AuthenticatedRecordingRoute
   AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedShortcutsRoute: typeof AuthenticatedShortcutsRoute
   AuthenticatedTranscriptionsRoute: typeof AuthenticatedTranscriptionsRoute
@@ -446,7 +412,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedHistoryRoute: AuthenticatedHistoryRoute,
   AuthenticatedNotificationsRoute: AuthenticatedNotificationsRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
-  AuthenticatedRecordingRoute: AuthenticatedRecordingRouteWithChildren,
+  AuthenticatedRecordingRoute: AuthenticatedRecordingRoute,
   AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedShortcutsRoute: AuthenticatedShortcutsRoute,
   AuthenticatedTranscriptionsRoute: AuthenticatedTranscriptionsRoute,
