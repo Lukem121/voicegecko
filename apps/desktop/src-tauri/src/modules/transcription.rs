@@ -64,7 +64,6 @@ pub async fn transcribe(
 fn read_wav_to_f32(path: String) -> Result<Vec<f32>, TranscriptionError> {
     let mut reader =
         WavReader::open(path).map_err(|e| TranscriptionError::AudioProcessing(e.to_string()))?;
-    let spec = reader.spec();
     let samples: Vec<i16> = reader.samples::<i16>().map(|s| s.unwrap()).collect();
 
     // Convert to f32 samples
