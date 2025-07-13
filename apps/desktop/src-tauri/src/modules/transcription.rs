@@ -29,7 +29,7 @@ pub async fn transcribe(
         ));
     }
 
-    let ctx = WhisperContext::new_with_params(
+    let ctx: WhisperContext = WhisperContext::new_with_params(
         &model_path.to_string_lossy(),
         WhisperContextParameters::default(),
     )
@@ -72,9 +72,6 @@ fn read_wav_to_f32(path: String) -> Result<Vec<f32>, TranscriptionError> {
     for (i, sample) in samples.iter().enumerate() {
         f32_samples[i] = (*sample as f32) / (i16::MAX as f32);
     }
-
-    // TODO: Resample to 16kHz if necessary, whisper.cpp requires it.
-    // For now, assume the input is already 16kHz.
 
     Ok(f32_samples)
 }
