@@ -1,7 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import {
   Bell,
-  FileText,
   Globe,
   Keyboard,
   Mic,
@@ -79,6 +78,16 @@ function SettingsPage() {
                 </div>
                 <Switch id="auto-punctuation" defaultChecked />
               </div>
+
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label htmlFor="launch-on-startup">Launch on startup</Label>
+                  <p className="text-muted-foreground text-sm">
+                    Start the application when your computer boots
+                  </p>
+                </div>
+                <Switch id="launch-on-startup" />
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -98,34 +107,12 @@ function SettingsPage() {
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
-                  <Label htmlFor="transcription-complete">
-                    Transcription complete
-                  </Label>
+                  <Label htmlFor="interaction-sounds">Interaction sounds</Label>
                   <p className="text-muted-foreground text-sm">
-                    Notify when transcription is finished
+                    Play sounds for key actions like start/stop recording
                   </p>
                 </div>
-                <Switch id="transcription-complete" defaultChecked />
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label htmlFor="low-storage">Low storage warning</Label>
-                  <p className="text-muted-foreground text-sm">
-                    Alert when storage space is low
-                  </p>
-                </div>
-                <Switch id="low-storage" defaultChecked />
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label htmlFor="update-available">Update available</Label>
-                  <p className="text-muted-foreground text-sm">
-                    Notify when app updates are available
-                  </p>
-                </div>
-                <Switch id="update-available" defaultChecked />
+                <Switch id="interaction-sounds" defaultChecked />
               </div>
             </div>
           </CardContent>
@@ -144,13 +131,6 @@ function SettingsPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label>Default Audio Quality</Label>
-              <Button variant="outline" className="w-full justify-start">
-                High Quality (48kHz, 16-bit)
-              </Button>
-            </div>
-
-            <div className="space-y-2">
               <Label>Default Microphone</Label>
               <Button variant="outline" className="w-full justify-start">
                 Built-in Microphone
@@ -165,6 +145,38 @@ function SettingsPage() {
                 </p>
               </div>
               <Switch id="noise-suppression" defaultChecked />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Recording Stop/Start Sound</Label>
+              <Button variant="outline" className="w-full justify-start">
+                Chime (Default)
+              </Button>
+              <div className="mt-2 grid grid-cols-2 gap-2">
+                <Button variant="outline" size="sm" className="text-xs">
+                  🔔 Chime
+                </Button>
+                <Button variant="outline" size="sm" className="text-xs">
+                  📢 Beep
+                </Button>
+                <Button variant="outline" size="sm" className="text-xs">
+                  🎵 Tone
+                </Button>
+                <Button variant="outline" size="sm" className="text-xs">
+                  🔇 Silent
+                </Button>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label htmlFor="mute-system-audio">Mute system audio</Label>
+                <p className="text-muted-foreground text-sm">
+                  Silence all other audio when recording to reduce background
+                  noise
+                </p>
+              </div>
+              <Switch id="mute-system-audio" />
             </div>
           </CardContent>
         </Card>
@@ -181,13 +193,6 @@ function SettingsPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label>Data Retention</Label>
-              <Button variant="outline" className="w-full justify-start">
-                Keep transcriptions for 1 year
-              </Button>
-            </div>
-
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
                 <Label htmlFor="analytics">Usage analytics</Label>
@@ -209,6 +214,41 @@ function SettingsPage() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Personalization */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Palette className="h-5 w-5" />
+              Personalization
+            </CardTitle>
+            <CardDescription>
+              Customize the app experience for your needs
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label htmlFor="smart-formatting">Smart formatting</Label>
+                <p className="text-muted-foreground text-sm">
+                  Use AI to intelligently format your dictation text
+                </p>
+              </div>
+              <Switch id="smart-formatting" defaultChecked />
+            </div>
+
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label htmlFor="auto-dictionary">Auto add to dictionary</Label>
+                <p className="text-muted-foreground text-sm">
+                  Help AI learn your frequently used words for better
+                  recognition
+                </p>
+              </div>
+              <Switch id="auto-dictionary" defaultChecked />
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Advanced Settings */}
@@ -218,18 +258,14 @@ function SettingsPage() {
           <CardDescription>Advanced configuration options</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-3">
+          <div className="grid gap-4 md:grid-cols-2">
             <Button variant="outline" className="justify-start gap-2">
-              <FileText className="h-4 w-4" />
-              Export Settings
+              <Keyboard className="h-4 w-4" />
+              Keyboard Shortcuts
             </Button>
             <Button variant="outline" className="justify-start gap-2">
               <Globe className="h-4 w-4" />
               Language Settings
-            </Button>
-            <Button variant="outline" className="justify-start gap-2">
-              <Keyboard className="h-4 w-4" />
-              Keyboard Shortcuts
             </Button>
           </div>
         </CardContent>
