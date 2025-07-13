@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { List, Mic, RotateCcw, Search } from "lucide-react";
+import { List, Mic, RotateCcw, RotateCw, Search } from "lucide-react";
 
 import { Button } from "@acme/ui/components/ui/button";
 import { Card, CardContent } from "@acme/ui/components/ui/card";
@@ -11,20 +11,6 @@ export const Route = createFileRoute("/_authenticated/recording")({
 });
 
 function RecordingPage() {
-  const [noteText, setNoteText] = useState("");
-  const [isRecording, setIsRecording] = useState(false);
-
-  const handleFinish = () => {
-    // TODO: Implement finish functionality
-    console.log("Finishing note:", noteText);
-    setNoteText("");
-  };
-
-  const handleMicrophoneClick = () => {
-    setIsRecording(!isRecording);
-    // TODO: Implement microphone recording functionality
-  };
-
   return (
     <div className="flex flex-1 flex-col gap-6">
       {/* Main Note Input */}
@@ -34,28 +20,19 @@ function RecordingPage() {
             <div className="relative">
               <Textarea
                 placeholder="Start typing or click the microphone to record..."
-                value={noteText}
-                onChange={(e) => setNoteText(e.target.value)}
                 className="min-h-[200px] resize-none border-0 text-base focus-visible:ring-0"
               />
               <Button
                 variant="secondary"
                 size="icon"
                 className={`absolute top-3 right-3 h-10 w-10 rounded-full`}
-                onClick={handleMicrophoneClick}
               >
                 <Mic className="h-5 w-5" />
               </Button>
             </div>
 
             <div className="flex justify-end">
-              <Button
-                onClick={handleFinish}
-                disabled={!noteText.trim()}
-                variant="secondary"
-              >
-                Finish
-              </Button>
+              <Button variant="secondary">Finish</Button>
             </div>
           </div>
         </CardContent>
@@ -67,7 +44,7 @@ function RecordingPage() {
           <h2 className="text-lg font-medium tracking-wide text-gray-500 uppercase">
             RECENTS
           </h2>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1">
             <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
               <Search className="h-4 w-4" />
             </Button>
@@ -75,7 +52,7 @@ function RecordingPage() {
               <List className="h-4 w-4" />
             </Button>
             <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-              <RotateCcw className="h-4 w-4" />
+              <RotateCw className="h-4 w-4" />
             </Button>
           </div>
         </div>
