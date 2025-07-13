@@ -40,6 +40,7 @@ sha1 = "0.10"
 whisper-rs = "0.14.3"
 thiserror = "2.0.12"
 rubato = "0.15.0"
+tauri-plugin-log = "2.6.0"
 
 
 [target."cfg(not(any(target_os = \"android\", target_os = \"ios\")))".dependencies]

@@ -1,6 +1,8 @@
+import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { invoke } from "@tauri-apps/api/core";
 import { List, Mic, RotateCw, Search, Square } from "lucide-react";
+import { toast } from "sonner";
 
 import { Button } from "@acme/ui/components/ui/button";
 import { Card, CardContent } from "@acme/ui/components/ui/card";
@@ -16,6 +18,8 @@ export const Route = createFileRoute("/_authenticated/recording")({
 function RecordingPage() {
   const { status, selectedDevice, selectedSound, notificationTiming } =
     useRecordingStore();
+  const [transcript, setTranscript] = useState("");
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const handleMicClick = async () => {
     if (status === "idle") {
@@ -31,6 +35,7 @@ function RecordingPage() {
         await invoke("start_recording", { device: selectedDevice?.name });
       } catch (error) {
         console.error("Failed to start recording:", error);
+        toast.error("Failed to start recording");
       }
     } else if (status === "recording") {
       try {
@@ -40,9 +45,31 @@ function RecordingPage() {
             variant: "End",
           });
         }
-        await invoke("stop_recording");
+        const audioPath = await invoke<string>("stop_recording");
+
+        setIsProcessing(true);
+        const modelId = await invoke<string>("get_active_model_id");
+
+        if (modelId === "cloud") {
+          // TODO: Implement cloud transcription
+          toast.info("Cloud transcription coming soon!");
+          setIsProcessing(false);
+          return;
+        }
+
+        const newTranscript = await invoke<string>("transcribe", {
+          modelId,
+          audioPath,
+        });
+
+        setTranscript(newTranscript);
       } catch (error) {
-        console.error("Failed to stop recording:", error);
+        console.error("Failed to stop recording or transcribe:", error);
+        toast.error("Transcription failed", {
+          description: "Could not process the recorded audio.",
+        });
+      } finally {
+        setIsProcessing(false);
       }
     }
   };
@@ -59,6 +86,8 @@ function RecordingPage() {
               <Textarea
                 placeholder="Start typing or click the microphone to record..."
                 className="min-h-[200px] resize-none border-0 text-base focus-visible:ring-0"
+                value={transcript}
+                onChange={(e) => setTranscript(e.target.value)}
               />
               <Button
                 variant={isRecording ? "destructive" : "secondary"}
@@ -68,7 +97,7 @@ function RecordingPage() {
                   isRecording && "animate-pulse",
                 )}
                 onClick={handleMicClick}
-                disabled={status === "processing"}
+                disabled={status === "processing" || isProcessing}
               >
                 {isRecording ? (
                   <Square className="h-5 w-5" />
