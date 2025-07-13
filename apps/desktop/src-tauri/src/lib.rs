@@ -38,12 +38,21 @@ pub fn run() {
             modules::audio::start_recording,
             modules::audio::stop_recording,
             modules::audio::play_notification_sound,
-            modules::audio::set_volume
+            modules::audio::set_volume,
+            modules::model_manager::list_models,
+            modules::model_manager::download_model,
+            modules::model_manager::delete_model,
+            modules::transcription::transcribe
         ])
         .setup(|app| {
             let (_stream, stream_handle) = rodio::OutputStream::try_default().unwrap();
             let sink = rodio::Sink::try_new(&stream_handle).unwrap();
             app.manage(modules::audio::AudioState::new(sink));
+
+            let model_manager_state = modules::model_manager::ModelManagerState::new();
+            model_manager_state.init(&app.handle())?;
+            app.manage(model_manager_state);
+            
             // Keep the stream alive for the duration of the app
             std::mem::forget(_stream);
             std::mem::forget(stream_handle);
