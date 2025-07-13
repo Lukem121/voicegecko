@@ -1,6 +1,5 @@
-import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { List, Mic, RotateCcw, RotateCw, Search } from "lucide-react";
+import { List, Mic, RotateCw, Search } from "lucide-react";
 
 import { Button } from "@acme/ui/components/ui/button";
 import { Card, CardContent } from "@acme/ui/components/ui/card";
