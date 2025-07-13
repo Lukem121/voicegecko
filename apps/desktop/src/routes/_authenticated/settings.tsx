@@ -1,7 +1,4 @@
-import { useEffect } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { invoke } from "@tauri-apps/api/core";
-import { LazyStore } from "@tauri-apps/plugin-store";
 import {
   Globe,
   Keyboard,
@@ -32,18 +29,14 @@ import { Slider } from "@acme/ui/components/ui/slider";
 import { Switch } from "@acme/ui/components/ui/switch";
 
 import type {
-  AudioDevice,
   NotificationSound,
   NotificationTiming,
 } from "~/hooks/use-recording-store";
-import { useRecordingStore } from "~/hooks/use-recording-store";
+import { useAudioSettings } from "~/hooks/use-audio-settings";
 
 export const Route = createFileRoute("/_authenticated/settings")({
   component: SettingsPage,
 });
-
-const SETTINGS_VERSION = 1;
-const store = new LazyStore("settings.dat");
 
 function SettingsPage() {
   const {
@@ -52,117 +45,12 @@ function SettingsPage() {
     selectedSound,
     notificationTiming,
     volume,
-    setDevices,
-    setSelectedDevice,
-    setSelectedSound,
-    setNotificationTiming,
-    setVolume,
-  } = useRecordingStore();
-
-  useEffect(() => {
-    async function migrateAndLoadSettings() {
-      const currentVersion = (await store.get<number>("version")) ?? 0;
-
-      if (currentVersion < SETTINGS_VERSION) {
-        if (currentVersion < 1) {
-          // Migrating from unversioned to v1
-          // Ensure default values exist for new settings
-          const volume = await store.get<number>("volume");
-          if (volume === undefined) {
-            await store.set("volume", 1.0);
-          }
-          const timing =
-            await store.get<NotificationTiming>("notificationTiming");
-          if (timing === undefined) {
-            await store.set("notificationTiming", "start_stop");
-          }
-        }
-        // Future migrations would go here in `if (currentVersion < 2)` blocks
-
-        await store.set("version", SETTINGS_VERSION);
-        await store.save();
-      }
-
-      // Load all settings from store
-      const savedDevice = await store.get<AudioDevice>("selectedDevice");
-      if (savedDevice) {
-        setSelectedDevice(savedDevice);
-      }
-      const savedSound = await store.get<NotificationSound>("selectedSound");
-      if (savedSound) {
-        setSelectedSound(savedSound);
-      }
-      const savedTiming =
-        await store.get<NotificationTiming>("notificationTiming");
-      if (savedTiming) {
-        setNotificationTiming(savedTiming);
-      }
-      const savedVolume = await store.get<number>("volume");
-      if (savedVolume !== undefined) {
-        setVolume(savedVolume);
-        void invoke("set_volume", { volume: savedVolume });
-      }
-    }
-
-    async function getDevices() {
-      try {
-        const audioDevices = await invoke<AudioDevice[]>("list_audio_devices");
-        setDevices(audioDevices);
-        if (!selectedDevice && audioDevices.length > 0) {
-          const defaultDevice =
-            audioDevices.find((d) => d.name.includes("Default")) ??
-            audioDevices[0];
-          if (defaultDevice) {
-            setSelectedDevice(defaultDevice);
-          }
-        }
-      } catch (error) {
-        console.error("Failed to get audio devices:", error);
-      }
-    }
-
-    void migrateAndLoadSettings();
-    void getDevices();
-  }, [
-    setDevices,
-    setSelectedDevice,
-    setSelectedSound,
-    setNotificationTiming,
-    setVolume,
-    selectedDevice,
-  ]);
-
-  const handleDeviceChange = (deviceName: string) => {
-    const device = devices.find((d) => d.name === deviceName) ?? null;
-    setSelectedDevice(device);
-    void store.set("selectedDevice", device);
-  };
-
-  const handleSoundChange = (sound: NotificationSound) => {
-    setSelectedSound(sound);
-    void store.set("selectedSound", sound);
-  };
-
-  const handleTimingChange = (timing: NotificationTiming) => {
-    setNotificationTiming(timing);
-    void store.set("notificationTiming", timing);
-  };
-
-  const handleVolumeChange = (newVolume: number[]) => {
-    const vol = newVolume[0] ?? 1.0;
-    setVolume(vol);
-    void store.set("volume", vol);
-    void invoke("set_volume", { volume: vol });
-  };
-
-  const handleTestSound = () => {
-    if (notificationTiming !== "disabled") {
-      void invoke("play_notification_sound", {
-        soundName: `${selectedSound}.mp3`,
-        variant: "Start",
-      });
-    }
-  };
+    handleDeviceChange,
+    handleSoundChange,
+    handleTimingChange,
+    handleVolumeChange,
+    handleTestSound,
+  } = useAudioSettings();
 
   return (
     <div className="flex flex-1 flex-col gap-4">
@@ -242,17 +130,6 @@ function SettingsPage() {
                 </SelectContent>
               </Select>
             </div>
-
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label htmlFor="noise-suppression">Noise suppression</Label>
-                <p className="text-muted-foreground text-sm">
-                  Reduce background noise
-                </p>
-              </div>
-              <Switch id="noise-suppression" defaultChecked />
-            </div>
-
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Notification Sound</Label>
@@ -312,6 +189,16 @@ function SettingsPage() {
                   <Volume2 className="h-4 w-4" />
                 </Button>
               </div>
+            </div>
+
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label htmlFor="noise-suppression">Noise suppression</Label>
+                <p className="text-muted-foreground text-sm">
+                  Reduce background noise
+                </p>
+              </div>
+              <Switch id="noise-suppression" defaultChecked />
             </div>
 
             <div className="flex items-center justify-between">
