@@ -1,13 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import {
-  Bell,
-  Globe,
-  Keyboard,
-  Mic,
-  Palette,
-  Settings,
-  Shield,
-} from "lucide-react";
+import { Globe, Keyboard, Mic, Palette, Settings, Shield } from "lucide-react";
 
 import { Button } from "@acme/ui/components/ui/button";
 import {
@@ -51,36 +43,6 @@ function SettingsPage() {
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
-                  <Label htmlFor="auto-save">Auto-save transcriptions</Label>
-                  <p className="text-muted-foreground text-sm">
-                    Automatically save transcriptions as you record
-                  </p>
-                </div>
-                <Switch id="auto-save" defaultChecked />
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label htmlFor="show-timestamps">Show timestamps</Label>
-                  <p className="text-muted-foreground text-sm">
-                    Display timestamps in transcriptions
-                  </p>
-                </div>
-                <Switch id="show-timestamps" defaultChecked />
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
-                  <Label htmlFor="auto-punctuation">Auto-punctuation</Label>
-                  <p className="text-muted-foreground text-sm">
-                    Automatically add punctuation marks
-                  </p>
-                </div>
-                <Switch id="auto-punctuation" defaultChecked />
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div className="space-y-0.5">
                   <Label htmlFor="launch-on-startup">Launch on startup</Label>
                   <p className="text-muted-foreground text-sm">
                     Start the application when your computer boots
@@ -88,31 +50,17 @@ function SettingsPage() {
                 </div>
                 <Switch id="launch-on-startup" />
               </div>
-            </div>
-          </CardContent>
-        </Card>
 
-        {/* Notifications */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Bell className="h-5 w-5" />
-              Notifications
-            </CardTitle>
-            <CardDescription>
-              Choose what you want to be notified about
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
-                  <Label htmlFor="interaction-sounds">Interaction sounds</Label>
+                  <Label htmlFor="show-gecko-bar">
+                    Show gecko bar at all times
+                  </Label>
                   <p className="text-muted-foreground text-sm">
-                    Play sounds for key actions like start/stop recording
+                    Keep the gecko widget visible at the bottom of your screen
                   </p>
                 </div>
-                <Switch id="interaction-sounds" defaultChecked />
+                <Switch id="show-gecko-bar" defaultChecked />
               </div>
             </div>
           </CardContent>
@@ -227,6 +175,16 @@ function SettingsPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label htmlFor="interaction-sounds">Interaction sounds</Label>
+                <p className="text-muted-foreground text-sm">
+                  Play sounds for key actions like start/stop recording
+                </p>
+              </div>
+              <Switch id="interaction-sounds" defaultChecked />
+            </div>
+
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
                 <Label htmlFor="smart-formatting">Smart formatting</Label>
