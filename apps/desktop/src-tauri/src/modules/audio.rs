@@ -1,6 +1,7 @@
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
 use crossbeam_channel::{unbounded, Sender};
 use rodio::{Decoder, Sink, Source};
+use rubato::{FftFixedIn, Resampler};
 use serde::{Deserialize, Serialize};
 use std::fs::File;
 use std::io::BufReader;
@@ -75,9 +76,14 @@ pub fn start_recording(
         };
 
         let config = input_device.default_input_config().unwrap();
+        let input_sample_rate = config.sample_rate().0;
+        let input_channels = config.channels();
+
+        const TARGET_SAMPLE_RATE: u32 = 16000;
+
         let spec = hound::WavSpec {
-            channels: config.channels() as u16,
-            sample_rate: config.sample_rate().0,
+            channels: 1, // mono
+            sample_rate: TARGET_SAMPLE_RATE,
             bits_per_sample: 16,
             sample_format: hound::SampleFormat::Int,
         };
@@ -92,6 +98,16 @@ pub fn start_recording(
             hound::WavWriter::create(path, spec).unwrap(),
         )));
 
+        // Setup resampler
+        let mut resampler = FftFixedIn::<f32>::new(
+            input_sample_rate as usize,
+            TARGET_SAMPLE_RATE as usize,
+            1024, // chunk size
+            2,    // number of channels in internal processing
+            input_channels as usize,
+        )
+        .unwrap();
+
         let writer_clone = writer.clone();
         let app_clone = app.clone();
         let err_fn = move |err: cpal::StreamError| {
@@ -104,11 +120,14 @@ pub fn start_recording(
                 .build_input_stream(
                     &config.into(),
                     move |data: &[i16], _: &cpal::InputCallbackInfo| {
-                        if let Some(writer) = writer_clone.lock().unwrap().as_mut() {
-                            for &sample in data.iter() {
-                                writer.write_sample(sample).unwrap();
-                            }
-                        }
+                        let f32_samples: Vec<f32> =
+                            data.iter().map(|s| *s as f32 / i16::MAX as f32).collect();
+                        process_and_write_samples(
+                            &writer_clone,
+                            &mut resampler,
+                            &f32_samples,
+                            input_channels,
+                        );
                     },
                     err_fn,
                     None,
@@ -118,12 +137,12 @@ pub fn start_recording(
                 .build_input_stream(
                     &config.into(),
                     move |data: &[f32], _: &cpal::InputCallbackInfo| {
-                        if let Some(writer) = writer_clone.lock().unwrap().as_mut() {
-                            for &sample in data.iter() {
-                                let amplitude = i16::MAX as f32;
-                                writer.write_sample((sample * amplitude) as i16).unwrap();
-                            }
-                        }
+                        process_and_write_samples(
+                            &writer_clone,
+                            &mut resampler,
+                            data,
+                            input_channels,
+                        );
                     },
                     err_fn,
                     None,
@@ -155,6 +174,32 @@ pub fn start_recording(
     app_handle
         .emit("recording-state-changed", "recording".to_string())
         .map_err(|e| e.to_string())
+}
+
+fn process_and_write_samples(
+    writer: &Arc<Mutex<Option<hound::WavWriter<std::io::BufWriter<File>>>>>,
+    resampler: &mut FftFixedIn<f32>,
+    samples: &[f32],
+    channels: u16,
+) {
+    let mono_samples = if channels == 2 {
+        samples
+            .chunks_exact(2)
+            .map(|chunk| (chunk[0] + chunk[1]) / 2.0)
+            .collect()
+    } else {
+        samples.to_vec()
+    };
+
+    let waves_in = vec![mono_samples];
+    let resampled_waves = resampler.process(&waves_in, None).unwrap();
+
+    if let Some(writer) = writer.lock().unwrap().as_mut() {
+        for sample in resampled_waves[0].iter() {
+            let amplitude = i16::MAX as f32;
+            writer.write_sample((sample * amplitude) as i16).unwrap();
+        }
+    }
 }
 
 #[tauri::command]
