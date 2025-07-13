@@ -23,6 +23,8 @@ pub enum ModelManagerError {
     StoreError(String),
 }
 
+const SELECTED_MODEL_KEY: &str = "selected_model";
+
 impl From<std::io::Error> for ModelManagerError {
     fn from(err: std::io::Error) -> Self {
         ModelManagerError::FileSystemError(err.to_string())
@@ -77,6 +79,64 @@ impl ModelManagerState {
 
         Ok(())
     }
+}
+
+#[tauri::command]
+pub fn set_selected_model(
+    app: AppHandle,
+    state: tauri::State<ModelManagerState>,
+    model_id: String,
+) -> Result<(), ModelManagerError> {
+    let store = app.store(&state.store_path)?;
+    store.set(SELECTED_MODEL_KEY, json!(model_id));
+    store.save()?;
+    Ok(())
+}
+
+#[tauri::command]
+pub fn get_selected_model(
+    app: AppHandle,
+    state: tauri::State<ModelManagerState>,
+) -> Result<Option<String>, ModelManagerError> {
+    let store = app.store(&state.store_path)?;
+    let selected_model = store
+        .get(SELECTED_MODEL_KEY)
+        .map(|v| v.as_str().unwrap().to_string());
+    Ok(selected_model)
+}
+
+#[tauri::command]
+pub fn get_active_model_id(
+    app: AppHandle,
+    state: tauri::State<ModelManagerState>,
+) -> Result<String, ModelManagerError> {
+    let models = list_models(app.clone(), state.clone())?;
+
+    // 1. Check for a user-selected and downloaded model
+    if let Some(selected_id) = get_selected_model(app.clone(), state.clone())? {
+        if let Some(model) = models.get(&selected_id) {
+            if model.status == ModelStatus::Downloaded {
+                return Ok(selected_id);
+            }
+        }
+    }
+
+    // 2. Fallback to tiny.en if it's downloaded
+    if let Some(model) = models.get("tiny.en") {
+        if model.status == ModelStatus::Downloaded {
+            return Ok("tiny.en".to_string());
+        }
+    }
+
+    // 3. Fallback to any other downloaded model
+    for (id, model) in models {
+        if model.status == ModelStatus::Downloaded {
+            return Ok(id);
+        }
+    }
+
+    // 4. Fallback to cloud
+    Ok("cloud".to_string())
 }
 
 #[tauri::command]
