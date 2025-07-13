@@ -66,8 +66,8 @@ function SettingsPage() {
         setSelectedSound(savedSound);
       }
       const savedVolume = await store.get<number>("volume");
-      if (savedVolume !== null) {
-        setVolume(savedVolume ?? 1.0);
+      if (savedVolume !== undefined) {
+        setVolume(savedVolume);
         void invoke("set_volume", { volume: savedVolume });
       }
     }
