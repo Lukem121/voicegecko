@@ -1,6 +1,6 @@
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
 use crossbeam_channel::{unbounded, Sender};
-use rodio::{Decoder, Sink};
+use rodio::{Decoder, Sink, Source};
 use serde::{Deserialize, Serialize};
 use std::fs::File;
 use std::io::BufReader;
@@ -15,6 +15,12 @@ pub struct AudioDevice {
 
 pub enum AudioCommand {
     Stop,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub enum SoundVariant {
+    Start,
+    End,
 }
 
 pub struct AudioState {
@@ -172,6 +178,7 @@ pub fn play_notification_sound(
     state: tauri::State<AudioState>,
     app: tauri::AppHandle,
     sound_name: String,
+    variant: SoundVariant,
 ) -> Result<(), String> {
     let sound_path = app
         .path()
@@ -187,6 +194,12 @@ pub fn play_notification_sound(
     );
 
     let source = Decoder::new(file).map_err(|e| e.to_string())?;
-    state.sink.lock().unwrap().append(source);
+
+    let modified_source = match variant {
+        SoundVariant::Start => source.speed(1.0).convert_samples::<f32>(),
+        SoundVariant::End => source.speed(0.85).convert_samples::<f32>(),
+    };
+
+    state.sink.lock().unwrap().append(modified_source);
     Ok(())
 }
