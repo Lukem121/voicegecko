@@ -203,3 +203,9 @@ pub fn play_notification_sound(
     state.sink.lock().unwrap().append(modified_source);
     Ok(())
 }
+
+#[tauri::command]
+pub fn set_volume(state: tauri::State<AudioState>, volume: f32) -> Result<(), String> {
+    state.sink.lock().unwrap().set_volume(volume);
+    Ok(())
+}
