@@ -14,16 +14,19 @@ export const Route = createFileRoute("/_authenticated/recording")({
 });
 
 function RecordingPage() {
-  const { status, selectedDevice, selectedSound } = useRecordingStore();
+  const { status, selectedDevice, selectedSound, notificationTiming } =
+    useRecordingStore();
 
   const handleMicClick = async () => {
     if (status === "idle") {
       try {
-        if (selectedSound !== "silent") {
+        if (notificationTiming === "start_stop") {
           await invoke("play_notification_sound", {
             soundName: `${selectedSound}.mp3`,
             variant: "Start",
           });
+          // Add a delay to prevent the sound from being recorded
+          await new Promise((resolve) => setTimeout(resolve, 500));
         }
         await invoke("start_recording", { device: selectedDevice?.name });
       } catch (error) {
@@ -31,7 +34,7 @@ function RecordingPage() {
       }
     } else if (status === "recording") {
       try {
-        if (selectedSound !== "silent") {
+        if (notificationTiming === "start_stop") {
           await invoke("play_notification_sound", {
             soundName: `${selectedSound}.mp3`,
             variant: "End",

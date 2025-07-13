@@ -34,6 +34,7 @@ import { Switch } from "@acme/ui/components/ui/switch";
 import type {
   AudioDevice,
   NotificationSound,
+  NotificationTiming,
 } from "~/hooks/use-recording-store";
 import { useRecordingStore } from "~/hooks/use-recording-store";
 
@@ -41,6 +42,7 @@ export const Route = createFileRoute("/_authenticated/settings")({
   component: SettingsPage,
 });
 
+const SETTINGS_VERSION = 1;
 const store = new LazyStore("settings.dat");
 
 function SettingsPage() {
@@ -48,15 +50,40 @@ function SettingsPage() {
     devices,
     selectedDevice,
     selectedSound,
+    notificationTiming,
     volume,
     setDevices,
     setSelectedDevice,
     setSelectedSound,
+    setNotificationTiming,
     setVolume,
   } = useRecordingStore();
 
   useEffect(() => {
-    async function loadSettings() {
+    async function migrateAndLoadSettings() {
+      const currentVersion = (await store.get<number>("version")) ?? 0;
+
+      if (currentVersion < SETTINGS_VERSION) {
+        if (currentVersion < 1) {
+          // Migrating from unversioned to v1
+          // Ensure default values exist for new settings
+          const volume = await store.get<number>("volume");
+          if (volume === undefined) {
+            await store.set("volume", 1.0);
+          }
+          const timing =
+            await store.get<NotificationTiming>("notificationTiming");
+          if (timing === undefined) {
+            await store.set("notificationTiming", "start_stop");
+          }
+        }
+        // Future migrations would go here in `if (currentVersion < 2)` blocks
+
+        await store.set("version", SETTINGS_VERSION);
+        await store.save();
+      }
+
+      // Load all settings from store
       const savedDevice = await store.get<AudioDevice>("selectedDevice");
       if (savedDevice) {
         setSelectedDevice(savedDevice);
@@ -64,6 +91,11 @@ function SettingsPage() {
       const savedSound = await store.get<NotificationSound>("selectedSound");
       if (savedSound) {
         setSelectedSound(savedSound);
+      }
+      const savedTiming =
+        await store.get<NotificationTiming>("notificationTiming");
+      if (savedTiming) {
+        setNotificationTiming(savedTiming);
       }
       const savedVolume = await store.get<number>("volume");
       if (savedVolume !== undefined) {
@@ -89,12 +121,13 @@ function SettingsPage() {
       }
     }
 
-    void loadSettings();
+    void migrateAndLoadSettings();
     void getDevices();
   }, [
     setDevices,
     setSelectedDevice,
     setSelectedSound,
+    setNotificationTiming,
     setVolume,
     selectedDevice,
   ]);
@@ -110,6 +143,11 @@ function SettingsPage() {
     void store.set("selectedSound", sound);
   };
 
+  const handleTimingChange = (timing: NotificationTiming) => {
+    setNotificationTiming(timing);
+    void store.set("notificationTiming", timing);
+  };
+
   const handleVolumeChange = (newVolume: number[]) => {
     const vol = newVolume[0] ?? 1.0;
     setVolume(vol);
@@ -118,7 +156,7 @@ function SettingsPage() {
   };
 
   const handleTestSound = () => {
-    if (selectedSound !== "silent") {
+    if (notificationTiming !== "disabled") {
       void invoke("play_notification_sound", {
         soundName: `${selectedSound}.mp3`,
         variant: "Start",
@@ -215,24 +253,45 @@ function SettingsPage() {
               <Switch id="noise-suppression" defaultChecked />
             </div>
 
-            <div className="space-y-2">
-              <Label>Recording Stop/Start Sound</Label>
-              <Select
-                value={selectedSound}
-                onValueChange={(value) =>
-                  handleSoundChange(value as NotificationSound)
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select a sound" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="chime">🔔 Chime</SelectItem>
-                  <SelectItem value="beep">📢 Beep</SelectItem>
-                  <SelectItem value="tone">🎵 Tone</SelectItem>
-                  <SelectItem value="silent">🔇 Silent</SelectItem>
-                </SelectContent>
-              </Select>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Notification Sound</Label>
+                <Select
+                  value={selectedSound}
+                  onValueChange={(value) =>
+                    handleSoundChange(value as NotificationSound)
+                  }
+                  disabled={notificationTiming === "disabled"}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select a sound" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="chime">🔔 Chime</SelectItem>
+                    <SelectItem value="beep">📢 Beep</SelectItem>
+                    <SelectItem value="tone">🎵 Tone</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Play Notification Sound</Label>
+                <Select
+                  value={notificationTiming}
+                  onValueChange={(value) =>
+                    handleTimingChange(value as NotificationTiming)
+                  }
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select when to play sounds" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="start_stop">On Start/Stop</SelectItem>
+                    <SelectItem value="completion">On Completion</SelectItem>
+                    <SelectItem value="disabled">Disabled</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
             <div className="space-y-2">
