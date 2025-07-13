@@ -29,7 +29,6 @@ function RecordingPage() {
             soundName: `${selectedSound}.mp3`,
             variant: "Start",
           });
-          await new Promise((resolve) => setTimeout(resolve, 500));
         }
         await invoke("start_recording", { device: selectedDevice?.name });
       } catch (error) {
