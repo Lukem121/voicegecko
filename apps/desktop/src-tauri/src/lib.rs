@@ -5,9 +5,11 @@ mod modules;
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
-        .manage(modules::audio::AudioState::new())
         .plugin(tauri_plugin_global_shortcut::Builder::new().build())
-        .plugin(tauri_plugin_autostart::init(tauri_plugin_autostart::MacosLauncher::LaunchAgent, None))
+        .plugin(tauri_plugin_autostart::init(
+            tauri_plugin_autostart::MacosLauncher::LaunchAgent,
+            None,
+        ))
         .plugin(tauri_plugin_process::init())
         .plugin(tauri_plugin_opener::init())
         .plugin(tauri_plugin_os::init())
@@ -16,11 +18,14 @@ pub fn run() {
         .plugin(tauri_plugin_store::Builder::new().build())
         .plugin(tauri_plugin_deep_link::init())
         .plugin(tauri_plugin_single_instance::init(|app, argv, _cwd| {
-            // With the deep-link feature enabled, the plugin automatically forwards 
+            // With the deep-link feature enabled, the plugin automatically forwards
             // deep links to the deep link system, so we just need to log for debugging
             if argv.len() > 1 {
                 let url = &argv[1];
-                println!("Single instance received URL: {} (automatically forwarded to deep link system)", url);
+                println!(
+                    "Single instance received URL: {} (automatically forwarded to deep link system)",
+                    url
+                );
             }
 
             // Focus the window
@@ -35,6 +40,13 @@ pub fn run() {
             modules::audio::play_notification_sound
         ])
         .setup(|app| {
+            let (_stream, stream_handle) = rodio::OutputStream::try_default().unwrap();
+            let sink = rodio::Sink::try_new(&stream_handle).unwrap();
+            app.manage(modules::audio::AudioState::new(sink));
+            // Keep the stream alive for the duration of the app
+            std::mem::forget(_stream);
+            std::mem::forget(stream_handle);
+
             #[cfg(any(windows, target_os = "linux"))]
             {
                 use tauri_plugin_deep_link::DeepLinkExt;
@@ -43,7 +55,7 @@ pub fn run() {
 
             // Setup custom updater configuration
             modules::updater::setup_updater(app)?;
-            
+
             Ok(())
         })
         .run(tauri::generate_context!())
