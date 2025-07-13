@@ -42,8 +42,15 @@ function SettingsModelsPage() {
 
   const fetchModels = async () => {
     try {
-      const fetchedModels = await invoke<Record<string, Model>>("list_models");
+      const [fetchedModels, previouslySelected] = await Promise.all([
+        invoke<Record<string, Model>>("list_models"),
+        invoke<string | null>("get_selected_model"),
+      ]);
       setModels(fetchedModels);
+      if (previouslySelected) {
+        setSelected(previouslySelected);
+        setInitialSelected(previouslySelected);
+      }
     } catch (error) {
       toast.error("Failed to fetch models", { description: error as string });
     }
@@ -57,19 +64,21 @@ function SettingsModelsPage() {
       (event) => {
         const [modelId, progress] = event.payload;
 
-        const model = models[modelId];
+        setModels((prev) => {
+          const model = prev[modelId];
 
-        if (!model) {
-          return;
-        }
+          if (!model) {
+            return prev;
+          }
 
-        setModels((prev) => ({
-          ...prev,
-          [modelId]: {
-            ...model,
-            status: { Downloading: progress },
-          },
-        }));
+          return {
+            ...prev,
+            [modelId]: {
+              ...model,
+              status: { Downloading: progress },
+            },
+          };
+        });
       },
     );
 
@@ -134,10 +143,14 @@ function SettingsModelsPage() {
     }
   };
 
-  const handleSave = () => {
-    setInitialSelected(selected);
-    // You might want to save the selected model to the backend here
-    toast.success("Settings saved successfully!");
+  const handleSave = async () => {
+    try {
+      await invoke("set_selected_model", { modelId: selected });
+      setInitialSelected(selected);
+      toast.success("Settings saved successfully!");
+    } catch (error) {
+      toast.error("Failed to save settings", { description: error as string });
+    }
   };
 
   const getModelStatus = (status: ModelStatus) => {

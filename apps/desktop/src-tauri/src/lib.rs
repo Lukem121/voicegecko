@@ -42,6 +42,9 @@ pub fn run() {
             modules::model_manager::list_models,
             modules::model_manager::download_model,
             modules::model_manager::delete_model,
+            modules::model_manager::get_selected_model,
+            modules::model_manager::set_selected_model,
+            modules::model_manager::get_active_model_id,
             modules::transcription::transcribe
         ])
         .setup(|app| {
