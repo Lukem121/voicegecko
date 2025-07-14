@@ -49,8 +49,7 @@ export class RecordingService {
         console.log(
           "[RecordingService] Recording is processing, ignoring toggle",
         );
-      }
-      {
+      } else {
         console.log(
           "[RecordingService] Recording in error state, attempting to start...",
         );
