@@ -1,8 +1,6 @@
 import { writeText } from "@tauri-apps/plugin-clipboard-manager";
 import { toast } from "sonner";
 
-import { recordingService } from "~/services/recording.service";
-
 export class TranscriptionService {
   private static instance: TranscriptionService | undefined;
   private lastTranscription = "";
@@ -52,11 +50,11 @@ export class TranscriptionService {
   }
 
   /**
-   * Handle completed transcription with clipboard, state, and notification
+   * Handle completed transcription with clipboard and state management
    */
   async handleCompletedTranscription(transcript: string): Promise<void> {
     console.log(
-      "[TranscriptionService] Handling completed transcription:",
+      "[TranscriptionService] 🎯 Handling completed transcription:",
       transcript,
     );
 
@@ -64,20 +62,22 @@ export class TranscriptionService {
       try {
         // Update internal state
         this.setLastTranscription(transcript);
+        console.log(
+          "[TranscriptionService] 💾 Updated internal state with transcript",
+        );
 
         // Copy to clipboard
         await writeText(transcript);
-        console.log("[TranscriptionService] Successfully copied to clipboard");
-
-        // Play notification sound if enabled
-        console.log("[TranscriptionService] 🙏 Playing notification sound");
-        await recordingService.playEndSoundIfEnabled();
+        console.log(
+          "[TranscriptionService] 📋 Successfully copied to clipboard",
+        );
 
         // Show success toast
         toast.success("Transcription complete and copied to clipboard!");
+        console.log("[TranscriptionService] ✅ Success toast shown");
       } catch (error) {
         console.error(
-          "[TranscriptionService] Failed to copy to clipboard:",
+          "[TranscriptionService] ❌ Failed to copy to clipboard:",
           error,
         );
         toast.error("Failed to copy to clipboard", {
@@ -85,7 +85,7 @@ export class TranscriptionService {
         });
       }
     } else {
-      console.warn("[TranscriptionService] Empty transcript received");
+      console.warn("[TranscriptionService] ⚠️ Empty transcript received");
       toast.warning("Transcription returned an empty result.");
     }
   }
