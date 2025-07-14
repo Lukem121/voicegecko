@@ -30,16 +30,22 @@ export const Route = createFileRoute("/_authenticated/settings/transcription")({
 interface TranscriptionConfig {
   language: string;
   threads: number;
+  beam_size: number;
+  best_of: number;
 }
 
 function SettingsTranscriptionPage() {
   const [config, setConfig] = useState<TranscriptionConfig>({
     language: "en",
     threads: 4,
+    beam_size: 1,
+    best_of: 1,
   });
   const [initialConfig, setInitialConfig] = useState<TranscriptionConfig>({
     language: "en",
     threads: 4,
+    beam_size: 1,
+    best_of: 1,
   });
 
   const hasChanges = JSON.stringify(config) !== JSON.stringify(initialConfig);
@@ -75,13 +81,23 @@ function SettingsTranscriptionPage() {
   };
 
   const handleThreadsChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    const threads = value === "" ? 0 : parseInt(value, 10);
-    if (!isNaN(threads)) {
-      setConfig((prev) => ({
-        ...prev,
-        threads: Math.max(0, threads),
-      }));
+    const value = parseInt(e.target.value);
+    if (!isNaN(value) && value > 0) {
+      setConfig({ ...config, threads: value });
+    }
+  };
+
+  const handleBeamSizeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = parseInt(e.target.value);
+    if (!isNaN(value) && value > 0) {
+      setConfig({ ...config, beam_size: value });
+    }
+  };
+
+  const handleBestOfChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = parseInt(e.target.value);
+    if (!isNaN(value) && value > 0) {
+      setConfig({ ...config, best_of: value });
     }
   };
 
@@ -123,6 +139,38 @@ function SettingsTranscriptionPage() {
             onChange={handleThreadsChange}
             placeholder="e.g., 4"
           />
+          <p className="text-muted-foreground text-sm">
+            Number of CPU threads to use. Try setting this to your CPU core
+            count or lower for optimal performance.
+          </p>
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="beam_size">Beam Size</Label>
+          <Input
+            id="beam_size"
+            type="number"
+            value={config.beam_size}
+            onChange={handleBeamSizeChange}
+            placeholder="e.g., 1"
+          />
+          <p className="text-muted-foreground text-sm">
+            1 = Greedy (fastest), higher values = better quality but slower.
+            Recommended: 1 for speed, 5+ for quality.
+          </p>
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="best_of">Best Of</Label>
+          <Input
+            id="best_of"
+            type="number"
+            value={config.best_of}
+            onChange={handleBestOfChange}
+            placeholder="e.g., 1"
+          />
+          <p className="text-muted-foreground text-sm">
+            Number of candidates to consider. 1 = fastest, higher values =
+            better quality but slower.
+          </p>
         </div>
       </CardContent>
       {hasChanges && (

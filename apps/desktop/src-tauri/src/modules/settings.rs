@@ -11,6 +11,8 @@ const TRANSCRIPTION_CONFIG_KEY: &str = "transcriptionConfig";
 pub struct TranscriptionConfig {
     pub language: String,
     pub threads: usize,
+    pub beam_size: i32,
+    pub best_of: i32,
 }
 
 impl Default for TranscriptionConfig {
@@ -18,6 +20,8 @@ impl Default for TranscriptionConfig {
         Self {
             language: "en".to_string(),
             threads: 4,
+            beam_size: 1, // 1 = greedy (fastest), higher = better quality but slower
+            best_of: 1,   // Number of candidates to consider (1 = fastest)
         }
     }
 }
