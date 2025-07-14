@@ -57,7 +57,7 @@ export class TranscriptionService {
    */
   async handleCompletedTranscription(transcript: string): Promise<void> {
     console.log(
-      "[TranscriptionService] 🎯 Handling completed transcription:",
+      "[TranscriptionService] Handling completed transcription:",
       transcript,
     );
 
@@ -65,22 +65,15 @@ export class TranscriptionService {
       try {
         // Update internal state
         this.setLastTranscription(transcript);
-        console.log(
-          "[TranscriptionService] 💾 Updated internal state with transcript",
-        );
 
         // Copy to clipboard
         await writeText(transcript);
-        console.log(
-          "[TranscriptionService] 📋 Successfully copied to clipboard",
-        );
 
         // Show success toast
         toast.success("Transcription complete and copied to clipboard!");
-        console.log("[TranscriptionService] ✅ Success toast shown");
       } catch (error) {
         console.error(
-          "[TranscriptionService] ❌ Failed to copy to clipboard:",
+          "[TranscriptionService] Failed to copy to clipboard:",
           error,
         );
         toast.error("Failed to copy to clipboard", {
@@ -88,7 +81,7 @@ export class TranscriptionService {
         });
       }
     } else {
-      console.warn("[TranscriptionService] ⚠️ Empty transcript received");
+      console.warn("[TranscriptionService] Empty transcript received");
       toast.warning("Transcription returned an empty result.");
     }
   }
@@ -113,7 +106,7 @@ export class TranscriptionService {
         console.log("[TranscriptionService] ✅ End sound played successfully");
       } catch (error) {
         console.error(
-          "[TranscriptionService] ❌ Failed to play end sound:",
+          "[TranscriptionService] Failed to play end sound:",
           error,
         );
         // Don't throw - notification sound failure shouldn't break transcription

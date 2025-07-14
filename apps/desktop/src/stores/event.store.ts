@@ -69,7 +69,7 @@ export const useEventStore = create<EventState>()(
 
       // Transcription actions
       setTranscriptionProgress: (status, data) => {
-        console.log("[EventStore] 📝 Transcription progress:", status, data);
+        console.log("[EventStore] Transcription progress:", status, data);
 
         switch (status) {
           case "Starting":
@@ -105,7 +105,7 @@ export const useEventStore = create<EventState>()(
 
       handleTranscriptionComplete: async (transcript) => {
         console.log(
-          "[EventStore] ✅ Handling transcription completion:",
+          "[EventStore] Handling transcription completion:",
           transcript,
         );
 
@@ -117,11 +117,11 @@ export const useEventStore = create<EventState>()(
           await transcriptionService.playEndSoundIfEnabled();
 
           console.log(
-            "[EventStore] 🎉 Transcription completion handled successfully",
+            "[EventStore] Transcription completion handled successfully",
           );
         } catch (error) {
           console.error(
-            "[EventStore] ❌ Error handling transcription completion:",
+            "[EventStore] Error handling transcription completion:",
             error,
           );
         }
