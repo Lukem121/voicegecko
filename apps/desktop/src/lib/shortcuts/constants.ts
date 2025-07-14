@@ -10,7 +10,7 @@ export const DEFAULT_SHORTCUTS: ShortcutCategory[] = [
       {
         id: "push-to-talk",
         name: "Push to dictate (hold to record)",
-        keys: ["CommandOrControl", "Shift", "Space"],
+        keys: ["CommandOrControl", "Shift", "X"],
         global: true,
         enabled: true,
       },
