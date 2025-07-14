@@ -1,10 +1,11 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 
 import { shortcutActions } from "~/lib/shortcuts/actions";
 import { useShortcutStore } from "~/lib/stores/shortcut-store";
 
 export function usePushToTalk() {
   const { categories } = useShortcutStore();
+  const isRecordingRef = useRef(false);
 
   useEffect(() => {
     const pushToTalkShortcut = categories
@@ -16,39 +17,61 @@ export function usePushToTalk() {
     }
 
     const handleKeyDown = (event: KeyboardEvent) => {
-      const keys = pushToTalkShortcut.keys.map((k) => k.toLowerCase());
-      const pressed = new Set<string>();
+      // Prevent multiple keydown events while holding
+      if (event.repeat) return;
 
-      if (event.metaKey) pressed.add("command");
+      const normalizedKeys = pushToTalkShortcut.keys.map((k) => {
+        const lower = k.toLowerCase();
+        // Handle CommandOrControl based on platform
+        if (lower === "commandorcontrol") {
+          return navigator.platform.includes("Mac") ? "meta" : "control";
+        }
+        return lower;
+      });
+
+      const pressed = new Set<string>();
+      if (event.metaKey) pressed.add("meta");
       if (event.ctrlKey) pressed.add("control");
       if (event.altKey) pressed.add("alt");
       if (event.shiftKey) pressed.add("shift");
-      if (
-        !["control", "alt", "shift", "meta"].includes(event.key.toLowerCase())
-      ) {
-        pressed.add(event.key.toLowerCase());
+
+      const eventKey = event.key.toLowerCase();
+      if (!["control", "alt", "shift", "meta"].includes(eventKey)) {
+        pressed.add(eventKey === " " ? "space" : eventKey);
       }
 
-      const allKeysPressed = keys.every((key) =>
-        pressed.has(key.toLowerCase()),
-      );
+      const allKeysPressed = normalizedKeys.every((key) => pressed.has(key));
 
-      if (allKeysPressed && pressed.size === keys.length) {
+      if (
+        allKeysPressed &&
+        pressed.size === normalizedKeys.length &&
+        !isRecordingRef.current
+      ) {
+        isRecordingRef.current = true;
         void shortcutActions["push-to-talk"].onPress();
       }
     };
 
     const handleKeyUp = (event: KeyboardEvent) => {
-      const keys = pushToTalkShortcut.keys.map((k) => k.toLowerCase());
-      const key = event.key.toLowerCase();
+      if (!isRecordingRef.current) return;
 
-      const modifierKeys = ["command", "control", "alt", "shift", "meta"];
-      let relevantKey = "";
-      if (key === "meta") relevantKey = "command";
-      else if (modifierKeys.includes(key)) relevantKey = key;
-      else relevantKey = key;
+      const normalizedKeys = pushToTalkShortcut.keys.map((k) => {
+        const lower = k.toLowerCase();
+        if (lower === "commandorcontrol") {
+          return navigator.platform.includes("Mac") ? "meta" : "control";
+        }
+        return lower;
+      });
 
-      if (keys.includes(relevantKey)) {
+      const eventKey = event.key.toLowerCase();
+      let releasedKey = eventKey;
+
+      if (eventKey === " ") releasedKey = "space";
+      else if (eventKey === "meta") releasedKey = "meta";
+      else if (eventKey === "control") releasedKey = "control";
+
+      if (normalizedKeys.includes(releasedKey)) {
+        isRecordingRef.current = false;
         void shortcutActions["push-to-talk"].onRelease();
       }
     };
