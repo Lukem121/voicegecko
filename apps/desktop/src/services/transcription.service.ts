@@ -1,5 +1,8 @@
+import { invoke } from "@tauri-apps/api/core";
 import { writeText } from "@tauri-apps/plugin-clipboard-manager";
 import { toast } from "sonner";
+
+import { useRecordingStore } from "~/hooks/use-recording-store";
 
 export class TranscriptionService {
   private static instance: TranscriptionService | undefined;
@@ -87,6 +90,36 @@ export class TranscriptionService {
     } else {
       console.warn("[TranscriptionService] ⚠️ Empty transcript received");
       toast.warning("Transcription returned an empty result.");
+    }
+  }
+
+  /**
+   * Play end sound if configured (to avoid circular dependency with recording service)
+   */
+  async playEndSoundIfEnabled(): Promise<void> {
+    const { notificationTiming, selectedSound } = useRecordingStore.getState();
+
+    const shouldPlayEndSound =
+      notificationTiming === "completion" ||
+      notificationTiming === "start_stop";
+
+    if (shouldPlayEndSound) {
+      console.log("[TranscriptionService] Playing end notification sound");
+      try {
+        await invoke("play_notification_sound", {
+          soundName: `${selectedSound}.mp3`,
+          variant: "End",
+        });
+        console.log("[TranscriptionService] ✅ End sound played successfully");
+      } catch (error) {
+        console.error(
+          "[TranscriptionService] ❌ Failed to play end sound:",
+          error,
+        );
+        // Don't throw - notification sound failure shouldn't break transcription
+      }
+    } else {
+      console.log("[TranscriptionService] End sound disabled in settings");
     }
   }
 
