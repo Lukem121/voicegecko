@@ -271,6 +271,15 @@ fn get_initial_models() -> HashMap<String, Model> {
             "142 MiB",
             "~1.5 GB",
             "137c40403d78fd54d454da0f9bd998f78703390c",
+            false,
+        ),
+        (
+            "base.en-q8_0",
+            "Base Q8_0",
+            "Balanced performance with reliable accuracy for everyday use, using Q8_0 quantization.",
+            "78 MiB",
+            "~1.5 GB",
+            "bb1574182e9b924452bf0cd1510ac034d323e948",
             true,
         ),
         (
