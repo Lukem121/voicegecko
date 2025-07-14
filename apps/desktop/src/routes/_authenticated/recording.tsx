@@ -11,7 +11,7 @@ import { cn } from "@acme/ui/lib/utils";
 
 import { useRecordingStore } from "~/hooks/use-recording-store";
 import { useTranscription } from "~/hooks/use-transcription";
-import { invokeTranscription } from "~/lib/transcription";
+import { invokeTranscriptionFromBuffer } from "~/lib/transcription";
 
 export const Route = createFileRoute("/_authenticated/recording")({
   component: RecordingPage,
@@ -23,7 +23,18 @@ function RecordingPage() {
   const { transcript, status: transcriptionStatus, error } = useTranscription();
   const [isProcessing, setIsProcessing] = useState(false);
 
+  console.log(
+    "[RecordingPage] Component render - transcript:",
+    transcript,
+    "transcriptionStatus:",
+    transcriptionStatus,
+    "error:",
+    error,
+  );
+
   const handleMicClick = async () => {
+    console.log("[Recording] handleMicClick called, status:", status);
+
     if (status === "idle") {
       try {
         if (notificationTiming === "start_stop") {
@@ -33,6 +44,7 @@ function RecordingPage() {
           });
         }
         await invoke("start_recording", { device: selectedDevice?.name });
+        console.log("[Recording] Started recording");
       } catch (error) {
         console.error("Failed to start recording:", error);
         toast.error("Failed to start recording");
@@ -46,8 +58,19 @@ function RecordingPage() {
             variant: "End",
           });
         }
-        const audioPath = await invoke<string>("stop_recording");
-        await invokeTranscription(audioPath);
+        console.log("[Recording] Stopping recording...");
+        const audioData = await invoke<{
+          samples: number[];
+          sample_rate: number;
+          channels: number;
+        }>("stop_recording");
+        console.log("[Recording] Audio data received:", {
+          samplesLength: audioData.samples.length,
+          sampleRate: audioData.sample_rate,
+          channels: audioData.channels,
+        });
+        await invokeTranscriptionFromBuffer(audioData);
+        console.log("[Recording] Transcription invoked");
       } catch (error) {
         // Errors are handled in transcribeAndProcess, but we can add more here if needed
         console.error("An error occurred during recording flow:", error);

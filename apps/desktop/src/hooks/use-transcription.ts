@@ -20,6 +20,8 @@ interface TranscriptionState {
 }
 
 export function useTranscription() {
+  console.log("[useTranscription] Hook called");
+
   const [state, setState] = useState<TranscriptionState>({
     status: "idle",
     transcript: null,
@@ -27,11 +29,17 @@ export function useTranscription() {
   });
 
   useEffect(() => {
+    console.log("[useTranscription] useEffect mounting");
     let unlisten: UnlistenFn | undefined;
 
     async function setupListener() {
+      console.log(
+        "[useTranscription] Setting up listener for transcription-progress",
+      );
+
       unlisten = await listen("transcription-progress", (event) => {
         const payload = event.payload as { status: string; data?: any };
+        console.log("[useTranscription] Received event:", payload);
 
         switch (payload.status) {
           case "Starting":
@@ -44,6 +52,10 @@ export function useTranscription() {
             setState((prev) => ({ ...prev, status: "transcribing" }));
             break;
           case "Complete":
+            console.log(
+              "[useTranscription] Complete event with data:",
+              payload.data,
+            );
             setState({
               status: "complete",
               transcript: payload.data,
@@ -59,16 +71,25 @@ export function useTranscription() {
             });
             toast.error("Transcription failed", { description: payload.data });
             break;
+          default:
+            console.warn(
+              "[useTranscription] Unknown event status:",
+              payload.status,
+            );
         }
       });
+
+      console.log("[useTranscription] Listener setup complete");
     }
 
     void setupListener();
 
     return () => {
+      console.log("[useTranscription] Cleanup - unlistening");
       unlisten?.();
     };
   }, []);
 
+  console.log("[useTranscription] Returning state:", state);
   return state;
 }
