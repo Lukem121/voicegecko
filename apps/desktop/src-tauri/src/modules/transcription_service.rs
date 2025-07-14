@@ -5,7 +5,9 @@ use std::time::Instant;
 use async_trait::async_trait;
 use hound::WavReader;
 use tauri::{AppHandle, Emitter, Manager};
-use whisper_rs::{FullParams, SamplingStrategy, WhisperContext, WhisperContextParameters};
+use whisper_rs::{
+    FullParams, SamplingStrategy, WhisperContext, WhisperContextParameters, WhisperState,
+};
 
 use crate::modules::transcription::{TranscriptionError, TranscriptionProgress};
 use crate::modules::{self};
@@ -42,6 +44,7 @@ impl From<TranscriptionProgress> for TranscriptionEvent {
 
 pub struct TranscriptionService {
     model_cache: Arc<Mutex<HashMap<String, Arc<WhisperContext>>>>,
+    state_cache: Arc<Mutex<HashMap<String, Vec<WhisperState>>>>, // Pool of reusable states
     cache_enabled: Arc<Mutex<bool>>,
 }
 
@@ -94,9 +97,9 @@ impl TranscriptionProvider for LocalWhisperProvider {
         );
 
         let state_create_time = Instant::now();
-        let mut state = ctx.create_state().unwrap();
+        let mut state = service.get_or_create_state(&ctx, &self.model_id)?;
         println!(
-            "[Rust] Create state took: {:?}",
+            "[Rust] Get or create state took: {:?}",
             state_create_time.elapsed()
         );
 
@@ -104,7 +107,17 @@ impl TranscriptionProvider for LocalWhisperProvider {
         let audio_data = read_wav_to_f32(audio_path)?;
         println!("[Rust] Read audio took: {:?}", audio_read_time.elapsed());
 
-        let mut params = FullParams::new(SamplingStrategy::Greedy { best_of: 1 });
+        let mut params = if config.beam_size > 1 {
+            FullParams::new(SamplingStrategy::BeamSearch {
+                beam_size: config.beam_size,
+                patience: 1.0,
+            })
+        } else {
+            FullParams::new(SamplingStrategy::Greedy {
+                best_of: config.best_of,
+            })
+        };
+
         params.set_n_threads(config.threads as i32);
         params.set_translate(false);
         params.set_language(Some(&config.language));
@@ -143,6 +156,10 @@ impl TranscriptionProvider for LocalWhisperProvider {
             "[Rust] Total transcription time: {:?}",
             total_time.elapsed()
         );
+
+        // Return state to cache for reuse
+        service.return_state(&self.model_id, state);
+
         Ok(result)
     }
 
@@ -174,9 +191,9 @@ impl TranscriptionProvider for LocalWhisperProvider {
         );
 
         let state_create_time = Instant::now();
-        let mut state = ctx.create_state().unwrap();
+        let mut state = service.get_or_create_state(&ctx, &self.model_id)?;
         println!(
-            "[Rust] Create state took: {:?}",
+            "[Rust] Get or create state took: {:?}",
             state_create_time.elapsed()
         );
 
@@ -186,7 +203,17 @@ impl TranscriptionProvider for LocalWhisperProvider {
             audio_samples.len()
         );
 
-        let mut params = FullParams::new(SamplingStrategy::Greedy { best_of: 1 });
+        let mut params = if config.beam_size > 1 {
+            FullParams::new(SamplingStrategy::BeamSearch {
+                beam_size: config.beam_size,
+                patience: 1.0,
+            })
+        } else {
+            FullParams::new(SamplingStrategy::Greedy {
+                best_of: config.best_of,
+            })
+        };
+
         params.set_n_threads(config.threads as i32);
         params.set_translate(false);
         params.set_language(Some(&config.language));
@@ -225,6 +252,10 @@ impl TranscriptionProvider for LocalWhisperProvider {
             "[Rust] Total transcription time (buffer): {:?}",
             total_time.elapsed()
         );
+
+        // Return state to cache for reuse
+        service.return_state(&self.model_id, state);
+
         Ok(result)
     }
 }
@@ -233,6 +264,7 @@ impl TranscriptionService {
     pub fn new() -> Self {
         Self {
             model_cache: Arc::new(Mutex::new(HashMap::new())),
+            state_cache: Arc::new(Mutex::new(HashMap::new())),
             cache_enabled: Arc::new(Mutex::new(true)),
         }
     }
@@ -284,6 +316,46 @@ impl TranscriptionService {
         Ok(arc_ctx)
     }
 
+    pub fn get_or_create_state(
+        &self,
+        ctx: &Arc<WhisperContext>,
+        model_id: &str,
+    ) -> Result<WhisperState, TranscriptionError> {
+        let cache_enabled = *self.cache_enabled.lock().unwrap();
+
+        if cache_enabled {
+            let mut state_cache = self.state_cache.lock().unwrap();
+            if let Some(states) = state_cache.get_mut(model_id) {
+                if let Some(state) = states.pop() {
+                    println!("Reusing cached state for model {}", model_id);
+                    return Ok(state);
+                }
+            }
+        }
+
+        println!("Creating new state for model {}", model_id);
+        ctx.create_state()
+            .map_err(|e| TranscriptionError::Transcription(e.to_string()))
+    }
+
+    pub fn return_state(&self, model_id: &str, state: WhisperState) {
+        let cache_enabled = *self.cache_enabled.lock().unwrap();
+        if !cache_enabled {
+            return;
+        }
+
+        let mut state_cache = self.state_cache.lock().unwrap();
+        let states = state_cache
+            .entry(model_id.to_string())
+            .or_insert_with(Vec::new);
+
+        // Limit the number of cached states per model to prevent memory bloat
+        if states.len() < 3 {
+            states.push(state);
+            println!("Returned state to cache for model {}", model_id);
+        }
+    }
+
     pub fn set_cache_enabled(&self, enabled: bool) {
         let mut cache_enabled_lock = self.cache_enabled.lock().unwrap();
         *cache_enabled_lock = enabled;
@@ -298,19 +370,22 @@ impl TranscriptionService {
 
     pub fn clear_cache(&self) {
         self.model_cache.lock().unwrap().clear();
+        self.state_cache.lock().unwrap().clear();
     }
 }
 
+// Optimized audio conversion using vectorized operations
 fn read_wav_to_f32(path: String) -> Result<Vec<f32>, TranscriptionError> {
     let mut reader =
         WavReader::open(path).map_err(|e| TranscriptionError::AudioProcessing(e.to_string()))?;
     let samples: Vec<i16> = reader.samples::<i16>().map(|s| s.unwrap()).collect();
 
-    // Convert to f32 samples
-    let mut f32_samples = vec![0.0; samples.len()];
-    for (i, sample) in samples.iter().enumerate() {
-        f32_samples[i] = (*sample as f32) / (i16::MAX as f32);
-    }
+    // Optimized conversion using iterator and const division
+    const I16_MAX_F32: f32 = i16::MAX as f32;
+    let f32_samples: Vec<f32> = samples
+        .into_iter()
+        .map(|sample| sample as f32 / I16_MAX_F32)
+        .collect();
 
     Ok(f32_samples)
 }
