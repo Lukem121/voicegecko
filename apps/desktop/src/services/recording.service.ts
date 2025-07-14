@@ -118,12 +118,21 @@ export class RecordingService {
   private async playNotificationSound(variant: "Start" | "End"): Promise<void> {
     try {
       const { selectedSound } = useRecordingStore.getState();
+      console.log(
+        `[RecordingService] Playing ${variant} sound: ${selectedSound}.mp3`,
+      );
+
       await invoke("play_notification_sound", {
         soundName: `${selectedSound}.mp3`,
         variant,
       });
+
+      console.log(`[RecordingService] ✅ ${variant} sound played successfully`);
     } catch (error) {
-      console.error("Failed to play notification sound:", error);
+      console.error(
+        `[RecordingService] ❌ Failed to play ${variant} sound:`,
+        error,
+      );
       // Don't throw - notification sound failure shouldn't stop recording
     }
   }
@@ -151,7 +160,10 @@ export class RecordingService {
    */
   async playEndSoundIfEnabled(): Promise<void> {
     if (this.shouldPlayEndSound()) {
+      console.log("[RecordingService] Playing end notification sound");
       await this.playNotificationSound("End");
+    } else {
+      console.log("[RecordingService] End sound disabled in settings");
     }
   }
 
