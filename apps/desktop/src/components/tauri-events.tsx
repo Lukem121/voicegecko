@@ -1,8 +1,14 @@
-import { useAppInitialization } from "~/hooks/use-app-initialization";
+import { useEffect } from "react";
+
+import { initializeTauriEvents } from "~/lib/tauri-events";
 
 export function TauriEvents() {
-  // Initialize the centralized event service
-  useAppInitialization();
+  useEffect(() => {
+    // Initialize Tauri event listeners once
+    initializeTauriEvents().catch((error) => {
+      console.error("[TauriEvents] Failed to initialize:", error);
+    });
+  }, []);
 
   return null;
 }

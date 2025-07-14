@@ -1,23 +1,29 @@
 import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { List, Mic, RotateCw, Search, Square } from "lucide-react";
+import { List, Loader2, Mic, RotateCw, Search, Square } from "lucide-react";
 
 import { Button } from "@acme/ui/components/ui/button";
 import { Card, CardContent } from "@acme/ui/components/ui/card";
 import { Textarea } from "@acme/ui/components/ui/textarea";
 import { cn } from "@acme/ui/lib/utils";
 
-import { useRecordingStore } from "~/hooks/use-recording-store";
-import { useTranscription } from "~/hooks/use-transcription";
 import { recordingService } from "~/services/recording.service";
+import { useEventStore } from "~/stores/event.store";
 
 export const Route = createFileRoute("/_authenticated/recording")({
   component: RecordingPage,
 });
 
 function RecordingPage() {
-  const { status } = useRecordingStore();
-  const { transcript, status: transcriptionStatus, error } = useTranscription();
+  const recordingStatus = useEventStore((state) => state.recordingStatus);
+  const transcript = useEventStore((state) => state.transcript);
+  const transcriptionStatus = useEventStore(
+    (state) => state.transcriptionStatus,
+  );
+  const transcriptionError = useEventStore((state) => state.transcriptionError);
+  const isRecording = useEventStore((state) => state.isRecording());
+  const isTranscribing = useEventStore((state) => state.isTranscribing());
+
   const [isProcessing, setIsProcessing] = useState(false);
 
   console.log(
@@ -25,31 +31,34 @@ function RecordingPage() {
     transcript,
     "transcriptionStatus:",
     transcriptionStatus,
+    "recordingStatus:",
+    recordingStatus,
     "error:",
-    error,
+    transcriptionError,
   );
 
   const handleMicClick = async () => {
-    console.log("[Recording] handleMicClick called, status:", status);
+    console.log(
+      "[Recording] 🎯 handleMicClick called, status:",
+      recordingStatus,
+    );
 
-    if (status === "recording") {
+    if (recordingStatus === "recording") {
       setIsProcessing(true);
     }
 
     try {
+      console.log(
+        "[Recording] 🚀 Calling recordingService.toggleRecording()...",
+      );
       await recordingService.toggleRecording();
-      console.log("[Recording] Recording toggled successfully");
+      console.log("[Recording] ✅ Recording toggled successfully");
     } catch (error) {
-      console.error("An error occurred during recording flow:", error);
+      console.error("[Recording] ❌ Error during recording flow:", error);
     } finally {
       setIsProcessing(false);
     }
   };
-
-  const isRecording = status === "recording";
-  const isTranscribing =
-    transcriptionStatus === "transcribing" ||
-    transcriptionStatus === "loading_model";
 
   return (
     <div className="flex flex-1 flex-col gap-6">
@@ -82,7 +91,17 @@ function RecordingPage() {
               </Button>
             </div>
 
-            <div className="flex justify-end">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                {isTranscribing && (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <span className="text-sm text-gray-500">
+                      Transcribing...
+                    </span>
+                  </>
+                )}
+              </div>
               <Button variant="secondary">Finish</Button>
             </div>
           </div>
