@@ -1,8 +1,6 @@
 use serde::{Deserialize, Serialize};
-use tauri::{AppHandle, State};
+use tauri::AppHandle;
 use tauri_plugin_store::StoreExt;
-
-use super::transcription_service::TranscriptionService;
 
 const SETTINGS_STORE_PATH: &str = "settings.json";
 const TRANSCRIPTION_CONFIG_KEY: &str = "transcriptionConfig";
@@ -24,22 +22,6 @@ impl Default for TranscriptionConfig {
             best_of: 1,   // Number of candidates to consider (1 = fastest)
         }
     }
-}
-
-#[tauri::command]
-pub fn get_model_cache_enabled(
-    transcription_service: State<TranscriptionService>,
-) -> Result<bool, String> {
-    Ok(transcription_service.get_cache_enabled())
-}
-
-#[tauri::command]
-pub fn set_model_cache_enabled(
-    transcription_service: State<TranscriptionService>,
-    enabled: bool,
-) -> Result<(), String> {
-    transcription_service.set_cache_enabled(enabled);
-    Ok(())
 }
 
 #[tauri::command]

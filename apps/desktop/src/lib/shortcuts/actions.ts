@@ -41,12 +41,6 @@ export async function handleToggleRecording() {
       }
     } else if (status === "recording") {
       try {
-        if (notificationTiming === "start_stop") {
-          await invoke("play_notification_sound", {
-            soundName: `${selectedSound}.mp3`,
-            variant: "End",
-          });
-        }
         const audioData = await invoke<{
           samples: number[];
           sample_rate: number;

@@ -5,8 +5,8 @@ use sha1::{Digest, Sha1};
 use std::collections::HashMap;
 use std::fs;
 use std::io::Write;
-use tauri::{AppHandle, Emitter, Manager};
-use tauri_plugin_store::StoreExt;
+use tauri::{AppHandle, Emitter, Manager, Wry};
+use tauri_plugin_store::{Store, StoreExt};
 use thiserror::Error;
 
 #[derive(Debug, Error, Serialize)]
@@ -23,7 +23,9 @@ pub enum ModelManagerError {
     StoreError(String),
 }
 
+const STORE_PATH: &str = "models.json";
 const SELECTED_MODEL_KEY: &str = "selected_model";
+const MODEL_STATUSES_KEY: &str = "model_statuses";
 
 impl From<std::io::Error> for ModelManagerError {
     fn from(err: std::io::Error) -> Self {
@@ -56,64 +58,83 @@ pub struct Model {
     pub recommended: bool,
 }
 
-pub struct ModelManagerState {
-    pub store_path: String,
+fn get_model_statuses(
+    store: &Store<Wry>,
+) -> Result<HashMap<String, ModelStatus>, ModelManagerError> {
+    match store.get(MODEL_STATUSES_KEY) {
+        Some(value) => serde_json::from_value(value.clone())
+            .map_err(|e| ModelManagerError::StoreError(e.to_string())),
+        None => Ok(HashMap::new()),
+    }
 }
 
-impl ModelManagerState {
-    pub fn new() -> Self {
-        Self {
-            store_path: "models.json".to_string(),
-        }
-    }
-
-    pub fn init(&self, app: &AppHandle) -> Result<(), ModelManagerError> {
-        let store = app.store(&self.store_path)?;
-
-        // Check if models are already initialized
-        if store.get("models").is_none() {
-            let initial_models = get_initial_models();
-            store.set("models", json!(initial_models));
-            store.save()?;
-        }
-
-        Ok(())
-    }
+fn set_model_status(
+    app: &AppHandle,
+    model_id: &str,
+    status: ModelStatus,
+) -> Result<(), ModelManagerError> {
+    let store = app.store(STORE_PATH)?;
+    let mut statuses = get_model_statuses(&store)?;
+    statuses.insert(model_id.to_string(), status);
+    store.set(MODEL_STATUSES_KEY, json!(statuses));
+    store.save()?;
+    Ok(())
 }
 
 #[tauri::command]
-pub fn set_selected_model(
-    app: AppHandle,
-    state: tauri::State<ModelManagerState>,
-    model_id: String,
-) -> Result<(), ModelManagerError> {
-    let store = app.store(&state.store_path)?;
+pub fn synchronize_models(app: AppHandle) -> Result<(), ModelManagerError> {
+    let store = app.store(STORE_PATH)?;
+    let initial_models = get_initial_models();
+    let mut stored_statuses = get_model_statuses(&store).unwrap_or_default();
+    let app_data_dir = app.path().app_data_dir().unwrap();
+
+    stored_statuses.retain(|id, status| {
+        if !initial_models.contains_key(id) {
+            return false;
+        }
+        if *status == ModelStatus::Downloaded {
+            let file_path = app_data_dir.join(format!("models/ggml-{}.bin", id));
+            if !file_path.exists() {
+                return false;
+            }
+        }
+        true
+    });
+
+    for (id, _model) in &initial_models {
+        if !stored_statuses.contains_key(id) {
+            stored_statuses.insert(id.clone(), ModelStatus::NotDownloaded);
+        }
+    }
+
+    store.set(MODEL_STATUSES_KEY, json!(stored_statuses));
+    store.save()?;
+
+    Ok(())
+}
+
+#[tauri::command]
+pub fn set_selected_model(app: AppHandle, model_id: String) -> Result<(), ModelManagerError> {
+    let store = app.store(STORE_PATH)?;
     store.set(SELECTED_MODEL_KEY, json!(model_id));
     store.save()?;
     Ok(())
 }
 
 #[tauri::command]
-pub fn get_selected_model(
-    app: AppHandle,
-    state: tauri::State<ModelManagerState>,
-) -> Result<Option<String>, ModelManagerError> {
-    let store = app.store(&state.store_path)?;
+pub fn get_selected_model(app: AppHandle) -> Result<Option<String>, ModelManagerError> {
+    let store = app.store(STORE_PATH)?;
     let selected_model = store
         .get(SELECTED_MODEL_KEY)
-        .map(|v| v.as_str().unwrap().to_string());
+        .and_then(|v| v.as_str().map(|s| s.to_string()));
     Ok(selected_model)
 }
 
 #[tauri::command]
-pub fn get_active_model_id(
-    app: AppHandle,
-    state: tauri::State<ModelManagerState>,
-) -> Result<String, ModelManagerError> {
-    let models = list_models(app.clone(), state.clone())?;
+pub fn get_active_model_id(app: AppHandle) -> Result<String, ModelManagerError> {
+    let models = list_models(app.clone())?;
 
-    // 1. Check for a user-selected and downloaded model
-    if let Some(selected_id) = get_selected_model(app.clone(), state.clone())? {
+    if let Some(selected_id) = get_selected_model(app.clone())? {
         if let Some(model) = models.get(&selected_id) {
             if model.status == ModelStatus::Downloaded {
                 return Ok(selected_id);
@@ -121,61 +142,47 @@ pub fn get_active_model_id(
         }
     }
 
-    // 2. Fallback to tiny.en if it's downloaded
     if let Some(model) = models.get("tiny.en") {
         if model.status == ModelStatus::Downloaded {
             return Ok("tiny.en".to_string());
         }
     }
 
-    // 3. Fallback to any other downloaded model
     for (id, model) in models {
         if model.status == ModelStatus::Downloaded {
             return Ok(id);
         }
     }
 
-    // 4. Fallback to cloud
     Ok("cloud".to_string())
 }
 
 #[tauri::command]
-pub fn list_models(
-    app: AppHandle,
-    state: tauri::State<ModelManagerState>,
-) -> Result<HashMap<String, Model>, ModelManagerError> {
-    let store = app.store(&state.store_path)?;
-    let models_value = store
-        .get("models")
-        .ok_or_else(|| ModelManagerError::StoreError("Models not found in store".to_string()))?;
+pub fn list_models(app: AppHandle) -> Result<HashMap<String, Model>, ModelManagerError> {
+    let store = app.store(STORE_PATH)?;
+    let mut models = get_initial_models();
+    let statuses = get_model_statuses(&store)?;
 
-    let models: HashMap<String, Model> = serde_json::from_value(models_value)
-        .map_err(|e| ModelManagerError::StoreError(e.to_string()))?;
+    for (id, model) in models.iter_mut() {
+        if let Some(status) = statuses.get(id) {
+            model.status = status.clone();
+        }
+    }
 
     Ok(models)
 }
 
 #[tauri::command]
-pub async fn download_model(
-    app: AppHandle,
-    state: tauri::State<'_, ModelManagerState>,
-    model_id: String,
-) -> Result<(), ModelManagerError> {
-    let store = app.store(&state.store_path)?;
-
+pub async fn download_model(app: AppHandle, model_id: String) -> Result<(), ModelManagerError> {
     let (model_url, sha) = {
-        let models_value = store.get("models").ok_or_else(|| {
-            ModelManagerError::StoreError("Models not found in store".to_string())
-        })?;
-        let models: HashMap<String, Model> = serde_json::from_value(models_value)
-            .map_err(|e| ModelManagerError::StoreError(e.to_string()))?;
-
+        let models = get_initial_models();
         let model = models
             .get(&model_id)
             .ok_or_else(|| ModelManagerError::ModelNotFound(model_id.clone()))?;
-
         (model.url.clone(), model.sha.clone())
     };
+
+    set_model_status(&app, &model_id, ModelStatus::Downloading(0))?;
 
     let app_data_dir = app.path().app_data_dir().unwrap();
     let models_dir = app_data_dir.join("models");
@@ -196,6 +203,7 @@ pub async fn download_model(
     let mut file = fs::File::create(&file_path)?;
     let mut downloaded: u64 = 0;
     let mut hasher = Sha1::new();
+    let mut last_progress = 0;
 
     while let Some(item) = stream.next().await {
         let chunk = item.map_err(|e| ModelManagerError::DownloadFailed(e.to_string()))?;
@@ -203,43 +211,35 @@ pub async fn download_model(
         downloaded += chunk.len() as u64;
         hasher.update(&chunk);
 
-        let progress = (downloaded * 100 / total_size) as u8;
-        app.emit("model-download-progress", (model_id.clone(), progress))
-            .unwrap();
+        if total_size > 0 {
+            let progress = (downloaded * 100 / total_size) as u8;
+            if progress > last_progress {
+                set_model_status(&app, &model_id, ModelStatus::Downloading(progress))?;
+                app.emit("model-download-progress", (model_id.clone(), progress))
+                    .unwrap();
+                last_progress = progress;
+            }
+        }
     }
 
     let finished_hash = format!("{:x}", hasher.finalize());
     if finished_hash != sha {
+        fs::remove_file(&file_path)?;
+        set_model_status(&app, &model_id, ModelStatus::NotDownloaded)?;
         return Err(ModelManagerError::VerificationFailed(
             "SHA mismatch".to_string(),
         ));
     }
 
-    // Update model status in store
-    let models_value = store
-        .get("models")
-        .ok_or_else(|| ModelManagerError::StoreError("Models not found in store".to_string()))?;
-    let mut models: HashMap<String, Model> = serde_json::from_value(models_value)
-        .map_err(|e| ModelManagerError::StoreError(e.to_string()))?;
-
-    if let Some(model) = models.get_mut(&model_id) {
-        model.status = ModelStatus::Downloaded;
-    }
-
-    store.set("models", json!(models));
-    store.save()?;
-
-    app.emit("model-download-complete", model_id).unwrap();
+    set_model_status(&app, &model_id, ModelStatus::Downloaded)?;
+    app.emit("model-download-complete", model_id.clone())
+        .unwrap();
 
     Ok(())
 }
 
 #[tauri::command]
-pub fn delete_model(
-    app: AppHandle,
-    state: tauri::State<ModelManagerState>,
-    model_id: String,
-) -> Result<(), ModelManagerError> {
+pub fn delete_model(app: AppHandle, model_id: String) -> Result<(), ModelManagerError> {
     let app_data_dir = app.path().app_data_dir().unwrap();
     let file_path = app_data_dir.join(format!("models/ggml-{}.bin", model_id));
 
@@ -247,22 +247,7 @@ pub fn delete_model(
         fs::remove_file(file_path)?;
     }
 
-    let store = app.store(&state.store_path)?;
-    let models_value = store
-        .get("models")
-        .ok_or_else(|| ModelManagerError::StoreError("Models not found in store".to_string()))?;
-    let mut models: HashMap<String, Model> = serde_json::from_value(models_value)
-        .map_err(|e| ModelManagerError::StoreError(e.to_string()))?;
-
-    if let Some(model) = models.get_mut(&model_id) {
-        model.status = ModelStatus::NotDownloaded;
-    } else {
-        return Err(ModelManagerError::ModelNotFound(model_id));
-    }
-
-    store.set("models", json!(models));
-    store.save()?;
-
+    set_model_status(&app, &model_id, ModelStatus::NotDownloaded)?;
     app.emit("model-delete-complete", model_id).unwrap();
 
     Ok(())
@@ -315,6 +300,25 @@ fn get_initial_models() -> HashMap<String, Model> {
             "ad82bf6a9043ceed055076d0fd39f5f186ff8062",
             false,
         ),
+        (
+            "large-v3-turbo",
+            "Large Turbo",
+            "Fastest processing with high accuracy for quick notes and commands.",
+            "1.5 GiB",
+            "~8 GB",
+            "4af2b29d7ec73d781377bfd1758ca957a807e941",
+            false,
+        ),
+        (
+            "large-v3-turbo-q5_0",
+            "Large Turbo Q5_0",
+            "Fastest processing with high accuracy for quick notes and commands, using Q5_0 quantization.",
+            "547 MiB",
+            "~8 GB",
+            "e050f7970618a659205450ad97eb95a18d69c9ee",
+            false,
+        ),
+
     ];
 
     models_data

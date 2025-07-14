@@ -45,7 +45,6 @@ impl From<TranscriptionProgress> for TranscriptionEvent {
 pub struct TranscriptionService {
     model_cache: Arc<Mutex<HashMap<String, Arc<WhisperContext>>>>,
     state_cache: Arc<Mutex<HashMap<String, Vec<WhisperState>>>>, // Pool of reusable states
-    cache_enabled: Arc<Mutex<bool>>,
 }
 
 #[async_trait]
@@ -265,7 +264,39 @@ impl TranscriptionService {
         Self {
             model_cache: Arc::new(Mutex::new(HashMap::new())),
             state_cache: Arc::new(Mutex::new(HashMap::new())),
-            cache_enabled: Arc::new(Mutex::new(true)),
+        }
+    }
+
+    /// Preload the active model into memory during startup to ensure fast first transcription
+    pub fn preload_active_model(&self, app: &AppHandle) -> Result<(), TranscriptionError> {
+        // Get the active model ID using the same logic as transcription
+        let model_id = match crate::modules::model_manager::get_active_model_id(app.clone()) {
+            Ok(id) => id,
+            Err(e) => {
+                println!("[Rust] Failed to get active model ID: {}", e);
+                return Ok(()); // Don't fail startup if we can't get the model ID
+            }
+        };
+
+        // Skip preloading for cloud models
+        if model_id == "cloud" {
+            println!("[Rust] Active model is cloud, skipping preload");
+            return Ok(());
+        }
+
+        println!("[Rust] Preloading model {} during startup", model_id);
+
+        // Load the model into cache
+        match self.get_or_load_model(app, &model_id) {
+            Ok(_) => {
+                println!("[Rust] Successfully preloaded model {}", model_id);
+                Ok(())
+            }
+            Err(e) => {
+                println!("[Rust] Failed to preload model {}: {}", model_id, e);
+                // Don't fail startup if preloading fails
+                Ok(())
+            }
         }
     }
 
@@ -274,9 +305,7 @@ impl TranscriptionService {
         app: &AppHandle,
         model_id: &str,
     ) -> Result<Arc<WhisperContext>, TranscriptionError> {
-        let cache_enabled = *self.cache_enabled.lock().unwrap();
-
-        if cache_enabled {
+        {
             let cache = self.model_cache.lock().unwrap();
             if let Some(model) = cache.get(model_id) {
                 println!("Model {} found in cache", model_id);
@@ -308,7 +337,7 @@ impl TranscriptionService {
 
         let arc_ctx = Arc::new(ctx);
 
-        if cache_enabled {
+        {
             let mut cache = self.model_cache.lock().unwrap();
             cache.insert(model_id.to_string(), Arc::clone(&arc_ctx));
         }
@@ -321,9 +350,7 @@ impl TranscriptionService {
         ctx: &Arc<WhisperContext>,
         model_id: &str,
     ) -> Result<WhisperState, TranscriptionError> {
-        let cache_enabled = *self.cache_enabled.lock().unwrap();
-
-        if cache_enabled {
+        {
             let mut state_cache = self.state_cache.lock().unwrap();
             if let Some(states) = state_cache.get_mut(model_id) {
                 if let Some(state) = states.pop() {
@@ -339,11 +366,6 @@ impl TranscriptionService {
     }
 
     pub fn return_state(&self, model_id: &str, state: WhisperState) {
-        let cache_enabled = *self.cache_enabled.lock().unwrap();
-        if !cache_enabled {
-            return;
-        }
-
         let mut state_cache = self.state_cache.lock().unwrap();
         let states = state_cache
             .entry(model_id.to_string())
@@ -354,23 +376,6 @@ impl TranscriptionService {
             states.push(state);
             println!("Returned state to cache for model {}", model_id);
         }
-    }
-
-    pub fn set_cache_enabled(&self, enabled: bool) {
-        let mut cache_enabled_lock = self.cache_enabled.lock().unwrap();
-        *cache_enabled_lock = enabled;
-        if !enabled {
-            self.clear_cache();
-        }
-    }
-
-    pub fn get_cache_enabled(&self) -> bool {
-        *self.cache_enabled.lock().unwrap()
-    }
-
-    pub fn clear_cache(&self) {
-        self.model_cache.lock().unwrap().clear();
-        self.state_cache.lock().unwrap().clear();
     }
 }
 
