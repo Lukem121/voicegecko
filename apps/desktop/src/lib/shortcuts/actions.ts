@@ -5,7 +5,7 @@ import { toast } from "sonner";
 
 import type { ShortcutAction } from "~/lib/shortcuts/types";
 import { useRecordingStore } from "~/hooks/use-recording-store";
-import { transcribeAndProcess } from "~/lib/transcription";
+import { invokeTranscription } from "~/lib/transcription";
 
 // Placeholder for last transcription
 let lastTranscription = "";
@@ -49,7 +49,7 @@ export async function handleToggleRecording() {
           });
         }
         const audioPath = await invoke<string>("stop_recording");
-        await transcribeAndProcess(audioPath);
+        await invokeTranscription(audioPath);
       } catch (error) {
         console.error("Failed to stop recording:", error);
         toast.error("Failed to stop recording");

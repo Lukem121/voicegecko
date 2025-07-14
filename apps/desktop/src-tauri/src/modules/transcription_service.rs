@@ -1,12 +1,13 @@
 use std::collections::HashMap;
 use std::sync::{Arc, Mutex};
+use std::time::Instant;
 
 use async_trait::async_trait;
 use hound::WavReader;
-use tauri::{AppHandle, Manager};
+use tauri::{AppHandle, Emitter, Manager};
 use whisper_rs::{FullParams, SamplingStrategy, WhisperContext, WhisperContextParameters};
 
-use crate::modules::transcription::TranscriptionError;
+use crate::modules::transcription::{TranscriptionError, TranscriptionProgress};
 use crate::modules::{self};
 
 pub struct TranscriptionService {
@@ -34,14 +35,38 @@ impl TranscriptionProvider for LocalWhisperProvider {
         app: AppHandle,
         audio_path: String,
     ) -> Result<String, TranscriptionError> {
+        let total_time = Instant::now();
+        println!("[Rust] Starting transcription for: {}", audio_path);
+
+        let config_time = Instant::now();
         let config = modules::settings::get_transcription_config(app.clone())
             .map_err(|e| TranscriptionError::Transcription(e.to_string()))?;
+        println!("[Rust] Get config took: {:?}", config_time.elapsed());
 
+        app.emit(
+            "transcription-progress",
+            TranscriptionProgress::LoadingModel,
+        )
+        .unwrap();
         let service = app.state::<TranscriptionService>();
-        let ctx = service.get_or_load_model(&app, &self.model_id)?;
-        let mut state = ctx.create_state().unwrap();
 
+        let model_load_time = Instant::now();
+        let ctx = service.get_or_load_model(&app, &self.model_id)?;
+        println!(
+            "[Rust] Get or load model took: {:?}",
+            model_load_time.elapsed()
+        );
+
+        let state_create_time = Instant::now();
+        let mut state = ctx.create_state().unwrap();
+        println!(
+            "[Rust] Create state took: {:?}",
+            state_create_time.elapsed()
+        );
+
+        let audio_read_time = Instant::now();
         let audio_data = read_wav_to_f32(audio_path)?;
+        println!("[Rust] Read audio took: {:?}", audio_read_time.elapsed());
 
         let mut params = FullParams::new(SamplingStrategy::Greedy { best_of: 1 });
         params.set_n_threads(config.threads as i32);
@@ -52,17 +77,36 @@ impl TranscriptionProvider for LocalWhisperProvider {
         params.set_print_realtime(false);
         params.set_print_timestamps(false);
 
+        app.emit(
+            "transcription-progress",
+            TranscriptionProgress::Transcribing,
+        )
+        .unwrap();
+        let full_transcribe_time = Instant::now();
         state
             .full(params, &audio_data)
             .map_err(|e| TranscriptionError::Transcription(e.to_string()))?;
+        println!(
+            "[Rust] Full transcribe took: {:?}",
+            full_transcribe_time.elapsed()
+        );
 
+        let segment_build_time = Instant::now();
         let num_segments = state.full_n_segments().unwrap();
         let mut result = String::new();
         for i in 0..num_segments {
             let segment = state.full_get_segment_text(i).unwrap();
             result.push_str(&segment);
         }
+        println!(
+            "[Rust] Segment building took: {:?}",
+            segment_build_time.elapsed()
+        );
 
+        println!(
+            "[Rust] Total transcription time: {:?}",
+            total_time.elapsed()
+        );
         Ok(result)
     }
 }
@@ -101,11 +145,16 @@ impl TranscriptionService {
             )));
         }
 
+        let model_load_time = Instant::now();
         let ctx = WhisperContext::new_with_params(
             &model_path.to_string_lossy(),
             WhisperContextParameters::default(),
         )
         .map_err(|e| TranscriptionError::ModelLoad(e.to_string()))?;
+        println!(
+            "[Rust] Model loading from disk took: {:?}",
+            model_load_time.elapsed()
+        );
 
         let arc_ctx = Arc::new(ctx);
 
