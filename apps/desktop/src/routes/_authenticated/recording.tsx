@@ -10,6 +10,7 @@ import { Textarea } from "@acme/ui/components/ui/textarea";
 import { cn } from "@acme/ui/lib/utils";
 
 import { useRecordingStore } from "~/hooks/use-recording-store";
+import { transcribeAndProcess } from "~/lib/transcription";
 
 export const Route = createFileRoute("/_authenticated/recording")({
   component: RecordingPage,
@@ -36,6 +37,7 @@ function RecordingPage() {
         toast.error("Failed to start recording");
       }
     } else if (status === "recording") {
+      setIsProcessing(true);
       try {
         if (notificationTiming === "start_stop") {
           await invoke("play_notification_sound", {
@@ -44,27 +46,13 @@ function RecordingPage() {
           });
         }
         const audioPath = await invoke<string>("stop_recording");
-
-        setIsProcessing(true);
-        const modelId = await invoke<string>("get_active_model_id");
-
-        if (modelId === "cloud") {
-          // TODO: Implement cloud transcription
-          toast.info("Cloud transcription coming soon!");
-          setIsProcessing(false);
-          return;
+        const newTranscript = await transcribeAndProcess(audioPath);
+        if (newTranscript) {
+          setTranscript(newTranscript);
         }
-
-        const newTranscript = await invoke<string>("transcribe_audio", {
-          audioPath,
-        });
-
-        setTranscript(newTranscript);
       } catch (error) {
-        console.error("Failed to stop recording or transcribe:", error);
-        toast.error("Transcription failed", {
-          description: "Could not process the recorded audio.",
-        });
+        // Errors are handled in transcribeAndProcess, but we can add more here if needed
+        console.error("An error occurred during recording flow:", error);
       } finally {
         setIsProcessing(false);
       }
