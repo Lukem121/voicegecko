@@ -5,7 +5,6 @@ import { listen } from "@tauri-apps/api/event";
 import {
   CheckCircle,
   Cloud,
-  Cpu,
   Download,
   Save,
   Server,
@@ -23,10 +22,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@acme/ui/components/ui/card";
-import { Label } from "@acme/ui/components/ui/label";
 import { Progress } from "@acme/ui/components/ui/progress";
 import { RadioGroup, RadioGroupItem } from "@acme/ui/components/ui/radio-group";
-import { Switch } from "@acme/ui/components/ui/switch";
 
 export const Route = createFileRoute("/_authenticated/settings/models")({
   component: SettingsModelsPage,
@@ -50,19 +47,16 @@ function SettingsModelsPage() {
   const [selected, setSelected] = useState("cloud");
   const [initialSelected, setInitialSelected] = useState("cloud");
   const [models, setModels] = useState<Record<string, Model>>({});
-  const [cacheEnabled, setCacheEnabled] = useState(true);
 
   const hasChanges = selected !== initialSelected;
 
   const fetchModels = async () => {
     try {
-      const [fetchedModels, previouslySelected, cache] = await Promise.all([
+      const [fetchedModels, previouslySelected] = await Promise.all([
         invoke<Record<string, Model>>("list_models"),
         invoke<string | null>("get_selected_model"),
-        invoke<boolean>("get_model_cache_enabled"),
       ]);
       setModels(fetchedModels);
-      setCacheEnabled(cache);
       if (previouslySelected) {
         setSelected(previouslySelected);
         setInitialSelected(previouslySelected);
@@ -139,20 +133,6 @@ function SettingsModelsPage() {
       toast.success("Settings saved successfully!");
     } catch (error) {
       toast.error("Failed to save settings", {
-        description: error as string,
-      });
-    }
-  };
-
-  const handleToggleCache = async (enabled: boolean) => {
-    try {
-      await invoke("set_model_cache_enabled", { enabled });
-      setCacheEnabled(enabled);
-      toast.success(
-        `Model caching ${enabled ? "enabled" : "disabled"} successfully!`,
-      );
-    } catch (error) {
-      toast.error("Failed to update cache settings", {
         description: error as string,
       });
     }
@@ -243,14 +223,6 @@ function SettingsModelsPage() {
                   <p className="text-muted-foreground text-sm">
                     Run directly on your machine. No internet required.
                   </p>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <Switch
-                    id="cache-models"
-                    checked={cacheEnabled}
-                    onCheckedChange={handleToggleCache}
-                  />
-                  <Label htmlFor="cache-models">Cache models in memory</Label>
                 </div>
               </div>
               <div className="grid gap-4 md:grid-cols-2">

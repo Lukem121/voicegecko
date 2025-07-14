@@ -1,5 +1,5 @@
 use serde::Serialize;
-use tauri::{AppHandle, Emitter, State};
+use tauri::{AppHandle, Emitter};
 use thiserror::Error;
 
 use super::model_manager;
@@ -61,13 +61,8 @@ impl From<TranscriptionProgress> for TranscriptionEvent {
 }
 
 #[tauri::command]
-pub async fn transcribe_audio(
-    app: AppHandle,
-    model_manager_state: State<'_, model_manager::ModelManagerState>,
-    audio_path: String,
-) -> Result<(), String> {
-    let model_id = model_manager::get_active_model_id(app.clone(), model_manager_state)
-        .map_err(|e| e.to_string())?;
+pub async fn transcribe_audio(app: AppHandle, audio_path: String) -> Result<(), String> {
+    let model_id = model_manager::get_active_model_id(app.clone()).map_err(|e| e.to_string())?;
 
     let provider: Box<dyn TranscriptionProvider> = if model_id == "cloud" {
         return Err("Cloud-based transcription is not available at the moment.".to_string());
@@ -93,13 +88,8 @@ pub async fn transcribe_audio(
 }
 
 #[tauri::command]
-pub async fn transcribe_audio_buffer(
-    app: AppHandle,
-    model_manager_state: State<'_, model_manager::ModelManagerState>,
-    audio_data: AudioData,
-) -> Result<(), String> {
-    let model_id = model_manager::get_active_model_id(app.clone(), model_manager_state)
-        .map_err(|e| e.to_string())?;
+pub async fn transcribe_audio_buffer(app: AppHandle, audio_data: AudioData) -> Result<(), String> {
+    let model_id = model_manager::get_active_model_id(app.clone()).map_err(|e| e.to_string())?;
 
     let provider: Box<dyn TranscriptionProvider> = if model_id == "cloud" {
         return Err("Cloud-based transcription is not available at the moment.".to_string());
