@@ -1,8 +1,10 @@
 import type { UnlistenFn } from "@tauri-apps/api/event";
 import { useEffect, useState } from "react";
+import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { toast } from "sonner";
 
+import { useRecordingStore } from "~/hooks/use-recording-store";
 import { handleCompletedTranscription } from "~/lib/transcription";
 
 export type TranscriptionStatus =
@@ -61,7 +63,9 @@ export function useTranscription() {
               transcript: payload.data,
               error: null,
             });
-            void handleCompletedTranscription(payload.data);
+
+            // Handle completion with notification
+            handleTranscriptionComplete(payload.data);
             break;
           case "Error":
             setState({
@@ -78,18 +82,37 @@ export function useTranscription() {
             );
         }
       });
-
-      console.log("[useTranscription] Listener setup complete");
     }
 
-    void setupListener();
+    setupListener();
 
     return () => {
-      console.log("[useTranscription] Cleanup - unlistening");
-      unlisten?.();
+      if (unlisten) {
+        unlisten();
+      }
     };
   }, []);
 
-  console.log("[useTranscription] Returning state:", state);
   return state;
+}
+
+async function handleTranscriptionComplete(transcript: string) {
+  // Handle the transcription completion (clipboard, state, etc.)
+  await handleCompletedTranscription(transcript);
+
+  // Play notification sound if enabled
+  const { selectedSound, notificationTiming } = useRecordingStore.getState();
+  if (
+    notificationTiming === "completion" ||
+    notificationTiming === "start_stop"
+  ) {
+    try {
+      await invoke("play_notification_sound", {
+        soundName: `${selectedSound}.mp3`,
+        variant: "End",
+      });
+    } catch (error) {
+      console.error("Failed to play notification sound:", error);
+    }
+  }
 }

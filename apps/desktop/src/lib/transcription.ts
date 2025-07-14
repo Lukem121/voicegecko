@@ -67,6 +67,7 @@ export async function handleCompletedTranscription(transcript: string) {
         "[handleCompletedTranscription] Successfully copied to clipboard",
       );
       setLastTranscription(transcript);
+
       toast.success("Transcription complete and copied to clipboard!");
     } catch (error) {
       console.error(

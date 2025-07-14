@@ -52,12 +52,6 @@ function RecordingPage() {
     } else if (status === "recording") {
       setIsProcessing(true);
       try {
-        if (notificationTiming === "start_stop") {
-          await invoke("play_notification_sound", {
-            soundName: `${selectedSound}.mp3`,
-            variant: "End",
-          });
-        }
         console.log("[Recording] Stopping recording...");
         const audioData = await invoke<{
           samples: number[];

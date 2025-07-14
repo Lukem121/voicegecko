@@ -145,17 +145,10 @@ class ShortcutManager {
     if (!this.isRecordingRef) return;
     this.isRecordingRef = false;
 
-    const { status, selectedSound, notificationTiming } =
-      useRecordingStore.getState();
+    const { status } = useRecordingStore.getState();
 
     if (status === "recording") {
       try {
-        if (notificationTiming === "start_stop") {
-          await invoke("play_notification_sound", {
-            soundName: `${selectedSound}.mp3`,
-            variant: "End",
-          });
-        }
         const audioData = await invoke<{
           samples: number[];
           sample_rate: number;

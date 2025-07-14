@@ -47,10 +47,9 @@ pub fn run() {
             modules::model_manager::get_selected_model,
             modules::model_manager::set_selected_model,
             modules::model_manager::get_active_model_id,
+            modules::model_manager::synchronize_models,
             modules::transcription::transcribe_audio,
             modules::transcription::transcribe_audio_buffer,
-            modules::settings::get_model_cache_enabled,
-            modules::settings::set_model_cache_enabled,
             modules::settings::get_transcription_config,
             modules::settings::set_transcription_config
         ])
@@ -59,12 +58,17 @@ pub fn run() {
             let sink = rodio::Sink::try_new(&stream_handle).unwrap();
             app.manage(modules::audio::AudioState::new(sink));
 
-            let model_manager_state = modules::model_manager::ModelManagerState::new();
-            model_manager_state.init(&app.handle())?;
-            app.manage(model_manager_state);
+            modules::model_manager::synchronize_models(app.handle().clone())?;
 
             let transcription_service =
                 modules::transcription_service::TranscriptionService::new();
+            
+            // Preload the active model to ensure fast first transcription
+            if let Err(e) = transcription_service.preload_active_model(&app.handle()) {
+                println!("[Rust] Failed to preload model during startup: {}", e);
+                // Don't fail startup if preloading fails
+            }
+            
             app.manage(transcription_service);
 
             // Keep the stream alive for the duration of the app
