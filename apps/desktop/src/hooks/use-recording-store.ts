@@ -1,10 +1,6 @@
-import { listen } from "@tauri-apps/api/event";
 import { create } from "zustand";
 
-import type {
-  RecordingErrorEvent,
-  RecordingStateChangedEvent,
-} from "~/types/events";
+import { eventService } from "~/services/event.service";
 
 export type RecordingStatus = "idle" | "recording" | "processing" | "error";
 export type NotificationSound = "beep" | "chime" | "tone";
@@ -29,7 +25,7 @@ interface RecordingState {
   setNotificationTiming: (timing: NotificationTiming) => void;
   setVolume: (volume: number) => void;
   setError: (error: string | null) => void;
-  initializeEventListeners: () => Promise<void>;
+  initializeEventListeners: () => void;
 }
 
 export const useRecordingStore = create<RecordingState>((set, get) => ({
@@ -48,29 +44,40 @@ export const useRecordingStore = create<RecordingState>((set, get) => ({
   setVolume: (volume) => set({ volume }),
   setError: (error) => set({ error }),
 
-  initializeEventListeners: async () => {
-    // Listen for recording state changes from the backend
-    await listen("recording-state-changed", (event) => {
-      const payload = event.payload as RecordingStateChangedEvent;
-      console.log("[RecordingStore] Recording state changed:", payload);
+  initializeEventListeners: () => {
+    console.log("[RecordingStore] Initializing event listeners");
 
-      set({ status: payload.status });
+    // Subscribe to recording state changes from the centralized event service
+    const unsubscribeState = eventService.onRecordingStateChange((status) => {
+      console.log(
+        "[RecordingStore] Recording state changed from event service:",
+        status,
+      );
+
+      set({ status });
 
       // Clear error when state changes successfully
-      if (payload.status !== "error") {
+      if (status !== "error") {
         set({ error: null });
       }
     });
 
-    // Listen for recording errors from the backend
-    await listen("recording-error", (event) => {
-      const payload = event.payload as RecordingErrorEvent;
-      console.log("[RecordingStore] Recording error:", payload);
+    // Subscribe to recording errors from the centralized event service
+    const unsubscribeError = eventService.onRecordingError((errorMessage) => {
+      console.log(
+        "[RecordingStore] Recording error from event service:",
+        errorMessage,
+      );
 
       set({
         status: "error",
-        error: payload.error,
+        error: errorMessage,
       });
     });
+
+    console.log("[RecordingStore] Event listeners initialized");
+
+    // Note: In a real app, you might want to store these unsubscribe functions
+    // and call them when the store is destroyed, but Zustand doesn't have a cleanup mechanism
   },
 }));

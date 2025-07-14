@@ -17,13 +17,15 @@ export interface TranscriptionProgressEvent {
   data?: string;
 }
 
-export interface RecordingStateChangedEvent {
-  status: "idle" | "recording" | "processing" | "error";
-}
+// Backend sends raw string, not an object
+export type RecordingStateChangedEvent =
+  | "idle"
+  | "recording"
+  | "processing"
+  | "error";
 
-export interface RecordingErrorEvent {
-  error: string;
-}
+// Backend sends raw string, not an object
+export type RecordingErrorEvent = string;
 
 export interface ModelDownloadProgressEvent {
   modelId: string;
