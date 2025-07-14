@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 
+import { useGlobalPushToTalk } from "~/hooks/use-global-push-to-talk";
 import { useRecordingStore } from "~/hooks/use-recording-store";
 import { useTranscription } from "~/hooks/use-transcription";
 
@@ -9,6 +10,7 @@ export function TauriEvents() {
   const { setStatus, setError, notificationTiming, selectedSound } =
     useRecordingStore();
   useTranscription();
+  useGlobalPushToTalk();
 
   useEffect(() => {
     const unlistenState = listen<string>("recording-state-changed", (event) => {

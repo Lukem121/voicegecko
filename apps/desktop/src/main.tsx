@@ -6,17 +6,11 @@ import "@acme/ui/globals.css";
 import "~/styles/fonts.css";
 
 import { useBetterAuthTauri } from "@daveyplate/better-auth-tauri/react";
-import {
-  createRouter,
-  RouterProvider,
-  useRouter,
-} from "@tanstack/react-router";
+import { createRouter, RouterProvider } from "@tanstack/react-router";
 import ReactDOM from "react-dom/client";
 
 import { AppLauncher } from "~/components/app-launcher";
 import { useIsAuthenticated } from "~/hooks/auth";
-import { usePushToTalk } from "~/hooks/use-push-to-talk";
-import { shortcutManager } from "~/lib/shortcuts/manager";
 import { routeTree } from "~/routeTree.gen";
 import { TRPCReactProvider } from "~/trpc";
 import { ThemeProvider } from "./providers/theme";
@@ -43,7 +37,6 @@ declare module "@tanstack/react-router" {
 function InnerApp() {
   const auth = useIsAuthenticated();
   const session = authClient.useSession();
-  usePushToTalk();
 
   useBetterAuthTauri({
     authClient,
