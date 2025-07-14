@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import { useRecordingStore } from "~/hooks/use-recording-store";
 import { getOS } from "~/lib/shortcuts/utils";
 import { useShortcutStore } from "~/lib/stores/shortcut-store";
-import { invokeTranscription } from "~/lib/transcription";
+import { invokeTranscriptionFromBuffer } from "~/lib/transcription";
 
 export function usePushToTalk() {
   const { categories } = useShortcutStore();
@@ -105,8 +105,12 @@ export function usePushToTalk() {
                 variant: "End",
               });
             }
-            const audioPath = await invoke<string>("stop_recording");
-            await invokeTranscription(audioPath);
+            const audioData = await invoke<{
+              samples: number[];
+              sample_rate: number;
+              channels: number;
+            }>("stop_recording");
+            await invokeTranscriptionFromBuffer(audioData);
           } catch (error) {
             console.error("Failed to stop push-to-talk recording:", error);
             toast.error("Failed to stop recording");

@@ -24,9 +24,17 @@ pub enum SoundVariant {
     End,
 }
 
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct AudioData {
+    pub samples: Vec<f32>,
+    pub sample_rate: u32,
+    pub channels: u16,
+}
+
 pub struct AudioState {
     pub sink: Arc<Mutex<Sink>>,
     pub recording_thread: Arc<Mutex<Option<(thread::JoinHandle<()>, Sender<AudioCommand>)>>>,
+    pub recorded_audio: Arc<Mutex<Option<Vec<f32>>>>,
 }
 
 impl AudioState {
@@ -34,6 +42,7 @@ impl AudioState {
         Self {
             sink: Arc::new(Mutex::new(sink)),
             recording_thread: Arc::new(Mutex::new(None)),
+            recorded_audio: Arc::new(Mutex::new(None)),
         }
     }
 }
@@ -63,6 +72,7 @@ pub fn start_recording(
 ) -> Result<(), String> {
     let (tx, rx) = unbounded();
     let app_handle = app.clone();
+    let recorded_audio = state.recorded_audio.clone();
 
     let thread_handle = thread::spawn(move || {
         let host = cpal::default_host();
@@ -81,23 +91,6 @@ pub fn start_recording(
 
         const TARGET_SAMPLE_RATE: u32 = 16000;
 
-        let spec = hound::WavSpec {
-            channels: 1, // mono
-            sample_rate: TARGET_SAMPLE_RATE,
-            bits_per_sample: 16,
-            sample_format: hound::SampleFormat::Int,
-        };
-
-        let temp_dir = app.path().app_data_dir().unwrap();
-        if !temp_dir.exists() {
-            std::fs::create_dir_all(&temp_dir).unwrap();
-        }
-        let path = temp_dir.join("temp_recording.wav");
-
-        let writer = Arc::new(Mutex::new(Some(
-            hound::WavWriter::create(path, spec).unwrap(),
-        )));
-
         let chunk_size = 1024;
 
         // Setup resampler
@@ -112,10 +105,11 @@ pub fn start_recording(
         let resampler = Arc::new(Mutex::new(resampler));
 
         let audio_buffer = Arc::new(Mutex::new(Vec::new()));
+        let output_samples = Arc::new(Mutex::new(Vec::new()));
 
-        let writer_clone = writer.clone();
         let resampler_clone = resampler.clone();
         let audio_buffer_clone = audio_buffer.clone();
+        let output_samples_clone = output_samples.clone();
         let app_clone = app.clone();
         let err_fn = move |err: cpal::StreamError| {
             eprintln!("an error occurred on stream: {}", err);
@@ -129,10 +123,10 @@ pub fn start_recording(
                     move |data: &[i16], _: &cpal::InputCallbackInfo| {
                         let f32_samples: Vec<f32> =
                             data.iter().map(|s| *s as f32 / i16::MAX as f32).collect();
-                        process_and_write_samples(
-                            &writer_clone,
+                        process_samples_to_buffer(
                             &mut resampler_clone.lock().unwrap(),
                             &mut audio_buffer_clone.lock().unwrap(),
+                            &mut output_samples_clone.lock().unwrap(),
                             &f32_samples,
                             input_channels,
                             chunk_size,
@@ -146,10 +140,10 @@ pub fn start_recording(
                 .build_input_stream(
                     &config.into(),
                     move |data: &[f32], _: &cpal::InputCallbackInfo| {
-                        process_and_write_samples(
-                            &writer_clone,
+                        process_samples_to_buffer(
                             &mut resampler_clone.lock().unwrap(),
                             &mut audio_buffer_clone.lock().unwrap(),
+                            &mut output_samples_clone.lock().unwrap(),
                             data,
                             input_channels,
                             chunk_size,
@@ -191,13 +185,14 @@ pub fn start_recording(
                     };
 
                     let resampled_waves = resampler.process(&waves_in, None).unwrap();
-                    write_resampled_waves(&writer, &resampled_waves);
+                    collect_resampled_samples(
+                        &mut output_samples.lock().unwrap(),
+                        &resampled_waves,
+                    );
                 }
 
-                // Finalize the writer
-                if let Some(writer) = writer.lock().unwrap().take() {
-                    writer.finalize().unwrap();
-                }
+                // Store the recorded audio
+                *recorded_audio.lock().unwrap() = Some(output_samples.lock().unwrap().clone());
             }
             Err(_) => {
                 // Channel disconnected
@@ -206,16 +201,17 @@ pub fn start_recording(
     });
 
     *state.recording_thread.lock().unwrap() = Some((thread_handle, tx));
+    *state.recorded_audio.lock().unwrap() = None; // Clear any previous recording
 
     app_handle
         .emit("recording-state-changed", "recording".to_string())
         .map_err(|e| e.to_string())
 }
 
-fn process_and_write_samples(
-    writer: &Arc<Mutex<Option<hound::WavWriter<std::io::BufWriter<File>>>>>,
+fn process_samples_to_buffer(
     resampler: &mut FftFixedIn<f32>,
     audio_buffer: &mut Vec<f32>,
+    output_samples: &mut Vec<f32>,
     samples: &[f32],
     channels: u16,
     chunk_size: usize,
@@ -242,30 +238,21 @@ fn process_and_write_samples(
         };
 
         let resampled_waves = resampler.process(&waves_in, None).unwrap();
-        write_resampled_waves(writer, &resampled_waves);
+        collect_resampled_samples(output_samples, &resampled_waves);
     }
 }
 
-fn write_resampled_waves(
-    writer: &Arc<Mutex<Option<hound::WavWriter<std::io::BufWriter<File>>>>>,
-    resampled_waves: &Vec<Vec<f32>>,
-) {
-    if let Some(writer) = writer.lock().unwrap().as_mut() {
-        // Always write mono to the file
-        if resampled_waves.len() > 1 {
-            let left = &resampled_waves[0];
-            let right = &resampled_waves[1];
-            for i in 0..left.len() {
-                let sample = (left[i] + right[i]) / 2.0;
-                let amplitude = i16::MAX as f32;
-                writer.write_sample((sample * amplitude) as i16).unwrap();
-            }
-        } else {
-            for sample in resampled_waves[0].iter() {
-                let amplitude = i16::MAX as f32;
-                writer.write_sample((sample * amplitude) as i16).unwrap();
-            }
+fn collect_resampled_samples(output_samples: &mut Vec<f32>, resampled_waves: &Vec<Vec<f32>>) {
+    // Always output mono samples
+    if resampled_waves.len() > 1 {
+        let left = &resampled_waves[0];
+        let right = &resampled_waves[1];
+        for i in 0..left.len() {
+            let sample = (left[i] + right[i]) / 2.0;
+            output_samples.push(sample);
         }
+    } else {
+        output_samples.extend_from_slice(&resampled_waves[0]);
     }
 }
 
@@ -273,7 +260,7 @@ fn write_resampled_waves(
 pub fn stop_recording(
     state: tauri::State<AudioState>,
     app: tauri::AppHandle,
-) -> Result<String, String> {
+) -> Result<AudioData, String> {
     if let Some((thread_handle, sender)) = state.recording_thread.lock().unwrap().take() {
         sender.send(AudioCommand::Stop).unwrap();
         thread_handle.join().unwrap();
@@ -282,8 +269,50 @@ pub fn stop_recording(
     app.emit("recording-state-changed", "idle".to_string())
         .map_err(|e| e.to_string())?;
 
+    let samples = state
+        .recorded_audio
+        .lock()
+        .unwrap()
+        .take()
+        .ok_or_else(|| "No audio data recorded".to_string())?;
+
+    Ok(AudioData {
+        samples,
+        sample_rate: 16000, // We always resample to 16kHz
+        channels: 1,        // We always convert to mono
+    })
+}
+
+#[tauri::command]
+pub fn stop_recording_to_file(
+    state: tauri::State<AudioState>,
+    app: tauri::AppHandle,
+) -> Result<String, String> {
+    // First get the audio data
+    let audio_data = stop_recording(state, app.clone())?;
+
+    // Save to file
     let temp_dir = app.path().app_data_dir().unwrap();
+    if !temp_dir.exists() {
+        std::fs::create_dir_all(&temp_dir).unwrap();
+    }
     let path = temp_dir.join("temp_recording.wav");
+
+    let spec = hound::WavSpec {
+        channels: audio_data.channels,
+        sample_rate: audio_data.sample_rate,
+        bits_per_sample: 16,
+        sample_format: hound::SampleFormat::Int,
+    };
+
+    let mut writer = hound::WavWriter::create(&path, spec).unwrap();
+
+    for sample in audio_data.samples {
+        let amplitude = i16::MAX as f32;
+        writer.write_sample((sample * amplitude) as i16).unwrap();
+    }
+
+    writer.finalize().unwrap();
 
     Ok(path.to_string_lossy().to_string())
 }
