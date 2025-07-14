@@ -238,14 +238,11 @@ function SettingsModelsPage() {
             {/* Local Models Section */}
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-4">
-                  <Cpu className="h-8 w-8 text-green-500" />
-                  <div>
-                    <h4 className="font-semibold">Local Models</h4>
-                    <p className="text-muted-foreground text-sm">
-                      Run directly on your machine. No internet required.
-                    </p>
-                  </div>
+                <div>
+                  <h4 className="font-semibold">Local Models</h4>
+                  <p className="text-muted-foreground text-sm">
+                    Run directly on your machine. No internet required.
+                  </p>
                 </div>
                 <div className="flex items-center space-x-2">
                   <Switch
