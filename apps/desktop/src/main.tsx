@@ -16,9 +16,7 @@ import ReactDOM from "react-dom/client";
 import { AppLauncher } from "~/components/app-launcher";
 import { useIsAuthenticated } from "~/hooks/auth";
 import { usePushToTalk } from "~/hooks/use-push-to-talk";
-import { setRouterInstance } from "~/lib/shortcuts/actions";
 import { shortcutManager } from "~/lib/shortcuts/manager";
-// Import the generated route tree
 import { routeTree } from "~/routeTree.gen";
 import { TRPCReactProvider } from "~/trpc";
 import { ThemeProvider } from "./providers/theme";
@@ -63,16 +61,6 @@ function InnerApp() {
       console.error("❌ Auth error:", error);
     },
   });
-
-  useEffect(() => {
-    void shortcutManager.initialize();
-    setRouterInstance(routerInstance);
-
-    return () => {
-      // Clean up router instance on unmount
-      setRouterInstance(null);
-    };
-  }, [routerInstance]);
 
   useEffect(() => {
     console.log("Auth state changed", session.data, session.isPending);
