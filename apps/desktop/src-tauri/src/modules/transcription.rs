@@ -1,8 +1,6 @@
-use hound::WavReader;
 use serde::Serialize;
-use tauri::{AppHandle, Manager, State};
+use tauri::{AppHandle, State};
 use thiserror::Error;
-use whisper_rs::{FullParams, SamplingStrategy};
 
 use super::model_manager;
 use crate::modules::transcription_service::{LocalWhisperProvider, TranscriptionProvider};
@@ -40,18 +38,4 @@ pub async fn transcribe_audio(
     };
 
     provider.transcribe(app, audio_path).await
-}
-
-fn read_wav_to_f32(path: String) -> Result<Vec<f32>, TranscriptionError> {
-    let mut reader =
-        WavReader::open(path).map_err(|e| TranscriptionError::AudioProcessing(e.to_string()))?;
-    let samples: Vec<i16> = reader.samples::<i16>().map(|s| s.unwrap()).collect();
-
-    // Convert to f32 samples
-    let mut f32_samples = vec![0.0; samples.len()];
-    for (i, sample) in samples.iter().enumerate() {
-        f32_samples[i] = (*sample as f32) / (i16::MAX as f32);
-    }
-
-    Ok(f32_samples)
 }

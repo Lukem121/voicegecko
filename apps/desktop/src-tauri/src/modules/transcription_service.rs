@@ -83,7 +83,7 @@ impl TranscriptionService {
         let cache_enabled = *self.cache_enabled.lock().unwrap();
 
         if cache_enabled {
-            let mut cache = self.model_cache.lock().unwrap();
+            let cache = self.model_cache.lock().unwrap();
             if let Some(model) = cache.get(model_id) {
                 println!("Model {} found in cache", model_id);
                 return Ok(Arc::clone(model));
