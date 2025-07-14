@@ -10,7 +10,8 @@ import { Textarea } from "@acme/ui/components/ui/textarea";
 import { cn } from "@acme/ui/lib/utils";
 
 import { useRecordingStore } from "~/hooks/use-recording-store";
-import { transcribeAndProcess } from "~/lib/transcription";
+import { useTranscription } from "~/hooks/use-transcription";
+import { invokeTranscription } from "~/lib/transcription";
 
 export const Route = createFileRoute("/_authenticated/recording")({
   component: RecordingPage,
@@ -19,7 +20,7 @@ export const Route = createFileRoute("/_authenticated/recording")({
 function RecordingPage() {
   const { status, selectedDevice, selectedSound, notificationTiming } =
     useRecordingStore();
-  const [transcript, setTranscript] = useState("");
+  const { transcript, status: transcriptionStatus, error } = useTranscription();
   const [isProcessing, setIsProcessing] = useState(false);
 
   const handleMicClick = async () => {
@@ -46,10 +47,7 @@ function RecordingPage() {
           });
         }
         const audioPath = await invoke<string>("stop_recording");
-        const newTranscript = await transcribeAndProcess(audioPath);
-        if (newTranscript) {
-          setTranscript(newTranscript);
-        }
+        await invokeTranscription(audioPath);
       } catch (error) {
         // Errors are handled in transcribeAndProcess, but we can add more here if needed
         console.error("An error occurred during recording flow:", error);
@@ -60,6 +58,9 @@ function RecordingPage() {
   };
 
   const isRecording = status === "recording";
+  const isTranscribing =
+    transcriptionStatus === "transcribing" ||
+    transcriptionStatus === "loading_model";
 
   return (
     <div className="flex flex-1 flex-col gap-6">
@@ -71,8 +72,8 @@ function RecordingPage() {
               <Textarea
                 placeholder="Start typing or click the microphone to record..."
                 className="min-h-[200px] resize-none border-0 text-base focus-visible:ring-0"
-                value={transcript}
-                onChange={(e) => setTranscript(e.target.value)}
+                value={transcript ?? ""}
+                readOnly
               />
               <Button
                 variant={isRecording ? "destructive" : "secondary"}
@@ -82,7 +83,7 @@ function RecordingPage() {
                   isRecording && "animate-pulse",
                 )}
                 onClick={handleMicClick}
-                disabled={status === "processing" || isProcessing}
+                disabled={isTranscribing || isProcessing}
               >
                 {isRecording ? (
                   <Square className="h-5 w-5" />

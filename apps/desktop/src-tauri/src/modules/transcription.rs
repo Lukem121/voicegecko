@@ -1,5 +1,5 @@
 use serde::Serialize;
-use tauri::{AppHandle, State};
+use tauri::{AppHandle, Emitter, State};
 use thiserror::Error;
 
 use super::model_manager;
@@ -21,21 +21,40 @@ impl From<model_manager::ModelManagerError> for TranscriptionError {
     }
 }
 
+#[derive(Clone, Serialize)]
+pub enum TranscriptionProgress {
+    Starting,
+    Downloading,
+    LoadingModel,
+    Transcribing,
+    Complete(String),
+    Error(String),
+}
+
 #[tauri::command]
 pub async fn transcribe_audio(
     app: AppHandle,
     model_manager_state: State<'_, model_manager::ModelManagerState>,
     audio_path: String,
-) -> Result<String, TranscriptionError> {
-    let model_id = model_manager::get_active_model_id(app.clone(), model_manager_state)?;
+) -> Result<(), String> {
+    let model_id = model_manager::get_active_model_id(app.clone(), model_manager_state)
+        .map_err(|e| e.to_string())?;
 
     let provider: Box<dyn TranscriptionProvider> = if model_id == "cloud" {
-        return Err(TranscriptionError::Transcription(
-            "Cloud-based transcription is not available at the moment.".to_string(),
-        ));
+        return Err("Cloud-based transcription is not available at the moment.".to_string());
     } else {
         Box::new(LocalWhisperProvider { model_id })
     };
 
-    provider.transcribe(app, audio_path).await
+    // Perform transcription in a separate thread
+    tauri::async_runtime::spawn(async move {
+        let result = provider.transcribe(app.clone(), audio_path).await;
+        let event_payload = match result {
+            Ok(transcript) => TranscriptionProgress::Complete(transcript),
+            Err(e) => TranscriptionProgress::Error(e.to_string()),
+        };
+        app.emit("transcription-progress", event_payload).unwrap();
+    });
+
+    Ok(())
 }
