@@ -119,12 +119,12 @@ export function usePushToTalk() {
       }
     };
 
-    document.addEventListener("keydown", handleKeyDown);
-    document.addEventListener("keyup", handleKeyUp);
+    document.addEventListener("keydown", (e) => void handleKeyDown(e));
+    document.addEventListener("keyup", (e) => void handleKeyUp(e));
 
     return () => {
-      document.removeEventListener("keydown", handleKeyDown);
-      document.removeEventListener("keyup", handleKeyUp);
+      document.removeEventListener("keydown", (e) => void handleKeyDown(e));
+      document.removeEventListener("keyup", (e) => void handleKeyUp(e));
     };
   }, [categories, platform]);
 }
