@@ -3,6 +3,7 @@ import { toast } from "sonner";
 
 import { useRecordingStore } from "~/hooks/use-recording-store";
 import { invokeTranscriptionFromBuffer } from "~/lib/transcription";
+import { useEventStore } from "~/stores/event.store";
 
 export interface RecordingOptions {
   playStartSound?: boolean;
@@ -31,12 +32,29 @@ export class RecordingService {
     this.isToggling = true;
 
     try {
-      const { status } = useRecordingStore.getState();
+      const { recordingStatus } = useEventStore.getState();
 
-      if (status === "idle") {
+      console.log(
+        "[RecordingService] Toggle recording called, current status:",
+        recordingStatus,
+      );
+
+      if (recordingStatus === "idle") {
+        console.log("[RecordingService] Starting recording...");
         await this.startRecording(options);
-      } else if (status === "recording") {
+      } else if (recordingStatus === "recording") {
+        console.log("[RecordingService] Stopping recording...");
         await this.stopRecording(options);
+      } else if (recordingStatus === "processing") {
+        console.log(
+          "[RecordingService] Recording is processing, ignoring toggle",
+        );
+      }
+      {
+        console.log(
+          "[RecordingService] Recording in error state, attempting to start...",
+        );
+        await this.startRecording(options);
       }
     } finally {
       setTimeout(() => {
@@ -52,9 +70,9 @@ export class RecordingService {
     if (this.isPushToTalkActive) return;
 
     this.isPushToTalkActive = true;
-    const { status } = useRecordingStore.getState();
+    const { recordingStatus } = useEventStore.getState();
 
-    if (status === "idle") {
+    if (recordingStatus === "idle") {
       await this.startRecording(options);
     }
   }
@@ -66,9 +84,9 @@ export class RecordingService {
     if (!this.isPushToTalkActive) return;
 
     this.isPushToTalkActive = false;
-    const { status } = useRecordingStore.getState();
+    const { recordingStatus } = useEventStore.getState();
 
-    if (status === "recording") {
+    if (recordingStatus === "recording") {
       await this.stopRecording(options);
     }
   }
@@ -153,18 +171,6 @@ export class RecordingService {
     return (
       notificationTiming === "completion" || notificationTiming === "start_stop"
     );
-  }
-
-  /**
-   * Play end sound if configured (called from transcription completion)
-   */
-  async playEndSoundIfEnabled(): Promise<void> {
-    if (this.shouldPlayEndSound()) {
-      console.log("[RecordingService] Playing end notification sound");
-      await this.playNotificationSound("End");
-    } else {
-      console.log("[RecordingService] End sound disabled in settings");
-    }
   }
 
   /**
