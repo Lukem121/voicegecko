@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 
-import type { ShortcutCategory } from "~/lib/shortcuts/types";
+import type { ShortcutCategory, ShortcutId } from "~/lib/shortcuts/types";
+import { DEFAULT_SHORTCUTS } from "~/lib/shortcuts/constants";
 import { shortcutManager } from "~/lib/shortcuts/manager";
 import { useShortcutStore } from "~/lib/stores/shortcut-store";
 
@@ -21,19 +22,24 @@ export function useShortcuts() {
   useEffect(() => {
     async function loadShortcuts() {
       setIsLoading(true);
-      const loadedCategories =
-        (await shortcutManager
-          .getStore()
-          .get<ShortcutCategory[]>("shortcuts")) ?? [];
-      if (loadedCategories.length > 0) {
+      try {
+        const loadedCategories =
+          (await shortcutManager
+            .getStore()
+            .get<ShortcutCategory[]>("shortcuts")) ?? DEFAULT_SHORTCUTS;
         setShortcuts(loadedCategories);
+      } catch (error) {
+        console.error("Failed to load shortcuts:", error);
+        // Fall back to defaults if loading fails
+        setShortcuts(DEFAULT_SHORTCUTS);
+      } finally {
+        setIsLoading(false);
       }
-      setIsLoading(false);
     }
     void loadShortcuts();
   }, [setShortcuts]);
 
-  const updateShortcut = async (actionId: string, keys: string[]) => {
+  const updateShortcut = async (actionId: ShortcutId, keys: string[]) => {
     updateShortcutInStore(actionId, keys);
     await shortcutManager.updateAndSaveShortcuts(
       useShortcutStore.getState().categories,
@@ -47,7 +53,7 @@ export function useShortcuts() {
     );
   };
 
-  const startRecording = async (actionId: string) => {
+  const startRecording = async (actionId: ShortcutId) => {
     await shortcutManager.unregisterAll();
     startRecordingInStore(actionId);
   };

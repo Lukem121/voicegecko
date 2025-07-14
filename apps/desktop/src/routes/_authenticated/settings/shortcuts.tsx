@@ -1,5 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Command, Keyboard, RotateCcw, Settings2, Zap } from "lucide-react";
+import {
+  Command,
+  Keyboard,
+  Loader2,
+  RotateCcw,
+  Settings2,
+  Zap,
+} from "lucide-react";
 
 import { Badge } from "@acme/ui/components/ui/badge";
 import { Button } from "@acme/ui/components/ui/button";
@@ -55,7 +62,14 @@ function ShortcutsPage() {
   };
 
   if (isLoading) {
-    return <div>Loading...</div>;
+    return (
+      <div className="flex h-[400px] items-center justify-center">
+        <div className="flex flex-col items-center gap-2">
+          <Loader2 className="text-muted-foreground h-8 w-8 animate-spin" />
+          <p className="text-muted-foreground text-sm">Loading shortcuts...</p>
+        </div>
+      </div>
+    );
   }
 
   return (

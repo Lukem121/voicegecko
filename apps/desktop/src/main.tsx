@@ -6,12 +6,17 @@ import "@acme/ui/globals.css";
 import "~/styles/fonts.css";
 
 import { useBetterAuthTauri } from "@daveyplate/better-auth-tauri/react";
-import { createRouter, RouterProvider } from "@tanstack/react-router";
+import {
+  createRouter,
+  RouterProvider,
+  useRouter,
+} from "@tanstack/react-router";
 import ReactDOM from "react-dom/client";
 
 import { AppLauncher } from "~/components/app-launcher";
 import { useIsAuthenticated } from "~/hooks/auth";
 import { usePushToTalk } from "~/hooks/use-push-to-talk";
+import { setRouterInstance } from "~/lib/shortcuts/actions";
 import { shortcutManager } from "~/lib/shortcuts/manager";
 // Import the generated route tree
 import { routeTree } from "~/routeTree.gen";
@@ -40,6 +45,7 @@ declare module "@tanstack/react-router" {
 function InnerApp() {
   const auth = useIsAuthenticated();
   const session = authClient.useSession();
+  const routerInstance = useRouter();
   usePushToTalk();
 
   useBetterAuthTauri({
@@ -60,7 +66,13 @@ function InnerApp() {
 
   useEffect(() => {
     void shortcutManager.initialize();
-  }, []);
+    setRouterInstance(routerInstance);
+
+    return () => {
+      // Clean up router instance on unmount
+      setRouterInstance(null);
+    };
+  }, [routerInstance]);
 
   useEffect(() => {
     console.log("Auth state changed", session.data, session.isPending);
