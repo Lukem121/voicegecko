@@ -1102,6 +1102,7 @@ dependencies = [
  "tauri-plugin-log",
  "tauri-plugin-opener",
  "tauri-plugin-os",
+ "tauri-plugin-positioner",
  "tauri-plugin-process",
  "tauri-plugin-shell",
  "tauri-plugin-single-instance",
@@ -5348,6 +5349,21 @@ dependencies = [
  "serde_json",
  "serialize-to-javascript",
  "sys-locale",
+ "tauri",
+ "tauri-plugin",
+ "thiserror 2.0.12",
+]
+
+[[package]]
+name = "tauri-plugin-positioner"
+version = "2.3.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3a01e373ea3f3f5f46d40f434ba13bd12fa4833aabab50dfc09f6362bad27c95"
+dependencies = [
+ "log",
+ "serde",
+ "serde_json",
+ "serde_repr",
  "tauri",
  "tauri-plugin",
  "thiserror 2.0.12",
