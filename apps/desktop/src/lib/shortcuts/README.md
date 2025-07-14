@@ -1,4 +1,4 @@
-# Keyboard Shortcuts System
+Perfect. This is working exactly as I would expect. What I'd really like you to do now is move on to the next part, which is I've noticed that at the end of all these times I've been pressing the key bindings, I would like it to paste the contents of the transcription. So basically after he's done the transcription, I want it to add it to my clipboard. This is probably not anything to do with the shortcut system, so we're going to move on to this, moving away from the shortcut system. But I only wanted just to mention it now.# Keyboard Shortcuts System
 
 This directory contains the keyboard shortcut system for VoiceGecko. The system is designed to be flexible, maintainable, and easy to extend.
 
