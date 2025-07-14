@@ -1,23 +1,28 @@
+import type { ShortcutEvent } from "@tauri-apps/plugin-global-shortcut";
+import { invoke } from "@tauri-apps/api/core";
 import {
   register,
   unregister,
   unregisterAll,
 } from "@tauri-apps/plugin-global-shortcut";
 import { LazyStore } from "@tauri-apps/plugin-store";
+import { toast } from "sonner";
 
 import type { ShortcutCategory } from "./types";
+import { useRecordingStore } from "~/hooks/use-recording-store";
 import { shortcutActions } from "./actions";
 import {
   DEFAULT_SHORTCUTS,
   SHORTCUTS_SETTINGS_FILE,
   SHORTCUTS_STORE_KEY,
 } from "./constants";
-import { acceleratorFromKeys } from "./utils";
+import { acceleratorFromKeys, normalizeKeys } from "./utils";
 
 class ShortcutManager {
   private static instance: ShortcutManager | undefined;
   private store: LazyStore;
   private initialized = false;
+  private isRecordingRef = false;
 
   private constructor() {
     this.store = new LazyStore(SHORTCUTS_SETTINGS_FILE);
@@ -61,13 +66,20 @@ class ShortcutManager {
     for (const category of categories) {
       for (const shortcut of category.shortcuts) {
         if (shortcut.enabled && shortcut.keys.length > 0) {
-          const accelerator = acceleratorFromKeys(shortcut.keys);
+          const normalizedKeys = normalizeKeys(shortcut.keys);
+          const accelerator = acceleratorFromKeys(normalizedKeys);
           try {
             if (shortcut.id === "push-to-talk") {
+              await register(accelerator, (event: ShortcutEvent) => {
+                if (event.state === "Pressed") {
+                  void this.handlePushToTalkDown();
+                } else if (event.state === "Released") {
+                  void this.handlePushToTalkUp();
+                }
+              });
               console.log(
-                `Registering push-to-talk with special handling: ${accelerator}`,
+                `Successfully registered push-to-talk: ${accelerator}`,
               );
-              // Special handling for keydown/keyup is now managed by the global shortcut event system
             } else if (shortcut.id in shortcutActions) {
               await register(accelerator, () => {
                 const action =
@@ -103,6 +115,64 @@ class ShortcutManager {
 
   async unregister(accelerator: string) {
     await unregister(accelerator);
+  }
+
+  private async handlePushToTalkDown() {
+    if (this.isRecordingRef) return;
+    this.isRecordingRef = true;
+
+    const { status, selectedDevice, selectedSound, notificationTiming } =
+      useRecordingStore.getState();
+
+    if (status === "idle") {
+      try {
+        if (notificationTiming === "start_stop") {
+          await invoke("play_notification_sound", {
+            soundName: `${selectedSound}.mp3`,
+            variant: "Start",
+          });
+        }
+        await invoke("start_recording", { device: selectedDevice?.name });
+      } catch (error) {
+        console.error("Failed to start push-to-talk recording:", error);
+        toast.error("Failed to start recording");
+        this.isRecordingRef = false;
+      }
+    }
+  }
+
+  private async handlePushToTalkUp() {
+    if (!this.isRecordingRef) return;
+    this.isRecordingRef = false;
+
+    const { status, selectedSound, notificationTiming } =
+      useRecordingStore.getState();
+
+    if (status === "recording") {
+      try {
+        if (notificationTiming === "start_stop") {
+          await invoke("play_notification_sound", {
+            soundName: `${selectedSound}.mp3`,
+            variant: "End",
+          });
+        }
+        const audioData = await invoke<{
+          samples: number[];
+          sample_rate: number;
+          channels: number;
+        }>("stop_recording");
+        // We assume invokeTranscriptionFromBuffer exists and is correctly typed
+        // If not, you might need to import it or define its behavior.
+        // For example:
+        const { invokeTranscriptionFromBuffer } = await import(
+          "~/lib/transcription"
+        );
+        await invokeTranscriptionFromBuffer(audioData);
+      } catch (error) {
+        console.error("Failed to stop push-to-talk recording:", error);
+        toast.error("Failed to stop recording");
+      }
+    }
   }
 }
 
