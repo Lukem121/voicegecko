@@ -1,0 +1,80 @@
+import { invoke } from "@tauri-apps/api/core";
+import { writeText } from "@tauri-apps/plugin-clipboard-manager";
+import { toast } from "sonner";
+
+import { useRecordingStore } from "~/hooks/use-recording-store";
+
+// Placeholder for last transcription
+let lastTranscription = "";
+
+export function setLastTranscription(text: string) {
+  lastTranscription = text;
+}
+
+async function handleToggleRecording() {
+  const { status, selectedDevice, selectedSound, notificationTiming } =
+    useRecordingStore.getState();
+
+  if (status === "idle") {
+    try {
+      if (notificationTiming === "start_stop") {
+        await invoke("play_notification_sound", {
+          soundName: `${selectedSound}.mp3`,
+          variant: "Start",
+        });
+      }
+      await invoke("start_recording", { device: selectedDevice?.name });
+    } catch (error) {
+      console.error("Failed to start recording:", error);
+      toast.error("Failed to start recording");
+    }
+  } else if (status === "recording") {
+    try {
+      if (notificationTiming === "start_stop") {
+        await invoke("play_notification_sound", {
+          soundName: `${selectedSound}.mp3`,
+          variant: "End",
+        });
+      }
+      const audioPath = await invoke<string>("stop_recording");
+
+      // TODO: Handle transcription initiation
+      console.log("Stopped recording, audio at:", audioPath);
+      toast.info("Recording stopped. Transcription would start here.");
+    } catch (error) {
+      console.error("Failed to stop recording:", error);
+      toast.error("Failed to stop recording");
+    }
+  }
+}
+
+export const shortcutActions = {
+  "toggle-recording": handleToggleRecording,
+  "push-to-talk": {
+    onPress: async () => {
+      const { status } = useRecordingStore.getState();
+      if (status === "idle") {
+        await handleToggleRecording();
+      }
+    },
+    onRelease: async () => {
+      const { status } = useRecordingStore.getState();
+      if (status === "recording") {
+        await handleToggleRecording();
+      }
+    },
+  },
+  "paste-last-transcription": async () => {
+    if (lastTranscription) {
+      await writeText(lastTranscription);
+      toast.success("Last transcription copied to clipboard.");
+    } else {
+      toast.info("No transcription available to paste.");
+    }
+  },
+  "open-last-transcription": () => {
+    // TODO: Implement navigation to last transcription
+    console.log("Action: Open last transcription (not implemented)");
+    toast.info("Feature coming soon!");
+  },
+};

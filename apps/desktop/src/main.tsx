@@ -11,6 +11,8 @@ import ReactDOM from "react-dom/client";
 
 import { AppLauncher } from "~/components/app-launcher";
 import { useIsAuthenticated } from "~/hooks/auth";
+import { usePushToTalk } from "~/hooks/use-push-to-talk";
+import { shortcutManager } from "~/lib/shortcuts/manager";
 // Import the generated route tree
 import { routeTree } from "~/routeTree.gen";
 import { TRPCReactProvider } from "~/trpc";
@@ -38,6 +40,7 @@ declare module "@tanstack/react-router" {
 function InnerApp() {
   const auth = useIsAuthenticated();
   const session = authClient.useSession();
+  usePushToTalk();
 
   useBetterAuthTauri({
     authClient,
@@ -54,6 +57,10 @@ function InnerApp() {
       console.error("❌ Auth error:", error);
     },
   });
+
+  useEffect(() => {
+    void shortcutManager.initialize();
+  }, []);
 
   useEffect(() => {
     console.log("Auth state changed", session.data, session.isPending);

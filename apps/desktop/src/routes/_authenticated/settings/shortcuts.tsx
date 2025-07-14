@@ -17,56 +17,59 @@ import {
   TooltipTrigger,
 } from "@acme/ui/components/ui/tooltip";
 
+import { ShortcutRecorder } from "~/components/shortcut-recorder";
+import { useShortcuts } from "~/hooks/use-shortcuts";
+import { formatKeysForDisplay, getOS } from "~/lib/shortcuts/utils";
+
 export const Route = createFileRoute("/_authenticated/settings/shortcuts")({
   component: ShortcutsPage,
 });
 
 function ShortcutsPage() {
+  const {
+    shortcutCategories,
+    resetShortcuts,
+    isLoading,
+    updateShortcut,
+    isRecording,
+    startRecording,
+    stopRecording,
+    cancelRecording,
+    recordingActionId,
+  } = useShortcuts();
+  const os = getOS();
+
   const handleResetShortcuts = () => {
-    // TODO: Implement reset functionality
-    console.log("Reset shortcuts to defaults");
+    void resetShortcuts();
   };
 
-  const shortcuts = [
-    {
-      category: "Recording Controls",
-      items: [
-        {
-          keys: ["Ctrl", "⊞"],
-          description: "Push to dictate (hold to record)",
-        },
-        {
-          keys: ["Ctrl", "Shift", "X"],
-          description: "Toggle recording on/off",
-        },
-      ],
-    },
-    {
-      category: "Navigation",
-      items: [
-        {
-          keys: ["Ctrl", "Shift", "R"],
-          description: "Open most recent transcription",
-        },
-        {
-          keys: ["Ctrl", "Shift", "V"],
-          description: "Paste last transcription into active text field",
-        },
-      ],
-    },
-    {
-      category: "Post-Processing",
-      items: [
-        { keys: ["Ctrl", "1"], description: "Quick apply - Business style" },
-        { keys: ["Ctrl", "2"], description: "Quick apply - Casual style" },
-        { keys: ["Ctrl", "3"], description: "Quick apply - Grammar fix" },
-        { keys: ["Ctrl", "P"], description: "Open post-processing menu" },
-      ],
-    },
-  ];
+  const handleSaveShortcut = (keys: string[]) => {
+    if (recordingActionId) {
+      void updateShortcut(recordingActionId, keys);
+    }
+    stopRecording();
+  };
+
+  const handleCancelRecording = () => {
+    void cancelRecording();
+  };
+
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
 
   return (
     <TooltipProvider>
+      <ShortcutRecorder
+        isOpen={isRecording}
+        onClose={handleCancelRecording}
+        onSave={handleSaveShortcut}
+        actionName={
+          shortcutCategories
+            .flatMap((c) => c.shortcuts)
+            .find((s) => s.id === recordingActionId)?.name ?? ""
+        }
+      />
       <div className="flex flex-1 flex-col gap-4">
         {/* Header with future configuration option */}
         <div className="flex items-center justify-between">
@@ -98,76 +101,66 @@ function ShortcutsPage() {
 
         {/* Shortcut Categories */}
         <div className="grid gap-6">
-          {shortcuts.map((category) => (
-            <Card key={category.category}>
+          {shortcutCategories.map((category) => (
+            <Card key={category.name}>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Keyboard className="h-5 w-5" />
-                  {category.category}
+                  {category.name}
                 </CardTitle>
-                <CardDescription>
-                  {category.category === "Recording Controls" &&
-                    "Control your recording sessions"}
-                  {category.category === "Navigation" &&
-                    "Quick access to your transcriptions"}
-                  {category.category === "Post-Processing" &&
-                    "Process and enhance your transcriptions"}
-                </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {category.items.map((shortcut, index) => (
+                  {category.shortcuts.map((shortcut) => (
                     <div
-                      key={index}
+                      key={shortcut.id}
                       className="flex items-center justify-between border-b py-2 last:border-b-0"
                     >
-                      <span className="text-sm">{shortcut.description}</span>
+                      <span className="text-sm">{shortcut.name}</span>
                       <div className="flex items-center gap-3">
                         <div className="flex items-center gap-1">
-                          {shortcut.keys.map((key, keyIndex) => (
-                            <div
-                              key={keyIndex}
-                              className="flex items-center gap-1"
-                            >
-                              <Badge
-                                variant="outline"
-                                className="px-2 py-1 font-mono text-xs"
+                          {formatKeysForDisplay(shortcut.keys, os).map(
+                            (key, keyIndex) => (
+                              <div
+                                key={keyIndex}
+                                className="flex items-center gap-1"
                               >
-                                {key === "Ctrl" ? (
-                                  <div className="flex items-center gap-1">
-                                    <Command className="h-3 w-3" />
-                                    <span>Ctrl</span>
-                                  </div>
-                                ) : key === "⊞" ? (
-                                  <div className="flex items-center gap-1">
-                                    <span>⊞</span>
-                                  </div>
-                                ) : (
-                                  key
+                                <Badge
+                                  variant="outline"
+                                  className="px-2 py-1 font-mono text-xs"
+                                >
+                                  {key === "⌘" ? (
+                                    <div className="flex items-center gap-1">
+                                      <Command className="h-3 w-3" />
+                                      <span>{key}</span>
+                                    </div>
+                                  ) : (
+                                    key
+                                  )}
+                                </Badge>
+                                {keyIndex < shortcut.keys.length - 1 && (
+                                  <span className="text-muted-foreground text-xs">
+                                    +
+                                  </span>
                                 )}
-                              </Badge>
-                              {keyIndex < shortcut.keys.length - 1 && (
-                                <span className="text-muted-foreground text-xs">
-                                  +
-                                </span>
-                              )}
-                            </div>
-                          ))}
+                              </div>
+                            ),
+                          )}
                         </div>
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <Button
                               variant="ghost"
                               size="sm"
-                              className="h-8 w-8 p-0 opacity-50"
-                              disabled
+                              className="h-8 w-8 p-0"
+                              onClick={() => startRecording(shortcut.id)}
                             >
                               <Settings2 className="h-3 w-3" />
                               <span className="sr-only">Edit shortcut</span>
                             </Button>
                           </TooltipTrigger>
                           <TooltipContent>
-                            <p>Edit shortcut (coming soon)</p>
+                            <p>Edit shortcut</p>
                           </TooltipContent>
                         </Tooltip>
                       </div>
@@ -195,15 +188,15 @@ function ShortcutsPage() {
               <div className="space-y-2">
                 <h4 className="font-medium">🎙️ Push to Dictate</h4>
                 <p className="text-muted-foreground text-sm">
-                  Hold Ctrl + Windows key to record. Release to stop and
+                  Hold your push-to-talk shortcut to record. Release to stop and
                   automatically process the transcription.
                 </p>
               </div>
               <div className="space-y-2">
                 <h4 className="font-medium">🔄 Toggle Mode</h4>
                 <p className="text-muted-foreground text-sm">
-                  Use Ctrl + Shift + X for hands-free recording. Press once to
-                  start, again to stop.
+                  Use the toggle shortcut for hands-free recording. Press once
+                  to start, again to stop.
                 </p>
               </div>
               <div className="space-y-2">
