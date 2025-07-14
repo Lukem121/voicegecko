@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Command, Keyboard, Settings2, Zap } from "lucide-react";
+import { Command, Keyboard, RotateCcw, Settings2, Zap } from "lucide-react";
 
 import { Badge } from "@acme/ui/components/ui/badge";
 import { Button } from "@acme/ui/components/ui/button";
@@ -22,6 +22,11 @@ export const Route = createFileRoute("/_authenticated/settings/shortcuts")({
 });
 
 function ShortcutsPage() {
+  const handleResetShortcuts = () => {
+    // TODO: Implement reset functionality
+    console.log("Reset shortcuts to defaults");
+  };
+
   const shortcuts = [
     {
       category: "Recording Controls",
@@ -65,11 +70,29 @@ function ShortcutsPage() {
       <div className="flex flex-1 flex-col gap-4">
         {/* Header with future configuration option */}
         <div className="flex items-center justify-between">
-          <div>
+          <div className="flex-1">
             <h2 className="text-2xl font-semibold">Keyboard Shortcuts</h2>
-            <p className="text-muted-foreground text-sm">
-              Learn the shortcuts to speed up your workflow
-            </p>
+            <div className="flex items-center justify-between">
+              <p className="text-muted-foreground text-sm">
+                Learn the shortcuts to speed up your workflow
+              </p>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleResetShortcuts}
+                    className="ml-4"
+                  >
+                    <RotateCcw className="mr-2 h-4 w-4" />
+                    Reset to Defaults
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent>
+                  <p>Restore all shortcuts to their default values</p>
+                </TooltipContent>
+              </Tooltip>
+            </div>
           </div>
         </div>
 
