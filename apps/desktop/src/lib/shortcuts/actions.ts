@@ -6,45 +6,58 @@ import { useRecordingStore } from "~/hooks/use-recording-store";
 
 // Placeholder for last transcription
 let lastTranscription = "";
+let isToggling = false;
 
 export function setLastTranscription(text: string) {
   lastTranscription = text;
 }
 
 async function handleToggleRecording() {
-  const { status, selectedDevice, selectedSound, notificationTiming } =
-    useRecordingStore.getState();
+  // Prevent multiple simultaneous toggles
+  if (isToggling) return;
 
-  if (status === "idle") {
-    try {
-      if (notificationTiming === "start_stop") {
-        await invoke("play_notification_sound", {
-          soundName: `${selectedSound}.mp3`,
-          variant: "Start",
-        });
-      }
-      await invoke("start_recording", { device: selectedDevice?.name });
-    } catch (error) {
-      console.error("Failed to start recording:", error);
-      toast.error("Failed to start recording");
-    }
-  } else if (status === "recording") {
-    try {
-      if (notificationTiming === "start_stop") {
-        await invoke("play_notification_sound", {
-          soundName: `${selectedSound}.mp3`,
-          variant: "End",
-        });
-      }
-      const audioPath = await invoke<string>("stop_recording");
+  isToggling = true;
 
-      // TODO: Handle transcription initiation
-      console.log("Stopped recording, audio at:", audioPath);
-      toast.info("Recording stopped. Transcription would start here.");
-    } catch (error) {
-      console.error("Failed to stop recording:", error);
-      toast.error("Failed to stop recording");
+  try {
+    const { status, selectedDevice, selectedSound, notificationTiming } =
+      useRecordingStore.getState();
+
+    if (status === "idle") {
+      try {
+        if (notificationTiming === "start_stop") {
+          await invoke("play_notification_sound", {
+            soundName: `${selectedSound}.mp3`,
+            variant: "Start",
+          });
+        }
+        await invoke("start_recording", { device: selectedDevice?.name });
+      } catch (error) {
+        console.error("Failed to start recording:", error);
+        toast.error("Failed to start recording");
+      }
+    } else if (status === "recording") {
+      try {
+        if (notificationTiming === "start_stop") {
+          await invoke("play_notification_sound", {
+            soundName: `${selectedSound}.mp3`,
+            variant: "End",
+          });
+        }
+        const audioPath = await invoke<string>("stop_recording");
+
+        // TODO: Handle transcription initiation
+        console.log("Stopped recording, audio at:", audioPath);
+        toast.info("Recording stopped. Transcription would start here.");
+      } catch (error) {
+        console.error("Failed to stop recording:", error);
+        toast.error("Failed to stop recording");
+      }
     }
+  } finally {
+    // Reset the flag after a short delay to prevent accidental double-triggers
+    setTimeout(() => {
+      isToggling = false;
+    }, 200);
   }
 }
 
