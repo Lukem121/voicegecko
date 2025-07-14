@@ -38,7 +38,6 @@ pub fn run() {
             modules::audio::list_audio_devices,
             modules::audio::start_recording,
             modules::audio::stop_recording,
-            modules::audio::stop_recording_to_file,
             modules::audio::play_notification_sound,
             modules::audio::set_volume,
             modules::model_manager::list_models,
@@ -48,7 +47,6 @@ pub fn run() {
             modules::model_manager::set_selected_model,
             modules::model_manager::get_active_model_id,
             modules::model_manager::synchronize_models,
-            modules::transcription::transcribe_audio,
             modules::transcription::transcribe_audio_buffer,
             modules::settings::get_transcription_config,
             modules::settings::set_transcription_config

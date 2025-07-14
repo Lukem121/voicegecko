@@ -1,10 +1,9 @@
 import type { UnlistenFn } from "@tauri-apps/api/event";
 import { useEffect, useState } from "react";
-import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import { toast } from "sonner";
 
-import { useRecordingStore } from "~/hooks/use-recording-store";
+import type { TranscriptionProgressEvent } from "~/types/events";
 import { handleCompletedTranscription } from "~/lib/transcription";
 
 export type TranscriptionStatus =
@@ -40,7 +39,7 @@ export function useTranscription() {
       );
 
       unlisten = await listen("transcription-progress", (event) => {
-        const payload = event.payload as { status: string; data?: any };
+        const payload = event.payload as TranscriptionProgressEvent;
         console.log("[useTranscription] Received event:", payload);
 
         switch (payload.status) {
@@ -60,18 +59,20 @@ export function useTranscription() {
             );
             setState({
               status: "complete",
-              transcript: payload.data,
+              transcript: payload.data ?? null,
               error: null,
             });
 
             // Handle completion with notification
-            handleTranscriptionComplete(payload.data);
+            if (payload.data) {
+              handleTranscriptionComplete(payload.data);
+            }
             break;
           case "Error":
             setState({
               status: "error",
               transcript: null,
-              error: payload.data,
+              error: payload.data ?? "Unknown error",
             });
             toast.error("Transcription failed", { description: payload.data });
             break;
@@ -97,22 +98,6 @@ export function useTranscription() {
 }
 
 async function handleTranscriptionComplete(transcript: string) {
-  // Handle the transcription completion (clipboard, state, etc.)
+  // Handle the transcription completion (clipboard, state, notification sound, etc.)
   await handleCompletedTranscription(transcript);
-
-  // Play notification sound if enabled
-  const { selectedSound, notificationTiming } = useRecordingStore.getState();
-  if (
-    notificationTiming === "completion" ||
-    notificationTiming === "start_stop"
-  ) {
-    try {
-      await invoke("play_notification_sound", {
-        soundName: `${selectedSound}.mp3`,
-        variant: "End",
-      });
-    } catch (error) {
-      console.error("Failed to play notification sound:", error);
-    }
-  }
 }
