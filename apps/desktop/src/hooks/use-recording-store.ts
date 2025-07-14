@@ -1,4 +1,10 @@
+import { listen } from "@tauri-apps/api/event";
 import { create } from "zustand";
+
+import type {
+  RecordingErrorEvent,
+  RecordingStateChangedEvent,
+} from "~/types/events";
 
 export type RecordingStatus = "idle" | "recording" | "processing" | "error";
 export type NotificationSound = "beep" | "chime" | "tone";
@@ -23,9 +29,10 @@ interface RecordingState {
   setNotificationTiming: (timing: NotificationTiming) => void;
   setVolume: (volume: number) => void;
   setError: (error: string | null) => void;
+  initializeEventListeners: () => Promise<void>;
 }
 
-export const useRecordingStore = create<RecordingState>((set) => ({
+export const useRecordingStore = create<RecordingState>((set, get) => ({
   status: "idle",
   devices: [],
   selectedDevice: null,
@@ -40,4 +47,30 @@ export const useRecordingStore = create<RecordingState>((set) => ({
   setNotificationTiming: (timing) => set({ notificationTiming: timing }),
   setVolume: (volume) => set({ volume }),
   setError: (error) => set({ error }),
+
+  initializeEventListeners: async () => {
+    // Listen for recording state changes from the backend
+    await listen("recording-state-changed", (event) => {
+      const payload = event.payload as RecordingStateChangedEvent;
+      console.log("[RecordingStore] Recording state changed:", payload);
+
+      set({ status: payload.status });
+
+      // Clear error when state changes successfully
+      if (payload.status !== "error") {
+        set({ error: null });
+      }
+    });
+
+    // Listen for recording errors from the backend
+    await listen("recording-error", (event) => {
+      const payload = event.payload as RecordingErrorEvent;
+      console.log("[RecordingStore] Recording error:", payload);
+
+      set({
+        status: "error",
+        error: payload.error,
+      });
+    });
+  },
 }));

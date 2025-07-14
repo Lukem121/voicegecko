@@ -31,7 +31,7 @@ pub enum TranscriptionProgress {
 }
 
 #[derive(Clone, Serialize, Debug)]
-struct TranscriptionEvent {
+pub struct TranscriptionEvent {
     status: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     data: Option<String>,
@@ -58,33 +58,6 @@ impl From<TranscriptionProgress> for TranscriptionEvent {
             },
         }
     }
-}
-
-#[tauri::command]
-pub async fn transcribe_audio(app: AppHandle, audio_path: String) -> Result<(), String> {
-    let model_id = model_manager::get_active_model_id(app.clone()).map_err(|e| e.to_string())?;
-
-    let provider: Box<dyn TranscriptionProvider> = if model_id == "cloud" {
-        return Err("Cloud-based transcription is not available at the moment.".to_string());
-    } else {
-        Box::new(LocalWhisperProvider { model_id })
-    };
-
-    // Perform transcription in a separate thread
-    tauri::async_runtime::spawn(async move {
-        let result = provider.transcribe(app.clone(), audio_path).await;
-        let event_payload = match result {
-            Ok(transcript) => TranscriptionProgress::Complete(transcript),
-            Err(e) => TranscriptionProgress::Error(e.to_string()),
-        };
-        app.emit(
-            "transcription-progress",
-            TranscriptionEvent::from(event_payload),
-        )
-        .unwrap();
-    });
-
-    Ok(())
 }
 
 #[tauri::command]

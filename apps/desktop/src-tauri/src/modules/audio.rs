@@ -284,40 +284,6 @@ pub fn stop_recording(
 }
 
 #[tauri::command]
-pub fn stop_recording_to_file(
-    state: tauri::State<AudioState>,
-    app: tauri::AppHandle,
-) -> Result<String, String> {
-    // First get the audio data
-    let audio_data = stop_recording(state, app.clone())?;
-
-    // Save to file
-    let temp_dir = app.path().app_data_dir().unwrap();
-    if !temp_dir.exists() {
-        std::fs::create_dir_all(&temp_dir).unwrap();
-    }
-    let path = temp_dir.join("temp_recording.wav");
-
-    let spec = hound::WavSpec {
-        channels: audio_data.channels,
-        sample_rate: audio_data.sample_rate,
-        bits_per_sample: 16,
-        sample_format: hound::SampleFormat::Int,
-    };
-
-    let mut writer = hound::WavWriter::create(&path, spec).unwrap();
-
-    for sample in audio_data.samples {
-        let amplitude = i16::MAX as f32;
-        writer.write_sample((sample * amplitude) as i16).unwrap();
-    }
-
-    writer.finalize().unwrap();
-
-    Ok(path.to_string_lossy().to_string())
-}
-
-#[tauri::command]
 pub fn play_notification_sound(
     state: tauri::State<AudioState>,
     app: tauri::AppHandle,

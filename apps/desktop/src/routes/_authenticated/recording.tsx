@@ -1,8 +1,6 @@
 import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
-import { invoke } from "@tauri-apps/api/core";
 import { List, Mic, RotateCw, Search, Square } from "lucide-react";
-import { toast } from "sonner";
 
 import { Button } from "@acme/ui/components/ui/button";
 import { Card, CardContent } from "@acme/ui/components/ui/card";
@@ -11,15 +9,14 @@ import { cn } from "@acme/ui/lib/utils";
 
 import { useRecordingStore } from "~/hooks/use-recording-store";
 import { useTranscription } from "~/hooks/use-transcription";
-import { invokeTranscriptionFromBuffer } from "~/lib/transcription";
+import { recordingService } from "~/services/recording.service";
 
 export const Route = createFileRoute("/_authenticated/recording")({
   component: RecordingPage,
 });
 
 function RecordingPage() {
-  const { status, selectedDevice, selectedSound, notificationTiming } =
-    useRecordingStore();
+  const { status } = useRecordingStore();
   const { transcript, status: transcriptionStatus, error } = useTranscription();
   const [isProcessing, setIsProcessing] = useState(false);
 
@@ -35,42 +32,17 @@ function RecordingPage() {
   const handleMicClick = async () => {
     console.log("[Recording] handleMicClick called, status:", status);
 
-    if (status === "idle") {
-      try {
-        if (notificationTiming === "start_stop") {
-          await invoke("play_notification_sound", {
-            soundName: `${selectedSound}.mp3`,
-            variant: "Start",
-          });
-        }
-        await invoke("start_recording", { device: selectedDevice?.name });
-        console.log("[Recording] Started recording");
-      } catch (error) {
-        console.error("Failed to start recording:", error);
-        toast.error("Failed to start recording");
-      }
-    } else if (status === "recording") {
+    if (status === "recording") {
       setIsProcessing(true);
-      try {
-        console.log("[Recording] Stopping recording...");
-        const audioData = await invoke<{
-          samples: number[];
-          sample_rate: number;
-          channels: number;
-        }>("stop_recording");
-        console.log("[Recording] Audio data received:", {
-          samplesLength: audioData.samples.length,
-          sampleRate: audioData.sample_rate,
-          channels: audioData.channels,
-        });
-        await invokeTranscriptionFromBuffer(audioData);
-        console.log("[Recording] Transcription invoked");
-      } catch (error) {
-        // Errors are handled in transcribeAndProcess, but we can add more here if needed
-        console.error("An error occurred during recording flow:", error);
-      } finally {
-        setIsProcessing(false);
-      }
+    }
+
+    try {
+      await recordingService.toggleRecording();
+      console.log("[Recording] Recording toggled successfully");
+    } catch (error) {
+      console.error("An error occurred during recording flow:", error);
+    } finally {
+      setIsProcessing(false);
     }
   };
 

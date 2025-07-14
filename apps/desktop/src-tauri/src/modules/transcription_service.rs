@@ -3,44 +3,15 @@ use std::sync::{Arc, Mutex};
 use std::time::Instant;
 
 use async_trait::async_trait;
-use hound::WavReader;
 use tauri::{AppHandle, Emitter, Manager};
 use whisper_rs::{
     FullParams, SamplingStrategy, WhisperContext, WhisperContextParameters, WhisperState,
 };
 
-use crate::modules::transcription::{TranscriptionError, TranscriptionProgress};
+use crate::modules::transcription::{
+    TranscriptionError, TranscriptionEvent, TranscriptionProgress,
+};
 use crate::modules::{self};
-
-#[derive(Clone, serde::Serialize, Debug)]
-struct TranscriptionEvent {
-    status: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    data: Option<String>,
-}
-
-impl From<TranscriptionProgress> for TranscriptionEvent {
-    fn from(progress: TranscriptionProgress) -> Self {
-        match progress {
-            TranscriptionProgress::LoadingModel => TranscriptionEvent {
-                status: "LoadingModel".to_string(),
-                data: None,
-            },
-            TranscriptionProgress::Transcribing => TranscriptionEvent {
-                status: "Transcribing".to_string(),
-                data: None,
-            },
-            TranscriptionProgress::Complete(transcript) => TranscriptionEvent {
-                status: "Complete".to_string(),
-                data: Some(transcript),
-            },
-            TranscriptionProgress::Error(error) => TranscriptionEvent {
-                status: "Error".to_string(),
-                data: Some(error),
-            },
-        }
-    }
-}
 
 pub struct TranscriptionService {
     model_cache: Arc<Mutex<HashMap<String, Arc<WhisperContext>>>>,
@@ -49,12 +20,6 @@ pub struct TranscriptionService {
 
 #[async_trait]
 pub trait TranscriptionProvider: Send + Sync {
-    async fn transcribe(
-        &self,
-        app: AppHandle,
-        audio_path: String,
-    ) -> Result<String, TranscriptionError>;
-
     async fn transcribe_buffer(
         &self,
         app: AppHandle,
@@ -66,15 +31,16 @@ pub struct LocalWhisperProvider {
     pub model_id: String,
 }
 
-#[async_trait]
-impl TranscriptionProvider for LocalWhisperProvider {
-    async fn transcribe(
+impl LocalWhisperProvider {
+    /// Internal shared transcription logic used by both file and buffer methods
+    async fn transcribe_internal(
         &self,
         app: AppHandle,
-        audio_path: String,
+        audio_data: Vec<f32>,
+        source_description: &str,
     ) -> Result<String, TranscriptionError> {
         let total_time = Instant::now();
-        println!("[Rust] Starting transcription for: {}", audio_path);
+        println!("[Rust] Starting transcription for: {}", source_description);
 
         let config_time = Instant::now();
         let config = modules::settings::get_transcription_config(app.clone())
@@ -102,9 +68,11 @@ impl TranscriptionProvider for LocalWhisperProvider {
             state_create_time.elapsed()
         );
 
-        let audio_read_time = Instant::now();
-        let audio_data = read_wav_to_f32(audio_path)?;
-        println!("[Rust] Read audio took: {:?}", audio_read_time.elapsed());
+        println!(
+            "[Rust] Using {} audio samples from {}",
+            audio_data.len(),
+            source_description
+        );
 
         let mut params = if config.beam_size > 1 {
             FullParams::new(SamplingStrategy::BeamSearch {
@@ -152,7 +120,8 @@ impl TranscriptionProvider for LocalWhisperProvider {
         );
 
         println!(
-            "[Rust] Total transcription time: {:?}",
+            "[Rust] Total transcription time ({}): {:?}",
+            source_description,
             total_time.elapsed()
         );
 
@@ -161,101 +130,17 @@ impl TranscriptionProvider for LocalWhisperProvider {
 
         Ok(result)
     }
+}
 
+#[async_trait]
+impl TranscriptionProvider for LocalWhisperProvider {
     async fn transcribe_buffer(
         &self,
         app: AppHandle,
         audio_samples: Vec<f32>,
     ) -> Result<String, TranscriptionError> {
-        let total_time = Instant::now();
-        println!("[Rust] Starting transcription from buffer");
-
-        let config_time = Instant::now();
-        let config = modules::settings::get_transcription_config(app.clone())
-            .map_err(|e| TranscriptionError::Transcription(e.to_string()))?;
-        println!("[Rust] Get config took: {:?}", config_time.elapsed());
-
-        app.emit(
-            "transcription-progress",
-            TranscriptionEvent::from(TranscriptionProgress::LoadingModel),
-        )
-        .unwrap();
-        let service = app.state::<TranscriptionService>();
-
-        let model_load_time = Instant::now();
-        let ctx = service.get_or_load_model(&app, &self.model_id)?;
-        println!(
-            "[Rust] Get or load model took: {:?}",
-            model_load_time.elapsed()
-        );
-
-        let state_create_time = Instant::now();
-        let mut state = service.get_or_create_state(&ctx, &self.model_id)?;
-        println!(
-            "[Rust] Get or create state took: {:?}",
-            state_create_time.elapsed()
-        );
-
-        // Skip the file reading step - we already have the audio data!
-        println!(
-            "[Rust] Using {} audio samples directly from memory",
-            audio_samples.len()
-        );
-
-        let mut params = if config.beam_size > 1 {
-            FullParams::new(SamplingStrategy::BeamSearch {
-                beam_size: config.beam_size,
-                patience: 1.0,
-            })
-        } else {
-            FullParams::new(SamplingStrategy::Greedy {
-                best_of: config.best_of,
-            })
-        };
-
-        params.set_n_threads(config.threads as i32);
-        params.set_translate(false);
-        params.set_language(Some(&config.language));
-        params.set_print_special(false);
-        params.set_print_progress(false);
-        params.set_print_realtime(false);
-        params.set_print_timestamps(false);
-
-        app.emit(
-            "transcription-progress",
-            TranscriptionEvent::from(TranscriptionProgress::Transcribing),
-        )
-        .unwrap();
-        let full_transcribe_time = Instant::now();
-        state
-            .full(params, &audio_samples)
-            .map_err(|e| TranscriptionError::Transcription(e.to_string()))?;
-        println!(
-            "[Rust] Full transcribe took: {:?}",
-            full_transcribe_time.elapsed()
-        );
-
-        let segment_build_time = Instant::now();
-        let num_segments = state.full_n_segments().unwrap();
-        let mut result = String::new();
-        for i in 0..num_segments {
-            let segment = state.full_get_segment_text(i).unwrap();
-            result.push_str(&segment);
-        }
-        println!(
-            "[Rust] Segment building took: {:?}",
-            segment_build_time.elapsed()
-        );
-
-        println!(
-            "[Rust] Total transcription time (buffer): {:?}",
-            total_time.elapsed()
-        );
-
-        // Return state to cache for reuse
-        service.return_state(&self.model_id, state);
-
-        Ok(result)
+        self.transcribe_internal(app, audio_samples, "memory buffer")
+            .await
     }
 }
 
@@ -377,20 +262,4 @@ impl TranscriptionService {
             println!("Returned state to cache for model {}", model_id);
         }
     }
-}
-
-// Optimized audio conversion using vectorized operations
-fn read_wav_to_f32(path: String) -> Result<Vec<f32>, TranscriptionError> {
-    let mut reader =
-        WavReader::open(path).map_err(|e| TranscriptionError::AudioProcessing(e.to_string()))?;
-    let samples: Vec<i16> = reader.samples::<i16>().map(|s| s.unwrap()).collect();
-
-    // Optimized conversion using iterator and const division
-    const I16_MAX_F32: f32 = i16::MAX as f32;
-    let f32_samples: Vec<f32> = samples
-        .into_iter()
-        .map(|sample| sample as f32 / I16_MAX_F32)
-        .collect();
-
-    Ok(f32_samples)
 }
