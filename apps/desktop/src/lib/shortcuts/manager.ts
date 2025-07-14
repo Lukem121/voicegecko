@@ -61,35 +61,30 @@ class ShortcutManager {
     for (const category of categories) {
       for (const shortcut of category.shortcuts) {
         if (shortcut.enabled && shortcut.keys.length > 0) {
-          // Skip push-to-talk as it requires special keydown/keyup handling
-          if (shortcut.id === "push-to-talk") {
-            console.log(
-              `Skipping global registration for push-to-talk (handled by custom hook)`,
-            );
-            continue;
-          }
-
           const accelerator = acceleratorFromKeys(shortcut.keys);
           try {
-            await register(accelerator, () => {
-              // Only process standard shortcut actions
-              if (shortcut.id in shortcutActions) {
+            if (shortcut.id === "push-to-talk") {
+              console.log(
+                `Registering push-to-talk with special handling: ${accelerator}`,
+              );
+              // Special handling for keydown/keyup is now managed by the global shortcut event system
+            } else if (shortcut.id in shortcutActions) {
+              await register(accelerator, () => {
                 const action =
                   shortcutActions[shortcut.id as keyof typeof shortcutActions];
                 if (action) {
                   void action();
                 }
-              }
-            });
-            console.log(
-              `Successfully registered shortcut: ${accelerator} for ${shortcut.id}`,
-            );
+              });
+              console.log(
+                `Successfully registered shortcut: ${accelerator} for ${shortcut.id}`,
+              );
+            }
           } catch (error) {
             console.error(
               `Failed to register shortcut ${accelerator} for ${shortcut.id}:`,
               error,
             );
-            // Continue registering other shortcuts even if one fails
           }
         }
       }
