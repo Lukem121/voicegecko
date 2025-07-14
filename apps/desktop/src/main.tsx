@@ -11,6 +11,7 @@ import ReactDOM from "react-dom/client";
 
 import { AppLauncher } from "~/components/app-launcher";
 import { useIsAuthenticated } from "~/hooks/auth";
+import { shortcutManager } from "~/lib/shortcuts/manager";
 import { routeTree } from "~/routeTree.gen";
 import { TRPCReactProvider } from "~/trpc";
 import { ThemeProvider } from "./providers/theme";
@@ -64,6 +65,12 @@ function InnerApp() {
 
 function App() {
   const [isAppReady, setIsAppReady] = useState(false);
+
+  useEffect(() => {
+    if (isAppReady) {
+      void shortcutManager.initialize();
+    }
+  }, [isAppReady]);
 
   // Show launcher/updater first, then main app
   if (!isAppReady) {
