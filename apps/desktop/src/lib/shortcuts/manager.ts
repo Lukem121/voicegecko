@@ -72,10 +72,13 @@ class ShortcutManager {
           const accelerator = acceleratorFromKeys(shortcut.keys);
           try {
             await register(accelerator, () => {
-              const action =
-                shortcutActions[shortcut.id as keyof typeof shortcutActions];
-              if (typeof action === "function") {
-                void action();
+              // Only process standard shortcut actions
+              if (shortcut.id in shortcutActions) {
+                const action =
+                  shortcutActions[shortcut.id as keyof typeof shortcutActions];
+                if (action) {
+                  void action();
+                }
               }
             });
             console.log(

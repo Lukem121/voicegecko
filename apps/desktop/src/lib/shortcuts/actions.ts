@@ -1,18 +1,29 @@
+import { useRouter } from "@tanstack/react-router";
 import { invoke } from "@tauri-apps/api/core";
 import { writeText } from "@tauri-apps/plugin-clipboard-manager";
 import { toast } from "sonner";
 
+import type { ShortcutAction } from "~/lib/shortcuts/types";
 import { useRecordingStore } from "~/hooks/use-recording-store";
 
 // Placeholder for last transcription
 let lastTranscription = "";
+let lastTranscriptionId: string | null = null;
 let isToggling = false;
 
-export function setLastTranscription(text: string) {
-  lastTranscription = text;
+// Router instance for navigation
+let routerInstance: ReturnType<typeof useRouter> | null = null;
+
+export function setRouterInstance(router: ReturnType<typeof useRouter> | null) {
+  routerInstance = router;
 }
 
-async function handleToggleRecording() {
+export function setLastTranscription(text: string, id?: string) {
+  lastTranscription = text;
+  if (id) lastTranscriptionId = id;
+}
+
+export async function handleToggleRecording() {
   // Prevent multiple simultaneous toggles
   if (isToggling) return;
 
@@ -61,22 +72,13 @@ async function handleToggleRecording() {
   }
 }
 
-export const shortcutActions = {
+// Simple action handlers for keyboard shortcuts
+export const shortcutActions: Record<
+  ShortcutAction,
+  () => void | Promise<void>
+> = {
   "toggle-recording": handleToggleRecording,
-  "push-to-talk": {
-    onPress: async () => {
-      const { status } = useRecordingStore.getState();
-      if (status === "idle") {
-        await handleToggleRecording();
-      }
-    },
-    onRelease: async () => {
-      const { status } = useRecordingStore.getState();
-      if (status === "recording") {
-        await handleToggleRecording();
-      }
-    },
-  },
+
   "paste-last-transcription": async () => {
     if (lastTranscription) {
       await writeText(lastTranscription);
@@ -85,9 +87,19 @@ export const shortcutActions = {
       toast.info("No transcription available to paste.");
     }
   },
+
   "open-last-transcription": () => {
-    // TODO: Implement navigation to last transcription
-    console.log("Action: Open last transcription (not implemented)");
-    toast.info("Feature coming soon!");
+    if (routerInstance) {
+      if (lastTranscriptionId) {
+        // Navigate to specific transcription when implemented
+        void routerInstance.navigate({ to: "/transcriptions" });
+      } else {
+        // Navigate to transcriptions list
+        void routerInstance.navigate({ to: "/transcriptions" });
+      }
+      toast.success("Opened transcriptions");
+    } else {
+      toast.error("Navigation not available");
+    }
   },
 };
