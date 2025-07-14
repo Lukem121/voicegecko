@@ -83,7 +83,9 @@ function RecordingPage() {
                 onClick={handleMicClick}
                 disabled={isTranscribing || isProcessing}
               >
-                {isRecording ? (
+                {isTranscribing ? (
+                  <Loader2 className="h-5 w-5 animate-spin" />
+                ) : isRecording ? (
                   <Square className="h-5 w-5" />
                 ) : (
                   <Mic className="h-5 w-5" />
@@ -93,14 +95,7 @@ function RecordingPage() {
 
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                {isTranscribing && (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    <span className="text-sm text-gray-500">
-                      Transcribing...
-                    </span>
-                  </>
-                )}
+                {/* Removed spinner section */}
               </div>
               <Button variant="secondary">Finish</Button>
             </div>
