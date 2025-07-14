@@ -1,11 +1,10 @@
-import { useRouter } from "@tanstack/react-router";
 import { invoke } from "@tauri-apps/api/core";
 import { writeText } from "@tauri-apps/plugin-clipboard-manager";
 import { toast } from "sonner";
 
 import type { ShortcutAction } from "~/lib/shortcuts/types";
 import { useRecordingStore } from "~/hooks/use-recording-store";
-import { invokeTranscription } from "~/lib/transcription";
+import { invokeTranscriptionFromBuffer } from "~/lib/transcription";
 
 // Placeholder for last transcription
 let lastTranscription = "";
@@ -48,8 +47,12 @@ export async function handleToggleRecording() {
             variant: "End",
           });
         }
-        const audioPath = await invoke<string>("stop_recording");
-        await invokeTranscription(audioPath);
+        const audioData = await invoke<{
+          samples: number[];
+          sample_rate: number;
+          channels: number;
+        }>("stop_recording");
+        await invokeTranscriptionFromBuffer(audioData);
       } catch (error) {
         console.error("Failed to stop recording:", error);
         toast.error("Failed to stop recording");

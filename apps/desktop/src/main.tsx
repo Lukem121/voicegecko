@@ -43,7 +43,6 @@ declare module "@tanstack/react-router" {
 function InnerApp() {
   const auth = useIsAuthenticated();
   const session = authClient.useSession();
-  const routerInstance = useRouter();
   usePushToTalk();
 
   useBetterAuthTauri({
