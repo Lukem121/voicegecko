@@ -4,15 +4,24 @@
  */
 export type ShortcutAction =
   | "toggle-recording"
-  | "push-to-talk"
   | "paste-last-transcription"
   | "open-last-transcription";
+
+/**
+ * Special shortcuts that need custom handling beyond simple key press
+ */
+export type SpecialShortcut = "push-to-talk";
+
+/**
+ * All possible shortcut identifiers
+ */
+export type ShortcutId = ShortcutAction | SpecialShortcut;
 
 /**
  * Represents a keyboard shortcut configuration.
  */
 export interface Shortcut {
-  id: ShortcutAction;
+  id: ShortcutId;
   name: string;
   keys: string[];
   global: boolean;

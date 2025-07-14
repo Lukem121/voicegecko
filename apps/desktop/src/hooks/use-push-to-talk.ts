@@ -1,11 +1,15 @@
 import { useEffect, useRef } from "react";
+import { invoke } from "@tauri-apps/api/core";
+import { toast } from "sonner";
 
-import { shortcutActions } from "~/lib/shortcuts/actions";
+import { useRecordingStore } from "~/hooks/use-recording-store";
+import { getOS } from "~/lib/shortcuts/utils";
 import { useShortcutStore } from "~/lib/stores/shortcut-store";
 
 export function usePushToTalk() {
   const { categories } = useShortcutStore();
   const isRecordingRef = useRef(false);
+  const platform = getOS();
 
   useEffect(() => {
     const pushToTalkShortcut = categories
@@ -16,15 +20,15 @@ export function usePushToTalk() {
       return;
     }
 
-    const handleKeyDown = (event: KeyboardEvent) => {
+    const handleKeyDown = async (event: KeyboardEvent) => {
       // Prevent multiple keydown events while holding
-      if (event.repeat) return;
+      if (event.repeat || isRecordingRef.current) return;
 
       const normalizedKeys = pushToTalkShortcut.keys.map((k) => {
         const lower = k.toLowerCase();
         // Handle CommandOrControl based on platform
         if (lower === "commandorcontrol") {
-          return navigator.platform.includes("Mac") ? "meta" : "control";
+          return platform === "macos" ? "meta" : "control";
         }
         return lower;
       });
@@ -42,23 +46,38 @@ export function usePushToTalk() {
 
       const allKeysPressed = normalizedKeys.every((key) => pressed.has(key));
 
-      if (
-        allKeysPressed &&
-        pressed.size === normalizedKeys.length &&
-        !isRecordingRef.current
-      ) {
+      if (allKeysPressed && pressed.size === normalizedKeys.length) {
         isRecordingRef.current = true;
-        void shortcutActions["push-to-talk"].onPress();
+
+        // Start recording
+        const { status, selectedDevice, selectedSound, notificationTiming } =
+          useRecordingStore.getState();
+
+        if (status === "idle") {
+          try {
+            if (notificationTiming === "start_stop") {
+              await invoke("play_notification_sound", {
+                soundName: `${selectedSound}.mp3`,
+                variant: "Start",
+              });
+            }
+            await invoke("start_recording", { device: selectedDevice?.name });
+          } catch (error) {
+            console.error("Failed to start push-to-talk recording:", error);
+            toast.error("Failed to start recording");
+            isRecordingRef.current = false;
+          }
+        }
       }
     };
 
-    const handleKeyUp = (event: KeyboardEvent) => {
+    const handleKeyUp = async (event: KeyboardEvent) => {
       if (!isRecordingRef.current) return;
 
       const normalizedKeys = pushToTalkShortcut.keys.map((k) => {
         const lower = k.toLowerCase();
         if (lower === "commandorcontrol") {
-          return navigator.platform.includes("Mac") ? "meta" : "control";
+          return platform === "macos" ? "meta" : "control";
         }
         return lower;
       });
@@ -72,7 +91,29 @@ export function usePushToTalk() {
 
       if (normalizedKeys.includes(releasedKey)) {
         isRecordingRef.current = false;
-        void shortcutActions["push-to-talk"].onRelease();
+
+        // Stop recording
+        const { status, selectedSound, notificationTiming } =
+          useRecordingStore.getState();
+
+        if (status === "recording") {
+          try {
+            if (notificationTiming === "start_stop") {
+              await invoke("play_notification_sound", {
+                soundName: `${selectedSound}.mp3`,
+                variant: "End",
+              });
+            }
+            const audioPath = await invoke<string>("stop_recording");
+
+            // TODO: Handle transcription initiation
+            console.log("Push-to-talk stopped, audio at:", audioPath);
+            toast.info("Recording stopped. Transcription would start here.");
+          } catch (error) {
+            console.error("Failed to stop push-to-talk recording:", error);
+            toast.error("Failed to stop recording");
+          }
+        }
       }
     };
 
@@ -83,5 +124,5 @@ export function usePushToTalk() {
       document.removeEventListener("keydown", handleKeyDown);
       document.removeEventListener("keyup", handleKeyUp);
     };
-  }, [categories]);
+  }, [categories, platform]);
 }

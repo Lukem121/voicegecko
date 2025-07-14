@@ -1,21 +1,21 @@
 import { create } from "zustand";
 
-import type { ShortcutCategory } from "~/lib/shortcuts/types";
+import type { ShortcutCategory, ShortcutId } from "~/lib/shortcuts/types";
 import { DEFAULT_SHORTCUTS } from "~/lib/shortcuts/constants";
 
 interface ShortcutStoreState {
   categories: ShortcutCategory[];
   isRecording: boolean;
-  recordingActionId: string | null;
+  recordingActionId: ShortcutId | null;
   setShortcuts: (categories: ShortcutCategory[]) => void;
-  updateShortcut: (actionId: string, keys: string[]) => void;
+  updateShortcut: (actionId: ShortcutId, keys: string[]) => void;
   resetShortcuts: () => void;
-  startRecording: (actionId: string) => void;
+  startRecording: (actionId: ShortcutId) => void;
   stopRecording: () => void;
 }
 
 export const useShortcutStore = create<ShortcutStoreState>((set, get) => ({
-  categories: DEFAULT_SHORTCUTS,
+  categories: [], // Start with empty array to avoid race conditions
   isRecording: false,
   recordingActionId: null,
 
