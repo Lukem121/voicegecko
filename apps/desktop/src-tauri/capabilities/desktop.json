@@ -12,6 +12,7 @@
     "updater:default",
     "autostart:default",
     "global-shortcut:default",
-    "global-shortcut:default"
+    "global-shortcut:default",
+    "positioner:default"
   ]
 }
