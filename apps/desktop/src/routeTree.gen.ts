@@ -14,7 +14,6 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
 import { Route as AuthenticatedTranscriptionsRouteImport } from './routes/_authenticated/transcriptions'
-import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedRecordingRouteImport } from './routes/_authenticated/recording'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedNotificationsRouteImport } from './routes/_authenticated/notifications'
@@ -55,11 +54,6 @@ const AuthenticatedTranscriptionsRoute =
     path: '/transcriptions',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
-const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
-  id: '/settings',
-  path: '/settings',
-  getParentRoute: () => AuthenticatedRoute,
-} as any)
 const AuthenticatedRecordingRoute = AuthenticatedRecordingRouteImport.update({
   id: '/recording',
   path: '/recording',
@@ -92,33 +86,33 @@ const unauthenticatedAuthRoute = unauthenticatedAuthRouteImport.update({
 } as any)
 const AuthenticatedSettingsIndexRoute =
   AuthenticatedSettingsIndexRouteImport.update({
-    id: '/',
-    path: '/',
-    getParentRoute: () => AuthenticatedSettingsRoute,
+    id: '/settings/',
+    path: '/settings/',
+    getParentRoute: () => AuthenticatedRoute,
   } as any)
 const AuthenticatedSettingsTranscriptionRoute =
   AuthenticatedSettingsTranscriptionRouteImport.update({
-    id: '/transcription',
-    path: '/transcription',
-    getParentRoute: () => AuthenticatedSettingsRoute,
+    id: '/settings/transcription',
+    path: '/settings/transcription',
+    getParentRoute: () => AuthenticatedRoute,
   } as any)
 const AuthenticatedSettingsShortcutsRoute =
   AuthenticatedSettingsShortcutsRouteImport.update({
-    id: '/shortcuts',
-    path: '/shortcuts',
-    getParentRoute: () => AuthenticatedSettingsRoute,
+    id: '/settings/shortcuts',
+    path: '/settings/shortcuts',
+    getParentRoute: () => AuthenticatedRoute,
   } as any)
 const AuthenticatedSettingsModelsRoute =
   AuthenticatedSettingsModelsRouteImport.update({
-    id: '/models',
-    path: '/models',
-    getParentRoute: () => AuthenticatedSettingsRoute,
+    id: '/settings/models',
+    path: '/settings/models',
+    getParentRoute: () => AuthenticatedRoute,
   } as any)
 const AuthenticatedSettingsLanguageRoute =
   AuthenticatedSettingsLanguageRouteImport.update({
-    id: '/language',
-    path: '/language',
-    getParentRoute: () => AuthenticatedSettingsRoute,
+    id: '/settings/language',
+    path: '/settings/language',
+    getParentRoute: () => AuthenticatedRoute,
   } as any)
 const unauthenticatedLegalTermsRoute =
   unauthenticatedLegalTermsRouteImport.update({
@@ -170,7 +164,6 @@ export interface FileRoutesByFullPath {
   '/notifications': typeof AuthenticatedNotificationsRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/recording': typeof AuthenticatedRecordingRoute
-  '/settings': typeof AuthenticatedSettingsRouteWithChildren
   '/transcriptions': typeof AuthenticatedTranscriptionsRoute
   '/authentication-error': typeof unauthenticatedAuthAuthenticationErrorRoute
   '/sign-in': typeof unauthenticatedAuthSignInRoute
@@ -183,7 +176,7 @@ export interface FileRoutesByFullPath {
   '/settings/models': typeof AuthenticatedSettingsModelsRoute
   '/settings/shortcuts': typeof AuthenticatedSettingsShortcutsRoute
   '/settings/transcription': typeof AuthenticatedSettingsTranscriptionRoute
-  '/settings/': typeof AuthenticatedSettingsIndexRoute
+  '/settings': typeof AuthenticatedSettingsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof AuthenticatedIndexRoute
@@ -216,7 +209,6 @@ export interface FileRoutesById {
   '/_authenticated/notifications': typeof AuthenticatedNotificationsRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/recording': typeof AuthenticatedRecordingRoute
-  '/_authenticated/settings': typeof AuthenticatedSettingsRouteWithChildren
   '/_authenticated/transcriptions': typeof AuthenticatedTranscriptionsRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
   '/(unauthenticated)/_auth/authentication-error': typeof unauthenticatedAuthAuthenticationErrorRoute
@@ -241,7 +233,6 @@ export interface FileRouteTypes {
     | '/notifications'
     | '/profile'
     | '/recording'
-    | '/settings'
     | '/transcriptions'
     | '/authentication-error'
     | '/sign-in'
@@ -254,7 +245,7 @@ export interface FileRouteTypes {
     | '/settings/models'
     | '/settings/shortcuts'
     | '/settings/transcription'
-    | '/settings/'
+    | '/settings'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -286,7 +277,6 @@ export interface FileRouteTypes {
     | '/_authenticated/notifications'
     | '/_authenticated/profile'
     | '/_authenticated/recording'
-    | '/_authenticated/settings'
     | '/_authenticated/transcriptions'
     | '/_authenticated/'
     | '/(unauthenticated)/_auth/authentication-error'
@@ -338,13 +328,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedTranscriptionsRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
-    '/_authenticated/settings': {
-      id: '/_authenticated/settings'
-      path: '/settings'
-      fullPath: '/settings'
-      preLoaderRoute: typeof AuthenticatedSettingsRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
     '/_authenticated/recording': {
       id: '/_authenticated/recording'
       path: '/recording'
@@ -389,38 +372,38 @@ declare module '@tanstack/react-router' {
     }
     '/_authenticated/settings/': {
       id: '/_authenticated/settings/'
-      path: '/'
-      fullPath: '/settings/'
+      path: '/settings'
+      fullPath: '/settings'
       preLoaderRoute: typeof AuthenticatedSettingsIndexRouteImport
-      parentRoute: typeof AuthenticatedSettingsRoute
+      parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/settings/transcription': {
       id: '/_authenticated/settings/transcription'
-      path: '/transcription'
+      path: '/settings/transcription'
       fullPath: '/settings/transcription'
       preLoaderRoute: typeof AuthenticatedSettingsTranscriptionRouteImport
-      parentRoute: typeof AuthenticatedSettingsRoute
+      parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/settings/shortcuts': {
       id: '/_authenticated/settings/shortcuts'
-      path: '/shortcuts'
+      path: '/settings/shortcuts'
       fullPath: '/settings/shortcuts'
       preLoaderRoute: typeof AuthenticatedSettingsShortcutsRouteImport
-      parentRoute: typeof AuthenticatedSettingsRoute
+      parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/settings/models': {
       id: '/_authenticated/settings/models'
-      path: '/models'
+      path: '/settings/models'
       fullPath: '/settings/models'
       preLoaderRoute: typeof AuthenticatedSettingsModelsRouteImport
-      parentRoute: typeof AuthenticatedSettingsRoute
+      parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/settings/language': {
       id: '/_authenticated/settings/language'
-      path: '/language'
+      path: '/settings/language'
       fullPath: '/settings/language'
       preLoaderRoute: typeof AuthenticatedSettingsLanguageRouteImport
-      parentRoute: typeof AuthenticatedSettingsRoute
+      parentRoute: typeof AuthenticatedRoute
     }
     '/(unauthenticated)/legal/terms': {
       id: '/(unauthenticated)/legal/terms'
@@ -474,37 +457,19 @@ declare module '@tanstack/react-router' {
   }
 }
 
-interface AuthenticatedSettingsRouteChildren {
-  AuthenticatedSettingsLanguageRoute: typeof AuthenticatedSettingsLanguageRoute
-  AuthenticatedSettingsModelsRoute: typeof AuthenticatedSettingsModelsRoute
-  AuthenticatedSettingsShortcutsRoute: typeof AuthenticatedSettingsShortcutsRoute
-  AuthenticatedSettingsTranscriptionRoute: typeof AuthenticatedSettingsTranscriptionRoute
-  AuthenticatedSettingsIndexRoute: typeof AuthenticatedSettingsIndexRoute
-}
-
-const AuthenticatedSettingsRouteChildren: AuthenticatedSettingsRouteChildren = {
-  AuthenticatedSettingsLanguageRoute: AuthenticatedSettingsLanguageRoute,
-  AuthenticatedSettingsModelsRoute: AuthenticatedSettingsModelsRoute,
-  AuthenticatedSettingsShortcutsRoute: AuthenticatedSettingsShortcutsRoute,
-  AuthenticatedSettingsTranscriptionRoute:
-    AuthenticatedSettingsTranscriptionRoute,
-  AuthenticatedSettingsIndexRoute: AuthenticatedSettingsIndexRoute,
-}
-
-const AuthenticatedSettingsRouteWithChildren =
-  AuthenticatedSettingsRoute._addFileChildren(
-    AuthenticatedSettingsRouteChildren,
-  )
-
 interface AuthenticatedRouteChildren {
   AuthenticatedBillingRoute: typeof AuthenticatedBillingRoute
   AuthenticatedHistoryRoute: typeof AuthenticatedHistoryRoute
   AuthenticatedNotificationsRoute: typeof AuthenticatedNotificationsRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
   AuthenticatedRecordingRoute: typeof AuthenticatedRecordingRoute
-  AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRouteWithChildren
   AuthenticatedTranscriptionsRoute: typeof AuthenticatedTranscriptionsRoute
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
+  AuthenticatedSettingsLanguageRoute: typeof AuthenticatedSettingsLanguageRoute
+  AuthenticatedSettingsModelsRoute: typeof AuthenticatedSettingsModelsRoute
+  AuthenticatedSettingsShortcutsRoute: typeof AuthenticatedSettingsShortcutsRoute
+  AuthenticatedSettingsTranscriptionRoute: typeof AuthenticatedSettingsTranscriptionRoute
+  AuthenticatedSettingsIndexRoute: typeof AuthenticatedSettingsIndexRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
@@ -513,9 +478,14 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedNotificationsRoute: AuthenticatedNotificationsRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
   AuthenticatedRecordingRoute: AuthenticatedRecordingRoute,
-  AuthenticatedSettingsRoute: AuthenticatedSettingsRouteWithChildren,
   AuthenticatedTranscriptionsRoute: AuthenticatedTranscriptionsRoute,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
+  AuthenticatedSettingsLanguageRoute: AuthenticatedSettingsLanguageRoute,
+  AuthenticatedSettingsModelsRoute: AuthenticatedSettingsModelsRoute,
+  AuthenticatedSettingsShortcutsRoute: AuthenticatedSettingsShortcutsRoute,
+  AuthenticatedSettingsTranscriptionRoute:
+    AuthenticatedSettingsTranscriptionRoute,
+  AuthenticatedSettingsIndexRoute: AuthenticatedSettingsIndexRoute,
 }
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
