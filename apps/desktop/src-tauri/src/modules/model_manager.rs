@@ -273,7 +273,7 @@ fn get_initial_models() -> HashMap<String, Model> {
         (
             "tiny.en",
             "Tiny",
-            "Fastest, for offline notes & commands.",
+            "Fastest processing, ideal for quick notes and simple commands.",
             "75 MiB",
             "~1 GB",
             "c78c86eb1a8faa21b369bcd33207cc90d64ae9df",
@@ -282,7 +282,7 @@ fn get_initial_models() -> HashMap<String, Model> {
         (
             "base.en",
             "Base",
-            "Recommended balance of speed and accuracy.",
+            "Balanced performance with reliable accuracy for everyday use.",
             "142 MiB",
             "~1.5 GB",
             "137c40403d78fd54d454da0f9bd998f78703390c",
@@ -291,7 +291,7 @@ fn get_initial_models() -> HashMap<String, Model> {
         (
             "small.en",
             "Small",
-            "Good accuracy for general dictation.",
+            "Enhanced accuracy for meetings, interviews, and dictation.",
             "466 MiB",
             "~2 GB",
             "db8a495a91d927739e50b3fc1cc4c6b8f6c2d022",
@@ -300,7 +300,7 @@ fn get_initial_models() -> HashMap<String, Model> {
         (
             "medium.en",
             "Medium",
-            "High accuracy for noisy environments.",
+            "Superior accuracy handling accents, background noise, and technical terms.",
             "1.5 GiB",
             "~4 GB",
             "8c30f0e44ce9560643ebd10bbe50cd20eafd3723",
@@ -309,7 +309,7 @@ fn get_initial_models() -> HashMap<String, Model> {
         (
             "large-v3",
             "Large",
-            "Latest version of Large.",
+            "Maximum accuracy with advanced language understanding and punctuation.",
             "2.9 GiB",
             "~8 GB",
             "ad82bf6a9043ceed055076d0fd39f5f186ff8062",
