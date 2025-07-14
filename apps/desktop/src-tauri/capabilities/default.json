@@ -49,6 +49,7 @@
         }
       ]
     },
-    "clipboard-manager:default"
+    "clipboard-manager:default",
+    "os:default"
   ]
 }
