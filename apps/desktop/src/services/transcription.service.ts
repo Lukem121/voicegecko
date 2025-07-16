@@ -1,8 +1,8 @@
-import { invoke } from "@tauri-apps/api/core";
 import { writeText } from "@tauri-apps/plugin-clipboard-manager";
 import { toast } from "sonner";
 
 import { useRecordingStore } from "~/hooks/use-recording-store";
+import { recordingService } from "./recording.service";
 
 export class TranscriptionService {
   private static instance: TranscriptionService | undefined;
@@ -87,32 +87,30 @@ export class TranscriptionService {
   }
 
   /**
-   * Play end sound if configured (to avoid circular dependency with recording service)
+   * Play end notification sound if enabled according to user settings
    */
   async playEndSoundIfEnabled(): Promise<void> {
-    const { notificationTiming, selectedSound } = useRecordingStore.getState();
+    try {
+      const { notificationTiming } = useRecordingStore.getState();
 
-    const shouldPlayEndSound =
-      notificationTiming === "completion" ||
-      notificationTiming === "start_stop";
-
-    if (shouldPlayEndSound) {
-      console.log("[TranscriptionService] Playing end notification sound");
-      try {
-        await invoke("play_notification_sound", {
-          soundName: `${selectedSound}.mp3`,
-          variant: "End",
-        });
+      // Play end sound on transcription completion for "completion_only" and "start_completion" timings
+      // "start_stop" timing plays sounds when recording starts/stops, not on transcription
+      if (
+        notificationTiming === "completion_only" ||
+        notificationTiming === "start_completion"
+      ) {
+        console.log("[TranscriptionService] Playing end notification sound");
+        await recordingService.playNotificationSound("End");
         console.log("[TranscriptionService] ✅ End sound played successfully");
-      } catch (error) {
-        console.error(
-          "[TranscriptionService] Failed to play end sound:",
-          error,
-        );
-        // Don't throw - notification sound failure shouldn't break transcription
+      } else {
+        console.log("[TranscriptionService] End sound disabled by settings");
       }
-    } else {
-      console.log("[TranscriptionService] End sound disabled in settings");
+    } catch (error) {
+      console.error(
+        "[TranscriptionService] ❌ Failed to play end sound:",
+        error,
+      );
+      // Don't throw - notification sound failure shouldn't stop transcription completion
     }
   }
 

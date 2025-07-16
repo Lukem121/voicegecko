@@ -19,6 +19,25 @@
         "maximizable": true,
         "resizable": true,
         "center": true
+      },
+      {
+        "label": "gecko-bar",
+        "title": "Voice Gecko Bar",
+        "width": 300,
+        "height": 80,
+        "closable": false,
+        "minimizable": false,
+        "maximizable": false,
+        "resizable": false,
+        "alwaysOnTop": true,
+        "decorations": false,
+        "skipTaskbar": true,
+        "visible": false,
+        "transparent": true,
+        "center": false,
+        "shadow": false,
+        "acceptFirstMouse": true,
+        "tabbingIdentifier": "gecko-bar"
       }
     ],
     "security": {

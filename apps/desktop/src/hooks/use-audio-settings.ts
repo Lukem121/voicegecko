@@ -7,6 +7,8 @@ import type {
   NotificationSound,
   NotificationTiming,
 } from "./use-recording-store";
+import { recordingService } from "~/services/recording.service";
+import { transcriptionService } from "~/services/transcription.service";
 import { useRecordingStore } from "./use-recording-store";
 
 const SETTINGS_VERSION = 1;
@@ -54,6 +56,9 @@ export function useAudioSettings() {
 
       const savedTiming =
         await store.get<NotificationTiming>("notificationTiming");
+      if (!savedTiming) {
+        await store.set("notificationTiming", "start_completion");
+      }
       if (savedTiming) setNotificationTiming(savedTiming);
 
       const savedVolume = await store.get<number>("volume");
@@ -128,14 +133,13 @@ export function useAudioSettings() {
     [setVolume],
   );
 
-  const handleTestSound = useCallback(() => {
+  const handleTestSound = useCallback(async () => {
     if (notificationTiming !== "disabled") {
-      void invoke("play_notification_sound", {
-        soundName: `${selectedSound}.mp3`,
-        variant: "Start",
-      });
+      await recordingService.playNotificationSound("Start");
+      await new Promise((resolve) => setTimeout(resolve, 700));
+      await transcriptionService.playEndSoundIfEnabled();
     }
-  }, [notificationTiming, selectedSound]);
+  }, [notificationTiming]);
 
   return {
     devices,

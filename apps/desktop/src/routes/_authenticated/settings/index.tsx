@@ -34,6 +34,7 @@ import type {
   NotificationTiming,
 } from "~/hooks/use-recording-store";
 import { useAudioSettings } from "~/hooks/use-audio-settings";
+import { useGeckoBarSettings } from "~/hooks/use-gecko-bar-settings";
 
 export const Route = createFileRoute("/_authenticated/settings/")({
   component: SettingsPage,
@@ -52,6 +53,12 @@ function SettingsPage() {
     handleVolumeChange,
     handleTestSound,
   } = useAudioSettings();
+
+  const {
+    config: geckoBarConfig,
+    setEnabled: setGeckoBarEnabled,
+    setHideOnFullscreen: setGeckoBarHideOnFullscreen,
+  } = useGeckoBarSettings();
 
   return (
     <div className="flex flex-1 flex-col gap-4">
@@ -86,8 +93,33 @@ function SettingsPage() {
                     Keep the gecko widget visible at the bottom of your screen
                   </p>
                 </div>
-                <Switch id="show-gecko-bar" defaultChecked />
+                <Switch
+                  id="show-gecko-bar"
+                  checked={geckoBarConfig.enabled}
+                  onCheckedChange={setGeckoBarEnabled}
+                />
               </div>
+
+              {geckoBarConfig.enabled && (
+                <>
+                  <div className="flex items-center justify-between">
+                    <div className="space-y-0.5">
+                      <Label htmlFor="hide-gecko-on-fullscreen">
+                        Hide on fullscreen
+                      </Label>
+                      <p className="text-muted-foreground text-sm">
+                        Automatically hide gecko bar when fullscreen apps are
+                        detected
+                      </p>
+                    </div>
+                    <Switch
+                      id="hide-gecko-on-fullscreen"
+                      checked={geckoBarConfig.hideOnFullscreen ?? true}
+                      onCheckedChange={setGeckoBarHideOnFullscreen}
+                    />
+                  </div>
+                </>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -155,8 +187,15 @@ function SettingsPage() {
                     <SelectValue placeholder="Select when to play sounds" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="start_stop">On Start/Stop</SelectItem>
-                    <SelectItem value="completion">On Completion</SelectItem>
+                    <SelectItem value="start_completion">
+                      Start + Completion
+                    </SelectItem>
+                    <SelectItem value="start_stop">
+                      Start + Stop Recording
+                    </SelectItem>
+                    <SelectItem value="completion_only">
+                      Completion Only
+                    </SelectItem>
                     <SelectItem value="disabled">Disabled</SelectItem>
                   </SelectContent>
                 </Select>

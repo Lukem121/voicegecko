@@ -10,6 +10,7 @@ export interface TauriEventMap {
   "model-download-progress": ModelDownloadProgressEvent;
   "model-download-complete": ModelDownloadCompleteEvent;
   "model-delete-complete": ModelDeleteCompleteEvent;
+  "audio-level": AudioLevelEvent;
 }
 
 export interface TranscriptionProgressEvent {
@@ -60,3 +61,18 @@ export interface AudioData {
  * Sound variant for notification sounds
  */
 export type SoundVariant = "Start" | "End";
+
+/**
+ * Audio level event for real-time audio monitoring with advanced analysis
+ */
+export interface AudioLevelEvent {
+  level: number; // RMS level (0.0 to 1.0)
+  peak: number; // Peak level (0.0 to 1.0)
+  frequency_bands: number[]; // 10 frequency bands for visualization
+  dominant_frequency: number; // Dominant frequency in Hz
+  spectral_centroid: number; // Spectral centroid (brightness)
+  spectral_rolloff: number; // Spectral rolloff (95% energy point)
+  zero_crossing_rate: number; // Zero crossing rate (roughness)
+  is_voice_detected: boolean; // Voice activity detection
+  is_silence: boolean; // Silence detection
+}
