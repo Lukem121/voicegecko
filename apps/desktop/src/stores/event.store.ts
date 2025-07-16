@@ -1,3 +1,4 @@
+import { emit } from "@tauri-apps/api/event";
 import { create } from "zustand";
 import { devtools } from "zustand/middleware";
 
@@ -87,11 +88,6 @@ export const useEventStore = create<EventState>()(
               transcript: data || null,
               transcriptionError: null,
             });
-
-            // Handle completion
-            if (data) {
-              get().handleTranscriptionComplete(data);
-            }
             break;
           case "Error":
             set({
@@ -99,6 +95,9 @@ export const useEventStore = create<EventState>()(
               transcript: null,
               transcriptionError: data || "Unknown error",
             });
+
+            // Emit idle state on error so gecko bar can collapse
+            void emit("recording-state-changed", "idle");
             break;
         }
       },
@@ -113,8 +112,11 @@ export const useEventStore = create<EventState>()(
           // Handle transcription completion (clipboard, state management)
           await transcriptionService.handleCompletedTranscription(transcript);
 
-          // Play notification sound if enabled - moved to transcription service to avoid circular import
+          // Play notification sound if enabled
           await transcriptionService.playEndSoundIfEnabled();
+
+          // Emit idle state so gecko bar knows transcription is complete
+          await emit("recording-state-changed", "idle");
 
           console.log(
             "[EventStore] Transcription completion handled successfully",

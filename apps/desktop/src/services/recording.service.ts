@@ -121,6 +121,10 @@ export class RecordingService {
         channels: number;
       }>("stop_recording");
 
+      if (options.playEndSound ?? this.shouldPlayEndSound()) {
+        await this.playNotificationSound("End");
+      }
+
       await invokeTranscriptionFromBuffer(audioData);
     } catch (error) {
       console.error("Failed to stop recording:", error);
@@ -130,9 +134,27 @@ export class RecordingService {
   }
 
   /**
+   * Cancel recording without transcription - discards audio completely
+   */
+  async cancelRecording(options: RecordingOptions = {}): Promise<void> {
+    try {
+      console.log("[RecordingService] Canceling recording...");
+
+      // Stop recording and discard audio data
+      await invoke("cancel_recording");
+
+      console.log("[RecordingService] Recording canceled successfully");
+    } catch (error) {
+      console.error("Failed to cancel recording:", error);
+      toast.error("Failed to cancel recording");
+      throw error;
+    }
+  }
+
+  /**
    * Play notification sound with proper error handling
    */
-  private async playNotificationSound(variant: "Start" | "End"): Promise<void> {
+  public async playNotificationSound(variant: "Start" | "End"): Promise<void> {
     try {
       const { selectedSound } = useRecordingStore.getState();
       console.log(
@@ -159,7 +181,10 @@ export class RecordingService {
    */
   private shouldPlayStartSound(): boolean {
     const { notificationTiming } = useRecordingStore.getState();
-    return notificationTiming === "start_stop";
+    return (
+      notificationTiming === "start_stop" ||
+      notificationTiming === "start_completion"
+    );
   }
 
   /**
@@ -167,9 +192,9 @@ export class RecordingService {
    */
   private shouldPlayEndSound(): boolean {
     const { notificationTiming } = useRecordingStore.getState();
-    return (
-      notificationTiming === "completion" || notificationTiming === "start_stop"
-    );
+    // Only play end sound on recording stop if timing is "start_stop"
+    // "completion_only" and "start_completion" timings are handled by transcription service
+    return notificationTiming === "start_stop";
   }
 
   /**
