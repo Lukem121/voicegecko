@@ -2,6 +2,7 @@ import { listen } from "@tauri-apps/api/event";
 import { toast } from "sonner";
 
 import type {
+  AudioLevelEvent,
   RecordingErrorEvent,
   RecordingStateChangedEvent,
   TranscriptionProgressEvent,
@@ -10,11 +11,17 @@ import { useEventStore } from "~/stores/event.store";
 
 let initialized = false;
 
+interface InitializeOptions {
+  isGeckoBar?: boolean;
+}
+
 /**
  * Initialize Tauri event listeners that update the Zustand store
  * Should be called once during app startup
  */
-export async function initializeTauriEvents(): Promise<void> {
+export async function initializeTauriEvents(
+  options: InitializeOptions = {},
+): Promise<void> {
   if (initialized) {
     console.log("[TauriEvents] ⚠️ Already initialized, skipping...");
     return;
@@ -24,14 +31,25 @@ export async function initializeTauriEvents(): Promise<void> {
   console.log("[TauriEvents] 🚀 Initializing Tauri event listeners...");
 
   try {
-    // Listen for transcription progress events
+    // Listen for transcription progress events (always needed for UI state)
     await listen("transcription-progress", (event) => {
       const payload = event.payload as TranscriptionProgressEvent;
       console.log("[TauriEvents] 📝 Transcription progress:", payload);
 
-      useEventStore
-        .getState()
-        .setTranscriptionProgress(payload.status, payload.data);
+      const store = useEventStore.getState();
+      store.setTranscriptionProgress(payload.status, payload.data);
+
+      // Only handle completion business logic in main window
+      if (
+        !options.isGeckoBar &&
+        payload.status === "Complete" &&
+        payload.data
+      ) {
+        console.log(
+          "[TauriEvents] Handling transcription completion in main window",
+        );
+        store.handleTranscriptionComplete(payload.data);
+      }
     });
 
     // Listen for recording state changes
@@ -49,6 +67,13 @@ export async function initializeTauriEvents(): Promise<void> {
 
       useEventStore.getState().setRecordingError(payload);
       toast.error("Recording error", { description: payload });
+    });
+
+    // Listen for audio level events
+    await listen("audio-level", (event) => {
+      const payload = event.payload as AudioLevelEvent;
+      // Emit to any components that need real-time audio levels
+      window.dispatchEvent(new CustomEvent("audio-level", { detail: payload }));
     });
 
     console.log(

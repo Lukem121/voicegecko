@@ -39,8 +39,15 @@ pub fn run() {
             modules::audio::list_audio_devices,
             modules::audio::start_recording,
             modules::audio::stop_recording,
+            modules::audio::cancel_recording,
             modules::audio::play_notification_sound,
             modules::audio::set_volume,
+            modules::gecko_bar::show_gecko_bar,
+            modules::gecko_bar::hide_gecko_bar,
+            modules::gecko_bar::is_gecko_bar_visible,
+            modules::gecko_bar::reposition_gecko_bar,
+            modules::gecko_bar::is_fullscreen_app_active,
+            modules::gecko_bar::set_gecko_bar_fullscreen_mode,
             modules::model_manager::list_models,
             modules::model_manager::download_model,
             modules::model_manager::delete_model,
@@ -50,7 +57,9 @@ pub fn run() {
             modules::model_manager::synchronize_models,
             modules::transcription::transcribe_audio_buffer,
             modules::settings::get_transcription_config,
-            modules::settings::set_transcription_config
+            modules::settings::set_transcription_config,
+            modules::settings::get_gecko_bar_config,
+            modules::settings::set_gecko_bar_config
         ])
         .setup(|app| {
             let (_stream, stream_handle) = rodio::OutputStream::try_default().unwrap();

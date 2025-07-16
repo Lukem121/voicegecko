@@ -2,11 +2,13 @@ use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
 use crossbeam_channel::{unbounded, Sender};
 use rodio::{Decoder, Sink, Source};
 use rubato::{FftFixedIn, Resampler};
+use rustfft::{num_complex::Complex, FftPlanner};
 use serde::{Deserialize, Serialize};
 use std::fs::File;
 use std::io::BufReader;
 use std::sync::{Arc, Mutex};
 use std::thread;
+use std::time::{Duration, Instant};
 use tauri::{Emitter, Manager};
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -29,6 +31,19 @@ pub struct AudioData {
     pub samples: Vec<f32>,
     pub sample_rate: u32,
     pub channels: u16,
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct AudioLevel {
+    pub level: f32,                // RMS level (0.0 to 1.0)
+    pub peak: f32,                 // Peak level (0.0 to 1.0)
+    pub frequency_bands: Vec<f32>, // 10 frequency bands for visualization
+    pub dominant_frequency: f32,   // Dominant frequency in Hz
+    pub spectral_centroid: f32,    // Spectral centroid (brightness)
+    pub spectral_rolloff: f32,     // Spectral rolloff (95% energy point)
+    pub zero_crossing_rate: f32,   // Zero crossing rate (roughness)
+    pub is_voice_detected: bool,   // Voice activity detection
+    pub is_silence: bool,          // Silence detection
 }
 
 pub struct AudioState {
@@ -106,53 +121,97 @@ pub fn start_recording(
 
         let audio_buffer = Arc::new(Mutex::new(Vec::new()));
         let output_samples = Arc::new(Mutex::new(Vec::new()));
+        let last_level_emit = Arc::new(Mutex::new(Instant::now()));
 
         let resampler_clone = resampler.clone();
         let audio_buffer_clone = audio_buffer.clone();
         let output_samples_clone = output_samples.clone();
+        let last_level_emit_clone = last_level_emit.clone();
         let app_clone = app.clone();
+        let app_clone_for_err = app.clone();
         let err_fn = move |err: cpal::StreamError| {
             eprintln!("an error occurred on stream: {}", err);
-            app_clone.emit("recording-error", err.to_string()).unwrap();
+            app_clone_for_err
+                .emit("recording-error", err.to_string())
+                .unwrap();
         };
 
         let stream = match config.sample_format() {
-            cpal::SampleFormat::I16 => input_device
-                .build_input_stream(
-                    &config.into(),
-                    move |data: &[i16], _: &cpal::InputCallbackInfo| {
-                        let f32_samples: Vec<f32> =
-                            data.iter().map(|s| *s as f32 / i16::MAX as f32).collect();
-                        process_samples_to_buffer(
-                            &mut resampler_clone.lock().unwrap(),
-                            &mut audio_buffer_clone.lock().unwrap(),
-                            &mut output_samples_clone.lock().unwrap(),
-                            &f32_samples,
-                            input_channels,
-                            chunk_size,
-                        );
-                    },
-                    err_fn,
-                    None,
-                )
-                .unwrap(),
-            cpal::SampleFormat::F32 => input_device
-                .build_input_stream(
-                    &config.into(),
-                    move |data: &[f32], _: &cpal::InputCallbackInfo| {
-                        process_samples_to_buffer(
-                            &mut resampler_clone.lock().unwrap(),
-                            &mut audio_buffer_clone.lock().unwrap(),
-                            &mut output_samples_clone.lock().unwrap(),
-                            data,
-                            input_channels,
-                            chunk_size,
-                        );
-                    },
-                    err_fn,
-                    None,
-                )
-                .unwrap(),
+            cpal::SampleFormat::I16 => {
+                let resampler_i16 = resampler_clone.clone();
+                let audio_buffer_i16 = audio_buffer_clone.clone();
+                let output_samples_i16 = output_samples_clone.clone();
+                let last_level_emit_i16 = last_level_emit_clone.clone();
+                let app_i16 = app_clone.clone();
+
+                input_device
+                    .build_input_stream(
+                        &config.into(),
+                        move |data: &[i16], _: &cpal::InputCallbackInfo| {
+                            let f32_samples: Vec<f32> =
+                                data.iter().map(|s| *s as f32 / i16::MAX as f32).collect();
+
+                            // Emit audio level events (throttled to ~30 FPS)
+                            let now = Instant::now();
+                            let mut last_emit = last_level_emit_i16.lock().unwrap();
+                            if now.duration_since(*last_emit) >= Duration::from_millis(33) {
+                                let level = calculate_audio_level(&f32_samples);
+                                if let Err(e) = app_i16.emit("audio-level", level) {
+                                    eprintln!("Failed to emit audio level: {}", e);
+                                }
+                                *last_emit = now;
+                            }
+
+                            process_samples_to_buffer(
+                                &mut resampler_i16.lock().unwrap(),
+                                &mut audio_buffer_i16.lock().unwrap(),
+                                &mut output_samples_i16.lock().unwrap(),
+                                &f32_samples,
+                                input_channels,
+                                chunk_size,
+                            );
+                        },
+                        err_fn,
+                        None,
+                    )
+                    .unwrap()
+            }
+            cpal::SampleFormat::F32 => {
+                let resampler_f32 = resampler_clone.clone();
+                let audio_buffer_f32 = audio_buffer_clone.clone();
+                let output_samples_f32 = output_samples_clone.clone();
+                let last_level_emit_f32 = last_level_emit_clone.clone();
+                let app_f32 = app_clone.clone();
+
+                input_device
+                    .build_input_stream(
+                        &config.into(),
+                        move |data: &[f32], _: &cpal::InputCallbackInfo| {
+                            // Emit audio level events (throttled to ~30 FPS)
+                            let now = Instant::now();
+                            let mut last_emit = last_level_emit_f32.lock().unwrap();
+                            if now.duration_since(*last_emit) >= Duration::from_millis(33) {
+                                let level = calculate_audio_level(data);
+                                if let Err(e) = app_f32.emit("audio-level", level) {
+                                    eprintln!("Failed to emit audio level: {}", e);
+                                }
+                                *last_emit = now;
+                            }
+
+                            process_samples_to_buffer(
+                                &mut resampler_f32.lock().unwrap(),
+                                &mut audio_buffer_f32.lock().unwrap(),
+                                &mut output_samples_f32.lock().unwrap(),
+                                data,
+                                input_channels,
+                                chunk_size,
+                            );
+                        },
+                        err_fn,
+                        None,
+                    )
+                    .unwrap()
+            }
             sample_format => panic!("Unsupported sample format '{sample_format}'"),
         };
 
@@ -256,6 +315,162 @@ fn collect_resampled_samples(output_samples: &mut Vec<f32>, resampled_waves: &Ve
     }
 }
 
+fn calculate_audio_level(samples: &[f32]) -> AudioLevel {
+    if samples.is_empty() {
+        return AudioLevel {
+            level: 0.0,
+            peak: 0.0,
+            frequency_bands: vec![0.0; 10],
+            dominant_frequency: 0.0,
+            spectral_centroid: 0.0,
+            spectral_rolloff: 0.0,
+            zero_crossing_rate: 0.0,
+            is_voice_detected: false,
+            is_silence: true,
+        };
+    }
+
+    // Basic level calculation
+    let mut sum_squares = 0.0;
+    let mut peak = 0.0;
+    let mut zero_crossings = 0;
+
+    for i in 0..samples.len() {
+        let abs_sample = samples[i].abs();
+        sum_squares += abs_sample * abs_sample;
+        if abs_sample > peak {
+            peak = abs_sample;
+        }
+
+        // Count zero crossings
+        if i > 0 && (samples[i] >= 0.0) != (samples[i - 1] >= 0.0) {
+            zero_crossings += 1;
+        }
+    }
+
+    let rms = (sum_squares / samples.len() as f32).sqrt();
+    let zero_crossing_rate = zero_crossings as f32 / samples.len() as f32;
+
+    // Determine if this is silence (below noise threshold)
+    let is_silence = rms < 0.01;
+
+    // Simple voice detection (based on RMS and ZCR)
+    let is_voice_detected = rms > 0.02 && zero_crossing_rate > 0.02 && zero_crossing_rate < 0.3;
+
+    // Calculate frequency spectrum analysis
+    let (frequency_bands, dominant_frequency, spectral_centroid, spectral_rolloff) =
+        analyze_frequency_spectrum(samples);
+
+    AudioLevel {
+        level: rms.min(1.0),
+        peak: peak.min(1.0),
+        frequency_bands,
+        dominant_frequency,
+        spectral_centroid,
+        spectral_rolloff,
+        zero_crossing_rate,
+        is_voice_detected,
+        is_silence,
+    }
+}
+
+fn analyze_frequency_spectrum(samples: &[f32]) -> (Vec<f32>, f32, f32, f32) {
+    const FFT_SIZE: usize = 512;
+    const NUM_BANDS: usize = 10;
+    const SAMPLE_RATE: f32 = 16000.0; // We resample to 16kHz
+
+    if samples.len() < FFT_SIZE {
+        return (vec![0.0; NUM_BANDS], 0.0, 0.0, 0.0);
+    }
+
+    // Take the last FFT_SIZE samples for analysis
+    let start_idx = samples.len().saturating_sub(FFT_SIZE);
+    let chunk = &samples[start_idx..start_idx + FFT_SIZE];
+
+    // Apply Hamming window
+    let windowed: Vec<f32> = chunk
+        .iter()
+        .enumerate()
+        .map(|(i, &sample)| {
+            let window_val =
+                0.54 - 0.46 * (2.0 * std::f32::consts::PI * i as f32 / (FFT_SIZE - 1) as f32).cos();
+            sample * window_val
+        })
+        .collect();
+
+    // Convert to complex numbers for FFT
+    let mut fft_input: Vec<Complex<f32>> = windowed.iter().map(|&x| Complex::new(x, 0.0)).collect();
+
+    // Perform FFT
+    let mut planner = FftPlanner::new();
+    let fft = planner.plan_fft_forward(FFT_SIZE);
+    fft.process(&mut fft_input);
+
+    // Calculate magnitude spectrum (only first half due to symmetry)
+    let magnitude_spectrum: Vec<f32> = fft_input[..FFT_SIZE / 2].iter().map(|c| c.norm()).collect();
+
+    // Divide spectrum into frequency bands
+    let mut frequency_bands = vec![0.0; NUM_BANDS];
+    let band_size = magnitude_spectrum.len() / NUM_BANDS;
+
+    for (band_idx, band) in frequency_bands.iter_mut().enumerate() {
+        let start = band_idx * band_size;
+        let end = ((band_idx + 1) * band_size).min(magnitude_spectrum.len());
+
+        if start < end {
+            let band_sum: f32 = magnitude_spectrum[start..end].iter().sum();
+            *band = (band_sum / (end - start) as f32).min(1.0);
+        }
+    }
+
+    // Find dominant frequency
+    let mut max_magnitude = 0.0;
+    let mut max_bin = 0;
+    for (i, &magnitude) in magnitude_spectrum.iter().enumerate() {
+        if magnitude > max_magnitude {
+            max_magnitude = magnitude;
+            max_bin = i;
+        }
+    }
+    let dominant_frequency = (max_bin as f32 * SAMPLE_RATE) / (FFT_SIZE as f32);
+
+    // Calculate spectral centroid (brightness)
+    let mut weighted_sum = 0.0;
+    let mut magnitude_sum = 0.0;
+    for (i, &magnitude) in magnitude_spectrum.iter().enumerate() {
+        let frequency = (i as f32 * SAMPLE_RATE) / (FFT_SIZE as f32);
+        weighted_sum += frequency * magnitude;
+        magnitude_sum += magnitude;
+    }
+    let spectral_centroid = if magnitude_sum > 0.0 {
+        weighted_sum / magnitude_sum
+    } else {
+        0.0
+    };
+
+    // Calculate spectral rolloff (95% energy point)
+    let total_energy: f32 = magnitude_spectrum.iter().map(|x| x * x).sum();
+    let threshold = 0.95 * total_energy;
+    let mut cumulative_energy = 0.0;
+    let mut rolloff_bin = 0;
+
+    for (i, &magnitude) in magnitude_spectrum.iter().enumerate() {
+        cumulative_energy += magnitude * magnitude;
+        if cumulative_energy >= threshold {
+            rolloff_bin = i;
+            break;
+        }
+    }
+    let spectral_rolloff = (rolloff_bin as f32 * SAMPLE_RATE) / (FFT_SIZE as f32);
+
+    (
+        frequency_bands,
+        dominant_frequency,
+        spectral_centroid,
+        spectral_rolloff,
+    )
+}
+
 #[tauri::command]
 pub fn stop_recording(
     state: tauri::State<AudioState>,
@@ -281,6 +496,27 @@ pub fn stop_recording(
         sample_rate: 16000, // We always resample to 16kHz
         channels: 1,        // We always convert to mono
     })
+}
+
+#[tauri::command]
+pub fn cancel_recording(
+    state: tauri::State<AudioState>,
+    app: tauri::AppHandle,
+) -> Result<(), String> {
+    // Stop the recording thread
+    if let Some((thread_handle, sender)) = state.recording_thread.lock().unwrap().take() {
+        sender.send(AudioCommand::Stop).unwrap();
+        thread_handle.join().unwrap();
+    }
+
+    // Emit state change to idle
+    app.emit("recording-state-changed", "idle".to_string())
+        .map_err(|e| e.to_string())?;
+
+    // Discard the recorded audio data without returning it
+    state.recorded_audio.lock().unwrap().take();
+
+    Ok(())
 }
 
 #[tauri::command]
