@@ -1,7 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   Cpu,
-  Globe,
   Keyboard,
   Mic,
   Palette,
@@ -29,13 +28,8 @@ import {
 import { Slider } from "@acme/ui/components/ui/slider";
 import { Switch } from "@acme/ui/components/ui/switch";
 
-import type {
-  NotificationSound,
-  NotificationTiming,
-} from "~/hooks/use-recording-store";
-import { useAudioSettings } from "~/hooks/use-audio-settings";
-import { useAutostartSettings } from "~/hooks/use-autostart-settings";
-import { useGeckoBarSettings } from "~/hooks/use-gecko-bar-settings";
+import { useAudioHelpers } from "~/hooks/use-audio-helpers";
+import { useSettingsStore } from "~/stores/settings.store";
 
 export const Route = createFileRoute("/_authenticated/settings/")({
   component: SettingsPage,
@@ -43,28 +37,21 @@ export const Route = createFileRoute("/_authenticated/settings/")({
 
 function SettingsPage() {
   const {
-    devices,
-    selectedDevice,
-    selectedSound,
-    notificationTiming,
-    volume,
-    muteSystemAudio,
-    handleDeviceChange,
-    handleSoundChange,
-    handleTimingChange,
-    handleVolumeChange,
-    handleTestSound,
-    handleMuteSystemAudioChange,
-  } = useAudioSettings();
+    settings,
+    audioDevices,
+    updateAudioDevice,
+    updateNotificationSound,
+    updateNotificationTiming,
+    updateNotificationVolume,
+    updateMuteSystemAudio,
+    updateLaunchOnStartup,
+    updateShowGeckoBar,
+    updateHideGeckoOnFullscreen,
+    updatePrivacySetting,
+    updatePersonalizationSetting,
+  } = useSettingsStore();
 
-  const {
-    config: geckoBarConfig,
-    setEnabled: setGeckoBarEnabled,
-    setHideOnFullscreen: setGeckoBarHideOnFullscreen,
-  } = useGeckoBarSettings();
-
-  const { config: autostartConfig, setEnabled: setAutostartEnabled } =
-    useAutostartSettings();
+  const { playTestSound } = useAudioHelpers();
 
   return (
     <div className="flex flex-1 flex-col gap-4">
@@ -82,53 +69,44 @@ function SettingsPage() {
             <div className="space-y-4">
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
-                  <Label htmlFor="launch-on-startup">Launch on startup</Label>
+                  <Label>Launch on startup</Label>
                   <p className="text-muted-foreground text-sm">
                     Start the application when your computer boots
                   </p>
                 </div>
                 <Switch
-                  id="launch-on-startup"
-                  checked={autostartConfig.enabled}
-                  onCheckedChange={setAutostartEnabled}
+                  checked={settings.general.launchOnStartup}
+                  onCheckedChange={updateLaunchOnStartup}
                 />
               </div>
 
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
-                  <Label htmlFor="show-gecko-bar">
-                    Show gecko bar at all times
-                  </Label>
+                  <Label>Show gecko bar at all times</Label>
                   <p className="text-muted-foreground text-sm">
                     Keep the gecko widget visible at the bottom of your screen
                   </p>
                 </div>
                 <Switch
-                  id="show-gecko-bar"
-                  checked={geckoBarConfig.enabled}
-                  onCheckedChange={setGeckoBarEnabled}
+                  checked={settings.general.showGeckoBar}
+                  onCheckedChange={updateShowGeckoBar}
                 />
               </div>
 
-              {geckoBarConfig.enabled && (
-                <>
-                  <div className="flex items-center justify-between">
-                    <div className="space-y-0.5">
-                      <Label htmlFor="hide-gecko-on-fullscreen">
-                        Hide on fullscreen
-                      </Label>
-                      <p className="text-muted-foreground text-sm">
-                        Automatically hide gecko bar when fullscreen apps are
-                        detected
-                      </p>
-                    </div>
-                    <Switch
-                      id="hide-gecko-on-fullscreen"
-                      checked={geckoBarConfig.hideOnFullscreen ?? true}
-                      onCheckedChange={setGeckoBarHideOnFullscreen}
-                    />
+              {settings.general.showGeckoBar && (
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label>Hide on fullscreen</Label>
+                    <p className="text-muted-foreground text-sm">
+                      Automatically hide gecko bar when fullscreen apps are
+                      detected
+                    </p>
                   </div>
-                </>
+                  <Switch
+                    checked={settings.general.hideGeckoOnFullscreen}
+                    onCheckedChange={updateHideGeckoOnFullscreen}
+                  />
+                </div>
               )}
             </div>
           </CardContent>
@@ -147,16 +125,20 @@ function SettingsPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label>Default Microphone</Label>
+              <Label htmlFor="microphone">Default Microphone</Label>
               <Select
-                value={selectedDevice?.name}
-                onValueChange={handleDeviceChange}
+                value={settings.audio.selectedDevice?.name ?? ""}
+                onValueChange={(name) => {
+                  const device =
+                    audioDevices.find((d) => d.name === name) ?? null;
+                  void updateAudioDevice(device);
+                }}
               >
-                <SelectTrigger>
+                <SelectTrigger id="microphone">
                   <SelectValue placeholder="Select a microphone" />
                 </SelectTrigger>
                 <SelectContent>
-                  {devices.map((device) => (
+                  {audioDevices.map((device) => (
                     <SelectItem key={device.name} value={device.name}>
                       {device.name}
                     </SelectItem>
@@ -164,18 +146,17 @@ function SettingsPage() {
                 </SelectContent>
               </Select>
             </div>
+
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Notification Sound</Label>
+                <Label htmlFor="notification-sound">Notification Sound</Label>
                 <Select
-                  value={selectedSound}
-                  onValueChange={(value) =>
-                    handleSoundChange(value as NotificationSound)
-                  }
-                  disabled={notificationTiming === "disabled"}
+                  value={settings.audio.selectedSound}
+                  onValueChange={updateNotificationSound}
+                  disabled={settings.audio.notificationTiming === "disabled"}
                 >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select a sound" />
+                  <SelectTrigger id="notification-sound">
+                    <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="chime">🔔 Chime</SelectItem>
@@ -186,15 +167,15 @@ function SettingsPage() {
               </div>
 
               <div className="space-y-2">
-                <Label>Play Notification Sound</Label>
+                <Label htmlFor="notification-timing">
+                  Play Notification Sound
+                </Label>
                 <Select
-                  value={notificationTiming}
-                  onValueChange={(value) =>
-                    handleTimingChange(value as NotificationTiming)
-                  }
+                  value={settings.audio.notificationTiming}
+                  onValueChange={updateNotificationTiming}
                 >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Select when to play sounds" />
+                  <SelectTrigger id="notification-timing">
+                    <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="start_completion">
@@ -212,12 +193,13 @@ function SettingsPage() {
               </div>
             </div>
 
-            <div className="space-y-2">
-              <Label>Notification Volume</Label>
+            <div>
+              <Label htmlFor="volume">Notification Volume</Label>
               <div className="flex items-center gap-2">
                 <Slider
-                  value={[volume]}
-                  onValueChange={handleVolumeChange}
+                  id="volume"
+                  value={[settings.audio.notificationVolume]}
+                  onValueChange={(v) => updateNotificationVolume(v[0] ?? 1)}
                   max={1}
                   step={0.1}
                 />
@@ -225,7 +207,8 @@ function SettingsPage() {
                   variant="outline"
                   size="icon"
                   className="h-8 w-8"
-                  onClick={handleTestSound}
+                  onClick={playTestSound}
+                  type="button"
                 >
                   <Volume2 className="h-4 w-4" />
                 </Button>
@@ -234,16 +217,15 @@ function SettingsPage() {
 
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
-                <Label htmlFor="mute-system-audio">Mute system audio</Label>
+                <Label>Mute system audio</Label>
                 <p className="text-muted-foreground text-sm">
                   Silence all other audio when recording to reduce background
                   noise
                 </p>
               </div>
               <Switch
-                id="mute-system-audio"
-                checked={muteSystemAudio}
-                onCheckedChange={handleMuteSystemAudioChange}
+                checked={settings.audio.muteSystemAudio}
+                onCheckedChange={updateMuteSystemAudio}
               />
             </div>
           </CardContent>
@@ -263,22 +245,32 @@ function SettingsPage() {
           <CardContent className="space-y-4">
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
-                <Label htmlFor="analytics">Usage analytics</Label>
+                <Label>Usage analytics</Label>
                 <p className="text-muted-foreground text-sm">
                   Help improve the app by sharing usage data
                 </p>
               </div>
-              <Switch id="analytics" />
+              <Switch
+                checked={settings.privacy.usageAnalytics}
+                onCheckedChange={(checked) =>
+                  updatePrivacySetting("usageAnalytics", checked)
+                }
+              />
             </div>
 
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
-                <Label htmlFor="crash-reports">Crash reports</Label>
+                <Label>Crash reports</Label>
                 <p className="text-muted-foreground text-sm">
                   Automatically send crash reports
                 </p>
               </div>
-              <Switch id="crash-reports" defaultChecked />
+              <Switch
+                checked={settings.privacy.crashReports}
+                onCheckedChange={(checked) =>
+                  updatePrivacySetting("crashReports", checked)
+                }
+              />
             </div>
           </CardContent>
         </Card>
@@ -297,33 +289,48 @@ function SettingsPage() {
           <CardContent className="space-y-4">
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
-                <Label htmlFor="interaction-sounds">Interaction sounds</Label>
+                <Label>Interaction sounds</Label>
                 <p className="text-muted-foreground text-sm">
                   Play sounds for key actions like start/stop recording
                 </p>
               </div>
-              <Switch id="interaction-sounds" defaultChecked />
+              <Switch
+                checked={settings.personalization.interactionSounds}
+                onCheckedChange={(checked) =>
+                  updatePersonalizationSetting("interactionSounds", checked)
+                }
+              />
             </div>
 
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
-                <Label htmlFor="smart-formatting">Smart formatting</Label>
+                <Label>Smart formatting</Label>
                 <p className="text-muted-foreground text-sm">
                   Use AI to intelligently format your dictation text
                 </p>
               </div>
-              <Switch id="smart-formatting" defaultChecked />
+              <Switch
+                checked={settings.personalization.smartFormatting}
+                onCheckedChange={(checked) =>
+                  updatePersonalizationSetting("smartFormatting", checked)
+                }
+              />
             </div>
 
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
-                <Label htmlFor="auto-dictionary">Auto add to dictionary</Label>
+                <Label>Auto add to dictionary</Label>
                 <p className="text-muted-foreground text-sm">
                   Help AI learn your frequently used words for better
                   recognition
                 </p>
               </div>
-              <Switch id="auto-dictionary" defaultChecked />
+              <Switch
+                checked={settings.personalization.autoAddToDictionary}
+                onCheckedChange={(checked) =>
+                  updatePersonalizationSetting("autoAddToDictionary", checked)
+                }
+              />
             </div>
           </CardContent>
         </Card>

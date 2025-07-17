@@ -1,54 +1,25 @@
 // This function is used to initialize the app
 
-import { invoke } from "@tauri-apps/api/core";
-import { disable, enable, isEnabled } from "@tauri-apps/plugin-autostart";
+import { storeRegistry } from "~/stores/store-registry";
+import { initializeTauriEvents } from "./tauri-events";
 
-export async function initializeApp() {
-  // Initialize autostart based on saved settings
+/**
+ * Initialize the application on startup
+ * This should be called once when the main window loads
+ */
+export async function initializeApp(): Promise<void> {
+  console.log("[App] 🚀 Initializing application...");
+
   try {
-    const autostartConfig = await invoke<{ enabled: boolean }>(
-      "get_autostart_config",
-    );
+    // Initialize all stores through the registry
+    await storeRegistry.initializeAll();
 
-    const isCurrentlyEnabled = await isEnabled();
+    // Initialize Tauri event listeners
+    await initializeTauriEvents();
 
-    // Only update if the current state doesn't match the saved setting
-    if (autostartConfig.enabled !== isCurrentlyEnabled) {
-      if (autostartConfig.enabled) {
-        await enable();
-        console.log("✅ Auto-start enabled based on settings");
-      } else {
-        await disable();
-        console.log("✅ Auto-start disabled based on settings");
-      }
-    }
+    console.log("[App] ✅ Application initialized successfully");
   } catch (error) {
-    console.error("❌ Failed to initialize auto-start:", error);
-    // Don't throw the error to prevent app startup failure
+    console.error("[App] ❌ Failed to initialize application:", error);
+    throw error;
   }
-
-  // Initialize system tray
-  try {
-    await import("./tray");
-    console.log("✅ System tray initialized successfully");
-  } catch (error) {
-    console.error("❌ Failed to initialize system tray:", error);
-    // Don't throw the error to prevent app startup failure
-  }
-
-  // Initialize gecko bar with a small delay to ensure window is ready
-  setTimeout(async () => {
-    try {
-      const geckoBarConfig = await invoke<{ enabled: boolean }>(
-        "get_gecko_bar_config",
-      );
-
-      if (geckoBarConfig.enabled) {
-        await invoke("show_gecko_bar");
-      }
-    } catch (error) {
-      console.error("Failed to initialize gecko bar:", error);
-      // Don't throw the error to prevent app startup failure
-    }
-  }, 1000); // Wait 1 second for window to be fully initialized
 }

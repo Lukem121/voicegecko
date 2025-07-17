@@ -42,6 +42,7 @@
     "@trpc/client": "catalog:",
     "@trpc/server": "catalog:",
     "@trpc/tanstack-react-query": "catalog:",
+    "fuse.js": "^7.1.0",
     "lucide-react": "^0.475.0",
     "motion": "^12.23.5",
     "react": "catalog:react19",

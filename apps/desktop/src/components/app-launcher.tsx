@@ -1,168 +1,61 @@
 import { useEffect, useState } from "react";
-import { relaunch } from "@tauri-apps/plugin-process";
-import { check } from "@tauri-apps/plugin-updater";
+import { invoke } from "@tauri-apps/api/core";
 
-import LogoFull from "@acme/ui/components/logos/logo-full";
-import { Progress } from "@acme/ui/components/ui/progress";
+import { initializeApp } from "~/lib/initialize-app";
 
-import { initializeApp as initApp } from "~/lib/initialize-app";
-
-interface AppLauncherProps {
-  onReady: () => void;
-}
-
-export function AppLauncher({ onReady }: AppLauncherProps) {
-  const [status, setStatus] = useState<string>("Starting Voice Gecko...");
-  const [progress, setProgress] = useState<number>(0);
-  const [isUpdating, setIsUpdating] = useState<boolean>(false);
+export function AppLauncher({ onReady }: { onReady: () => void }) {
+  const [isInitializing, setIsInitializing] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    let isMounted = true;
-
-    async function initializeApp() {
+    async function init() {
       try {
-        // Step 0: Initialize app settings (auto-start, etc.)
-        setStatus("Initializing application...");
-        setProgress(10);
-        await initApp();
+        // Initialize the app
+        await initializeApp();
 
-        // Step 1: Check for updates
-        setStatus("Checking for updates...");
-        setProgress(20);
-
-        const update = await check();
-
-        if (update) {
-          console.log(
-            `Found update ${update.version} from ${update.date} with notes ${update.body}`,
-          );
-
-          setIsUpdating(true);
-          setStatus(`Updating to ${update.version}...`);
-          setProgress(40);
-
-          let downloaded = 0;
-          let contentLength = 0;
-
-          // Download and install the update
-          await update.downloadAndInstall((event) => {
-            if (!isMounted) return;
-
-            switch (event.event) {
-              case "Started":
-                contentLength = event.data.contentLength ?? 0;
-                setStatus("Downloading update...");
-                break;
-              case "Progress":
-                downloaded += event.data.chunkLength;
-                if (contentLength > 0) {
-                  const downloadProgress = Math.round(
-                    (downloaded / contentLength) * 100,
-                  );
-                  setProgress(40 + downloadProgress * 0.5); // 40-90% for download
-                  setStatus(`Downloading update... ${downloadProgress}%`);
-                }
-                break;
-              case "Finished":
-                setStatus("Installing update...");
-                setProgress(95);
-                break;
-            }
-          });
-
-          // Update installed, relaunch
-          console.log("Update installed, restarting...");
-          setStatus("Restarting application...");
-          setProgress(100);
-          await relaunch();
-        } else {
-          // No update needed, continue with app launch
-          if (!isMounted) return;
-          setStatus("Loading application...");
-          setProgress(100);
-
-          // Small delay to show completion
-          setTimeout(() => {
-            if (isMounted) {
-              onReady();
-            }
-          }, 500);
-        }
-      } catch (error) {
-        console.error("Initialization error:", error);
-        if (!isMounted) return;
-
-        setError(
-          error instanceof Error ? error.message : "Failed to initialize app",
+        // Show gecko bar if enabled
+        const geckoBarConfig = await invoke<{ enabled: boolean }>(
+          "get_gecko_bar_config",
         );
-        setStatus("Error occurred");
+        if (geckoBarConfig.enabled) {
+          await invoke("show_gecko_bar");
+        }
 
-        // Continue with app launch even if update fails
-        setTimeout(() => {
-          if (isMounted) {
-            onReady();
-          }
-        }, 2000);
+        onReady();
+      } catch (error) {
+        console.error("Failed to initialize app:", error);
+        setError(error instanceof Error ? error.message : "Unknown error");
+      } finally {
+        setIsInitializing(false);
       }
     }
 
-    void initializeApp();
-
-    return () => {
-      isMounted = false;
-    };
+    void init();
   }, [onReady]);
 
-  return (
-    <div className="bg-background fixed inset-0 z-50 flex items-center justify-center">
-      {/* Background gradient */}
-      <div className="absolute inset-0 -z-10 overflow-hidden">
-        <div
-          className="pointer-events-none absolute inset-x-0 transform-gpu overflow-hidden blur-[120px] sm:-top-80"
-          aria-hidden="true"
-        >
-          <div
-            className="to-primary-muted relative left-[calc(50%)] aspect-[1155/678] w-[36.125rem] -translate-x-1/2 rotate-[45deg] bg-gradient-to-tr from-[#6E9C4A] via-[#6E9C4A]/60 via-[#6E9C4A]/80 to-[#6E9C4A]/40 opacity-25 sm:left-[calc(50%-30rem)] sm:w-[72.1875rem]"
-            style={{
-              clipPath: "polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)",
-            }}
-          />
+  if (error) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-xl font-semibold text-red-600">
+            Failed to initialize
+          </h2>
+          <p className="mt-2 text-gray-600">{error}</p>
         </div>
       </div>
+    );
+  }
 
-      <div className="w-full max-w-sm space-y-8 px-4">
-        {/* Logo */}
-        <div className="flex justify-center">
-          <LogoFull className="h-12" aria-label="Voice Gecko" />
-        </div>
-
-        {/* Status and Progress */}
-        <div className="space-y-4">
-          <div className="text-center">
-            <p className="text-sm font-medium">{status}</p>
-            {error && <p className="text-destructive mt-2 text-xs">{error}</p>}
-          </div>
-
-          <div className="space-y-2">
-            <Progress value={progress} className="h-2" />
-            <p className="text-muted-foreground text-center text-xs">
-              {isUpdating
-                ? "Updating for security and performance improvements"
-                : "Preparing your workspace"}
-            </p>
-          </div>
-        </div>
-
-        {/* Loading animation */}
-        <div className="flex justify-center">
-          <div className="flex space-x-1">
-            <div className="h-1.5 w-1.5 animate-pulse rounded-full bg-slate-300 [animation-delay:0ms] [animation-duration:1.5s]"></div>
-            <div className="h-1.5 w-1.5 animate-pulse rounded-full bg-slate-300 [animation-delay:150ms] [animation-duration:1.5s]"></div>
-            <div className="h-1.5 w-1.5 animate-pulse rounded-full bg-slate-300 [animation-delay:300ms] [animation-duration:1.5s]"></div>
-          </div>
+  if (isInitializing) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <div className="text-center">
+          <div className="h-8 w-8 animate-spin rounded-full border-4 border-gray-300 border-t-blue-600" />
+          <p className="mt-4 text-gray-600">Initializing app...</p>
         </div>
       </div>
-    </div>
-  );
+    );
+  }
+
+  return null;
 }

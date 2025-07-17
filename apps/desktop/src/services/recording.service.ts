@@ -1,9 +1,9 @@
 import { invoke } from "@tauri-apps/api/core";
 import { toast } from "sonner";
 
-import { useRecordingStore } from "~/hooks/use-recording-store";
 import { invokeTranscriptionFromBuffer } from "~/lib/transcription";
 import { useEventStore } from "~/stores/event.store";
+import { useSettingsStore } from "~/stores/settings.store";
 
 export interface RecordingOptions {
   playStartSound?: boolean;
@@ -103,8 +103,8 @@ export class RecordingService {
       await this.stopRecording(options);
     } else {
       // If recording was somehow stopped already, still unmute system audio
-      const { muteSystemAudio } = useRecordingStore.getState();
-      if (muteSystemAudio) {
+      const { settings } = useSettingsStore.getState();
+      if (settings.audio.muteSystemAudio) {
         try {
           await invoke("unmute_system_audio");
         } catch (error) {
@@ -119,15 +119,15 @@ export class RecordingService {
    */
   private async startRecording(options: RecordingOptions): Promise<void> {
     try {
-      const { selectedDevice, muteSystemAudio } = useRecordingStore.getState();
-      const deviceName = options.device ?? selectedDevice?.name;
+      const { settings } = useSettingsStore.getState();
+      const deviceName = options.device ?? settings.audio.selectedDevice?.name;
 
       if (options.playStartSound ?? this.shouldPlayStartSound()) {
         await this.playNotificationSound("Start");
       }
 
       // Mute system audio if enabled
-      if (muteSystemAudio) {
+      if (settings.audio.muteSystemAudio) {
         try {
           await invoke("mute_system_audio");
         } catch (error) {
@@ -160,8 +160,8 @@ export class RecordingService {
       }
 
       // Unmute system audio if it was muted
-      const { muteSystemAudio } = useRecordingStore.getState();
-      if (muteSystemAudio) {
+      const { settings } = useSettingsStore.getState();
+      if (settings.audio.muteSystemAudio) {
         try {
           await invoke("unmute_system_audio");
         } catch (error) {
@@ -189,8 +189,8 @@ export class RecordingService {
       await invoke("cancel_recording");
 
       // Unmute system audio if it was muted
-      const { muteSystemAudio } = useRecordingStore.getState();
-      if (muteSystemAudio) {
+      const { settings } = useSettingsStore.getState();
+      if (settings.audio.muteSystemAudio) {
         try {
           await invoke("unmute_system_audio");
         } catch (error) {
@@ -211,13 +211,13 @@ export class RecordingService {
    */
   public async playNotificationSound(variant: "Start" | "End"): Promise<void> {
     try {
-      const { selectedSound } = useRecordingStore.getState();
+      const { settings } = useSettingsStore.getState();
       console.log(
-        `[RecordingService] Playing ${variant} sound: ${selectedSound}.mp3`,
+        `[RecordingService] Playing ${variant} sound: ${settings.audio.selectedSound}.mp3`,
       );
 
       await invoke("play_notification_sound", {
-        soundName: `${selectedSound}.mp3`,
+        soundName: `${settings.audio.selectedSound}.mp3`,
         variant,
       });
 
@@ -235,10 +235,10 @@ export class RecordingService {
    * Determine if start sound should be played based on settings
    */
   private shouldPlayStartSound(): boolean {
-    const { notificationTiming } = useRecordingStore.getState();
+    const { settings } = useSettingsStore.getState();
     return (
-      notificationTiming === "start_stop" ||
-      notificationTiming === "start_completion"
+      settings.audio.notificationTiming === "start_stop" ||
+      settings.audio.notificationTiming === "start_completion"
     );
   }
 
@@ -246,10 +246,10 @@ export class RecordingService {
    * Determine if end sound should be played based on settings
    */
   private shouldPlayEndSound(): boolean {
-    const { notificationTiming } = useRecordingStore.getState();
+    const { settings } = useSettingsStore.getState();
     // Only play end sound on recording stop if timing is "start_stop"
     // "completion_only" and "start_completion" timings are handled by transcription service
-    return notificationTiming === "start_stop";
+    return settings.audio.notificationTiming === "start_stop";
   }
 
   /**

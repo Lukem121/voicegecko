@@ -21,10 +21,8 @@ import { Route as AuthenticatedHistoryRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedBillingRouteImport } from './routes/_authenticated/billing'
 import { Route as unauthenticatedAuthRouteImport } from './routes/(unauthenticated)/_auth'
 import { Route as AuthenticatedSettingsIndexRouteImport } from './routes/_authenticated/settings/index'
-import { Route as AuthenticatedSettingsTranscriptionRouteImport } from './routes/_authenticated/settings/transcription'
 import { Route as AuthenticatedSettingsShortcutsRouteImport } from './routes/_authenticated/settings/shortcuts'
 import { Route as AuthenticatedSettingsModelsRouteImport } from './routes/_authenticated/settings/models'
-import { Route as AuthenticatedSettingsLanguageRouteImport } from './routes/_authenticated/settings/language'
 import { Route as unauthenticatedLegalTermsRouteImport } from './routes/(unauthenticated)/legal/terms'
 import { Route as unauthenticatedLegalPrivacyRouteImport } from './routes/(unauthenticated)/legal/privacy'
 import { Route as unauthenticatedAuthVerifySuccessRouteImport } from './routes/(unauthenticated)/_auth.verify-success'
@@ -90,12 +88,6 @@ const AuthenticatedSettingsIndexRoute =
     path: '/settings/',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
-const AuthenticatedSettingsTranscriptionRoute =
-  AuthenticatedSettingsTranscriptionRouteImport.update({
-    id: '/settings/transcription',
-    path: '/settings/transcription',
-    getParentRoute: () => AuthenticatedRoute,
-  } as any)
 const AuthenticatedSettingsShortcutsRoute =
   AuthenticatedSettingsShortcutsRouteImport.update({
     id: '/settings/shortcuts',
@@ -106,12 +98,6 @@ const AuthenticatedSettingsModelsRoute =
   AuthenticatedSettingsModelsRouteImport.update({
     id: '/settings/models',
     path: '/settings/models',
-    getParentRoute: () => AuthenticatedRoute,
-  } as any)
-const AuthenticatedSettingsLanguageRoute =
-  AuthenticatedSettingsLanguageRouteImport.update({
-    id: '/settings/language',
-    path: '/settings/language',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
 const unauthenticatedLegalTermsRoute =
@@ -172,10 +158,8 @@ export interface FileRoutesByFullPath {
   '/verify-success': typeof unauthenticatedAuthVerifySuccessRoute
   '/legal/privacy': typeof unauthenticatedLegalPrivacyRoute
   '/legal/terms': typeof unauthenticatedLegalTermsRoute
-  '/settings/language': typeof AuthenticatedSettingsLanguageRoute
   '/settings/models': typeof AuthenticatedSettingsModelsRoute
   '/settings/shortcuts': typeof AuthenticatedSettingsShortcutsRoute
-  '/settings/transcription': typeof AuthenticatedSettingsTranscriptionRoute
   '/settings': typeof AuthenticatedSettingsIndexRoute
 }
 export interface FileRoutesByTo {
@@ -193,10 +177,8 @@ export interface FileRoutesByTo {
   '/verify-success': typeof unauthenticatedAuthVerifySuccessRoute
   '/legal/privacy': typeof unauthenticatedLegalPrivacyRoute
   '/legal/terms': typeof unauthenticatedLegalTermsRoute
-  '/settings/language': typeof AuthenticatedSettingsLanguageRoute
   '/settings/models': typeof AuthenticatedSettingsModelsRoute
   '/settings/shortcuts': typeof AuthenticatedSettingsShortcutsRoute
-  '/settings/transcription': typeof AuthenticatedSettingsTranscriptionRoute
   '/settings': typeof AuthenticatedSettingsIndexRoute
 }
 export interface FileRoutesById {
@@ -218,10 +200,8 @@ export interface FileRoutesById {
   '/(unauthenticated)/_auth/verify-success': typeof unauthenticatedAuthVerifySuccessRoute
   '/(unauthenticated)/legal/privacy': typeof unauthenticatedLegalPrivacyRoute
   '/(unauthenticated)/legal/terms': typeof unauthenticatedLegalTermsRoute
-  '/_authenticated/settings/language': typeof AuthenticatedSettingsLanguageRoute
   '/_authenticated/settings/models': typeof AuthenticatedSettingsModelsRoute
   '/_authenticated/settings/shortcuts': typeof AuthenticatedSettingsShortcutsRoute
-  '/_authenticated/settings/transcription': typeof AuthenticatedSettingsTranscriptionRoute
   '/_authenticated/settings/': typeof AuthenticatedSettingsIndexRoute
 }
 export interface FileRouteTypes {
@@ -241,10 +221,8 @@ export interface FileRouteTypes {
     | '/verify-success'
     | '/legal/privacy'
     | '/legal/terms'
-    | '/settings/language'
     | '/settings/models'
     | '/settings/shortcuts'
-    | '/settings/transcription'
     | '/settings'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -262,10 +240,8 @@ export interface FileRouteTypes {
     | '/verify-success'
     | '/legal/privacy'
     | '/legal/terms'
-    | '/settings/language'
     | '/settings/models'
     | '/settings/shortcuts'
-    | '/settings/transcription'
     | '/settings'
   id:
     | '__root__'
@@ -286,10 +262,8 @@ export interface FileRouteTypes {
     | '/(unauthenticated)/_auth/verify-success'
     | '/(unauthenticated)/legal/privacy'
     | '/(unauthenticated)/legal/terms'
-    | '/_authenticated/settings/language'
     | '/_authenticated/settings/models'
     | '/_authenticated/settings/shortcuts'
-    | '/_authenticated/settings/transcription'
     | '/_authenticated/settings/'
   fileRoutesById: FileRoutesById
 }
@@ -377,13 +351,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSettingsIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
-    '/_authenticated/settings/transcription': {
-      id: '/_authenticated/settings/transcription'
-      path: '/settings/transcription'
-      fullPath: '/settings/transcription'
-      preLoaderRoute: typeof AuthenticatedSettingsTranscriptionRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
     '/_authenticated/settings/shortcuts': {
       id: '/_authenticated/settings/shortcuts'
       path: '/settings/shortcuts'
@@ -396,13 +363,6 @@ declare module '@tanstack/react-router' {
       path: '/settings/models'
       fullPath: '/settings/models'
       preLoaderRoute: typeof AuthenticatedSettingsModelsRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/settings/language': {
-      id: '/_authenticated/settings/language'
-      path: '/settings/language'
-      fullPath: '/settings/language'
-      preLoaderRoute: typeof AuthenticatedSettingsLanguageRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/(unauthenticated)/legal/terms': {
@@ -465,10 +425,8 @@ interface AuthenticatedRouteChildren {
   AuthenticatedRecordingRoute: typeof AuthenticatedRecordingRoute
   AuthenticatedTranscriptionsRoute: typeof AuthenticatedTranscriptionsRoute
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
-  AuthenticatedSettingsLanguageRoute: typeof AuthenticatedSettingsLanguageRoute
   AuthenticatedSettingsModelsRoute: typeof AuthenticatedSettingsModelsRoute
   AuthenticatedSettingsShortcutsRoute: typeof AuthenticatedSettingsShortcutsRoute
-  AuthenticatedSettingsTranscriptionRoute: typeof AuthenticatedSettingsTranscriptionRoute
   AuthenticatedSettingsIndexRoute: typeof AuthenticatedSettingsIndexRoute
 }
 
@@ -480,11 +438,8 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedRecordingRoute: AuthenticatedRecordingRoute,
   AuthenticatedTranscriptionsRoute: AuthenticatedTranscriptionsRoute,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
-  AuthenticatedSettingsLanguageRoute: AuthenticatedSettingsLanguageRoute,
   AuthenticatedSettingsModelsRoute: AuthenticatedSettingsModelsRoute,
   AuthenticatedSettingsShortcutsRoute: AuthenticatedSettingsShortcutsRoute,
-  AuthenticatedSettingsTranscriptionRoute:
-    AuthenticatedSettingsTranscriptionRoute,
   AuthenticatedSettingsIndexRoute: AuthenticatedSettingsIndexRoute,
 }
 
