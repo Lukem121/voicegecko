@@ -1,7 +1,7 @@
 import { writeText } from "@tauri-apps/plugin-clipboard-manager";
 import { toast } from "sonner";
 
-import { useRecordingStore } from "~/hooks/use-recording-store";
+import { useSettingsStore } from "~/stores/settings.store";
 import { recordingService } from "./recording.service";
 
 export class TranscriptionService {
@@ -91,7 +91,8 @@ export class TranscriptionService {
    */
   async playEndSoundIfEnabled(): Promise<void> {
     try {
-      const { notificationTiming } = useRecordingStore.getState();
+      const { settings } = useSettingsStore.getState();
+      const notificationTiming = settings.audio.notificationTiming;
 
       // Play end sound on transcription completion for "completion_only" and "start_completion" timings
       // "start_stop" timing plays sounds when recording starts/stops, not on transcription

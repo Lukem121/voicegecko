@@ -535,76 +535,14 @@ pub fn stop_recording(
         .take()
         .ok_or_else(|| "No audio data recorded".to_string())?;
 
-    // Save the original audio for comparison
-    if let Err(e) = save_audio_sample(&app, &samples, "original") {
-        eprintln!("Failed to save original audio: {}", e);
-    }
-
     // Apply noise suppression to the recorded audio
     let denoised_samples = denoise_audio(samples);
-
-    // Save the denoised audio for comparison
-    if let Err(e) = save_audio_sample(&app, &denoised_samples, "denoised") {
-        eprintln!("Failed to save denoised audio: {}", e);
-    }
 
     Ok(AudioData {
         samples: denoised_samples,
         sample_rate: 16000, // We always resample to 16kHz
         channels: 1,        // We always convert to mono
     })
-}
-
-/// Save audio samples as a WAV file for debugging/comparison
-fn save_audio_sample(app: &tauri::AppHandle, samples: &[f32], suffix: &str) -> Result<(), String> {
-    // Get app data directory
-    let app_data_dir = app
-        .path()
-        .app_data_dir()
-        .map_err(|e| format!("Failed to get app data dir: {}", e))?;
-
-    // Create audio_samples directory if it doesn't exist
-    let audio_samples_dir = app_data_dir.join("audio_samples");
-    if !audio_samples_dir.exists() {
-        fs::create_dir_all(&audio_samples_dir)
-            .map_err(|e| format!("Failed to create audio samples directory: {}", e))?;
-    }
-
-    // Generate timestamp for unique filename
-    let timestamp = SystemTime::now()
-        .duration_since(UNIX_EPOCH)
-        .map_err(|e| format!("Failed to get timestamp: {}", e))?
-        .as_millis();
-
-    let filename = format!("audio_{}_{}.wav", timestamp, suffix);
-    let file_path = audio_samples_dir.join(&filename);
-
-    // Create WAV file
-    let spec = hound::WavSpec {
-        channels: 1,
-        sample_rate: 16000,
-        bits_per_sample: 16,
-        sample_format: hound::SampleFormat::Int,
-    };
-
-    let mut writer = hound::WavWriter::create(&file_path, spec)
-        .map_err(|e| format!("Failed to create WAV file: {}", e))?;
-
-    // Convert f32 samples to i16 and write
-    for &sample in samples {
-        let amplitude = (sample * 32767.0).clamp(-32768.0, 32767.0) as i16;
-        writer
-            .write_sample(amplitude)
-            .map_err(|e| format!("Failed to write sample: {}", e))?;
-    }
-
-    writer
-        .finalize()
-        .map_err(|e| format!("Failed to finalize WAV file: {}", e))?;
-
-    println!("Saved {} audio to: {}", suffix, file_path.display());
-
-    Ok(())
 }
 
 /// Apply noise suppression to audio samples using nnnoiseless

@@ -7,7 +7,6 @@ import {
   Folder,
   HelpCircle,
   History,
-  Keyboard,
   LogOut,
   Mic,
   PieChart,
@@ -15,7 +14,6 @@ import {
   User2,
 } from "lucide-react";
 
-import LogoFull from "@acme/ui/components/logos/logo-full";
 import LogoSquare from "@acme/ui/components/logos/logo-square";
 import {
   Avatar,
@@ -48,19 +46,18 @@ import {
 
 import { useSignOut, useUser } from "~/hooks/auth";
 
-// Navigation data structure
 const data = {
   navMain: [
+    {
+      title: "Recording",
+      url: "/recording",
+      icon: Mic,
+    },
     {
       title: "Dashboard",
       url: "/",
       icon: PieChart,
       isActive: true,
-    },
-    {
-      title: "Recording",
-      url: "/recording",
-      icon: Mic,
     },
     {
       title: "Transcriptions",
@@ -116,10 +113,6 @@ const data = {
         {
           title: "Models",
           url: "/settings/models",
-        },
-        {
-          title: "Language",
-          url: "/settings/language",
         },
         {
           title: "Keyboard Shortcuts",
