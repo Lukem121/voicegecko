@@ -18,6 +18,7 @@ interface RecordingSettingsState {
   selectedSound: NotificationSound;
   notificationTiming: NotificationTiming;
   volume: number;
+  muteSystemAudio: boolean;
 
   // Actions
   setDevices: (devices: AudioDevice[]) => void;
@@ -25,6 +26,7 @@ interface RecordingSettingsState {
   setSelectedSound: (sound: NotificationSound) => void;
   setNotificationTiming: (timing: NotificationTiming) => void;
   setVolume: (volume: number) => void;
+  setMuteSystemAudio: (mute: boolean) => void;
 }
 
 export const useRecordingStore = create<RecordingSettingsState>((set) => ({
@@ -34,6 +36,7 @@ export const useRecordingStore = create<RecordingSettingsState>((set) => ({
   selectedSound: "chime",
   notificationTiming: "start_completion",
   volume: 1.0,
+  muteSystemAudio: true, // Default to true as per requirement
 
   // Actions
   setDevices: (devices) => set({ devices }),
@@ -41,4 +44,5 @@ export const useRecordingStore = create<RecordingSettingsState>((set) => ({
   setSelectedSound: (sound) => set({ selectedSound: sound }),
   setNotificationTiming: (timing) => set({ notificationTiming: timing }),
   setVolume: (volume) => set({ volume }),
+  setMuteSystemAudio: (mute) => set({ muteSystemAudio: mute }),
 }));

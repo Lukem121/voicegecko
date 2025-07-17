@@ -47,11 +47,13 @@ function SettingsPage() {
     selectedSound,
     notificationTiming,
     volume,
+    muteSystemAudio,
     handleDeviceChange,
     handleSoundChange,
     handleTimingChange,
     handleVolumeChange,
     handleTestSound,
+    handleMuteSystemAudioChange,
   } = useAudioSettings();
 
   const {
@@ -230,7 +232,11 @@ function SettingsPage() {
                   noise
                 </p>
               </div>
-              <Switch id="mute-system-audio" />
+              <Switch
+                id="mute-system-audio"
+                checked={muteSystemAudio}
+                onCheckedChange={handleMuteSystemAudioChange}
+              />
             </div>
           </CardContent>
         </Card>
