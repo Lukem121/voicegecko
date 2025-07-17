@@ -185,51 +185,6 @@ function ShortcutsPage() {
             </Card>
           ))}
         </div>
-
-        {/* Tips */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Zap className="h-5 w-5" />
-              Pro Tips
-            </CardTitle>
-            <CardDescription>
-              Get the most out of VoiceGecko shortcuts
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid gap-4 md:grid-cols-2">
-              <div className="space-y-2">
-                <h4 className="font-medium">🎙️ Push to Dictate</h4>
-                <p className="text-muted-foreground text-sm">
-                  Hold your push-to-talk shortcut to record. Release to stop and
-                  automatically process the transcription.
-                </p>
-              </div>
-              <div className="space-y-2">
-                <h4 className="font-medium">🔄 Toggle Mode</h4>
-                <p className="text-muted-foreground text-sm">
-                  Use the toggle shortcut for hands-free recording. Press once
-                  to start, again to stop.
-                </p>
-              </div>
-              <div className="space-y-2">
-                <h4 className="font-medium">⚡ Quick Processing</h4>
-                <p className="text-muted-foreground text-sm">
-                  Use Ctrl + 1/2/3 to quickly apply different text styles
-                  without opening menus.
-                </p>
-              </div>
-              <div className="space-y-2">
-                <h4 className="font-medium">🎯 Context Aware</h4>
-                <p className="text-muted-foreground text-sm">
-                  Some shortcuts work differently depending on whether you're
-                  recording, transcribing, or editing.
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
       </div>
     </TooltipProvider>
   );

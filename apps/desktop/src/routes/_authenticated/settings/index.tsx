@@ -34,6 +34,7 @@ import type {
   NotificationTiming,
 } from "~/hooks/use-recording-store";
 import { useAudioSettings } from "~/hooks/use-audio-settings";
+import { useAutostartSettings } from "~/hooks/use-autostart-settings";
 import { useGeckoBarSettings } from "~/hooks/use-gecko-bar-settings";
 
 export const Route = createFileRoute("/_authenticated/settings/")({
@@ -62,6 +63,9 @@ function SettingsPage() {
     setHideOnFullscreen: setGeckoBarHideOnFullscreen,
   } = useGeckoBarSettings();
 
+  const { config: autostartConfig, setEnabled: setAutostartEnabled } =
+    useAutostartSettings();
+
   return (
     <div className="flex flex-1 flex-col gap-4">
       <div className="grid gap-4 md:grid-cols-2">
@@ -83,7 +87,11 @@ function SettingsPage() {
                     Start the application when your computer boots
                   </p>
                 </div>
-                <Switch id="launch-on-startup" />
+                <Switch
+                  id="launch-on-startup"
+                  checked={autostartConfig.enabled}
+                  onCheckedChange={setAutostartEnabled}
+                />
               </div>
 
               <div className="flex items-center justify-between">
@@ -333,12 +341,6 @@ function SettingsPage() {
               <Button variant="outline" className="w-full justify-start gap-2">
                 <Keyboard className="h-4 w-4" />
                 Keyboard Shortcuts
-              </Button>
-            </Link>
-            <Link to="/settings/language" className="w-full">
-              <Button variant="outline" className="w-full justify-start gap-2">
-                <Globe className="h-4 w-4" />
-                Language Settings
               </Button>
             </Link>
             <Link to="/settings/models" className="w-full">

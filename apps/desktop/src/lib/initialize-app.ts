@@ -1,14 +1,29 @@
 // This function is used to initialize the app
 
 import { invoke } from "@tauri-apps/api/core";
-import { enable } from "@tauri-apps/plugin-autostart";
+import { disable, enable, isEnabled } from "@tauri-apps/plugin-autostart";
 
 export async function initializeApp() {
+  // Initialize autostart based on saved settings
   try {
-    await enable();
-    console.log("✅ Auto-start enabled successfully");
+    const autostartConfig = await invoke<{ enabled: boolean }>(
+      "get_autostart_config",
+    );
+
+    const isCurrentlyEnabled = await isEnabled();
+
+    // Only update if the current state doesn't match the saved setting
+    if (autostartConfig.enabled !== isCurrentlyEnabled) {
+      if (autostartConfig.enabled) {
+        await enable();
+        console.log("✅ Auto-start enabled based on settings");
+      } else {
+        await disable();
+        console.log("✅ Auto-start disabled based on settings");
+      }
+    }
   } catch (error) {
-    console.error("❌ Failed to enable auto-start:", error);
+    console.error("❌ Failed to initialize auto-start:", error);
     // Don't throw the error to prevent app startup failure
   }
 

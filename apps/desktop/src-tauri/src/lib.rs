@@ -61,7 +61,9 @@ pub fn run() {
             modules::settings::get_transcription_config,
             modules::settings::set_transcription_config,
             modules::settings::get_gecko_bar_config,
-            modules::settings::set_gecko_bar_config
+            modules::settings::set_gecko_bar_config,
+            modules::settings::get_autostart_config,
+            modules::settings::set_autostart_config
         ])
         .setup(|app| {
             let (_stream, stream_handle) = rodio::OutputStream::try_default().unwrap();
