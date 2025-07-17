@@ -13,10 +13,9 @@ import { AppLauncher } from "~/components/app-launcher";
 import { FullscreenDetector } from "~/components/fullscreen-detector";
 import { GeckoBarApp } from "~/components/gecko-bar/gecko-bar-app";
 import { useIsAuthenticated } from "~/hooks/auth";
-import { useGeckoBarSettings } from "~/hooks/use-gecko-bar-settings";
-import { shortcutManager } from "~/lib/shortcuts/manager";
 import { isGeckoBarWindow } from "~/lib/window-detection";
 import { routeTree } from "~/routeTree.gen";
+import { useSettingsStore } from "~/stores/settings.store";
 import { TRPCReactProvider } from "~/trpc";
 import { ThemeProvider } from "./providers/theme";
 
@@ -42,7 +41,7 @@ declare module "@tanstack/react-router" {
 function InnerApp() {
   const auth = useIsAuthenticated();
   const session = authClient.useSession();
-  const { config: geckoBarConfig } = useGeckoBarSettings();
+  const settings = useSettingsStore((state) => state.settings);
 
   useBetterAuthTauri({
     authClient,
@@ -69,9 +68,10 @@ function InnerApp() {
     <>
       <FullscreenDetector
         enabled={
-          geckoBarConfig.enabled && (geckoBarConfig.hideOnFullscreen ?? true)
+          settings.general.showGeckoBar &&
+          settings.general.hideGeckoOnFullscreen
         }
-        geckoBarEnabled={geckoBarConfig.enabled}
+        geckoBarEnabled={settings.general.showGeckoBar}
       />
       <RouterProvider router={router} context={{ auth }} />
     </>
@@ -92,12 +92,6 @@ function App() {
 
     void detectWindow();
   }, []);
-
-  useEffect(() => {
-    if (isAppReady && !isGeckoBar) {
-      void shortcutManager.initialize();
-    }
-  }, [isAppReady, isGeckoBar]);
 
   // Don't render anything until we know which window we're in
   if (isGeckoBar === null) {

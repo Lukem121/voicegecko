@@ -292,6 +292,15 @@ fn get_initial_models() -> HashMap<String, Model> {
             false,
         ),
         (
+            "small.en-q5_1",
+            "Small Q5_1",
+            "Enhanced accuracy for meetings and interviews with Q5_1 quantization for reduced size.",
+            "181 MiB",
+            "~2 GB",
+            "20f54878d608f94e4a8ee3ae56016571d47cba34",
+            false,
+        ),
+        (
             "medium.en",
             "Medium",
             "Superior accuracy handling accents, background noise, and technical terms.",

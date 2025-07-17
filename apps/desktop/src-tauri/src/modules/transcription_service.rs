@@ -42,11 +42,6 @@ impl LocalWhisperProvider {
         let total_time = Instant::now();
         println!("[Rust] Starting transcription for: {}", source_description);
 
-        let config_time = Instant::now();
-        let config = modules::settings::get_transcription_config(app.clone())
-            .map_err(|e| TranscriptionError::Transcription(e.to_string()))?;
-        println!("[Rust] Get config took: {:?}", config_time.elapsed());
-
         app.emit(
             "transcription-progress",
             TranscriptionEvent::from(TranscriptionProgress::LoadingModel),
@@ -74,20 +69,23 @@ impl LocalWhisperProvider {
             source_description
         );
 
-        let mut params = if config.beam_size > 1 {
+        // Use hardcoded optimal values
+        let threads = 4;
+        let beam_size = 1; // Greedy for fastest performance
+        let best_of = 1; // Single candidate for speed
+
+        let mut params = if beam_size > 1 {
             FullParams::new(SamplingStrategy::BeamSearch {
-                beam_size: config.beam_size,
+                beam_size,
                 patience: 1.0,
             })
         } else {
-            FullParams::new(SamplingStrategy::Greedy {
-                best_of: config.best_of,
-            })
+            FullParams::new(SamplingStrategy::Greedy { best_of })
         };
 
-        params.set_n_threads(config.threads as i32);
+        params.set_n_threads(threads);
         params.set_translate(false);
-        params.set_language(Some(&config.language));
+        params.set_language(Some("en")); // Always use English
         params.set_print_special(false);
         params.set_print_progress(false);
         params.set_print_realtime(false);
