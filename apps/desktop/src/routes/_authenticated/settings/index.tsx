@@ -224,16 +224,6 @@ function SettingsPage() {
 
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
-                <Label htmlFor="noise-suppression">Noise suppression</Label>
-                <p className="text-muted-foreground text-sm">
-                  Reduce background noise
-                </p>
-              </div>
-              <Switch id="noise-suppression" defaultChecked />
-            </div>
-
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
                 <Label htmlFor="mute-system-audio">Mute system audio</Label>
                 <p className="text-muted-foreground text-sm">
                   Silence all other audio when recording to reduce background
