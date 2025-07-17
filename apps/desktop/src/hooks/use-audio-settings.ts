@@ -21,11 +21,13 @@ export function useAudioSettings() {
     selectedSound,
     notificationTiming,
     volume,
+    muteSystemAudio,
     setDevices,
     setSelectedDevice,
     setSelectedSound,
     setNotificationTiming,
     setVolume,
+    setMuteSystemAudio,
   } = useRecordingStore();
 
   useEffect(() => {
@@ -42,6 +44,11 @@ export function useAudioSettings() {
             await store.get<NotificationTiming>("notificationTiming");
           if (timing === undefined) {
             await store.set("notificationTiming", "start_stop");
+          }
+          // Add muteSystemAudio default
+          const storedMute = await store.get<boolean>("muteSystemAudio");
+          if (storedMute === undefined) {
+            await store.set("muteSystemAudio", true);
           }
         }
         await store.set("version", SETTINGS_VERSION);
@@ -65,6 +72,11 @@ export function useAudioSettings() {
       if (savedVolume !== undefined) {
         setVolume(savedVolume);
         void invoke("set_volume", { volume: savedVolume });
+      }
+
+      const savedMute = await store.get<boolean>("muteSystemAudio");
+      if (savedMute !== undefined) {
+        setMuteSystemAudio(savedMute);
       }
     }
 
@@ -93,6 +105,7 @@ export function useAudioSettings() {
     setSelectedSound,
     setNotificationTiming,
     setVolume,
+    setMuteSystemAudio,
     selectedDevice,
   ]);
 
@@ -141,16 +154,26 @@ export function useAudioSettings() {
     }
   }, [notificationTiming]);
 
+  const handleMuteSystemAudioChange = useCallback(
+    (mute: boolean) => {
+      setMuteSystemAudio(mute);
+      void store.set("muteSystemAudio", mute);
+    },
+    [setMuteSystemAudio],
+  );
+
   return {
     devices,
     selectedDevice,
     selectedSound,
     notificationTiming,
     volume,
+    muteSystemAudio,
     handleDeviceChange,
     handleSoundChange,
     handleTimingChange,
     handleVolumeChange,
     handleTestSound,
+    handleMuteSystemAudioChange,
   };
 }
