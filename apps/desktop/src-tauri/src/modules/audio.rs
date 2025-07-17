@@ -1,14 +1,15 @@
 use cpal::traits::{DeviceTrait, HostTrait, StreamTrait};
 use crossbeam_channel::{unbounded, Sender};
+use nnnoiseless::DenoiseState;
 use rodio::{Decoder, Sink, Source};
 use rubato::{FftFixedIn, Resampler};
 use rustfft::{num_complex::Complex, FftPlanner};
 use serde::{Deserialize, Serialize};
-use std::fs::File;
+use std::fs::{self, File};
 use std::io::BufReader;
 use std::sync::{Arc, Mutex};
 use std::thread;
-use std::time::{Duration, Instant};
+use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 use tauri::{Emitter, Manager};
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -85,6 +86,23 @@ pub fn start_recording(
     app: tauri::AppHandle,
     device: Option<String>,
 ) -> Result<(), String> {
+    // Validate device exists before spawning thread
+    let host = cpal::default_host();
+    if let Some(ref device_name) = device {
+        let devices = host.input_devices().map_err(|e| e.to_string())?;
+        let device_exists = devices
+            .filter_map(|d| d.name().ok())
+            .any(|name| name == *device_name);
+        if !device_exists {
+            return Err(format!("Audio device '{}' not found", device_name));
+        }
+    } else {
+        // Check if default device exists
+        if host.default_input_device().is_none() {
+            return Err("No default audio input device found".to_string());
+        }
+    }
+
     let (tx, rx) = unbounded();
     let app_handle = app.clone();
     let recorded_audio = state.recorded_audio.clone();
@@ -108,13 +126,16 @@ pub fn start_recording(
 
         let chunk_size = 1024;
 
+        // Limit channels to 2 for resampler (we convert to mono anyway)
+        let resampler_channels = input_channels.min(2) as usize;
+
         // Setup resampler
         let resampler = FftFixedIn::<f32>::new(
             input_sample_rate as usize,
             TARGET_SAMPLE_RATE as usize,
-            chunk_size, // chunk size
-            2,          // number of channels in internal processing
-            input_channels as usize,
+            chunk_size,         // chunk size
+            resampler_channels, // Max 2 channels for resampler
+            resampler_channels,
         )
         .unwrap();
         let resampler = Arc::new(Mutex::new(resampler));
@@ -149,7 +170,7 @@ pub fn start_recording(
                         &config.into(),
                         move |data: &[i16], _: &cpal::InputCallbackInfo| {
                             let f32_samples: Vec<f32> =
-                                data.iter().map(|s| *s as f32 / i16::MAX as f32).collect();
+                                data.iter().map(|s| *s as f32 / 32768.0).collect();
 
                             // Emit audio level events (throttled to ~30 FPS)
                             let now = Instant::now();
@@ -227,16 +248,27 @@ pub fn start_recording(
                 let mut buffer = audio_buffer.lock().unwrap();
                 if !buffer.is_empty() {
                     let mut resampler = resampler.lock().unwrap();
-                    let required_len = resampler.input_frames_next() * input_channels as usize;
-                    let missing = required_len - buffer.len();
-                    buffer.extend_from_slice(&vec![0.0; missing]);
+                    let required_len = resampler.input_frames_next() * resampler_channels;
+                    let missing = required_len.saturating_sub(buffer.len());
+                    if missing > 0 {
+                        buffer.extend_from_slice(&vec![0.0; missing]);
+                    }
 
-                    let waves_in = if input_channels == 2 {
+                    let waves_in = if resampler_channels == 2 {
                         let mut left = Vec::with_capacity(buffer.len() / 2);
                         let mut right = Vec::with_capacity(buffer.len() / 2);
-                        for chunk in buffer.chunks_exact(2) {
-                            left.push(chunk[0]);
-                            right.push(chunk[1]);
+
+                        if input_channels == 2 {
+                            for chunk in buffer.chunks_exact(2) {
+                                left.push(chunk[0]);
+                                right.push(chunk[1]);
+                            }
+                        } else if input_channels > 2 {
+                            // Multi-channel: take first 2 channels
+                            for chunk in buffer.chunks_exact(input_channels as usize) {
+                                left.push(chunk[0]);
+                                right.push(chunk.get(1).copied().unwrap_or(chunk[0]));
+                            }
                         }
                         vec![left, right]
                     } else {
@@ -284,15 +316,27 @@ fn process_samples_to_buffer(
             .drain(0..required_samples)
             .collect::<Vec<f32>>();
 
-        let waves_in = if channels == 2 {
+        let waves_in = if channels >= 2 {
+            // Handle stereo or multi-channel by taking first 2 channels
             let mut left = Vec::with_capacity(chunk_size);
             let mut right = Vec::with_capacity(chunk_size);
-            for chunk in chunk_to_process.chunks_exact(2) {
-                left.push(chunk[0]);
-                right.push(chunk[1]);
+
+            if channels == 2 {
+                // Stereo: simple case
+                for chunk in chunk_to_process.chunks_exact(2) {
+                    left.push(chunk[0]);
+                    right.push(chunk[1]);
+                }
+            } else {
+                // Multi-channel: take first 2 channels, ignore the rest
+                for chunk in chunk_to_process.chunks_exact(channels as usize) {
+                    left.push(chunk[0]);
+                    right.push(chunk.get(1).copied().unwrap_or(chunk[0])); // Duplicate mono if only 1 channel somehow
+                }
             }
             vec![left, right]
         } else {
+            // Mono
             vec![chunk_to_process]
         };
 
@@ -491,11 +535,280 @@ pub fn stop_recording(
         .take()
         .ok_or_else(|| "No audio data recorded".to_string())?;
 
+    // Save the original audio for comparison
+    if let Err(e) = save_audio_sample(&app, &samples, "original") {
+        eprintln!("Failed to save original audio: {}", e);
+    }
+
+    // Apply noise suppression to the recorded audio
+    let denoised_samples = denoise_audio(samples);
+
+    // Save the denoised audio for comparison
+    if let Err(e) = save_audio_sample(&app, &denoised_samples, "denoised") {
+        eprintln!("Failed to save denoised audio: {}", e);
+    }
+
     Ok(AudioData {
-        samples,
+        samples: denoised_samples,
         sample_rate: 16000, // We always resample to 16kHz
         channels: 1,        // We always convert to mono
     })
+}
+
+/// Save audio samples as a WAV file for debugging/comparison
+fn save_audio_sample(app: &tauri::AppHandle, samples: &[f32], suffix: &str) -> Result<(), String> {
+    // Get app data directory
+    let app_data_dir = app
+        .path()
+        .app_data_dir()
+        .map_err(|e| format!("Failed to get app data dir: {}", e))?;
+
+    // Create audio_samples directory if it doesn't exist
+    let audio_samples_dir = app_data_dir.join("audio_samples");
+    if !audio_samples_dir.exists() {
+        fs::create_dir_all(&audio_samples_dir)
+            .map_err(|e| format!("Failed to create audio samples directory: {}", e))?;
+    }
+
+    // Generate timestamp for unique filename
+    let timestamp = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map_err(|e| format!("Failed to get timestamp: {}", e))?
+        .as_millis();
+
+    let filename = format!("audio_{}_{}.wav", timestamp, suffix);
+    let file_path = audio_samples_dir.join(&filename);
+
+    // Create WAV file
+    let spec = hound::WavSpec {
+        channels: 1,
+        sample_rate: 16000,
+        bits_per_sample: 16,
+        sample_format: hound::SampleFormat::Int,
+    };
+
+    let mut writer = hound::WavWriter::create(&file_path, spec)
+        .map_err(|e| format!("Failed to create WAV file: {}", e))?;
+
+    // Convert f32 samples to i16 and write
+    for &sample in samples {
+        let amplitude = (sample * 32767.0).clamp(-32768.0, 32767.0) as i16;
+        writer
+            .write_sample(amplitude)
+            .map_err(|e| format!("Failed to write sample: {}", e))?;
+    }
+
+    writer
+        .finalize()
+        .map_err(|e| format!("Failed to finalize WAV file: {}", e))?;
+
+    println!("Saved {} audio to: {}", suffix, file_path.display());
+
+    Ok(())
+}
+
+/// Apply noise suppression to audio samples using nnnoiseless
+fn denoise_audio(samples: Vec<f32>) -> Vec<f32> {
+    // First, remove electrical hum (50/60Hz and harmonics)
+    let dehum_samples = remove_electrical_hum(samples);
+
+    // Apply high-pass filter to remove low-frequency rumble
+    let filtered_samples = apply_high_pass_filter(dehum_samples);
+
+    const FRAME_SIZE: usize = 480; // nnnoiseless requires exactly 480 samples per frame
+
+    let mut denoise_state = DenoiseState::new();
+    let mut denoised_samples = Vec::with_capacity(filtered_samples.len());
+
+    // Process complete frames
+    for chunk in filtered_samples.chunks_exact(FRAME_SIZE) {
+        let mut frame = [0.0; FRAME_SIZE];
+        frame.copy_from_slice(chunk);
+
+        // Apply denoising
+        let mut output = [0.0; FRAME_SIZE];
+        denoise_state.process_frame(&mut output, &frame);
+
+        // Collect denoised samples
+        denoised_samples.extend_from_slice(&output);
+    }
+
+    // Handle remaining samples (if any) by padding with zeros
+    let remainder = filtered_samples.len() % FRAME_SIZE;
+    if remainder > 0 {
+        let mut last_frame = [0.0; FRAME_SIZE];
+        let last_chunk = &filtered_samples[filtered_samples.len() - remainder..];
+        last_frame[..remainder].copy_from_slice(last_chunk);
+
+        // Apply denoising to padded frame
+        let mut output = [0.0; FRAME_SIZE];
+        denoise_state.process_frame(&mut output, &last_frame);
+
+        // Only keep the non-padded samples
+        denoised_samples.extend_from_slice(&output[..remainder]);
+    }
+
+    // Run through denoising a second time for more aggressive noise removal
+    let mut second_pass = Vec::with_capacity(denoised_samples.len());
+    let mut denoise_state_2 = DenoiseState::new();
+
+    for chunk in denoised_samples.chunks_exact(FRAME_SIZE) {
+        let mut frame = [0.0; FRAME_SIZE];
+        frame.copy_from_slice(chunk);
+
+        let mut output = [0.0; FRAME_SIZE];
+        denoise_state_2.process_frame(&mut output, &frame);
+
+        second_pass.extend_from_slice(&output);
+    }
+
+    // Handle remainder for second pass
+    let remainder = denoised_samples.len() % FRAME_SIZE;
+    if remainder > 0 {
+        let mut last_frame = [0.0; FRAME_SIZE];
+        let last_chunk = &denoised_samples[denoised_samples.len() - remainder..];
+        last_frame[..remainder].copy_from_slice(last_chunk);
+
+        let mut output = [0.0; FRAME_SIZE];
+        denoise_state_2.process_frame(&mut output, &last_frame);
+
+        second_pass.extend_from_slice(&output[..remainder]);
+    }
+
+    // Apply simple normalization to boost volume
+    normalize_audio(second_pass)
+}
+
+/// Remove electrical hum at 50/60Hz and harmonics
+fn remove_electrical_hum(samples: Vec<f32>) -> Vec<f32> {
+    // Apply notch filters at common electrical frequencies
+    let mut filtered = samples;
+
+    // 50Hz (European) and 60Hz (American) mains frequency and their harmonics
+    let hum_frequencies = [50.0, 60.0, 100.0, 120.0, 150.0, 180.0];
+
+    for freq in hum_frequencies {
+        filtered = apply_notch_filter(filtered, freq, 16000.0);
+    }
+
+    filtered
+}
+
+/// Apply a notch filter to remove a specific frequency
+fn apply_notch_filter(samples: Vec<f32>, frequency: f32, sample_rate: f32) -> Vec<f32> {
+    // Notch filter coefficients
+    let omega = 2.0 * std::f32::consts::PI * frequency / sample_rate;
+    let cos_omega = omega.cos();
+    let q = 30.0; // Quality factor - higher = narrower notch
+    let alpha = omega.sin() / (2.0 * q);
+
+    // Normalized coefficients
+    let b0 = 1.0;
+    let b1 = -2.0 * cos_omega;
+    let b2 = 1.0;
+    let a0 = 1.0 + alpha;
+    let a1 = -2.0 * cos_omega;
+    let a2 = 1.0 - alpha;
+
+    // Normalize
+    let b0 = b0 / a0;
+    let b1 = b1 / a0;
+    let b2 = b2 / a0;
+    let a1 = a1 / a0;
+    let a2 = a2 / a0;
+
+    let mut filtered = Vec::with_capacity(samples.len());
+    let mut x1 = 0.0;
+    let mut x2 = 0.0;
+    let mut y1 = 0.0;
+    let mut y2 = 0.0;
+
+    for &sample in samples.iter() {
+        let output = b0 * sample + b1 * x1 + b2 * x2 - a1 * y1 - a2 * y2;
+
+        x2 = x1;
+        x1 = sample;
+        y2 = y1;
+        y1 = output;
+
+        filtered.push(output);
+    }
+
+    filtered
+}
+
+/// Apply high-pass filter to remove low-frequency rumble
+fn apply_high_pass_filter(samples: Vec<f32>) -> Vec<f32> {
+    // Butterworth high-pass filter at 80Hz
+    let cutoff = 80.0;
+    let sample_rate = 16000.0;
+
+    let omega = 2.0 * std::f32::consts::PI * cutoff / sample_rate;
+    let cos_omega = omega.cos();
+    let sin_omega = omega.sin();
+    let alpha = sin_omega / std::f32::consts::SQRT_2;
+
+    // High-pass filter coefficients
+    let b0 = (1.0 + cos_omega) / 2.0;
+    let b1 = -(1.0 + cos_omega);
+    let b2 = (1.0 + cos_omega) / 2.0;
+    let a0 = 1.0 + alpha;
+    let a1 = -2.0 * cos_omega;
+    let a2 = 1.0 - alpha;
+
+    // Normalize
+    let b0 = b0 / a0;
+    let b1 = b1 / a0;
+    let b2 = b2 / a0;
+    let a1 = a1 / a0;
+    let a2 = a2 / a0;
+
+    let mut filtered = Vec::with_capacity(samples.len());
+    let mut x1 = 0.0;
+    let mut x2 = 0.0;
+    let mut y1 = 0.0;
+    let mut y2 = 0.0;
+
+    for &sample in samples.iter() {
+        let output = b0 * sample + b1 * x1 + b2 * x2 - a1 * y1 - a2 * y2;
+
+        x2 = x1;
+        x1 = sample;
+        y2 = y1;
+        y1 = output;
+
+        filtered.push(output);
+    }
+
+    filtered
+}
+
+/// Simple normalization to ensure good volume levels
+fn normalize_audio(samples: Vec<f32>) -> Vec<f32> {
+    if samples.is_empty() {
+        return samples;
+    }
+
+    // Find the peak absolute value
+    let peak = samples
+        .iter()
+        .map(|&s| s.abs())
+        .fold(0.0f32, |a, b| a.max(b));
+
+    if peak < 0.1 {
+        // If audio is very quiet, apply more aggressive normalization
+        let target = 0.5;
+        let gain = target / peak.max(0.001);
+        samples
+            .into_iter()
+            .map(|s| (s * gain).clamp(-1.0, 1.0))
+            .collect()
+    } else {
+        // Otherwise just ensure we're using full dynamic range
+        let target = 0.9;
+        let gain = target / peak;
+        samples.into_iter().map(|s| s * gain).collect()
+    }
 }
 
 #[tauri::command]
@@ -552,6 +865,12 @@ pub fn play_notification_sound(
 
 #[tauri::command]
 pub fn set_volume(state: tauri::State<AudioState>, volume: f32) -> Result<(), String> {
+    if volume < 0.0 || volume > 1.0 {
+        return Err(format!(
+            "Volume must be between 0.0 and 1.0, got {}",
+            volume
+        ));
+    }
     state.sink.lock().unwrap().set_volume(volume);
     Ok(())
 }
