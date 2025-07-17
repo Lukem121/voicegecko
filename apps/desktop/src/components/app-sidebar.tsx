@@ -57,26 +57,11 @@ const data = {
       title: "Dashboard",
       url: "/",
       icon: PieChart,
-      isActive: true,
     },
     {
       title: "Transcriptions",
       url: "/transcriptions",
       icon: FileText,
-      items: [
-        {
-          title: "Recent",
-          url: "/transcriptions/recent",
-        },
-        {
-          title: "All Files",
-          url: "/transcriptions/all",
-        },
-        {
-          title: "Favorites",
-          url: "/transcriptions/favorites",
-        },
-      ],
     },
 
     {

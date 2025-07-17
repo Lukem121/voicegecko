@@ -1,72 +1,344 @@
+import { createFileRoute } from "@tanstack/react-router";
 import {
-  createFileRoute,
-  Link,
-  Outlet,
-  useLocation,
-} from "@tanstack/react-router";
-import { Clock, FileText, Star } from "lucide-react";
+  Copy,
+  Download,
+  Info,
+  MessageSquare,
+  MoreVertical,
+  RotateCcw,
+  Search,
+  Trash2,
+} from "lucide-react";
 
 import { Button } from "@acme/ui/components/ui/button";
-import { Card, CardContent } from "@acme/ui/components/ui/card";
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuSeparator,
+  ContextMenuTrigger,
+} from "@acme/ui/components/ui/context-menu";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@acme/ui/components/ui/dropdown-menu";
+import { Input } from "@acme/ui/components/ui/input";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@acme/ui/components/ui/tooltip";
 
 export const Route = createFileRoute("/_authenticated/transcriptions")({
-  component: TranscriptionsLayout,
+  component: TranscriptionsPage,
 });
 
-function TranscriptionsLayout() {
-  const location = useLocation();
+interface TranscriptionItem {
+  id: string;
+  timestamp: string;
+  content: string;
+  status: "normal" | "silent" | "dismissed";
+}
 
-  const tabs = [
-    {
-      title: "Recent",
-      href: "/transcriptions/recent",
-      icon: Clock,
-    },
-    {
-      title: "All Files",
-      href: "/transcriptions/all",
-      icon: FileText,
-    },
-    {
-      title: "Favorites",
-      href: "/transcriptions/favorites",
-      icon: Star,
-    },
-  ];
+const mockTranscriptions: { date: string; items: TranscriptionItem[] }[] = [
+  {
+    date: "TODAY",
+    items: [
+      {
+        id: "1",
+        timestamp: "09:40 PM",
+        content: "Cats and dogs make fun-looking frogs.",
+        status: "normal",
+      },
+      {
+        id: "2",
+        timestamp: "09:40 PM",
+        content: "Cats and dogs make funny looking frogs.",
+        status: "normal",
+      },
+      {
+        id: "3",
+        timestamp: "09:40 PM",
+        content: "Audio is silent.",
+        status: "silent",
+      },
+      {
+        id: "4",
+        timestamp: "09:40 PM",
+        content:
+          "Cats and dogs make fun-looking frogs. but they're interesting to discover whether or not we have that on TV.",
+        status: "normal",
+      },
+      {
+        id: "5",
+        timestamp: "09:39 PM",
+        content: "Audio is silent.",
+        status: "silent",
+      },
+      {
+        id: "6",
+        timestamp: "09:39 PM",
+        content: "cats and dogs make fun of looking frogs",
+        status: "normal",
+      },
+      {
+        id: "7",
+        timestamp: "09:39 PM",
+        content: "Cats and dogs make funny-looking frogs.",
+        status: "normal",
+      },
+      {
+        id: "8",
+        timestamp: "09:38 PM",
+        content: "The transcription was dismissed.",
+        status: "dismissed",
+      },
+      {
+        id: "9",
+        timestamp: "09:38 PM",
+        content: "The transcription was dismissed.",
+        status: "dismissed",
+      },
+      {
+        id: "10",
+        timestamp: "09:38 PM",
+        content: "Audio is silent.",
+        status: "silent",
+      },
+      {
+        id: "11",
+        timestamp: "09:37 PM",
+        content:
+          "This is a test, and I'm interested to see how it handles both mine and your transcription. I'm curious mostly about the speed; I want to see how it handles processing this.",
+        status: "normal",
+      },
+    ],
+  },
+  {
+    date: "YESTERDAY",
+    items: [
+      {
+        id: "12",
+        timestamp: "12:56 AM",
+        content: "Cats and dogs make funny looking frogs.",
+        status: "normal",
+      },
+      {
+        id: "13",
+        timestamp: "12:56 AM",
+        content: "Cats and dogs make fun of the frogs.",
+        status: "normal",
+      },
+      {
+        id: "14",
+        timestamp: "12:37 AM",
+        content: "Da-ba-da, da-ba-da, ba-da-ba-da.",
+        status: "normal",
+      },
+      {
+        id: "15",
+        timestamp: "12:14 AM",
+        content: "The transcription was dismissed.",
+        status: "dismissed",
+      },
+      {
+        id: "16",
+        timestamp: "12:04 AM",
+        content: "The transcription was dismissed.",
+        status: "dismissed",
+      },
+    ],
+  },
+];
+
+function TranscriptionsPage() {
+  const handleCopy = (content: string) => {
+    void navigator.clipboard.writeText(content);
+  };
+
+  const handleSendFeedback = (id: string) => {
+    console.log("Send feedback for:", id);
+  };
+
+  const handleRetryTranscript = (id: string) => {
+    console.log("Retry transcript for:", id);
+  };
+
+  const handleDeleteTranscript = (id: string) => {
+    console.log("Delete transcript for:", id);
+  };
+
+  const handleDownloadAudio = (id: string) => {
+    console.log("Download audio for:", id);
+  };
 
   return (
-    <div className="flex flex-1 flex-col gap-4">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Transcriptions</h1>
-        <p className="text-muted-foreground">
-          Manage and organize your transcription files
-        </p>
-      </div>
-
-      {/* Tab Navigation */}
-      <Card>
-        <CardContent className="pt-6">
-          <div className="flex items-center gap-2 border-b">
-            {tabs.map((tab) => (
-              <Button
-                key={tab.href}
-                variant={location.pathname === tab.href ? "default" : "ghost"}
-                size="sm"
-                className="gap-2"
-                asChild
-              >
-                <Link to={tab.href}>
-                  <tab.icon className="h-4 w-4" />
-                  {tab.title}
-                </Link>
-              </Button>
-            ))}
+    <TooltipProvider>
+      <div className="flex flex-1 flex-col gap-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight">
+              Recent activity
+            </h1>
           </div>
-        </CardContent>
-      </Card>
+          <div className="relative w-80">
+            <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
+            <Input placeholder="Search transcriptions..." className="pl-10" />
+          </div>
+        </div>
 
-      {/* Child routes will render here */}
-      <Outlet />
-    </div>
+        <div className="space-y-6">
+          {mockTranscriptions.map((section) => (
+            <div key={section.date} className="space-y-3">
+              <h2 className="text-muted-foreground text-sm font-medium tracking-wide uppercase">
+                {section.date}
+              </h2>
+              <div className="overflow-hidden rounded-lg border">
+                {section.items.map((item, index) => (
+                  <ContextMenu key={item.id}>
+                    <ContextMenuTrigger>
+                      <div
+                        className={`group hover:bg-muted/50 flex items-start justify-between border-transparent p-3 transition-colors ${
+                          index < section.items.length - 1
+                            ? "border-border border-b"
+                            : ""
+                        }`}
+                      >
+                        <div className="flex min-w-0 flex-1 items-start gap-3">
+                          <div className="text-muted-foreground text-sm whitespace-nowrap">
+                            {item.timestamp}
+                          </div>
+                          <div className="flex min-w-0 flex-1 items-start gap-2">
+                            <div
+                              className={`text-sm leading-relaxed ${
+                                item.status === "silent" ||
+                                item.status === "dismissed"
+                                  ? "text-muted-foreground italic"
+                                  : "text-foreground"
+                              }`}
+                            >
+                              {item.content}
+                            </div>
+                            {(item.status === "silent" ||
+                              item.status === "dismissed") && (
+                              <Tooltip>
+                                <TooltipTrigger>
+                                  <Info className="text-muted-foreground mt-0.5 h-4 w-4 flex-shrink-0" />
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p>
+                                    {item.status === "silent"
+                                      ? "No audio detected during this recording"
+                                      : "This transcription was manually dismissed"}
+                                  </p>
+                                </TooltipContent>
+                              </Tooltip>
+                            )}
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleCopy(item.content);
+                                }}
+                                className="h-8 w-8 p-0"
+                              >
+                                <Copy className="h-4 w-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Copy transcription</p>
+                            </TooltipContent>
+                          </Tooltip>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleSendFeedback(item.id);
+                                }}
+                                className="h-8 w-8 p-0"
+                              >
+                                <MessageSquare className="h-4 w-4" />
+                              </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>Send feedback</p>
+                            </TooltipContent>
+                          </Tooltip>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-8 w-8 p-0"
+                              >
+                                <MoreVertical className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-48">
+                              <DropdownMenuItem
+                                onClick={() => handleDeleteTranscript(item.id)}
+                                className="text-red-600 focus:text-red-600"
+                              >
+                                <Trash2 className="mr-2 h-4 w-4" />
+                                Delete transcription
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+                      </div>
+                    </ContextMenuTrigger>
+                    <ContextMenuContent className="w-48">
+                      <ContextMenuItem onClick={() => handleCopy(item.content)}>
+                        <Copy className="mr-2 h-4 w-4" />
+                        Copy transcription
+                      </ContextMenuItem>
+                      <ContextMenuItem
+                        onClick={() => handleSendFeedback(item.id)}
+                      >
+                        <MessageSquare className="mr-2 h-4 w-4" />
+                        Send feedback
+                      </ContextMenuItem>
+                      <ContextMenuSeparator />
+                      <ContextMenuItem
+                        onClick={() => handleRetryTranscript(item.id)}
+                      >
+                        <RotateCcw className="mr-2 h-4 w-4" />
+                        Retry transcription
+                      </ContextMenuItem>
+                      <ContextMenuItem
+                        onClick={() => handleDeleteTranscript(item.id)}
+                        className="text-red-600 focus:text-red-600"
+                      >
+                        <Trash2 className="mr-2 h-4 w-4" />
+                        Delete transcription
+                      </ContextMenuItem>
+                      <ContextMenuSeparator />
+                      <ContextMenuItem
+                        onClick={() => handleDownloadAudio(item.id)}
+                      >
+                        <Download className="mr-2 h-4 w-4" />
+                        Download audio
+                      </ContextMenuItem>
+                    </ContextMenuContent>
+                  </ContextMenu>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </TooltipProvider>
   );
 }
