@@ -874,3 +874,70 @@ pub fn set_volume(state: tauri::State<AudioState>, volume: f32) -> Result<(), St
     state.sink.lock().unwrap().set_volume(volume);
     Ok(())
 }
+
+/// Mute or unmute system audio (platform-specific)
+#[cfg(target_os = "windows")]
+pub fn set_system_audio_mute(mute: bool) -> Result<(), String> {
+    use windows::Win32::Media::Audio::{
+        eConsole, eRender, Endpoints::IAudioEndpointVolume, IMMDeviceEnumerator, MMDeviceEnumerator,
+    };
+    use windows::Win32::System::Com::{
+        CoCreateInstance, CoInitializeEx, CLSCTX_ALL, COINIT_APARTMENTTHREADED,
+    };
+
+    unsafe {
+        // Initialize COM
+        let _ = CoInitializeEx(None, COINIT_APARTMENTTHREADED);
+
+        // Create device enumerator
+        let enumerator: IMMDeviceEnumerator =
+            CoCreateInstance(&MMDeviceEnumerator, None, CLSCTX_ALL)
+                .map_err(|e| format!("Failed to create device enumerator: {}", e))?;
+
+        // Get default audio endpoint
+        let device = enumerator
+            .GetDefaultAudioEndpoint(eRender, eConsole)
+            .map_err(|e| format!("Failed to get default audio endpoint: {}", e))?;
+
+        // Get volume interface
+        let volume = device
+            .Activate::<IAudioEndpointVolume>(CLSCTX_ALL, None)
+            .map_err(|e| format!("Failed to get volume interface: {}", e))?;
+
+        // Set mute state
+        volume
+            .SetMute(mute, std::ptr::null())
+            .map_err(|e| format!("Failed to set mute state: {}", e))?;
+    }
+
+    Ok(())
+}
+
+#[cfg(target_os = "macos")]
+pub fn set_system_audio_mute(mute: bool) -> Result<(), String> {
+    // macOS implementation would use Core Audio
+    // For now, we'll return an error indicating it's not implemented
+    Err("System audio muting not yet implemented for macOS".to_string())
+}
+
+#[cfg(target_os = "linux")]
+pub fn set_system_audio_mute(mute: bool) -> Result<(), String> {
+    // Linux implementation would use ALSA or PulseAudio
+    // For now, we'll return an error indicating it's not implemented
+    Err("System audio muting not yet implemented for Linux".to_string())
+}
+
+#[cfg(not(any(target_os = "windows", target_os = "macos", target_os = "linux")))]
+pub fn set_system_audio_mute(_mute: bool) -> Result<(), String> {
+    Err("System audio muting not supported on this platform".to_string())
+}
+
+#[tauri::command]
+pub fn mute_system_audio() -> Result<(), String> {
+    set_system_audio_mute(true)
+}
+
+#[tauri::command]
+pub fn unmute_system_audio() -> Result<(), String> {
+    set_system_audio_mute(false)
+}

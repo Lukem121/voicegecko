@@ -91,15 +91,49 @@ export class RecordingService {
   }
 
   /**
+   * Release push-to-talk recording
+   */
+  async releasePushToTalk(options: RecordingOptions = {}): Promise<void> {
+    if (!this.isPushToTalkActive) return;
+
+    this.isPushToTalkActive = false;
+    const { recordingStatus } = useEventStore.getState();
+
+    if (recordingStatus === "recording") {
+      await this.stopRecording(options);
+    } else {
+      // If recording was somehow stopped already, still unmute system audio
+      const { muteSystemAudio } = useRecordingStore.getState();
+      if (muteSystemAudio) {
+        try {
+          await invoke("unmute_system_audio");
+        } catch (error) {
+          console.warn("Failed to unmute system audio:", error);
+        }
+      }
+    }
+  }
+
+  /**
    * Start recording with proper error handling and notifications
    */
   private async startRecording(options: RecordingOptions): Promise<void> {
     try {
-      const { selectedDevice } = useRecordingStore.getState();
+      const { selectedDevice, muteSystemAudio } = useRecordingStore.getState();
       const deviceName = options.device ?? selectedDevice?.name;
 
       if (options.playStartSound ?? this.shouldPlayStartSound()) {
         await this.playNotificationSound("Start");
+      }
+
+      // Mute system audio if enabled
+      if (muteSystemAudio) {
+        try {
+          await invoke("mute_system_audio");
+        } catch (error) {
+          console.warn("Failed to mute system audio:", error);
+          // Don't fail recording if muting fails
+        }
       }
 
       await invoke("start_recording", { device: deviceName });
@@ -125,6 +159,17 @@ export class RecordingService {
         await this.playNotificationSound("End");
       }
 
+      // Unmute system audio if it was muted
+      const { muteSystemAudio } = useRecordingStore.getState();
+      if (muteSystemAudio) {
+        try {
+          await invoke("unmute_system_audio");
+        } catch (error) {
+          console.warn("Failed to unmute system audio:", error);
+          // Don't fail transcription if unmuting fails
+        }
+      }
+
       await invokeTranscriptionFromBuffer(audioData);
     } catch (error) {
       console.error("Failed to stop recording:", error);
@@ -142,6 +187,16 @@ export class RecordingService {
 
       // Stop recording and discard audio data
       await invoke("cancel_recording");
+
+      // Unmute system audio if it was muted
+      const { muteSystemAudio } = useRecordingStore.getState();
+      if (muteSystemAudio) {
+        try {
+          await invoke("unmute_system_audio");
+        } catch (error) {
+          console.warn("Failed to unmute system audio:", error);
+        }
+      }
 
       console.log("[RecordingService] Recording canceled successfully");
     } catch (error) {

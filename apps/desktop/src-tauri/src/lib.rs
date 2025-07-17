@@ -42,6 +42,8 @@ pub fn run() {
             modules::audio::cancel_recording,
             modules::audio::play_notification_sound,
             modules::audio::set_volume,
+            modules::audio::mute_system_audio,
+            modules::audio::unmute_system_audio,
             modules::gecko_bar::show_gecko_bar,
             modules::gecko_bar::hide_gecko_bar,
             modules::gecko_bar::is_gecko_bar_visible,
