@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { CheckCircle2, ExternalLink, Loader2, RotateCcw } from "lucide-react";
 
-import VoiceGeckoLogo from "@acme/ui/components/logos/voice-gecko";
+import VoiceGeckoLogo from "@acme/ui/components/logos/logo-full";
 import { Badge } from "@acme/ui/components/ui/badge";
 import { Button } from "@acme/ui/components/ui/button";
 import {
