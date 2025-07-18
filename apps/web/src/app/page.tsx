@@ -1,4 +1,4 @@
-import VoiceGeckoLogo from "@acme/ui/components/logos/voice-gecko";
+import VoiceGeckoLogo from "@acme/ui/components/logos/logo-full";
 
 export default function LandingPage() {
   return (

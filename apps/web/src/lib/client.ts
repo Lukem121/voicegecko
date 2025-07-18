@@ -10,7 +10,7 @@ import { createAuthClient } from "better-auth/react";
 import { env } from "~/env";
 
 export const authClient = createAuthClient({
-  baseURL: env.VOICEGECKO_API_URL,
+  baseURL: env.NEXT_PUBLIC_VOICEGECKO_API_URL,
   plugins: [
     usernameClient(),
     adminClient(),
