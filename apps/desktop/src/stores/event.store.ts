@@ -2,6 +2,7 @@ import { emit } from "@tauri-apps/api/event";
 import { create } from "zustand";
 import { devtools } from "zustand/middleware";
 
+import { createTranscription } from "~/lib/transcription-mutations";
 import { transcriptionService } from "~/services/transcription.service";
 
 export interface EventState {
@@ -19,14 +20,34 @@ export interface EventState {
     | "error";
   transcript: string | null;
   transcriptionError: string | null;
+  transcriptionMetadata: {
+    duration_seconds?: number;
+    model_used?: string;
+    sample_rate?: number;
+  } | null;
 
   // Actions (called by Tauri event handlers)
   setRecordingStatus: (
     status: "idle" | "recording" | "processing" | "error",
   ) => void;
   setRecordingError: (error: string) => void;
-  setTranscriptionProgress: (status: string, data?: string) => void;
-  handleTranscriptionComplete: (transcript: string) => Promise<void>;
+  setTranscriptionProgress: (
+    status: string,
+    data?: string,
+    metadata?: {
+      duration_seconds?: number;
+      model_used?: string;
+      sample_rate?: number;
+    },
+  ) => void;
+  handleTranscriptionComplete: (
+    transcript: string,
+    metadata?: {
+      duration_seconds?: number;
+      model_used?: string;
+      sample_rate?: number;
+    },
+  ) => Promise<void>;
 
   // Selectors (computed values)
   isRecording: () => boolean;
@@ -42,6 +63,7 @@ export const useEventStore = create<EventState>()(
       transcriptionStatus: "idle",
       transcript: null,
       transcriptionError: null,
+      transcriptionMetadata: null,
 
       // Recording actions
       setRecordingStatus: (status) => {
@@ -69,8 +91,13 @@ export const useEventStore = create<EventState>()(
       },
 
       // Transcription actions
-      setTranscriptionProgress: (status, data) => {
-        console.log("[EventStore] Transcription progress:", status, data);
+      setTranscriptionProgress: (status, data, metadata) => {
+        console.log(
+          "[EventStore] Transcription progress:",
+          status,
+          data,
+          metadata,
+        );
 
         switch (status) {
           case "Starting":
@@ -85,15 +112,17 @@ export const useEventStore = create<EventState>()(
           case "Complete":
             set({
               transcriptionStatus: "complete",
-              transcript: data || null,
+              transcript: data ?? null,
               transcriptionError: null,
+              transcriptionMetadata: metadata ?? null,
             });
             break;
           case "Error":
             set({
               transcriptionStatus: "error",
               transcript: null,
-              transcriptionError: data || "Unknown error",
+              transcriptionError: data ?? "Unknown error",
+              transcriptionMetadata: null,
             });
 
             // Emit idle state on error so gecko bar can collapse
@@ -102,31 +131,54 @@ export const useEventStore = create<EventState>()(
         }
       },
 
-      handleTranscriptionComplete: async (transcript) => {
+      handleTranscriptionComplete: async (transcript: string, metadata) => {
         console.log(
-          "[EventStore] Handling transcription completion:",
+          "[EventStore] 📝 Transcription complete event received:",
           transcript,
+          metadata,
         );
 
+        // Handle the transcription through the service
+        await transcriptionService.handleCompletedTranscription(transcript);
+
+        // Play notification sound if enabled
+        await transcriptionService.playEndSoundIfEnabled();
+
+        // Save transcription to database
         try {
-          // Handle transcription completion (clipboard, state management)
-          await transcriptionService.handleCompletedTranscription(transcript);
+          const status =
+            !transcript.trim() ||
+            (metadata?.duration_seconds && metadata.duration_seconds < 1)
+              ? "silent"
+              : "normal";
+          const content = status === "silent" ? "Audio is silent." : transcript;
 
-          // Play notification sound if enabled
-          await transcriptionService.playEndSoundIfEnabled();
+          // Generate a unique ID for the transcription
+          const id = crypto.randomUUID();
 
-          // Emit idle state so gecko bar knows transcription is complete
-          await emit("recording-state-changed", "idle");
+          await createTranscription({
+            id,
+            content,
+            status,
+            durationSeconds:
+              Number.isFinite(metadata?.duration_seconds) &&
+              metadata?.duration_seconds !== undefined
+                ? Math.trunc(metadata.duration_seconds)
+                : undefined,
+            modelUsed: metadata?.model_used,
+            sampleRate: metadata?.sample_rate,
+            // TODO: Get app version
+            // appVersion: undefined,
+          });
 
-          console.log(
-            "[EventStore] Transcription completion handled successfully",
-          );
+          console.log("[EventStore] ✅ Transcription saved to database");
         } catch (error) {
-          console.error(
-            "[EventStore] Error handling transcription completion:",
-            error,
-          );
+          console.error("[EventStore] ❌ Failed to save transcription:", error);
+          // Don't throw - we already copied to clipboard, so the user has their transcription
         }
+
+        // Emit idle state so gecko bar can collapse
+        await emit("recording-state-changed", "idle");
       },
 
       // Selectors
