@@ -2,14 +2,17 @@ import { listen } from "@tauri-apps/api/event";
 import { toast } from "sonner";
 
 import type {
+  AudioData,
   AudioLevelEvent,
   RecordingErrorEvent,
   RecordingStateChangedEvent,
   TranscriptionProgressEvent,
 } from "~/types/events";
 import { useEventStore } from "~/stores/event.store";
+import { trpcClient } from "~/trpc";
 
 let initialized = false;
+let initializationId: string | null = null;
 
 interface InitializeOptions {
   isGeckoBar?: boolean;
@@ -22,13 +25,21 @@ interface InitializeOptions {
 export async function initializeTauriEvents(
   options: InitializeOptions = {},
 ): Promise<void> {
+  const callerId = `${Date.now()}-${Math.random()}`;
+  console.log(`[TauriEvents] Initialization attempt with ID: ${callerId}`);
+
   if (initialized) {
-    console.log("[TauriEvents] ⚠️ Already initialized, skipping...");
+    console.log(
+      `[TauriEvents] ⚠️ Already initialized by ${initializationId}, skipping (attempted by ${callerId})...`,
+    );
     return;
   }
 
   initialized = true;
-  console.log("[TauriEvents] 🚀 Initializing Tauri event listeners...");
+  initializationId = callerId;
+  console.log(
+    `[TauriEvents] 🚀 Initializing Tauri event listeners (ID: ${callerId})...`,
+  );
 
   try {
     // Listen for transcription progress events (always needed for UI state)
@@ -64,6 +75,55 @@ export async function initializeTauriEvents(
       console.log("[TauriEvents] 🎙️ Recording state changed:", payload);
 
       useEventStore.getState().setRecordingStatus(payload);
+    });
+
+    // Listen for cloud transcription requests
+    await listen("cloud-transcription-requested", async (event) => {
+      const audioData = event.payload as AudioData;
+      console.log("[TauriEvents] ☁️ Cloud transcription requested", {
+        samplesLength: audioData.samples.length,
+        sampleRate: audioData.sample_rate,
+      });
+
+      try {
+        // Update UI to show transcribing state
+        const store = useEventStore.getState();
+        store.setTranscriptionProgress("Transcribing");
+
+        // Call the cloud transcription API
+        const result = await trpcClient.transcription.cloudTranscribe.mutate({
+          audioData: Array.from(audioData.samples),
+          sampleRate: audioData.sample_rate,
+        });
+
+        // Directly update the store instead of emitting an event that we'll catch ourselves
+        const metadata = {
+          duration_seconds: audioData.samples.length / audioData.sample_rate,
+          model_used: result.modelUsed,
+          sample_rate: audioData.sample_rate,
+        };
+
+        // Update transcription progress to complete
+        store.setTranscriptionProgress("Complete", result.transcript, metadata);
+
+        // Handle completion business logic only if not in gecko bar
+        if (!options.isGeckoBar && result.transcript) {
+          await store.handleTranscriptionComplete(result.transcript, metadata);
+        }
+      } catch (error) {
+        console.error("[TauriEvents] Cloud transcription error:", error);
+
+        // Update error state directly
+        const store = useEventStore.getState();
+        store.setTranscriptionProgress(
+          "Error",
+          error instanceof Error ? error.message : "Cloud transcription failed",
+        );
+
+        toast.error("Cloud transcription failed", {
+          description: error instanceof Error ? error.message : "Unknown error",
+        });
+      }
     });
 
     // Listen for recording errors
