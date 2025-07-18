@@ -9,6 +9,8 @@ import type {
   NotificationTiming,
 } from "~/types/settings";
 import { CURRENT_SETTINGS_VERSION } from "~/lib/settings/migrations/registry";
+import { recordingService } from "~/services/recording.service";
+import { transcriptionService } from "~/services/transcription.service";
 
 // Settings types
 interface AudioSettings {
@@ -97,6 +99,9 @@ interface SettingsState {
   updateSelectedModel: (modelId: string) => Promise<void>;
   refreshModels: () => Promise<void>;
   updateModelStatus: (modelId: string, status: ModelStatus) => void;
+
+  // Test sound
+  playTestSound: () => Promise<void>;
 }
 
 const audioStore = new LazyStore("settings.json");
@@ -379,6 +384,15 @@ export const useSettingsStore = create<SettingsState>()(
             },
           },
         });
+      },
+
+      playTestSound: async () => {
+        const { settings } = get();
+        if (settings.audio.notificationTiming !== "disabled") {
+          await recordingService.playNotificationSound("Start");
+          await new Promise((resolve) => setTimeout(resolve, 700));
+          await transcriptionService.playEndSoundIfEnabled();
+        }
       },
     }),
     {

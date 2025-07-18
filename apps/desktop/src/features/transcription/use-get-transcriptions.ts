@@ -3,11 +3,11 @@ import { useQuery } from "@tanstack/react-query";
 import { trpc } from "~/trpc";
 
 export const useGetTranscriptions = () => {
-  const options = trpc.transcription.getAll.queryOptions();
-  const query = useQuery(options);
+  const query = useQuery(trpc.transcription.getAll.queryOptions());
 
   return {
-    ...query,
     transcriptions: query.data ?? [],
+    isLoading: query.isLoading,
+    error: query.error,
   };
 };

@@ -3,6 +3,7 @@ import {
   Copy,
   Download,
   Info,
+  Loader2,
   MessageSquare,
   MoreVertical,
   RotateCcw,
@@ -32,6 +33,7 @@ import {
   TooltipTrigger,
 } from "@acme/ui/components/ui/tooltip";
 
+import { useDeleteTranscription } from "~/features/transcription/use-delete-transcription";
 import { useGetTranscriptions } from "~/features/transcription/use-get-transcriptions";
 
 export const Route = createFileRoute("/_authenticated/transcriptions")({
@@ -40,24 +42,29 @@ export const Route = createFileRoute("/_authenticated/transcriptions")({
 
 function TranscriptionsPage() {
   const { transcriptions, isLoading } = useGetTranscriptions();
+  const { deleteTranscription, isDeleting } = useDeleteTranscription();
 
   const handleCopy = (content: string) => {
     void navigator.clipboard.writeText(content);
   };
 
-  const handleSendFeedback = (id: string) => {
+  const handleSendFeedback = (id: number) => {
     console.log("Send feedback for:", id);
   };
 
-  const handleRetryTranscript = (id: string) => {
+  const handleRetryTranscript = (id: number) => {
     console.log("Retry transcript for:", id);
   };
 
-  const handleDeleteTranscript = (id: string) => {
-    console.log("Delete transcript for:", id);
+  const handleDeleteTranscript = async (id: number) => {
+    try {
+      await deleteTranscription({ id });
+    } catch (error) {
+      console.error("Failed to delete transcription:", error);
+    }
   };
 
-  const handleDownloadAudio = (id: string) => {
+  const handleDownloadAudio = (id: number) => {
     console.log("Download audio for:", id);
   };
 
@@ -104,26 +111,20 @@ function TranscriptionsPage() {
                           <div className="flex min-w-0 flex-1 items-start gap-2">
                             <div
                               className={`text-sm leading-relaxed ${
-                                item.status === "silent" ||
-                                item.status === "dismissed"
+                                item.status === "silent"
                                   ? "text-muted-foreground italic"
                                   : "text-foreground"
                               }`}
                             >
                               {item.content}
                             </div>
-                            {(item.status === "silent" ||
-                              item.status === "dismissed") && (
+                            {item.status === "silent" && (
                               <Tooltip>
                                 <TooltipTrigger>
                                   <Info className="text-muted-foreground mt-0.5 h-4 w-4 flex-shrink-0" />
                                 </TooltipTrigger>
                                 <TooltipContent>
-                                  <p>
-                                    {item.status === "silent"
-                                      ? "No audio detected during this recording"
-                                      : "This transcription was manually dismissed"}
-                                  </p>
+                                  <p>No audio detected during this recording</p>
                                 </TooltipContent>
                               </Tooltip>
                             )}
@@ -180,8 +181,13 @@ function TranscriptionsPage() {
                               <DropdownMenuItem
                                 onClick={() => handleDeleteTranscript(item.id)}
                                 className="text-red-600 focus:text-red-600"
+                                disabled={isDeleting}
                               >
-                                <Trash2 className="mr-2 h-4 w-4" />
+                                {isDeleting ? (
+                                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                                ) : (
+                                  <Trash2 className="mr-2 h-4 w-4" />
+                                )}
                                 Delete transcription
                               </DropdownMenuItem>
                             </DropdownMenuContent>
