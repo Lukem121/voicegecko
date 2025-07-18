@@ -9,7 +9,7 @@ import { Loader } from "lucide-react";
 
 import { SignUpSchema } from "@acme/auth/schemas";
 import { getAuthErrorMessage } from "@acme/auth/utils";
-import VoiceGeckoLogo from "@acme/ui/components/logos/voice-gecko";
+import VoiceGeckoLogo from "@acme/ui/components/logos/logo-full";
 import { Button } from "@acme/ui/components/ui/button";
 import {
   Card,
