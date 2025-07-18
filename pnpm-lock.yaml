@@ -477,6 +477,9 @@ importers:
       '@trpc/server':
         specifier: 'catalog:'
         version: 11.4.3(typescript@5.8.3)
+      openai:
+        specifier: ^5.10.1
+        version: 5.10.1(ws@8.18.2(bufferutil@4.0.8)(utf-8-validate@6.0.4))(zod@3.25.67)
       superjson:
         specifier: 2.2.2
         version: 2.2.2
@@ -7039,6 +7042,18 @@ packages:
     resolution: {integrity: sha512-7x81NCL719oNbsq/3mh+hVrAWmFuEYUqrq/Iw3kUzH8ReypT9QQ0BLoJS7/G9k6N81XjW4qHWtjWwe/9eLy1EQ==}
     engines: {node: '>=12'}
 
+  openai@5.10.1:
+    resolution: {integrity: sha512-fq6xVfv1/gpLbsj8fArEt3b6B9jBxdhAK+VJ+bDvbUvNd+KTLlA3bnDeYZaBsGH9LUhJ1M1yXfp9sEyBLMx6eA==}
+    hasBin: true
+    peerDependencies:
+      ws: ^8.18.0
+      zod: ^3.23.8
+    peerDependenciesMeta:
+      ws:
+        optional: true
+      zod:
+        optional: true
+
   optionator@0.9.4:
     resolution: {integrity: sha512-6IpQ7mKUxRcZNLIObR0hz7lxsapSSIYNZJwXPGeF0mTVqGKFIXj1DQcMoT22S3ROcLyY/rz0PWaWZ9ayWmad9g==}
     engines: {node: '>= 0.8.0'}
@@ -9951,7 +9966,7 @@ snapshots:
       terminal-link: 2.1.1
       undici: 6.21.3
       wrap-ansi: 7.0.0
-      ws: 8.18.2(bufferutil@4.0.8)
+      ws: 8.18.2(bufferutil@4.0.8)(utf-8-validate@6.0.4)
     transitivePeerDependencies:
       - bufferutil
       - graphql
@@ -15650,6 +15665,11 @@ snapshots:
       is-docker: 2.2.1
       is-wsl: 2.2.0
 
+  openai@5.10.1(ws@8.18.2(bufferutil@4.0.8)(utf-8-validate@6.0.4))(zod@3.25.67):
+    optionalDependencies:
+      ws: 8.18.2(bufferutil@4.0.8)(utf-8-validate@6.0.4)
+      zod: 3.25.67
+
   optionator@0.9.4:
     dependencies:
       deep-is: 0.1.4
@@ -17360,9 +17380,10 @@ snapshots:
       bufferutil: 4.0.8
       utf-8-validate: 6.0.4
 
-  ws@8.18.2(bufferutil@4.0.8):
+  ws@8.18.2(bufferutil@4.0.8)(utf-8-validate@6.0.4):
     optionalDependencies:
       bufferutil: 4.0.8
+      utf-8-validate: 6.0.4
 
   xcode@3.0.1:
     dependencies:
