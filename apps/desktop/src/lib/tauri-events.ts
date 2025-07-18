@@ -37,7 +37,13 @@ export async function initializeTauriEvents(
       console.log("[TauriEvents] 📝 Transcription progress:", payload);
 
       const store = useEventStore.getState();
-      store.setTranscriptionProgress(payload.status, payload.data);
+      const metadata = {
+        duration_seconds: payload.duration_seconds,
+        model_used: payload.model_used,
+        sample_rate: payload.sample_rate,
+      };
+
+      store.setTranscriptionProgress(payload.status, payload.data, metadata);
 
       // Only handle completion business logic in main window
       if (
@@ -48,7 +54,7 @@ export async function initializeTauriEvents(
         console.log(
           "[TauriEvents] Handling transcription completion in main window",
         );
-        store.handleTranscriptionComplete(payload.data);
+        void store.handleTranscriptionComplete(payload.data, metadata);
       }
     });
 

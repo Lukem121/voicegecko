@@ -1,10 +1,10 @@
+import type { LucideIcon } from "lucide-react";
 import { Link, useLocation } from "@tanstack/react-router";
 import {
   Bell,
   ChevronUp,
   CreditCard,
   FileText,
-  Folder,
   HelpCircle,
   History,
   LogOut,
@@ -46,7 +46,24 @@ import {
 
 import { useSignOut, useUser } from "~/hooks/auth";
 
-const data = {
+interface NavigationSubItem {
+  title: string;
+  url: string;
+}
+
+interface NavigationItem {
+  title: string;
+  url: string;
+  icon: LucideIcon;
+  items?: NavigationSubItem[];
+}
+
+interface NavigationData {
+  navMain: NavigationItem[];
+  navSecondary: NavigationItem[];
+}
+
+const data: NavigationData = {
   navMain: [
     {
       title: "Recording",
@@ -68,25 +85,6 @@ const data = {
       title: "History",
       url: "/history",
       icon: History,
-    },
-    {
-      title: "Projects",
-      url: "/projects",
-      icon: Folder,
-      items: [
-        {
-          title: "My Projects",
-          url: "/projects/my",
-        },
-        {
-          title: "Shared",
-          url: "/projects/shared",
-        },
-        {
-          title: "Templates",
-          url: "/projects/templates",
-        },
-      ],
     },
   ],
   navSecondary: [

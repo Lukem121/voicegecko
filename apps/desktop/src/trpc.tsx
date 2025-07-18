@@ -7,7 +7,7 @@ import type { AppRouter } from "@acme/api";
 
 export const queryClient = new QueryClient();
 
-const trpcClient = createTRPCClient<AppRouter>({
+export const trpcClient = createTRPCClient<AppRouter>({
   links: [
     httpBatchLink({
       url: import.meta.env.VITE_API_URL + "/api/trpc",

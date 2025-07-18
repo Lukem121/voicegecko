@@ -42,6 +42,31 @@ impl LocalWhisperProvider {
         let total_time = Instant::now();
         println!("[Rust] Starting transcription for: {}", source_description);
 
+        // Check if audio is less than 1 second (assuming 16kHz sample rate)
+        // Whisper requires at least 1 second of audio
+        const MIN_SAMPLES_REQUIRED: usize = 16000; // 1 second at 16kHz
+
+        if audio_data.len() < MIN_SAMPLES_REQUIRED {
+            println!(
+                "[Rust] Audio too short: {} samples (< 1 second). Returning empty transcription.",
+                audio_data.len()
+            );
+
+            // Emit completion event with empty result
+            app.emit(
+                "transcription-progress",
+                TranscriptionEvent::from(TranscriptionProgress::Complete {
+                    transcript: String::new(),
+                    duration_seconds: Some(audio_data.len() as f32 / 16000.0),
+                    model_used: Some(self.model_id.clone()),
+                    sample_rate: Some(16000),
+                }),
+            )
+            .unwrap();
+
+            return Ok(String::new());
+        }
+
         app.emit(
             "transcription-progress",
             TranscriptionEvent::from(TranscriptionProgress::LoadingModel),

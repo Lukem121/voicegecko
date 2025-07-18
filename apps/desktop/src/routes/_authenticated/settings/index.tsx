@@ -28,7 +28,6 @@ import {
 import { Slider } from "@acme/ui/components/ui/slider";
 import { Switch } from "@acme/ui/components/ui/switch";
 
-import { useAudioHelpers } from "~/hooks/use-audio-helpers";
 import { useSettingsStore } from "~/stores/settings.store";
 
 export const Route = createFileRoute("/_authenticated/settings/")({
@@ -49,9 +48,8 @@ function SettingsPage() {
     updateHideGeckoOnFullscreen,
     updatePrivacySetting,
     updatePersonalizationSetting,
+    playTestSound,
   } = useSettingsStore();
-
-  const { playTestSound } = useAudioHelpers();
 
   return (
     <div className="flex flex-1 flex-col gap-4">

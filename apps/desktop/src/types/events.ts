@@ -13,9 +13,13 @@ export interface TauriEventMap {
   "audio-level": AudioLevelEvent;
 }
 
+// Transcription Events
 export interface TranscriptionProgressEvent {
-  status: "Starting" | "LoadingModel" | "Transcribing" | "Complete" | "Error";
+  status: string;
   data?: string;
+  duration_seconds?: number;
+  model_used?: string;
+  sample_rate?: number;
 }
 
 // Backend sends raw string, not an object

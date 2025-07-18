@@ -26,7 +26,12 @@ impl From<model_manager::ModelManagerError> for TranscriptionError {
 pub enum TranscriptionProgress {
     LoadingModel,
     Transcribing,
-    Complete(String),
+    Complete {
+        transcript: String,
+        duration_seconds: Option<f32>,
+        model_used: Option<String>,
+        sample_rate: Option<u32>,
+    },
     Error(String),
 }
 
@@ -35,6 +40,12 @@ pub struct TranscriptionEvent {
     status: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     data: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    duration_seconds: Option<f32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    model_used: Option<String>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    sample_rate: Option<u32>,
 }
 
 impl From<TranscriptionProgress> for TranscriptionEvent {
@@ -43,18 +54,35 @@ impl From<TranscriptionProgress> for TranscriptionEvent {
             TranscriptionProgress::LoadingModel => TranscriptionEvent {
                 status: "LoadingModel".to_string(),
                 data: None,
+                duration_seconds: None,
+                model_used: None,
+                sample_rate: None,
             },
             TranscriptionProgress::Transcribing => TranscriptionEvent {
                 status: "Transcribing".to_string(),
                 data: None,
+                duration_seconds: None,
+                model_used: None,
+                sample_rate: None,
             },
-            TranscriptionProgress::Complete(transcript) => TranscriptionEvent {
+            TranscriptionProgress::Complete {
+                transcript,
+                duration_seconds,
+                model_used,
+                sample_rate,
+            } => TranscriptionEvent {
                 status: "Complete".to_string(),
                 data: Some(transcript),
+                duration_seconds,
+                model_used,
+                sample_rate,
             },
             TranscriptionProgress::Error(error) => TranscriptionEvent {
                 status: "Error".to_string(),
                 data: Some(error),
+                duration_seconds: None,
+                model_used: None,
+                sample_rate: None,
             },
         }
     }
@@ -67,8 +95,19 @@ pub async fn transcribe_audio_buffer(app: AppHandle, audio_data: AudioData) -> R
     let provider: Box<dyn TranscriptionProvider> = if model_id == "cloud" {
         return Err("Cloud-based transcription is not available at the moment.".to_string());
     } else {
-        Box::new(LocalWhisperProvider { model_id })
+        Box::new(LocalWhisperProvider {
+            model_id: model_id.clone(),
+        })
     };
+
+    // Calculate duration in seconds
+    let duration_seconds = if audio_data.sample_rate > 0 {
+        Some(audio_data.samples.len() as f32 / audio_data.sample_rate as f32)
+    } else {
+        None
+    };
+
+    let sample_rate = Some(audio_data.sample_rate);
 
     // Perform transcription in a separate thread
     tauri::async_runtime::spawn(async move {
@@ -82,7 +121,12 @@ pub async fn transcribe_audio_buffer(app: AppHandle, audio_data: AudioData) -> R
                     "[Rust transcribe_audio_buffer] Transcription successful: {}",
                     transcript
                 );
-                TranscriptionProgress::Complete(transcript)
+                TranscriptionProgress::Complete {
+                    transcript,
+                    duration_seconds,
+                    model_used: Some(model_id),
+                    sample_rate,
+                }
             }
             Err(e) => {
                 println!("[Rust transcribe_audio_buffer] Transcription error: {}", e);
