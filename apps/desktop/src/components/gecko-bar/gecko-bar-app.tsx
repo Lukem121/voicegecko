@@ -73,7 +73,7 @@ export function GeckoBarApp() {
         isTransitioning: state.isTransitioning,
         isLoading: state.isLoading,
       }),
-      isLoading: isTranscribing,
+      isLoading: isTranscribing || state.isTransitioning,
     }),
     [
       showActiveState,
