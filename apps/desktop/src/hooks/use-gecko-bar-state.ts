@@ -81,8 +81,11 @@ export function useGeckoBarState(): UseGeckoBarStateReturn {
     // Clear any pending collapse timeout since states are changing
     timeoutManager.clearTimeout("collapse");
 
-    // Clear transition state on error
-    if (recordingStatus === "error" && isTransitioning) {
+    // Clear transition state on error or idle
+    if (
+      (recordingStatus === "error" || recordingStatus === "idle") &&
+      isTransitioning
+    ) {
       setIsTransitioning(false);
     }
 

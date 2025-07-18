@@ -93,7 +93,13 @@ pub async fn transcribe_audio_buffer(app: AppHandle, audio_data: AudioData) -> R
     let model_id = model_manager::get_active_model_id(app.clone()).map_err(|e| e.to_string())?;
 
     let provider: Box<dyn TranscriptionProvider> = if model_id == "cloud" {
-        return Err("Cloud-based transcription is not available at the moment.".to_string());
+        // Emit event for frontend to handle cloud transcription
+        println!(
+            "[Rust transcribe_audio_buffer] Cloud model selected, emitting event for frontend"
+        );
+        app.emit("cloud-transcription-requested", &audio_data)
+            .map_err(|e| format!("Failed to emit cloud transcription event: {}", e))?;
+        return Ok(());
     } else {
         Box::new(LocalWhisperProvider {
             model_id: model_id.clone(),

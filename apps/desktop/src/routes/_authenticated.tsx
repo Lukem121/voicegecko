@@ -12,7 +12,6 @@ import {
 
 import { AppBreadcrumb } from "~/components/app-breadcrumb";
 import { AppSidebar } from "~/components/app-sidebar";
-import { TauriEvents } from "~/components/tauri-events";
 
 export const Route = createFileRoute("/_authenticated")({
   beforeLoad: ({ context, location }) => {
@@ -45,7 +44,6 @@ function AuthenticatedLayout() {
   // User is authenticated, render the protected content with sidebar
   return (
     <SidebarProvider>
-      <TauriEvents />
       <AppSidebar />
       <SidebarInset className="!ml-0">
         <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">

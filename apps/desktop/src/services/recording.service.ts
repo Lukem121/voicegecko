@@ -149,6 +149,9 @@ export class RecordingService {
    */
   private async stopRecording(options: RecordingOptions): Promise<void> {
     try {
+      // Set processing state immediately to avoid UI gap
+      useEventStore.getState().setRecordingStatus("processing");
+
       const audioData = await invoke<{
         samples: number[];
         sample_rate: number;
