@@ -525,8 +525,8 @@ pub fn stop_recording(
         thread_handle.join().unwrap();
     }
 
-    app.emit("recording-state-changed", "idle".to_string())
-        .map_err(|e| e.to_string())?;
+    // Don't emit idle state here - let frontend manage the state transition
+    // to avoid UI gap between recording stop and processing start
 
     let samples = state
         .recorded_audio

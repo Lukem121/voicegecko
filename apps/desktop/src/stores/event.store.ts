@@ -1,4 +1,3 @@
-import { emit } from "@tauri-apps/api/event";
 import { create } from "zustand";
 import { devtools } from "zustand/middleware";
 
@@ -115,6 +114,8 @@ export const useEventStore = create<EventState>()(
               transcript: data ?? null,
               transcriptionError: null,
               transcriptionMetadata: metadata ?? null,
+              // Also set recording status to idle when transcription completes
+              recordingStatus: "idle",
             });
             break;
           case "Error":
@@ -123,10 +124,9 @@ export const useEventStore = create<EventState>()(
               transcript: null,
               transcriptionError: data ?? "Unknown error",
               transcriptionMetadata: null,
+              // Also set recording status to idle on error
+              recordingStatus: "idle",
             });
-
-            // Emit idle state on error so gecko bar can collapse
-            void emit("recording-state-changed", "idle");
             break;
         }
       },
@@ -177,8 +177,7 @@ export const useEventStore = create<EventState>()(
           // Don't throw - we already copied to clipboard, so the user has their transcription
         }
 
-        // Emit idle state so gecko bar can collapse
-        await emit("recording-state-changed", "idle");
+        // Recording status is now set to idle in setTranscriptionProgress when Complete status is received
       },
 
       // Selectors
