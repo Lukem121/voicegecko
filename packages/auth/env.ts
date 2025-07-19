@@ -11,6 +11,7 @@ export function authEnv() {
           ? z.string().min(1)
           : z.string().min(1).optional(),
       NODE_ENV: z.enum(["development", "production"]).optional(),
+      STRIPE_WEBHOOK_SECRET: z.string().min(1),
     },
     client: {
       NEXT_PUBLIC_VOICEGECKO_API_URL: z.string().min(1),

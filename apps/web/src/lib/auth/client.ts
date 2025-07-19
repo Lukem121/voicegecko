@@ -1,3 +1,4 @@
+import { stripeClient } from "@better-auth/stripe/client";
 import {
   adminClient,
   apiKeyClient,
@@ -17,5 +18,8 @@ export const authClient = createAuthClient({
     apiKeyClient(),
     twoFactorClient(),
     phoneNumberClient(),
+    stripeClient({
+      subscription: true,
+    }),
   ],
 });

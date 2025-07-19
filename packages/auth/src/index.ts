@@ -1,4 +1,5 @@
 import { expo } from "@better-auth/expo";
+import { stripe } from "@better-auth/stripe";
 import { tauri } from "@daveyplate/better-auth-tauri/plugin";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
@@ -11,6 +12,7 @@ import {
   username,
 } from "better-auth/plugins";
 
+import { stripeClient } from "@acme/api";
 import { db } from "@acme/db/client";
 import { sendResetPasswordEmail, sendVerificationEmail } from "@acme/email";
 
@@ -52,6 +54,26 @@ export const serverAuth = betterAuth({
     },
   },
   plugins: [
+    stripe({
+      stripeClient,
+      stripeWebhookSecret: authEnv().STRIPE_WEBHOOK_SECRET,
+      createCustomerOnSignUp: true,
+      subscription: {
+        enabled: true,
+        plans: [
+          {
+            name: "voice gecko pro",
+            priceId: "price_1RmdrpCsAgq8zVzDENwoLCxF",
+            annualDiscountPriceId: "price_1RmdrpCsAgq8zVzDPrkHGDHW",
+          },
+          {
+            name: "voice gecko team",
+            priceId: "price_1Rme5eCsAgq8zVzDywqISCBj",
+            annualDiscountPriceId: "price_1Rme5eCsAgq8zVzDRz03IJTc",
+          },
+        ],
+      },
+    }),
     oAuthProxy({
       /**
        * Auto-inference blocked by https://github.com/better-auth/better-auth/pull/2891

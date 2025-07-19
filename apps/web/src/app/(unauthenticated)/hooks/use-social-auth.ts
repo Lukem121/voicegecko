@@ -1,6 +1,6 @@
 import { useState } from "react";
 
-import { authClient } from "~/lib/client";
+import { authClient } from "~/lib/auth/client";
 import { APP_ROUTES } from "~/utils/app-routes";
 
 export type SocialProvider = "discord" | "google";

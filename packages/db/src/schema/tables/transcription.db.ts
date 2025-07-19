@@ -1,21 +1,21 @@
 import { index, pgEnum, pgTable } from "drizzle-orm/pg-core";
 
 import { createdAt, updatedAt } from "../columns/timestamps";
-import { user } from "./auth.db";
+import { user as UserTable } from "./auth.db";
 
 export const TranscriptionStatus = pgEnum("transcription_status", [
   "normal",
   "silent",
 ]);
 
-export const transcription = pgTable(
+export const TranscriptionTable = pgTable(
   "transcription",
   (t) => ({
     id: t.serial("id").primaryKey(),
     userId: t
       .text("user_id")
       .notNull()
-      .references(() => user.id, { onDelete: "cascade" }),
+      .references(() => UserTable.id, { onDelete: "cascade" }),
     content: t.text().notNull(),
     status: TranscriptionStatus("status").notNull(),
     durationSeconds: t.integer("duration_seconds"),
@@ -32,5 +32,3 @@ export const transcription = pgTable(
     ),
   ],
 );
-
-export const TranscriptionTable = transcription;

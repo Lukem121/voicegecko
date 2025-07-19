@@ -21,8 +21,10 @@
     "@acme/auth": "workspace:*",
     "@acme/db": "workspace:*",
     "@acme/validators": "workspace:*",
+    "@better-auth/stripe": "^1.2.12",
     "@trpc/server": "catalog:",
     "openai": "^5.10.1",
+    "stripe": "^18.3.0",
     "superjson": "2.2.2",
     "zod": "catalog:"
   },
