@@ -3,8 +3,8 @@
 import { cache } from "react";
 import { headers } from "next/headers";
 
-import type { Session } from "..";
-import { serverAuth } from "..";
+import type { Session } from "../auth";
+import { serverAuth } from "../auth";
 
 export const getServerSession = cache(async () => {
   const session = await serverAuth.api.getSession({
