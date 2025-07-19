@@ -6,6 +6,7 @@ export function apiEnv() {
     server: {
       OPENAI_API_KEY: z.string().min(1).startsWith("sk-"),
       NODE_ENV: z.enum(["development", "production"]).optional(),
+      STRIPE_SECRET_KEY: z.string().min(1),
     },
     experimental__runtimeEnv: {},
     skipValidation:

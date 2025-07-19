@@ -22,3 +22,5 @@ type RouterOutputs = inferRouterOutputs<AppRouter>;
 
 export { createTRPCContext, appRouter };
 export type { AppRouter, RouterInputs, RouterOutputs };
+
+export { stripeClient } from "./lib/stripe";

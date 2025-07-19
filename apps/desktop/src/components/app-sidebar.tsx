@@ -89,21 +89,6 @@ const data: NavigationData = {
   ],
   navSecondary: [
     {
-      title: "Settings",
-      url: "/settings",
-      icon: Settings2,
-      items: [
-        {
-          title: "Models",
-          url: "/settings/models",
-        },
-        {
-          title: "Keyboard Shortcuts",
-          url: "/settings/shortcuts",
-        },
-      ],
-    },
-    {
       title: "Help & Support",
       url: "/support",
       icon: HelpCircle,

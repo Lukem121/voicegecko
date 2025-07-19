@@ -28,7 +28,7 @@ import {
 } from "@acme/ui/components/ui/form";
 import { Input } from "@acme/ui/components/ui/input";
 
-import { authClient } from "~/lib/client";
+import { authClient } from "~/lib/auth/client";
 import { useTRPC } from "~/trpc/react";
 import { APP_ROUTES } from "~/utils/app-routes";
 import { countdown } from "~/utils/countdown";
