@@ -81,6 +81,19 @@ export const verification = pgTable(
   (table) => [index().on(table.identifier)],
 );
 
+export const subscription = pgTable("subscription", (t) => ({
+  id: t.text("id").primaryKey(),
+  plan: t.text("plan").notNull(),
+  referenceId: t.text("reference_id").notNull(),
+  stripeCustomerId: t.text("stripe_customer_id"),
+  stripeSubscriptionId: t.text("stripe_subscription_id"),
+  status: t.text("status").default("incomplete"),
+  periodStart: t.timestamp("period_start"),
+  periodEnd: t.timestamp("period_end"),
+  cancelAtPeriodEnd: t.boolean("cancel_at_period_end"),
+  seats: t.integer("seats"),
+}));
+
 export const twoFactor = pgTable("two_factor", (t) => ({
   id: t.text("id").primaryKey(),
   secret: t.text("secret").notNull(),
