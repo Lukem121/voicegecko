@@ -14,7 +14,7 @@ import {
   CardTitle,
 } from "@acme/ui/components/ui/card";
 
-import { authClient } from "~/lib/client";
+import { authClient } from "~/lib/auth/client";
 import { APP_ROUTES } from "~/utils/app-routes";
 
 // Constants

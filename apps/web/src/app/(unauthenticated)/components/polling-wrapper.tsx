@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 
-import { authClient } from "~/lib/client";
+import { authClient } from "~/lib/auth/client";
 import { APP_ROUTES } from "~/utils/app-routes";
 import { usePolling } from "../hooks/use-polling-refresh";
 
