@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Check, GraduationCap, X } from "lucide-react";
+import { Check, X } from "lucide-react";
 
 import { Button } from "@acme/ui/components/ui/button";
 import {
@@ -15,7 +15,7 @@ import {
 import { cn } from "@acme/ui/lib/utils";
 
 type BillingPeriod = "monthly" | "annual";
-type CellValue = "check" | "x" | string;
+type CellValue = "check" | "x" | (string & {});
 
 interface ComparisonTableProps {
   firstColumnHeader: string;
