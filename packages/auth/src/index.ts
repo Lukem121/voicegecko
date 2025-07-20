@@ -17,7 +17,7 @@ import { db } from "@acme/db/client";
 import { sendResetPasswordEmail, sendVerificationEmail } from "@acme/email";
 
 import { authEnv } from "../env";
-import { stripeClient } from "./lib/stripe";
+import { getStripeClient } from "./lib/stripe";
 import { checkBannedMiddleware } from "./middleware/check-banned-middleware";
 import { usernameValidator } from "./schemas/username.schema";
 
@@ -56,7 +56,7 @@ export const serverAuth = betterAuth({
   },
   plugins: [
     stripe({
-      stripeClient: stripeClient,
+      stripeClient: getStripeClient(),
       stripeWebhookSecret: authEnv().STRIPE_WEBHOOK_SECRET,
       createCustomerOnSignUp: true,
       subscription: {
