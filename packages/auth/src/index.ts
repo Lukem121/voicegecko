@@ -153,7 +153,6 @@ export const serverAuth = betterAuth({
     "http://tauri.localhost", // Tauri desktop app
 
     "https://voicegecko.io",
-    "https://www.voicegecko.io", // Add www subdomain
   ],
 });
 

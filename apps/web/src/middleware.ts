@@ -26,8 +26,9 @@ const addCorsHeaders = (response: NextResponse, request: NextRequest) => {
   const origin = request.headers.get("origin");
 
   console.log("Origin:", origin);
+  console.log("Request URL:", request.url);
 
-  // Allow any origin
+  // Allow any origin - for API routes we're being permissive
   if (origin) {
     response.headers.set("Access-Control-Allow-Origin", origin);
   } else {
@@ -41,6 +42,7 @@ const addCorsHeaders = (response: NextResponse, request: NextRequest) => {
     "Access-Control-Allow-Headers",
     "Content-Type, Authorization, Cookie, X-Requested-With, platform, x-trpc-source, trpc-accept, x-trpc-accept",
   );
+  response.headers.set("Access-Control-Max-Age", "86400");
 
   return response;
 };
@@ -56,22 +58,24 @@ const addCorsHeaders = (response: NextResponse, request: NextRequest) => {
 export default function middleware(request: NextRequest) {
   const pathname = new URL(request.url).pathname;
   const origin = request.headers.get("origin");
-  const isCrossOrigin = origin && origin !== new URL(request.url).origin;
 
-  // Handle preflight OPTIONS requests for CORS
-  if (request.method === "OPTIONS" && isCrossOrigin) {
-    const response = new NextResponse(null, { status: 200 });
-    return addCorsHeaders(response, request);
-  }
-
-  // For API routes, always add CORS headers to handle subdomain requests
+  // For API routes, always add CORS headers if there's an origin header
+  // This handles both same-site with different subdomains (www vs non-www) and truly cross-origin requests
   if (pathname.startsWith("/api/")) {
+    // Handle preflight OPTIONS requests
+    if (request.method === "OPTIONS") {
+      const response = new NextResponse(null, { status: 200 });
+      return addCorsHeaders(response, request);
+    }
+
+    // For regular API requests, add CORS headers if origin is present
     const response = NextResponse.next();
-    // Always add CORS headers for API routes to handle www/non-www subdomain differences
     return origin ? addCorsHeaders(response, request) : response;
   }
 
-  // For page routes, handle auth + CORS
+  // For page routes, handle auth + CORS for cross-origin requests
+  const isCrossOrigin = origin && origin !== new URL(request.url).origin;
+
   const sessionCookie = getSessionCookie(request);
   const isUnprotectedRoute = unprotectedRoutes.some(
     (route) => pathname === route,
@@ -94,7 +98,7 @@ export default function middleware(request: NextRequest) {
 
   const response = NextResponse.next();
 
-  // Add CORS headers for cross-origin requests
+  // Add CORS headers for cross-origin page requests
   return isCrossOrigin ? addCorsHeaders(response, request) : response;
 }
 
