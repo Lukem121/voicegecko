@@ -7,6 +7,15 @@ export function apiEnv() {
       OPENAI_API_KEY: z.string().min(1).startsWith("sk-"),
       NODE_ENV: z.enum(["development", "production"]).optional(),
       STRIPE_SECRET_KEY: z.string().min(1),
+      STRIPE_PRICE_ID_PRO_MONTHLY: z.string().min(1),
+      STRIPE_PRICE_ID_PRO_YEARLY: z.string().min(1),
+      STRIPE_PRICE_ID_TEAM_MONTHLY: z.string().min(1),
+      STRIPE_PRICE_ID_TEAM_YEARLY: z.string().min(1),
+      VOICEGECKO_APP_URL: z
+        .string()
+        .url()
+        .optional()
+        .default("http://localhost:3000"),
     },
     experimental__runtimeEnv: {},
     skipValidation:
