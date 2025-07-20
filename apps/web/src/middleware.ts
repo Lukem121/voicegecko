@@ -25,8 +25,12 @@ const unprotectedRoutes: string[] = [
 const addCorsHeaders = (response: NextResponse, request: NextRequest) => {
   const origin = request.headers.get("origin");
 
-  console.log("Origin:", origin);
-  console.log("Request URL:", request.url);
+  console.log("CORS Debug:", {
+    origin,
+    url: request.url,
+    method: request.method,
+    pathname: new URL(request.url).pathname,
+  });
 
   // Allow any origin - for API routes we're being permissive
   if (origin) {
