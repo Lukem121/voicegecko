@@ -468,7 +468,7 @@ export default function Plans({ prices, subscription, error }: PlansProps) {
   ];
 
   return (
-    <div className="mx-auto max-w-5xl p-8">
+    <div>
       <div className="mb-8 flex items-center justify-between">
         <div className="">
           <h1 className="mb-2 text-3xl font-medium">Plans</h1>

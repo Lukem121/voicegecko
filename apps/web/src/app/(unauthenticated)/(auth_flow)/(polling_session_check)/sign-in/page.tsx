@@ -32,9 +32,9 @@ import { authClient } from "~/lib/auth/client";
 import { useTRPC } from "~/trpc/react";
 import { APP_ROUTES } from "~/utils/app-routes";
 import { countdown } from "~/utils/countdown";
-import { SocialSignInButton } from "../components/social-sign-in-button";
-import TermsAndPrivacyNotice from "../components/terms-and-privacy-notice";
-import { useSocialAuth } from "../hooks/use-social-auth";
+import { SocialSignInButton } from "../../../components/social-sign-in-button";
+import TermsAndPrivacyNotice from "../../../components/terms-and-privacy-notice";
+import { useSocialAuth } from "../../../hooks/use-social-auth";
 
 // Types
 interface SignInFormValues {
