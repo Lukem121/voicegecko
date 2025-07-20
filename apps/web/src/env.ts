@@ -21,6 +21,11 @@ export const env = createEnv({
     GITHUB_OWNER: z.string().min(1, "GitHub repository owner is required"),
     GITHUB_REPO: z.string().min(1, "GitHub repository name is required"),
     SENDGRID_API_KEY: z.string().min(1).startsWith("SG."),
+    STRIPE_SECRET_KEY: z.string().min(1),
+    STRIPE_PRICE_ID_PRO_MONTHLY: z.string().min(1),
+    STRIPE_PRICE_ID_PRO_YEARLY: z.string().min(1),
+    STRIPE_PRICE_ID_TEAM_MONTHLY: z.string().min(1),
+    STRIPE_PRICE_ID_TEAM_YEARLY: z.string().min(1),
   },
 
   /**
