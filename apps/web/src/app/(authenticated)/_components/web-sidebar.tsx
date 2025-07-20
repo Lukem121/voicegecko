@@ -44,7 +44,6 @@ interface NavigationItem {
 
 interface NavigationData {
   navMain: NavigationItem[];
-  navSecondary: NavigationItem[];
 }
 
 const data: NavigationData = {
@@ -63,28 +62,6 @@ const data: NavigationData = {
       title: "Billing",
       url: "/app/billing",
       icon: CreditCard,
-    },
-  ],
-  navSecondary: [
-    {
-      title: "Settings",
-      url: "/settings",
-      icon: Settings2,
-      items: [
-        {
-          title: "Models",
-          url: "/settings/models",
-        },
-        {
-          title: "Keyboard Shortcuts",
-          url: "/settings/shortcuts",
-        },
-      ],
-    },
-    {
-      title: "Help & Support",
-      url: "/support",
-      icon: HelpCircle,
     },
   ],
 };
@@ -124,46 +101,6 @@ export default function AppSidebar() {
                     isActive={
                       item.url === "/app"
                         ? pathname === "/app"
-                        : pathname.startsWith(item.url)
-                    }
-                  >
-                    <Link href={item.url}>
-                      <item.icon />
-                      <span>{item.title}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                  {item.items?.length ? (
-                    <SidebarMenuSub>
-                      {item.items.map((subItem) => (
-                        <SidebarMenuSubItem key={subItem.title}>
-                          <SidebarMenuSubButton
-                            asChild
-                            isActive={pathname === subItem.url}
-                          >
-                            <Link href={subItem.url}>
-                              <span>{subItem.title}</span>
-                            </Link>
-                          </SidebarMenuSubButton>
-                        </SidebarMenuSubItem>
-                      ))}
-                    </SidebarMenuSub>
-                  ) : null}
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-        <SidebarGroup className="mt-auto">
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {data.navSecondary.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton
-                    asChild
-                    size="sm"
-                    isActive={
-                      item.url === "/"
-                        ? pathname === item.url
                         : pathname.startsWith(item.url)
                     }
                   >

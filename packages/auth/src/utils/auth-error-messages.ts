@@ -1,4 +1,4 @@
-import type { serverAuth } from "../auth";
+import type { serverAuth } from "..";
 
 export type AuthErrorCodes = keyof (typeof serverAuth)["$ERROR_CODES"];
 

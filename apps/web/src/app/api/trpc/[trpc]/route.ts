@@ -1,7 +1,8 @@
 import type { NextRequest } from "next/server";
 import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
 
-import { appRouter, createTRPCContext } from "@acme/api";
+import { appRouter } from "@acme/api/src/root";
+import { createTRPCContext } from "@acme/api/src/trpc";
 import { serverAuth } from "@acme/auth";
 
 /**

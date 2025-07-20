@@ -3,6 +3,7 @@ import { stripe } from "@better-auth/stripe";
 import { tauri } from "@daveyplate/better-auth-tauri/plugin";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import { nextCookies } from "better-auth/next-js";
 import {
   admin as adminPlugin,
   createAuthMiddleware,
@@ -12,7 +13,7 @@ import {
   username,
 } from "better-auth/plugins";
 
-import { stripeClient } from "@acme/api";
+import { stripeClient } from "@acme/api/src/lib/stripe";
 import { db } from "@acme/db/client";
 import { sendResetPasswordEmail, sendVerificationEmail } from "@acme/email";
 
@@ -63,13 +64,13 @@ export const serverAuth = betterAuth({
         plans: [
           {
             name: "voice gecko pro",
-            priceId: "price_1RmdrpCsAgq8zVzDENwoLCxF",
-            annualDiscountPriceId: "price_1RmdrpCsAgq8zVzDPrkHGDHW",
+            priceId: authEnv().STRIPE_PRICE_ID_PRO_MONTHLY,
+            annualDiscountPriceId: authEnv().STRIPE_PRICE_ID_PRO_YEARLY,
           },
           {
             name: "voice gecko team",
-            priceId: "price_1Rme5eCsAgq8zVzDywqISCBj",
-            annualDiscountPriceId: "price_1Rme5eCsAgq8zVzDRz03IJTc",
+            priceId: authEnv().STRIPE_PRICE_ID_TEAM_MONTHLY,
+            annualDiscountPriceId: authEnv().STRIPE_PRICE_ID_TEAM_YEARLY,
           },
         ],
       },
@@ -92,6 +93,7 @@ export const serverAuth = betterAuth({
     username({
       usernameValidator,
     }),
+    nextCookies(),
   ],
   hooks: {
     after: checkBannedMiddleware,
