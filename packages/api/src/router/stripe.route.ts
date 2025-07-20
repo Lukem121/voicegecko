@@ -2,7 +2,7 @@ import type { TRPCRouterRecord } from "@trpc/server";
 import { z } from "zod";
 
 import { apiEnv } from "../../env";
-import { stripeClient } from "../lib/stripe";
+import { getStripeClient } from "../lib/stripe";
 import { protectedProcedure } from "../trpc";
 
 type PriceId = string;
@@ -49,6 +49,8 @@ export const stripeRouter = {
       apiEnv().STRIPE_PRICE_ID_TEAM_YEARLY,
     ];
 
+    const stripeClient = getStripeClient();
+
     const prices = await Promise.all(
       priceIds.map((id) => stripeClient.prices.retrieve(id)),
     );
@@ -91,6 +93,8 @@ export const stripeRouter = {
 
       const returnUrl = `${apiEnv().VOICEGECKO_APP_URL}${input.returnUrl}`;
 
+      const stripeClient = getStripeClient();
+
       const billingPortalSession =
         await stripeClient.billingPortal.sessions.create({
           customer: customerId,
@@ -111,6 +115,8 @@ export const stripeRouter = {
     .mutation(async ({ input, ctx }) => {
       try {
         // Update the subscription to not cancel at period end
+        const stripeClient = getStripeClient();
+
         const subscription = await stripeClient.subscriptions.update(
           input.subscriptionId,
           {
