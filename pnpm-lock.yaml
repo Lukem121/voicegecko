@@ -520,9 +520,6 @@ importers:
 
   packages/auth:
     dependencies:
-      '@acme/api':
-        specifier: workspace:*
-        version: link:../api
       '@acme/db':
         specifier: workspace:*
         version: link:../db
