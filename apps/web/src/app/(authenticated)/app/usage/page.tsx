@@ -25,30 +25,6 @@ export default function UsagePage() {
     apiCalls: 1580,
   };
 
-  const recentTranscriptions = [
-    {
-      name: "Team Meeting Notes",
-      duration: "15:32",
-      words: 2340,
-      accuracy: 98,
-      date: "2 hours ago",
-    },
-    {
-      name: "Interview Recording",
-      duration: "42:18",
-      words: 6890,
-      accuracy: 96,
-      date: "Yesterday",
-    },
-    {
-      name: "Lecture Notes",
-      duration: "28:45",
-      words: 4200,
-      accuracy: 99,
-      date: "2 days ago",
-    },
-  ];
-
   const usageStats = [
     { label: "Average Accuracy", value: "97.8%", trend: "+2%" },
     { label: "Avg. Processing Speed", value: "3.2x", trend: "+15%" },
@@ -56,7 +32,7 @@ export default function UsagePage() {
   ];
 
   return (
-    <div className="mx-auto max-w-5xl space-y-8 p-8">
+    <div className="space-y-8">
       <div className="mb-8">
         <h1 className="mb-2 text-3xl font-medium">Usage</h1>
         <p className="text-muted-foreground">

@@ -1,7 +1,5 @@
 import type { ReactNode } from "react";
 
-import PollingAuthWrapper from "./components/polling-wrapper";
-
 interface AuthLayoutProps {
   readonly children: ReactNode;
 }
@@ -35,7 +33,7 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
       </div>
       <div className="lg:p-8">
         <div className="mx-auto flex w-full max-w-[400px] flex-col justify-center space-y-6">
-          <PollingAuthWrapper>{children}</PollingAuthWrapper>
+          {children}
         </div>
       </div>
     </div>
