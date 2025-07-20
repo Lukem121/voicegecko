@@ -1,6 +1,6 @@
 import { eq } from "@acme/db";
 import { db } from "@acme/db/client";
-import { UserTable } from "@acme/db/schema";
+import { user as UserTable } from "@acme/db/schema";
 
 class AuthRepository {
   async getBanByEmail(email: string) {

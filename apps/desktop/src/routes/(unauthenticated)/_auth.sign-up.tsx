@@ -4,7 +4,7 @@ import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { Loader } from "lucide-react";
 
 import { SignUpSchema } from "@acme/auth/schemas";
-import VoiceGeckoLogo from "@acme/ui/components/logos/voice-gecko";
+import LogoFull from "@acme/ui/components/logos/logo-full";
 import { Button } from "@acme/ui/components/ui/button";
 import {
   Card,
@@ -111,7 +111,7 @@ function SignUp() {
       <div className={"flex flex-col gap-4"}>
         <Card>
           <CardHeader className="items-start">
-            <VoiceGeckoLogo className="h-10" />
+            <LogoFull className="h-10" />
             <CardDescription>
               sign up to continue to{" "}
               <span className="font-mono font-bold">voicegecko</span>

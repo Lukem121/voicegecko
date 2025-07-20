@@ -1,7 +1,9 @@
 import { expo } from "@better-auth/expo";
+import { stripe } from "@better-auth/stripe";
 import { tauri } from "@daveyplate/better-auth-tauri/plugin";
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import { nextCookies } from "better-auth/next-js";
 import {
   admin as adminPlugin,
   createAuthMiddleware,
@@ -11,6 +13,7 @@ import {
   username,
 } from "better-auth/plugins";
 
+import { stripeClient } from "@acme/api/src/lib/stripe";
 import { db } from "@acme/db/client";
 import { sendResetPasswordEmail, sendVerificationEmail } from "@acme/email";
 
@@ -52,12 +55,32 @@ export const serverAuth = betterAuth({
     },
   },
   plugins: [
+    stripe({
+      stripeClient,
+      stripeWebhookSecret: authEnv().STRIPE_WEBHOOK_SECRET,
+      createCustomerOnSignUp: true,
+      subscription: {
+        enabled: true,
+        plans: [
+          {
+            name: "voice gecko pro",
+            priceId: authEnv().STRIPE_PRICE_ID_PRO_MONTHLY,
+            annualDiscountPriceId: authEnv().STRIPE_PRICE_ID_PRO_YEARLY,
+          },
+          {
+            name: "voice gecko team",
+            priceId: authEnv().STRIPE_PRICE_ID_TEAM_MONTHLY,
+            annualDiscountPriceId: authEnv().STRIPE_PRICE_ID_TEAM_YEARLY,
+          },
+        ],
+      },
+    }),
     oAuthProxy({
       /**
        * Auto-inference blocked by https://github.com/better-auth/better-auth/pull/2891
        */
-      currentURL: authEnv().VOICEGECKO_API_URL,
-      productionURL: authEnv().VOICEGECKO_API_URL,
+      currentURL: authEnv().NEXT_PUBLIC_VOICEGECKO_API_URL,
+      productionURL: authEnv().NEXT_PUBLIC_VOICEGECKO_API_URL,
     }),
     expo(),
     tauri({
@@ -70,6 +93,7 @@ export const serverAuth = betterAuth({
     username({
       usernameValidator,
     }),
+    nextCookies(),
   ],
   hooks: {
     after: checkBannedMiddleware,

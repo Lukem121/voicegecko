@@ -13,7 +13,16 @@ import { createFileRoute } from '@tanstack/react-router'
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
+import { Route as AuthenticatedTranscriptionsRouteImport } from './routes/_authenticated/transcriptions'
+import { Route as AuthenticatedRecordingRouteImport } from './routes/_authenticated/recording'
+import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
+import { Route as AuthenticatedNotificationsRouteImport } from './routes/_authenticated/notifications'
+import { Route as AuthenticatedHistoryRouteImport } from './routes/_authenticated/history'
+import { Route as AuthenticatedBillingRouteImport } from './routes/_authenticated/billing'
 import { Route as unauthenticatedAuthRouteImport } from './routes/(unauthenticated)/_auth'
+import { Route as AuthenticatedSettingsIndexRouteImport } from './routes/_authenticated/settings/index'
+import { Route as AuthenticatedSettingsShortcutsRouteImport } from './routes/_authenticated/settings/shortcuts'
+import { Route as AuthenticatedSettingsModelsRouteImport } from './routes/_authenticated/settings/models'
 import { Route as unauthenticatedLegalTermsRouteImport } from './routes/(unauthenticated)/legal/terms'
 import { Route as unauthenticatedLegalPrivacyRouteImport } from './routes/(unauthenticated)/legal/privacy'
 import { Route as unauthenticatedAuthVerifySuccessRouteImport } from './routes/(unauthenticated)/_auth.verify-success'
@@ -37,10 +46,60 @@ const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedTranscriptionsRoute =
+  AuthenticatedTranscriptionsRouteImport.update({
+    id: '/transcriptions',
+    path: '/transcriptions',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedRecordingRoute = AuthenticatedRecordingRouteImport.update({
+  id: '/recording',
+  path: '/recording',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedProfileRoute = AuthenticatedProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedNotificationsRoute =
+  AuthenticatedNotificationsRouteImport.update({
+    id: '/notifications',
+    path: '/notifications',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedHistoryRoute = AuthenticatedHistoryRouteImport.update({
+  id: '/history',
+  path: '/history',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedBillingRoute = AuthenticatedBillingRouteImport.update({
+  id: '/billing',
+  path: '/billing',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const unauthenticatedAuthRoute = unauthenticatedAuthRouteImport.update({
   id: '/_auth',
   getParentRoute: () => unauthenticatedRoute,
 } as any)
+const AuthenticatedSettingsIndexRoute =
+  AuthenticatedSettingsIndexRouteImport.update({
+    id: '/settings/',
+    path: '/settings/',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedSettingsShortcutsRoute =
+  AuthenticatedSettingsShortcutsRouteImport.update({
+    id: '/settings/shortcuts',
+    path: '/settings/shortcuts',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedSettingsModelsRoute =
+  AuthenticatedSettingsModelsRouteImport.update({
+    id: '/settings/models',
+    path: '/settings/models',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const unauthenticatedLegalTermsRoute =
   unauthenticatedLegalTermsRouteImport.update({
     id: '/legal/terms',
@@ -86,6 +145,12 @@ const unauthenticatedAuthAuthenticationErrorRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedIndexRoute
+  '/billing': typeof AuthenticatedBillingRoute
+  '/history': typeof AuthenticatedHistoryRoute
+  '/notifications': typeof AuthenticatedNotificationsRoute
+  '/profile': typeof AuthenticatedProfileRoute
+  '/recording': typeof AuthenticatedRecordingRoute
+  '/transcriptions': typeof AuthenticatedTranscriptionsRoute
   '/authentication-error': typeof unauthenticatedAuthAuthenticationErrorRoute
   '/sign-in': typeof unauthenticatedAuthSignInRoute
   '/sign-up': typeof unauthenticatedAuthSignUpRoute
@@ -93,9 +158,18 @@ export interface FileRoutesByFullPath {
   '/verify-success': typeof unauthenticatedAuthVerifySuccessRoute
   '/legal/privacy': typeof unauthenticatedLegalPrivacyRoute
   '/legal/terms': typeof unauthenticatedLegalTermsRoute
+  '/settings/models': typeof AuthenticatedSettingsModelsRoute
+  '/settings/shortcuts': typeof AuthenticatedSettingsShortcutsRoute
+  '/settings': typeof AuthenticatedSettingsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof AuthenticatedIndexRoute
+  '/billing': typeof AuthenticatedBillingRoute
+  '/history': typeof AuthenticatedHistoryRoute
+  '/notifications': typeof AuthenticatedNotificationsRoute
+  '/profile': typeof AuthenticatedProfileRoute
+  '/recording': typeof AuthenticatedRecordingRoute
+  '/transcriptions': typeof AuthenticatedTranscriptionsRoute
   '/authentication-error': typeof unauthenticatedAuthAuthenticationErrorRoute
   '/sign-in': typeof unauthenticatedAuthSignInRoute
   '/sign-up': typeof unauthenticatedAuthSignUpRoute
@@ -103,12 +177,21 @@ export interface FileRoutesByTo {
   '/verify-success': typeof unauthenticatedAuthVerifySuccessRoute
   '/legal/privacy': typeof unauthenticatedLegalPrivacyRoute
   '/legal/terms': typeof unauthenticatedLegalTermsRoute
+  '/settings/models': typeof AuthenticatedSettingsModelsRoute
+  '/settings/shortcuts': typeof AuthenticatedSettingsShortcutsRoute
+  '/settings': typeof AuthenticatedSettingsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/(unauthenticated)': typeof unauthenticatedRouteWithChildren
   '/(unauthenticated)/_auth': typeof unauthenticatedAuthRouteWithChildren
+  '/_authenticated/billing': typeof AuthenticatedBillingRoute
+  '/_authenticated/history': typeof AuthenticatedHistoryRoute
+  '/_authenticated/notifications': typeof AuthenticatedNotificationsRoute
+  '/_authenticated/profile': typeof AuthenticatedProfileRoute
+  '/_authenticated/recording': typeof AuthenticatedRecordingRoute
+  '/_authenticated/transcriptions': typeof AuthenticatedTranscriptionsRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
   '/(unauthenticated)/_auth/authentication-error': typeof unauthenticatedAuthAuthenticationErrorRoute
   '/(unauthenticated)/_auth/sign-in': typeof unauthenticatedAuthSignInRoute
@@ -117,11 +200,20 @@ export interface FileRoutesById {
   '/(unauthenticated)/_auth/verify-success': typeof unauthenticatedAuthVerifySuccessRoute
   '/(unauthenticated)/legal/privacy': typeof unauthenticatedLegalPrivacyRoute
   '/(unauthenticated)/legal/terms': typeof unauthenticatedLegalTermsRoute
+  '/_authenticated/settings/models': typeof AuthenticatedSettingsModelsRoute
+  '/_authenticated/settings/shortcuts': typeof AuthenticatedSettingsShortcutsRoute
+  '/_authenticated/settings/': typeof AuthenticatedSettingsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/billing'
+    | '/history'
+    | '/notifications'
+    | '/profile'
+    | '/recording'
+    | '/transcriptions'
     | '/authentication-error'
     | '/sign-in'
     | '/sign-up'
@@ -129,9 +221,18 @@ export interface FileRouteTypes {
     | '/verify-success'
     | '/legal/privacy'
     | '/legal/terms'
+    | '/settings/models'
+    | '/settings/shortcuts'
+    | '/settings'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/billing'
+    | '/history'
+    | '/notifications'
+    | '/profile'
+    | '/recording'
+    | '/transcriptions'
     | '/authentication-error'
     | '/sign-in'
     | '/sign-up'
@@ -139,11 +240,20 @@ export interface FileRouteTypes {
     | '/verify-success'
     | '/legal/privacy'
     | '/legal/terms'
+    | '/settings/models'
+    | '/settings/shortcuts'
+    | '/settings'
   id:
     | '__root__'
     | '/_authenticated'
     | '/(unauthenticated)'
     | '/(unauthenticated)/_auth'
+    | '/_authenticated/billing'
+    | '/_authenticated/history'
+    | '/_authenticated/notifications'
+    | '/_authenticated/profile'
+    | '/_authenticated/recording'
+    | '/_authenticated/transcriptions'
     | '/_authenticated/'
     | '/(unauthenticated)/_auth/authentication-error'
     | '/(unauthenticated)/_auth/sign-in'
@@ -152,6 +262,9 @@ export interface FileRouteTypes {
     | '/(unauthenticated)/_auth/verify-success'
     | '/(unauthenticated)/legal/privacy'
     | '/(unauthenticated)/legal/terms'
+    | '/_authenticated/settings/models'
+    | '/_authenticated/settings/shortcuts'
+    | '/_authenticated/settings/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -182,12 +295,75 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/transcriptions': {
+      id: '/_authenticated/transcriptions'
+      path: '/transcriptions'
+      fullPath: '/transcriptions'
+      preLoaderRoute: typeof AuthenticatedTranscriptionsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/recording': {
+      id: '/_authenticated/recording'
+      path: '/recording'
+      fullPath: '/recording'
+      preLoaderRoute: typeof AuthenticatedRecordingRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/profile': {
+      id: '/_authenticated/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof AuthenticatedProfileRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/notifications': {
+      id: '/_authenticated/notifications'
+      path: '/notifications'
+      fullPath: '/notifications'
+      preLoaderRoute: typeof AuthenticatedNotificationsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/history': {
+      id: '/_authenticated/history'
+      path: '/history'
+      fullPath: '/history'
+      preLoaderRoute: typeof AuthenticatedHistoryRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/billing': {
+      id: '/_authenticated/billing'
+      path: '/billing'
+      fullPath: '/billing'
+      preLoaderRoute: typeof AuthenticatedBillingRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/(unauthenticated)/_auth': {
       id: '/(unauthenticated)/_auth'
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof unauthenticatedAuthRouteImport
       parentRoute: typeof unauthenticatedRoute
+    }
+    '/_authenticated/settings/': {
+      id: '/_authenticated/settings/'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof AuthenticatedSettingsIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/settings/shortcuts': {
+      id: '/_authenticated/settings/shortcuts'
+      path: '/settings/shortcuts'
+      fullPath: '/settings/shortcuts'
+      preLoaderRoute: typeof AuthenticatedSettingsShortcutsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/settings/models': {
+      id: '/_authenticated/settings/models'
+      path: '/settings/models'
+      fullPath: '/settings/models'
+      preLoaderRoute: typeof AuthenticatedSettingsModelsRouteImport
+      parentRoute: typeof AuthenticatedRoute
     }
     '/(unauthenticated)/legal/terms': {
       id: '/(unauthenticated)/legal/terms'
@@ -242,11 +418,29 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedRouteChildren {
+  AuthenticatedBillingRoute: typeof AuthenticatedBillingRoute
+  AuthenticatedHistoryRoute: typeof AuthenticatedHistoryRoute
+  AuthenticatedNotificationsRoute: typeof AuthenticatedNotificationsRoute
+  AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
+  AuthenticatedRecordingRoute: typeof AuthenticatedRecordingRoute
+  AuthenticatedTranscriptionsRoute: typeof AuthenticatedTranscriptionsRoute
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
+  AuthenticatedSettingsModelsRoute: typeof AuthenticatedSettingsModelsRoute
+  AuthenticatedSettingsShortcutsRoute: typeof AuthenticatedSettingsShortcutsRoute
+  AuthenticatedSettingsIndexRoute: typeof AuthenticatedSettingsIndexRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
+  AuthenticatedBillingRoute: AuthenticatedBillingRoute,
+  AuthenticatedHistoryRoute: AuthenticatedHistoryRoute,
+  AuthenticatedNotificationsRoute: AuthenticatedNotificationsRoute,
+  AuthenticatedProfileRoute: AuthenticatedProfileRoute,
+  AuthenticatedRecordingRoute: AuthenticatedRecordingRoute,
+  AuthenticatedTranscriptionsRoute: AuthenticatedTranscriptionsRoute,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
+  AuthenticatedSettingsModelsRoute: AuthenticatedSettingsModelsRoute,
+  AuthenticatedSettingsShortcutsRoute: AuthenticatedSettingsShortcutsRoute,
+  AuthenticatedSettingsIndexRoute: AuthenticatedSettingsIndexRoute,
 }
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(

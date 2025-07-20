@@ -6,7 +6,7 @@ import { openUrl } from "@tauri-apps/plugin-opener";
 import { Loader } from "lucide-react";
 
 import { SignInSchema } from "@acme/auth/schemas";
-import VoiceGeckoLogo from "@acme/ui/components/logos/voice-gecko";
+import LogoFull from "@acme/ui/components/logos/logo-full";
 import { Button } from "@acme/ui/components/ui/button";
 import {
   Card,
@@ -126,10 +126,7 @@ function SignIn() {
       <div className="flex flex-col gap-6">
         <Card className="shadow-lg">
           <CardHeader className="space-y-3">
-            <VoiceGeckoLogo
-              className="mx-auto h-10"
-              aria-label="VoiceGecko Logo"
-            />
+            <LogoFull className="mx-auto h-10" aria-label="VoiceGecko Logo" />
             <CardDescription className="text-center">
               Sign in to continue to{" "}
               <span className="font-mono font-bold">VoiceGecko</span>

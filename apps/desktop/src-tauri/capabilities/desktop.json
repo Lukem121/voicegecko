@@ -1,6 +1,18 @@
 {
   "identifier": "desktop-capability",
-  "platforms": ["macOS", "windows", "linux"],
-  "windows": ["main"],
-  "permissions": ["updater:default"]
+  "platforms": [
+    "macOS",
+    "windows",
+    "linux"
+  ],
+  "windows": [
+    "main"
+  ],
+  "permissions": [
+    "updater:default",
+    "autostart:default",
+    "global-shortcut:default",
+    "global-shortcut:default",
+    "positioner:default"
+  ]
 }

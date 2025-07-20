@@ -3,15 +3,19 @@ import { StrictMode, useEffect, useState } from "react";
 import { authClient } from "~/lib/client";
 
 import "@acme/ui/globals.css";
+import "~/styles/fonts.css";
 
 import { useBetterAuthTauri } from "@daveyplate/better-auth-tauri/react";
 import { createRouter, RouterProvider } from "@tanstack/react-router";
 import ReactDOM from "react-dom/client";
 
 import { AppLauncher } from "~/components/app-launcher";
+import { FullscreenDetector } from "~/components/fullscreen-detector";
+import { GeckoBarApp } from "~/components/gecko-bar/gecko-bar-app";
 import { useIsAuthenticated } from "~/hooks/auth";
-// Import the generated route tree
+import { isGeckoBarWindow } from "~/lib/window-detection";
 import { routeTree } from "~/routeTree.gen";
+import { useSettingsStore } from "~/stores/settings.store";
 import { TRPCReactProvider } from "~/trpc";
 import { ThemeProvider } from "./providers/theme";
 
@@ -37,6 +41,7 @@ declare module "@tanstack/react-router" {
 function InnerApp() {
   const auth = useIsAuthenticated();
   const session = authClient.useSession();
+  const settings = useSettingsStore((state) => state.settings);
 
   useBetterAuthTauri({
     authClient,
@@ -59,13 +64,50 @@ function InnerApp() {
     void router.invalidate();
   }, [session.data, session.isPending]);
 
-  return <RouterProvider router={router} context={{ auth }} />;
+  return (
+    <>
+      <FullscreenDetector
+        enabled={
+          settings.general.showGeckoBar &&
+          settings.general.hideGeckoOnFullscreen
+        }
+        geckoBarEnabled={settings.general.showGeckoBar}
+      />
+      <RouterProvider router={router} context={{ auth }} />
+    </>
+  );
 }
 
 function App() {
   const [isAppReady, setIsAppReady] = useState(false);
+  const [isGeckoBar, setIsGeckoBar] = useState<boolean | null>(null);
 
-  // Show launcher/updater first, then main app
+  useEffect(() => {
+    // Detect which window we're in
+    async function detectWindow() {
+      const geckoBarWindow = await isGeckoBarWindow();
+      setIsGeckoBar(geckoBarWindow);
+      console.log("Window detected:", geckoBarWindow ? "gecko-bar" : "main");
+    }
+
+    void detectWindow();
+  }, []);
+
+  // Don't render anything until we know which window we're in
+  if (isGeckoBar === null) {
+    return <div>Loading...</div>;
+  }
+
+  // If this is the gecko bar window, render the gecko bar app directly
+  if (isGeckoBar) {
+    return (
+      <TRPCReactProvider>
+        <GeckoBarApp />
+      </TRPCReactProvider>
+    );
+  }
+
+  // Otherwise, this is the main window
   if (!isAppReady) {
     return <AppLauncher onReady={() => setIsAppReady(true)} />;
   }

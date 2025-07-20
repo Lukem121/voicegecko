@@ -1,8 +1,7 @@
+pub mod audio;
+pub mod gecko_bar;
+pub mod model_manager;
+pub mod settings;
+pub mod transcription;
+pub mod transcription_service;
 pub mod updater;
-
-// Future modules can be added here as the app grows:
-// pub mod audio;
-// pub mod settings;
-// pub mod database;
-// pub mod api_client;
-// pub mod voice_processing; 

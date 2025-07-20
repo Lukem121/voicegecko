@@ -1,7 +1,7 @@
 {
   "productName": "Voice Gecko",
   "version": "0.0.6",
-  "identifier": "com.voice-gecko.desktop",
+  "identifier": "com.voicegecko.desktop",
   "build": {
     "frontendDist": "../dist",
     "devUrl": "http://localhost:1420",
@@ -14,11 +14,30 @@
         "title": "Voice Gecko",
         "width": 1350,
         "height": 820,
-        "closable": false,
+        "closable": true,
         "minimizable": true,
         "maximizable": true,
         "resizable": true,
         "center": true
+      },
+      {
+        "label": "gecko-bar",
+        "title": "Voice Gecko Bar",
+        "width": 300,
+        "height": 80,
+        "closable": false,
+        "minimizable": false,
+        "maximizable": false,
+        "resizable": false,
+        "alwaysOnTop": true,
+        "decorations": false,
+        "skipTaskbar": true,
+        "visible": false,
+        "transparent": true,
+        "center": false,
+        "shadow": false,
+        "acceptFirstMouse": true,
+        "tabbingIdentifier": "gecko-bar"
       }
     ],
     "security": {
@@ -48,7 +67,8 @@
     "active": true,
     "targets": "all",
     "icon": ["icons/icon.ico"],
-    "createUpdaterArtifacts": true
+    "createUpdaterArtifacts": true,
+    "resources": ["resources/**/*"]
   },
   "$schema": "../../../node_modules/@tauri-apps/cli/schema.json"
 }
