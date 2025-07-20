@@ -64,10 +64,11 @@ export default function middleware(request: NextRequest) {
     return addCorsHeaders(response, request);
   }
 
-  // For API routes, just add CORS headers and continue
+  // For API routes, always add CORS headers to handle subdomain requests
   if (pathname.startsWith("/api/")) {
     const response = NextResponse.next();
-    return isCrossOrigin ? addCorsHeaders(response, request) : response;
+    // Always add CORS headers for API routes to handle www/non-www subdomain differences
+    return origin ? addCorsHeaders(response, request) : response;
   }
 
   // For page routes, handle auth + CORS
