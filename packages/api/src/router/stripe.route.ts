@@ -111,7 +111,6 @@ export const stripeRouter = {
     .mutation(async ({ input, ctx }) => {
       try {
         // Update the subscription to not cancel at period end
-
         const subscription = await stripeClient.subscriptions.update(
           input.subscriptionId,
           {

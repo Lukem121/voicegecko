@@ -79,8 +79,8 @@ export const serverAuth = betterAuth({
       /**
        * Auto-inference blocked by https://github.com/better-auth/better-auth/pull/2891
        */
-      currentURL: authEnv().NEXT_PUBLIC_VOICEGECKO_API_URL,
-      productionURL: authEnv().NEXT_PUBLIC_VOICEGECKO_API_URL,
+      currentURL: authEnv().NEXT_PUBLIC_VOICEGECKO_URL,
+      productionURL: authEnv().NEXT_PUBLIC_VOICEGECKO_URL,
     }),
     expo(),
     tauri({
