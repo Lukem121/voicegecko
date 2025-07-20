@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { Suspense } from "react";
 
 interface AuthLayoutProps {
   readonly children: ReactNode;
@@ -33,7 +34,7 @@ export default function AuthLayout({ children }: AuthLayoutProps) {
       </div>
       <div className="lg:p-8">
         <div className="mx-auto flex w-full max-w-[400px] flex-col justify-center space-y-6">
-          {children}
+          <Suspense fallback={<div>Loading...</div>}>{children}</Suspense>
         </div>
       </div>
     </div>
