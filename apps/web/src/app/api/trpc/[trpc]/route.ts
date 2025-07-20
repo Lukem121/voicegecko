@@ -7,7 +7,7 @@ import { serverAuth } from "@acme/auth";
 
 /**
  * Handle all tRPC requests (GET and POST)
- * CORS is handled by middleware
+ * CORS is handled by next.config.js
  */
 const handler = async (request: NextRequest) => {
   return await fetchRequestHandler({
@@ -26,3 +26,10 @@ const handler = async (request: NextRequest) => {
 };
 
 export { handler as GET, handler as POST };
+
+/**
+ * Handle OPTIONS preflight requests
+ */
+export function OPTIONS() {
+  return new Response(null, { status: 200 });
+}
