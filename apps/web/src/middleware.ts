@@ -20,6 +20,8 @@ const unprotectedRoutes: string[] = [
 ];
 
 export default function middleware(request: NextRequest) {
+  console.log("🔍 Middleware request:", request.url);
+
   const pathname = new URL(request.url).pathname;
 
   // Skip API routes - they have their own auth handling
