@@ -30,9 +30,9 @@ import { Input } from "@acme/ui/components/ui/input";
 
 import { authClient } from "~/lib/auth/client";
 import { APP_ROUTES, buildUrl } from "~/utils/app-routes";
-import { SocialSignInButton } from "../components/social-sign-in-button";
-import TermsAndPrivacyNotice from "../components/terms-and-privacy-notice";
-import { useSocialAuth } from "../hooks/use-social-auth";
+import { SocialSignInButton } from "../../../components/social-sign-in-button";
+import TermsAndPrivacyNotice from "../../../components/terms-and-privacy-notice";
+import { useSocialAuth } from "../../../hooks/use-social-auth";
 
 const isEmailError = (code: string) => {
   if (code === "USER_ALREADY_EXISTS") {
