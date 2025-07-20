@@ -19,7 +19,6 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@acme/api": "workspace:*",
     "@acme/db": "workspace:*",
     "@acme/email": "workspace:*",
     "@better-auth/expo": "1.3.0",
