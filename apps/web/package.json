@@ -39,13 +39,11 @@
     "react-dom": "catalog:react19",
     "react-icons": "^5.5.0",
     "superjson": "2.2.2",
-    "tailwind-merge": "^3.3.1",
     "zod": "catalog:"
   },
   "devDependencies": {
     "@acme/eslint-config": "workspace:*",
     "@acme/prettier-config": "workspace:*",
-    "@acme/tailwind-config": "workspace:*",
     "@acme/tsconfig": "workspace:*",
     "@types/node": "^24.0.7",
     "@types/react": "catalog:react19",
