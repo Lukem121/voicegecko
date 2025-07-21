@@ -63,14 +63,24 @@ jobs:
             $cmakeUrl = "https://github.com/Kitware/CMake/releases/download/v3.28.1/cmake-3.28.1-windows-x86_64.msi"
             $cmakeInstaller = "$env:TEMP\cmake-installer.msi"
             Invoke-WebRequest -Uri $cmakeUrl -OutFile $cmakeInstaller
+            Write-Host "Starting CMake installation..."
             Start-Process msiexec.exe -ArgumentList "/i", $cmakeInstaller, "/quiet", "/norestart" -Wait
-            # Add CMake to PATH for current session
-            $env:Path = "C:\Program Files\CMake\bin;$env:Path"
+            Write-Host "CMake installation completed"
+            
+            # Verify installation
+            if (Test-Path "C:\Program Files\CMake\bin\cmake.exe") {
+              Write-Host "CMake successfully installed at C:\Program Files\CMake\bin\cmake.exe"
+              # Add CMake to PATH persistently for GitHub Actions
+              "C:\Program Files\CMake\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+            } else {
+              Write-Error "CMake installation failed - executable not found"
+              exit 1
+            }
           } else {
-            Write-Host "CMake is already installed"
+            Write-Host "CMake is already installed at: $($cmakeInstalled.Source)"
           }
 
-          # Check if Vulkan SDK is installed
+          # Check if Vulkan SDK is installed and set environment variables
           if (-not (Test-Path "C:\VulkanSDK")) {
             Write-Host "Installing Vulkan SDK..."
             # Download and install Vulkan SDK
@@ -78,14 +88,27 @@ jobs:
             $vulkanInstaller = "$env:TEMP\VulkanSDK-Installer.exe"
             Invoke-WebRequest -Uri $vulkanUrl -OutFile $vulkanInstaller
             Start-Process -FilePath $vulkanInstaller -ArgumentList "/S" -Wait
-            # Set VULKAN_SDK environment variable for current session
-            $env:VULKAN_SDK = "C:\VulkanSDK\1.4.321.1"
-            $env:Path = "$env:VULKAN_SDK\Bin;$env:Path"
+            # Set VULKAN_SDK environment variable persistently for GitHub Actions
+            "VULKAN_SDK=C:\VulkanSDK\1.4.321.1" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+            "C:\VulkanSDK\1.4.321.1\Bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
           } else {
             Write-Host "Vulkan SDK is already installed"
-            # Find the installed version and set environment variable
+            # Find the installed version and set environment variable persistently
             $vulkanVersion = Get-ChildItem "C:\VulkanSDK" | Select-Object -First 1 -ExpandProperty Name
-            $env:VULKAN_SDK = "C:\VulkanSDK\$vulkanVersion"
+            $vulkanPath = "C:\VulkanSDK\$vulkanVersion"
+            Write-Host "Setting VULKAN_SDK to: $vulkanPath"
+            "VULKAN_SDK=$vulkanPath" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+            "$vulkanPath\Bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+          }
+
+          # Debug: Show current environment
+          Write-Host "Current PATH additions made:"
+          if (Test-Path $env:GITHUB_PATH) {
+            Get-Content $env:GITHUB_PATH
+          }
+          Write-Host "Current ENV additions made:"
+          if (Test-Path $env:GITHUB_ENV) {
+            Get-Content $env:GITHUB_ENV
           }
 
       - name: install frontend dependencies
@@ -97,7 +120,6 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
           VITE_API_URL: ${{ secrets.VITE_API_URL }}
-          VULKAN_SDK: ${{ matrix.platform == 'self-hosted' && 'C:\VulkanSDK\1.4.321.1' || '' }}
         with:
           tagName: app-v__VERSION__ # the action automatically replaces \_\_VERSION\_\_ with the app version.
           releaseName: "App v__VERSION__"
