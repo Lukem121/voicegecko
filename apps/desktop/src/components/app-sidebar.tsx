@@ -6,7 +6,6 @@ import {
   CreditCard,
   FileText,
   HelpCircle,
-  History,
   LogOut,
   Mic,
   PieChart,
