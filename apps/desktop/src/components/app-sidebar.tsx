@@ -79,7 +79,7 @@ const isSpecialLink = (url: string) => {
 const handleLinkClick = async (url: string) => {
   if (url === "#plans") {
     const websiteUrl =
-      import.meta.env.VITE_WEBSITE_URL || "https://www.voicegecko.io";
+      import.meta.env.VITE_PUBLIC_VOICEGECKO_URL || "https://www.voicegecko.io";
     await open(`${websiteUrl}/app/plans`);
   } else if (isExternalLink(url)) {
     await open(url);
@@ -302,7 +302,7 @@ export function AppSidebar() {
                       <button
                         onClick={async () => {
                           const websiteUrl =
-                            import.meta.env.VITE_WEBSITE_URL ||
+                            import.meta.env.VITE_PUBLIC_VOICEGECKO_URL ||
                             "https://www.voicegecko.io";
                           await open(`${websiteUrl}/app/plans`);
                         }}
