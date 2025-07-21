@@ -92,19 +92,42 @@ class UsageRepository {
       return { stripeCustomerId: null, subscription: null };
     }
 
-    const [subscription] = await db
+    // Get all subscriptions for this customer
+    const subscriptions = await db
       .select({
         status: SubscriptionTable.status,
         cancelAtPeriodEnd: SubscriptionTable.cancelAtPeriodEnd,
+        periodEnd: SubscriptionTable.periodEnd,
       })
       .from(SubscriptionTable)
       .where(
         eq(SubscriptionTable.stripeCustomerId, userRecord.stripeCustomerId),
       );
 
+    // Sort in JavaScript: active subscriptions first, then by period end date
+    const sortedSubscriptions = subscriptions.sort((a, b) => {
+      // First, prioritize active subscriptions
+      if (a.status === "active" && b.status !== "active") return -1;
+      if (a.status !== "active" && b.status === "active") return 1;
+
+      // Then sort by period end date (furthest in future first)
+      if (!a.periodEnd && !b.periodEnd) return 0;
+      if (!a.periodEnd) return 1;
+      if (!b.periodEnd) return -1;
+      return b.periodEnd.getTime() - a.periodEnd.getTime();
+    });
+
+    // Get the first subscription (which will be active if one exists)
+    const subscription = sortedSubscriptions[0];
+
     return {
       stripeCustomerId: userRecord.stripeCustomerId,
-      subscription: subscription || null,
+      subscription: subscription
+        ? {
+            status: subscription.status,
+            cancelAtPeriodEnd: subscription.cancelAtPeriodEnd,
+          }
+        : null,
     };
   }
 

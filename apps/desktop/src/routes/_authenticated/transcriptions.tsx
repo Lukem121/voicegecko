@@ -45,7 +45,7 @@ function TranscriptionsPage() {
   const { deleteTranscription, isDeleting } = useDeleteTranscription();
 
   const handleCopy = (content: string) => {
-    void navigator.clipboard.writeText(content);
+    void navigator.clipboard.writeText(content.trim());
   };
 
   const handleSendFeedback = (id: number) => {

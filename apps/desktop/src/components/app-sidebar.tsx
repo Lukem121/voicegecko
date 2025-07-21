@@ -12,7 +12,6 @@ import {
   HelpCircle,
   LogOut,
   Mic,
-  PieChart,
   Settings2,
   User2,
 } from "lucide-react";
@@ -68,6 +67,29 @@ interface NavigationData {
   navSecondary: NavigationItem[];
 }
 
+// Helper functions for link handling
+const isExternalLink = (url: string) => {
+  return url.startsWith("http") || url.startsWith("https");
+};
+
+const isSpecialLink = (url: string) => {
+  return url.startsWith("#");
+};
+
+const handleLinkClick = async (url: string) => {
+  if (url === "#plans") {
+    const websiteUrl =
+      import.meta.env.VITE_WEBSITE_URL || "https://www.voicegecko.io";
+    await open(`${websiteUrl}/app/plans`);
+  } else if (isExternalLink(url)) {
+    await open(url);
+  }
+};
+
+const shouldUseAsChild = (url: string) => {
+  return !isSpecialLink(url) && !isExternalLink(url);
+};
+
 const data: NavigationData = {
   navMain: [
     {
@@ -109,7 +131,7 @@ const data: NavigationData = {
     },
     {
       title: "Help & Support",
-      url: "/support",
+      url: "https://discord.gg/BFxNQCzZjB",
       icon: HelpCircle,
     },
   ],
@@ -129,10 +151,9 @@ export function AppSidebar() {
 
   // Check if user is on free plan (no subscription)
   const isFreePlan = usageStatus && !usageStatus.isUnlimited;
-  const usagePercentage =
-    isFreePlan && usageStatus
-      ? (usageStatus.wordsUsed / usageStatus.wordsLimit) * 100
-      : 0;
+  const usagePercentage = isFreePlan
+    ? (usageStatus.wordsUsed / usageStatus.wordsLimit) * 100
+    : 0;
 
   return (
     <Sidebar variant="inset" collapsible="icon">
@@ -199,66 +220,70 @@ export function AppSidebar() {
         <SidebarGroup className="mt-auto">
           <SidebarGroupContent>
             <SidebarMenu>
-              {data.navSecondary.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton
-                    asChild={item.url !== "#plans"}
-                    size="sm"
-                    isActive={
-                      item.url === "/"
-                        ? location.pathname === item.url
-                        : location.pathname.startsWith(item.url)
-                    }
-                    onClick={
-                      item.url === "#plans"
-                        ? async () => {
-                            const websiteUrl =
-                              import.meta.env.VITE_WEBSITE_URL ||
-                              "https://www.voicegecko.io";
-                            await open(`${websiteUrl}/app/plans`);
-                          }
-                        : undefined
-                    }
-                    className="cursor-pointer"
-                  >
-                    {item.url === "#plans" ? (
-                      <>
-                        <item.icon />
-                        <span>{item.title}</span>
-                        <ExternalLink className="ml-auto !size-3" />
-                      </>
-                    ) : (
-                      <Link to={item.url}>
-                        <item.icon />
-                        <span>{item.title}</span>
-                      </Link>
-                    )}
-                  </SidebarMenuButton>
-                  {item.items?.length ? (
-                    <SidebarMenuSub>
-                      {item.items.map((subItem) => (
-                        <SidebarMenuSubItem key={subItem.title}>
-                          <SidebarMenuSubButton
-                            asChild
-                            isActive={location.pathname === subItem.url}
-                          >
-                            <Link to={subItem.url}>
-                              <span>{subItem.title}</span>
-                            </Link>
-                          </SidebarMenuSubButton>
-                        </SidebarMenuSubItem>
-                      ))}
-                    </SidebarMenuSub>
-                  ) : null}
-                </SidebarMenuItem>
-              ))}
+              {data.navSecondary.map((item) => {
+                const isInternal = shouldUseAsChild(item.url);
+                const showExternalIcon =
+                  isSpecialLink(item.url) || isExternalLink(item.url);
+
+                return (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton
+                      asChild={isInternal}
+                      size="sm"
+                      isActive={
+                        isInternal &&
+                        (item.url === "/"
+                          ? location.pathname === item.url
+                          : location.pathname.startsWith(item.url))
+                      }
+                      onClick={
+                        !isInternal
+                          ? () => handleLinkClick(item.url)
+                          : undefined
+                      }
+                      className="cursor-pointer"
+                    >
+                      {isInternal ? (
+                        <Link to={item.url}>
+                          <item.icon />
+                          <span>{item.title}</span>
+                        </Link>
+                      ) : (
+                        <>
+                          <item.icon />
+                          <span>{item.title}</span>
+                          {showExternalIcon && (
+                            <ExternalLink className="ml-auto !size-3" />
+                          )}
+                        </>
+                      )}
+                    </SidebarMenuButton>
+                    {item.items?.length ? (
+                      <SidebarMenuSub>
+                        {item.items.map((subItem) => (
+                          <SidebarMenuSubItem key={subItem.title}>
+                            <SidebarMenuSubButton
+                              asChild
+                              isActive={location.pathname === subItem.url}
+                            >
+                              <Link to={subItem.url}>
+                                <span>{subItem.title}</span>
+                              </Link>
+                            </SidebarMenuSubButton>
+                          </SidebarMenuSubItem>
+                        ))}
+                      </SidebarMenuSub>
+                    ) : null}
+                  </SidebarMenuItem>
+                );
+              })}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
       <SidebarFooter>
         {/* Usage Progress Bar for Free Users */}
-        {isFreePlan && usageStatus && (
+        {isFreePlan && (
           <div className="mb-4 px-2">
             <div className="space-y-2">
               <div className="flex items-center justify-between text-xs">
