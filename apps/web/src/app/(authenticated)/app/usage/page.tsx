@@ -158,27 +158,6 @@ export default async function UsagePage() {
             ))}
           </CardContent>
         </Card>
-
-        {/* Quick Actions */}
-        <Card className="border-0 shadow-sm">
-          <CardHeader>
-            <CardTitle className="text-lg font-medium">Quick Actions</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <Button variant="outline" className="w-full justify-start" disabled>
-              <Download className="mr-2 h-4 w-4" />
-              Export Usage Report
-            </Button>
-            <Button variant="outline" className="w-full justify-start" disabled>
-              <Calendar className="mr-2 h-4 w-4" />
-              View Detailed Analytics
-            </Button>
-            <Button variant="outline" className="w-full justify-start" disabled>
-              <BarChart className="mr-2 h-4 w-4" />
-              Compare Previous Months
-            </Button>
-          </CardContent>
-        </Card>
       </div>
     </div>
   );
