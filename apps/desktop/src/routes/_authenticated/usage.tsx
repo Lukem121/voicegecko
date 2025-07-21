@@ -221,7 +221,7 @@ function UsagePage() {
               className="w-full justify-start"
               onClick={async () => {
                 const websiteUrl =
-                  import.meta.env.VITE_WEBSITE_URL ||
+                  import.meta.env.VITE_PUBLIC_VOICEGECKO_URL ||
                   "https://www.voicegecko.io";
                 await open(`${websiteUrl}/app/plans`);
               }}

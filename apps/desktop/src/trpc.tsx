@@ -10,7 +10,7 @@ export const queryClient = new QueryClient();
 export const trpcClient = createTRPCClient<AppRouter>({
   links: [
     httpBatchLink({
-      url: import.meta.env.VITE_API_URL + "/api/trpc",
+      url: import.meta.env.VITE_PUBLIC_VOICEGECKO_URL + "/api/trpc",
       transformer: superjson,
       fetch(url, options) {
         return fetch(url, {
