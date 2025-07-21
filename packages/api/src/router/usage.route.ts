@@ -6,7 +6,8 @@ import { protectedProcedure } from "../trpc";
 export const usageRouter = {
   getStatus: protectedProcedure.query(async ({ ctx }) => {
     const userId = ctx.session.user.id;
-    return usageService.getUserUsageStatus(userId);
+    const status = await usageService.getUserUsageStatus(userId);
+    return status;
   }),
 
   getStats: protectedProcedure.query(async ({ ctx }) => {

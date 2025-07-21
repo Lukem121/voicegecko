@@ -104,7 +104,6 @@ function RecordingPage() {
   // Fetch usage status
   const { data: usageStatus } = useQuery(trpc.usage.getStatus.queryOptions());
 
-  const canRecord = usageStatus?.canTranscribe ?? true;
   const isAtLimit =
     usageStatus && !usageStatus.isUnlimited && !usageStatus.canTranscribe;
 
@@ -159,7 +158,7 @@ function RecordingPage() {
       <div className="flex flex-1 flex-col gap-6">
         {/* Main Note Input */}
         <Card>
-          <CardContent className="p-6">
+          <CardContent>
             <div className="space-y-4">
               <div className="relative">
                 <Textarea
@@ -171,21 +170,14 @@ function RecordingPage() {
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button
-                      variant={
-                        isRecording
-                          ? "destructive"
-                          : isAtLimit
-                            ? "secondary"
-                            : "secondary"
-                      }
+                      variant={isRecording ? "destructive" : "secondary"}
                       size="icon"
                       className={cn(
                         `absolute top-3 right-3 h-10 w-10 rounded-full`,
                         isRecording && "animate-pulse",
-                        isAtLimit && "opacity-50",
                       )}
                       onClick={handleMicClick}
-                      disabled={isTranscribing || isProcessing || isAtLimit}
+                      disabled={isTranscribing || isProcessing}
                     >
                       {isTranscribing ? (
                         <Loader2 className="h-5 w-5 animate-spin" />
@@ -196,22 +188,23 @@ function RecordingPage() {
                       )}
                     </Button>
                   </TooltipTrigger>
-                  {isAtLimit && (
-                    <TooltipContent>
+                  <TooltipContent>
+                    {isAtLimit ? (
                       <p>
-                        Usage limit reached. Upgrade to Pro for unlimited
-                        transcriptions.
+                        Usage limit reached. Recording allowed but transcription
+                        may be blocked.
                       </p>
-                    </TooltipContent>
-                  )}
+                    ) : usageStatus && !usageStatus.isUnlimited ? (
+                      <p>
+                        {usageStatus.wordsUsed.toLocaleString()} /{" "}
+                        {usageStatus.wordsLimit.toLocaleString()} words used
+                        this week
+                      </p>
+                    ) : (
+                      <p>Click to start recording</p>
+                    )}
+                  </TooltipContent>
                 </Tooltip>
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  {/* Removed spinner section */}
-                </div>
-                <Button variant="secondary">Finish</Button>
               </div>
             </div>
           </CardContent>
