@@ -365,7 +365,7 @@ export default function Plans({ prices, subscription, error }: PlansProps) {
     {
       name: "Teams",
       id: "voice gecko team",
-      stripeId: "voice gecko team", // This matches the plan name in auth config
+      stripeId: "voice gecko team", // This matches the plan name in auth config 1
       monthlyPrice: getPerUnitPriceDisplay(
         "voice gecko team",
         "monthly",
