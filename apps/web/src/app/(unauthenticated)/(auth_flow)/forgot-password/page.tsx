@@ -29,7 +29,7 @@ import { Input } from "@acme/ui/components/ui/input";
 
 import { authClient } from "~/lib/auth/client";
 import { APP_ROUTES } from "~/utils/app-routes";
-import TermsAndPrivacyNotice from "../components/terms-and-privacy-notice";
+import TermsAndPrivacyNotice from "../../components/terms-and-privacy-notice";
 
 export default function ForgotPassword() {
   const [error, setError] = useState<string | null>(null);

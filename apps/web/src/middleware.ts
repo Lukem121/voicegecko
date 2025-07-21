@@ -19,82 +19,28 @@ const unprotectedRoutes: string[] = [
   APP_ROUTES.LEGAL.PRIVACY,
 ];
 
-/**
- * Add CORS headers for cross-origin requests (simple permissive config)
- */
-const addCorsHeaders = (response: NextResponse, request: NextRequest) => {
-  const origin = request.headers.get("origin");
-
-  console.log("Origin:", origin);
-
-  // Allow any origin
-  if (origin) {
-    response.headers.set("Access-Control-Allow-Origin", origin);
-  } else {
-    response.headers.set("Access-Control-Allow-Origin", "*");
-  }
-
-  // Allow everything
-  response.headers.set("Access-Control-Allow-Credentials", "true");
-  response.headers.set("Access-Control-Allow-Methods", "*");
-  response.headers.set(
-    "Access-Control-Allow-Headers",
-    "Content-Type, Authorization, Cookie, X-Requested-With, platform, x-trpc-source, trpc-accept, x-trpc-accept",
-  );
-
-  return response;
-};
-
-/**
- * Middleware for the app.
- *
- * Handles CORS for all routes and basic auth protection for pages.
- *
- * @param request - The request object.
- * @returns The response object.
- */
 export default function middleware(request: NextRequest) {
+  console.log("🔍 Middleware request:", request.url);
+
   const pathname = new URL(request.url).pathname;
-  const origin = request.headers.get("origin");
-  const isCrossOrigin = origin && origin !== new URL(request.url).origin;
 
-  // Handle preflight OPTIONS requests for CORS
-  if (request.method === "OPTIONS" && isCrossOrigin) {
-    const response = new NextResponse(null, { status: 200 });
-    return addCorsHeaders(response, request);
-  }
-
-  // For API routes, just add CORS headers and continue
+  // Skip API routes - they have their own auth handling
   if (pathname.startsWith("/api/")) {
-    const response = NextResponse.next();
-    return isCrossOrigin ? addCorsHeaders(response, request) : response;
+    return NextResponse.next();
   }
 
-  // For page routes, handle auth + CORS
+  // For page routes, handle auth
   const sessionCookie = getSessionCookie(request);
   const isUnprotectedRoute = unprotectedRoutes.some(
     (route) => pathname === route,
   );
 
   if (!sessionCookie && !isUnprotectedRoute) {
-    console.log("🚨👇 blocked in middleware 👇🚨");
-    console.log(pathname);
-    console.log("🚨👆 blocked in middleware 👆🚨");
-
-    const redirectResponse = NextResponse.redirect(
-      new URL(APP_ROUTES.AUTH.SIGN_IN, request.url),
-    );
-
-    // Add CORS headers even to redirects for cross-origin requests
-    return isCrossOrigin
-      ? addCorsHeaders(redirectResponse, request)
-      : redirectResponse;
+    console.log("🚨 Blocked in middleware:", pathname);
+    return NextResponse.redirect(new URL(APP_ROUTES.AUTH.SIGN_IN, request.url));
   }
 
-  const response = NextResponse.next();
-
-  // Add CORS headers for cross-origin requests
-  return isCrossOrigin ? addCorsHeaders(response, request) : response;
+  return NextResponse.next();
 }
 
 // Include API routes and all page routes

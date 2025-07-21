@@ -1,6 +1,6 @@
 [package]
 name = "desktop"
-version = "0.0.6"
+version = "0.0.7"
 description = "A Tauri App"
 authors = ["you"]
 edition = "2021"
@@ -38,7 +38,7 @@ reqwest = { version = "0.12", features = ["json"] }
 tokio = { version = "1.46.1", features = ["full"] }
 futures-util = "0.3.31"
 sha1 = "0.10"
-whisper-rs = "0.14.3"
+whisper-rs = { version = "0.14.3", features = ["vulkan"] }
 thiserror = "2.0.12"
 rubato = "0.15.0"
 tauri-plugin-log = "2.6.0"

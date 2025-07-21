@@ -1,7 +1,7 @@
 {
   "name": "@acme/desktop",
   "private": true,
-  "version": "0.0.6",
+  "version": "0.0.7",
   "type": "module",
   "scripts": {
     "dev": "tauri dev",
@@ -55,7 +55,6 @@
   "devDependencies": {
     "@acme/eslint-config": "workspace:*",
     "@acme/prettier-config": "workspace:*",
-    "@acme/tailwind-config": "workspace:*",
     "@acme/tsconfig": "workspace:*",
     "@tanstack/router-cli": "^1.123.0",
     "@tanstack/router-plugin": "^1.123.0",

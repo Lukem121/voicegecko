@@ -13,11 +13,11 @@ import {
   username,
 } from "better-auth/plugins";
 
-import { stripeClient } from "@acme/api/src/lib/stripe";
 import { db } from "@acme/db/client";
 import { sendResetPasswordEmail, sendVerificationEmail } from "@acme/email";
 
 import { authEnv } from "../env";
+import { stripeClient } from "./lib/stripe";
 import { checkBannedMiddleware } from "./middleware/check-banned-middleware";
 import { usernameValidator } from "./schemas/username.schema";
 
@@ -79,8 +79,8 @@ export const serverAuth = betterAuth({
       /**
        * Auto-inference blocked by https://github.com/better-auth/better-auth/pull/2891
        */
-      currentURL: authEnv().NEXT_PUBLIC_VOICEGECKO_API_URL,
-      productionURL: authEnv().NEXT_PUBLIC_VOICEGECKO_API_URL,
+      currentURL: authEnv().NEXT_PUBLIC_VOICEGECKO_URL,
+      productionURL: authEnv().NEXT_PUBLIC_VOICEGECKO_URL,
     }),
     expo(),
     tauri({
@@ -153,6 +153,7 @@ export const serverAuth = betterAuth({
     "http://tauri.localhost", // Tauri desktop app
 
     "https://voicegecko.io",
+    "https://www.voicegecko.io",
   ],
 });
 

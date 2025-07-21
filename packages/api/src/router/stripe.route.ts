@@ -18,6 +18,7 @@ export interface Price {
 export interface PriceWithMetadata extends Price {
   planName?: string;
   intervalType?: "monthly" | "yearly";
+  minimumQuantity?: number;
 }
 
 // Map environment variables to plan metadata
@@ -25,18 +26,22 @@ const PRICE_METADATA = {
   [apiEnv().STRIPE_PRICE_ID_PRO_MONTHLY]: {
     planName: "voice gecko pro",
     intervalType: "monthly" as const,
+    minimumQuantity: 1,
   },
   [apiEnv().STRIPE_PRICE_ID_PRO_YEARLY]: {
     planName: "voice gecko pro",
     intervalType: "yearly" as const,
+    minimumQuantity: 1,
   },
   [apiEnv().STRIPE_PRICE_ID_TEAM_MONTHLY]: {
     planName: "voice gecko team",
     intervalType: "monthly" as const,
+    minimumQuantity: 3,
   },
   [apiEnv().STRIPE_PRICE_ID_TEAM_YEARLY]: {
     planName: "voice gecko team",
     intervalType: "yearly" as const,
+    minimumQuantity: 3,
   },
 };
 
@@ -67,6 +72,7 @@ export const stripeRouter = {
           intervalCount: price.recurring?.interval_count ?? 1,
           planName: metadata?.planName,
           intervalType: metadata?.intervalType,
+          minimumQuantity: metadata?.minimumQuantity,
         };
         return acc;
       },
