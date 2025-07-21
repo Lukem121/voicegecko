@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 
 import type {
   GeckoBarEventHandlers,
@@ -10,6 +11,8 @@ import { initializeGeckoBarEvents } from "~/lib/gecko-bar-events";
 import { initializeTauriEvents } from "~/lib/tauri-events";
 import { recordingService } from "~/services/recording.service";
 import { useEventStore } from "~/stores/event.store";
+import { useGeckoBarNotificationStore } from "~/stores/gecko-bar-notification.store";
+import { trpc } from "~/trpc";
 import { useAudioProcessor } from "./use-audio-processor";
 import { useGeckoBarSettings } from "./use-gecko-bar-settings";
 import { useTimeoutManager } from "./use-timeout-manager";
@@ -29,6 +32,24 @@ export function useGeckoBarState(): UseGeckoBarStateReturn {
   const recordingStatus = useEventStore((state) => state.recordingStatus);
   const isRecording = useEventStore((state) => state.isRecording());
   const isTranscribing = useEventStore((state) => state.isTranscribing());
+
+  // Notification state
+  const notification = useGeckoBarNotificationStore(
+    (state) => state.notification,
+  );
+
+  // Fetch usage status
+  const { data: usageStatus } = useQuery({
+    ...trpc.usage.getStatus.queryOptions(),
+    refetchInterval: 60000, // Refetch every minute
+  });
+
+  // Determine tooltip message based on usage status or notifications
+  const tooltipMessage =
+    notification?.message || // Priority: Show notification if available
+    (usageStatus && !usageStatus.canTranscribe
+      ? "Usage limit reached"
+      : undefined); // Will default to "Click to start dictating"
 
   // Hooks
   const timeoutManager = useTimeoutManager();
@@ -137,6 +158,33 @@ export function useGeckoBarState(): UseGeckoBarStateReturn {
     }
   }, [isTranscribing, isTransitioning, timeoutManager]);
 
+  // Handle notifications
+  useEffect(() => {
+    if (notification) {
+      // Show tooltip and expand bar for notifications
+      setShowTooltip(true);
+      setIsExpanded(true);
+
+      // Clear any existing tooltip timer
+      timeoutManager.clearTimeout("tooltip");
+
+      // If notification has duration, hide tooltip after that duration
+      if (notification.duration) {
+        timeoutManager.setTimeout(
+          "tooltip",
+          () => {
+            setShowTooltip(false);
+            // Optionally collapse if nothing else is happening
+            if (!isRecording && !isTranscribing && !isHovered) {
+              setIsExpanded(false);
+            }
+          },
+          notification.duration,
+        );
+      }
+    }
+  }, [notification, timeoutManager, isRecording, isTranscribing, isHovered]);
+
   // Initialize event systems for gecko bar window
   useEffect(() => {
     // Initialize main Tauri events (for unified state management)
@@ -197,27 +245,22 @@ export function useGeckoBarState(): UseGeckoBarStateReturn {
     );
   }, [isHovered, timeoutManager, showTooltip, isExpanded]);
 
-  const handleClick = useCallback(async () => {
-    // Hide tooltip immediately on click
-    setShowTooltip(false);
-    timeoutManager.clearTimeout("tooltip");
+  // Optimized click handler using direct store access
+  const handleClick = useCallback(() => {
+    // Get current state directly from store for fastest response
+    const eventState = useEventStore.getState();
 
-    if (isLoading) {
+    // Start recording immediately if idle - skip all other operations
+    if (eventState.recordingStatus === "idle" && !eventState.isRecording()) {
+      recordingService.toggleRecording().catch(console.error);
+      // Return early to skip UI updates - they'll happen via state subscriptions
       return;
     }
 
-    if (!isRecording && recordingStatus === "idle") {
-      setIsLoading(true);
-      try {
-        await recordingService.toggleRecording();
-      } catch (error) {
-        // TODO: Implement proper error notification system
-        console.error("Failed to start recording:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    }
-  }, [isLoading, isRecording, recordingStatus, timeoutManager]);
+    // Only do UI cleanup if not starting recording
+    setShowTooltip(false);
+    timeoutManager.clearTimeout("tooltip");
+  }, [timeoutManager]); // Minimal dependencies for faster execution
 
   const handleCancel = useCallback(
     async (e: React.MouseEvent<HTMLButtonElement>) => {
@@ -287,6 +330,7 @@ export function useGeckoBarState(): UseGeckoBarStateReturn {
     wasRecentlyRecording,
     visualizerActive: audioProcessor.isActive,
     audioLevel: audioProcessor.audioLevel,
+    tooltipMessage,
   };
 
   return {

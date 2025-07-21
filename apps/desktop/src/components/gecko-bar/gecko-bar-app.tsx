@@ -126,7 +126,11 @@ export function GeckoBarApp() {
       onMouseLeave={handlers.onMouseLeave}
     >
       {/* Tooltip */}
-      <GeckoBarTooltip show={state.showTooltip} isRecording={isRecording} />
+      <GeckoBarTooltip
+        show={state.showTooltip}
+        isRecording={isRecording}
+        message={state.tooltipMessage}
+      />
 
       {/* Main bar */}
       <motion.div
@@ -141,11 +145,12 @@ export function GeckoBarApp() {
           damping: ANIMATIONS.SPRING.DAMPING,
           mass: ANIMATIONS.SPRING.MASS,
         }}
-        onClick={handlers.onClick}
+        onMouseDown={handlers.onClick} // Faster than onClick - fires immediately on press
+        onClick={handlers.onClick} // Keep as fallback
       >
         {/* Gecko scales background pattern */}
         <div
-          className="absolute inset-0 overflow-hidden rounded-full"
+          className="pointer-events-none absolute inset-0 overflow-hidden rounded-full"
           style={{
             ...patternStyle,
             opacity: STYLES.PATTERN_OPACITY,
@@ -160,6 +165,10 @@ export function GeckoBarApp() {
               ? "opacity-100"
               : "pointer-events-none opacity-0",
           )}
+          style={{
+            pointerEvents:
+              state.isExpanded || showActiveState ? "auto" : "none",
+          }}
         >
           {/* Cancel button */}
           <GeckoBarButton

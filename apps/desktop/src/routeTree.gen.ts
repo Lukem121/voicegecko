@@ -13,8 +13,8 @@ import { createFileRoute } from '@tanstack/react-router'
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
+import { Route as AuthenticatedUsageRouteImport } from './routes/_authenticated/usage'
 import { Route as AuthenticatedTranscriptionsRouteImport } from './routes/_authenticated/transcriptions'
-import { Route as AuthenticatedRecordingRouteImport } from './routes/_authenticated/recording'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedNotificationsRouteImport } from './routes/_authenticated/notifications'
 import { Route as AuthenticatedBillingRouteImport } from './routes/_authenticated/billing'
@@ -45,17 +45,17 @@ const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+const AuthenticatedUsageRoute = AuthenticatedUsageRouteImport.update({
+  id: '/usage',
+  path: '/usage',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const AuthenticatedTranscriptionsRoute =
   AuthenticatedTranscriptionsRouteImport.update({
     id: '/transcriptions',
     path: '/transcriptions',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
-const AuthenticatedRecordingRoute = AuthenticatedRecordingRouteImport.update({
-  id: '/recording',
-  path: '/recording',
-  getParentRoute: () => AuthenticatedRoute,
-} as any)
 const AuthenticatedProfileRoute = AuthenticatedProfileRouteImport.update({
   id: '/profile',
   path: '/profile',
@@ -142,8 +142,8 @@ export interface FileRoutesByFullPath {
   '/billing': typeof AuthenticatedBillingRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
   '/profile': typeof AuthenticatedProfileRoute
-  '/recording': typeof AuthenticatedRecordingRoute
   '/transcriptions': typeof AuthenticatedTranscriptionsRoute
+  '/usage': typeof AuthenticatedUsageRoute
   '/authentication-error': typeof unauthenticatedAuthAuthenticationErrorRoute
   '/sign-in': typeof unauthenticatedAuthSignInRoute
   '/sign-up': typeof unauthenticatedAuthSignUpRoute
@@ -160,8 +160,8 @@ export interface FileRoutesByTo {
   '/billing': typeof AuthenticatedBillingRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
   '/profile': typeof AuthenticatedProfileRoute
-  '/recording': typeof AuthenticatedRecordingRoute
   '/transcriptions': typeof AuthenticatedTranscriptionsRoute
+  '/usage': typeof AuthenticatedUsageRoute
   '/authentication-error': typeof unauthenticatedAuthAuthenticationErrorRoute
   '/sign-in': typeof unauthenticatedAuthSignInRoute
   '/sign-up': typeof unauthenticatedAuthSignUpRoute
@@ -181,8 +181,8 @@ export interface FileRoutesById {
   '/_authenticated/billing': typeof AuthenticatedBillingRoute
   '/_authenticated/notifications': typeof AuthenticatedNotificationsRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
-  '/_authenticated/recording': typeof AuthenticatedRecordingRoute
   '/_authenticated/transcriptions': typeof AuthenticatedTranscriptionsRoute
+  '/_authenticated/usage': typeof AuthenticatedUsageRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
   '/(unauthenticated)/_auth/authentication-error': typeof unauthenticatedAuthAuthenticationErrorRoute
   '/(unauthenticated)/_auth/sign-in': typeof unauthenticatedAuthSignInRoute
@@ -202,8 +202,8 @@ export interface FileRouteTypes {
     | '/billing'
     | '/notifications'
     | '/profile'
-    | '/recording'
     | '/transcriptions'
+    | '/usage'
     | '/authentication-error'
     | '/sign-in'
     | '/sign-up'
@@ -220,8 +220,8 @@ export interface FileRouteTypes {
     | '/billing'
     | '/notifications'
     | '/profile'
-    | '/recording'
     | '/transcriptions'
+    | '/usage'
     | '/authentication-error'
     | '/sign-in'
     | '/sign-up'
@@ -240,8 +240,8 @@ export interface FileRouteTypes {
     | '/_authenticated/billing'
     | '/_authenticated/notifications'
     | '/_authenticated/profile'
-    | '/_authenticated/recording'
     | '/_authenticated/transcriptions'
+    | '/_authenticated/usage'
     | '/_authenticated/'
     | '/(unauthenticated)/_auth/authentication-error'
     | '/(unauthenticated)/_auth/sign-in'
@@ -283,18 +283,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/usage': {
+      id: '/_authenticated/usage'
+      path: '/usage'
+      fullPath: '/usage'
+      preLoaderRoute: typeof AuthenticatedUsageRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/_authenticated/transcriptions': {
       id: '/_authenticated/transcriptions'
       path: '/transcriptions'
       fullPath: '/transcriptions'
       preLoaderRoute: typeof AuthenticatedTranscriptionsRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/recording': {
-      id: '/_authenticated/recording'
-      path: '/recording'
-      fullPath: '/recording'
-      preLoaderRoute: typeof AuthenticatedRecordingRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/profile': {
@@ -402,8 +402,8 @@ interface AuthenticatedRouteChildren {
   AuthenticatedBillingRoute: typeof AuthenticatedBillingRoute
   AuthenticatedNotificationsRoute: typeof AuthenticatedNotificationsRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
-  AuthenticatedRecordingRoute: typeof AuthenticatedRecordingRoute
   AuthenticatedTranscriptionsRoute: typeof AuthenticatedTranscriptionsRoute
+  AuthenticatedUsageRoute: typeof AuthenticatedUsageRoute
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
   AuthenticatedSettingsModelsRoute: typeof AuthenticatedSettingsModelsRoute
   AuthenticatedSettingsShortcutsRoute: typeof AuthenticatedSettingsShortcutsRoute
@@ -414,8 +414,8 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedBillingRoute: AuthenticatedBillingRoute,
   AuthenticatedNotificationsRoute: AuthenticatedNotificationsRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
-  AuthenticatedRecordingRoute: AuthenticatedRecordingRoute,
   AuthenticatedTranscriptionsRoute: AuthenticatedTranscriptionsRoute,
+  AuthenticatedUsageRoute: AuthenticatedUsageRoute,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
   AuthenticatedSettingsModelsRoute: AuthenticatedSettingsModelsRoute,
   AuthenticatedSettingsShortcutsRoute: AuthenticatedSettingsShortcutsRoute,

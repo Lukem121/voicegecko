@@ -1,9 +1,13 @@
 import type { LucideIcon } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 import { Link, useLocation } from "@tanstack/react-router";
+import { open } from "@tauri-apps/plugin-shell";
 import {
   Bell,
+  ChartBar,
   ChevronUp,
   CreditCard,
+  ExternalLink,
   FileText,
   HelpCircle,
   LogOut,
@@ -27,6 +31,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@acme/ui/components/ui/dropdown-menu";
+import { Progress } from "@acme/ui/components/ui/progress";
 import {
   Sidebar,
   SidebarContent,
@@ -44,6 +49,7 @@ import {
 } from "@acme/ui/components/ui/sidebar";
 
 import { useSignOut, useUser } from "~/hooks/auth";
+import { trpc } from "~/trpc";
 
 interface NavigationSubItem {
   title: string;
@@ -66,13 +72,8 @@ const data: NavigationData = {
   navMain: [
     {
       title: "Recording",
-      url: "/recording",
-      icon: Mic,
-    },
-    {
-      title: "Dashboard",
       url: "/",
-      icon: PieChart,
+      icon: Mic,
     },
     {
       title: "Transcriptions",
@@ -81,6 +82,16 @@ const data: NavigationData = {
     },
   ],
   navSecondary: [
+    {
+      title: "Plans",
+      url: "#plans",
+      icon: CreditCard,
+    },
+    {
+      title: "Usage",
+      url: "/usage",
+      icon: ChartBar,
+    },
     {
       title: "Settings",
       url: "/settings",
@@ -108,6 +119,20 @@ export function AppSidebar() {
   const user = useUser();
   const signOut = useSignOut();
   const location = useLocation();
+
+  // Fetch usage status
+  const { data: usageStatus } = useQuery({
+    ...trpc.usage.getStatus.queryOptions(),
+    refetchInterval: 60000, // Refetch every minute
+    enabled: !!user,
+  });
+
+  // Check if user is on free plan (no subscription)
+  const isFreePlan = usageStatus && !usageStatus.isUnlimited;
+  const usagePercentage =
+    isFreePlan && usageStatus
+      ? (usageStatus.wordsUsed / usageStatus.wordsLimit) * 100
+      : 0;
 
   return (
     <Sidebar variant="inset" collapsible="icon">
@@ -177,18 +202,37 @@ export function AppSidebar() {
               {data.navSecondary.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton
-                    asChild
+                    asChild={item.url !== "#plans"}
                     size="sm"
                     isActive={
                       item.url === "/"
                         ? location.pathname === item.url
                         : location.pathname.startsWith(item.url)
                     }
+                    onClick={
+                      item.url === "#plans"
+                        ? async () => {
+                            const websiteUrl =
+                              import.meta.env.VITE_WEBSITE_URL ||
+                              "https://www.voicegecko.io";
+                            await open(`${websiteUrl}/app/plans`);
+                          }
+                        : undefined
+                    }
+                    className="cursor-pointer"
                   >
-                    <Link to={item.url}>
-                      <item.icon />
-                      <span>{item.title}</span>
-                    </Link>
+                    {item.url === "#plans" ? (
+                      <>
+                        <item.icon />
+                        <span>{item.title}</span>
+                        <ExternalLink className="ml-auto !size-3" />
+                      </>
+                    ) : (
+                      <Link to={item.url}>
+                        <item.icon />
+                        <span>{item.title}</span>
+                      </Link>
+                    )}
                   </SidebarMenuButton>
                   {item.items?.length ? (
                     <SidebarMenuSub>
@@ -213,6 +257,45 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
       <SidebarFooter>
+        {/* Usage Progress Bar for Free Users */}
+        {isFreePlan && usageStatus && (
+          <div className="mb-4 px-2">
+            <div className="space-y-2">
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-muted-foreground">Weekly Usage</span>
+                <span className="font-medium">
+                  {usageStatus.wordsUsed.toLocaleString()} /{" "}
+                  {usageStatus.wordsLimit.toLocaleString()}
+                </span>
+              </div>
+              <Progress value={usagePercentage} className="h-2" />
+              {usagePercentage >= 90 && (
+                <p className="text-xs text-amber-600">
+                  {usagePercentage >= 100 ? (
+                    <>
+                      Limit reached.{" "}
+                      <button
+                        onClick={async () => {
+                          const websiteUrl =
+                            import.meta.env.VITE_WEBSITE_URL ||
+                            "https://www.voicegecko.io";
+                          await open(`${websiteUrl}/app/plans`);
+                        }}
+                        className="cursor-pointer underline"
+                      >
+                        Upgrade to Pro.
+                      </button>
+                    </>
+                  ) : (
+                    "Approaching usage limit."
+                  )}
+                </p>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* User Menu */}
         <SidebarMenu>
           <SidebarMenuItem>
             <DropdownMenu>

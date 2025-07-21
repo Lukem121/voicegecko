@@ -22,6 +22,7 @@ export const TranscriptionTable = pgTable(
     modelUsed: t.text("model_used"),
     sampleRate: t.integer("sample_rate"),
     appVersion: t.text("app_version"),
+    wordCount: t.integer("word_count").notNull().default(0),
     createdAt,
     updatedAt,
   }),
