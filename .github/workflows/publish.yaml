@@ -63,21 +63,17 @@ jobs:
             $cmakeUrl = "https://github.com/Kitware/CMake/releases/download/v3.28.1/cmake-3.28.1-windows-x86_64.msi"
             $cmakeInstaller = "$env:TEMP\cmake-installer.msi"
             Invoke-WebRequest -Uri $cmakeUrl -OutFile $cmakeInstaller
-            Write-Host "Starting CMake installation..."
             Start-Process msiexec.exe -ArgumentList "/i", $cmakeInstaller, "/quiet", "/norestart" -Wait
-            Write-Host "CMake installation completed"
             
-            # Verify installation
+            # Verify installation and add to PATH
             if (Test-Path "C:\Program Files\CMake\bin\cmake.exe") {
-              Write-Host "CMake successfully installed at C:\Program Files\CMake\bin\cmake.exe"
-              # Add CMake to PATH persistently for GitHub Actions
               "C:\Program Files\CMake\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
             } else {
-              Write-Error "CMake installation failed - executable not found"
+              Write-Error "CMake installation failed"
               exit 1
             }
           } else {
-            Write-Host "CMake is already installed at: $($cmakeInstalled.Source)"
+            Write-Host "CMake is already installed"
           }
 
           # Check if Vulkan SDK is installed and set environment variables
@@ -96,19 +92,8 @@ jobs:
             # Find the installed version and set environment variable persistently
             $vulkanVersion = Get-ChildItem "C:\VulkanSDK" | Select-Object -First 1 -ExpandProperty Name
             $vulkanPath = "C:\VulkanSDK\$vulkanVersion"
-            Write-Host "Setting VULKAN_SDK to: $vulkanPath"
             "VULKAN_SDK=$vulkanPath" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
             "$vulkanPath\Bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
-          }
-
-          # Debug: Show current environment
-          Write-Host "Current PATH additions made:"
-          if (Test-Path $env:GITHUB_PATH) {
-            Get-Content $env:GITHUB_PATH
-          }
-          Write-Host "Current ENV additions made:"
-          if (Test-Path $env:GITHUB_ENV) {
-            Get-Content $env:GITHUB_ENV
           }
 
       - name: install frontend dependencies
