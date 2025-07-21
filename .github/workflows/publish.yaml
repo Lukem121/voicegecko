@@ -52,6 +52,42 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
 
+      - name: install dependencies (windows self-hosted)
+        if: matrix.platform == 'self-hosted'
+        run: |
+          # Check if CMake is installed
+          $cmakeInstalled = Get-Command cmake -ErrorAction SilentlyContinue
+          if (-not $cmakeInstalled) {
+            Write-Host "Installing CMake..."
+            # Download and install CMake
+            $cmakeUrl = "https://github.com/Kitware/CMake/releases/download/v3.28.1/cmake-3.28.1-windows-x86_64.msi"
+            $cmakeInstaller = "$env:TEMP\cmake-installer.msi"
+            Invoke-WebRequest -Uri $cmakeUrl -OutFile $cmakeInstaller
+            Start-Process msiexec.exe -ArgumentList "/i", $cmakeInstaller, "/quiet", "/norestart" -Wait
+            # Add CMake to PATH for current session
+            $env:Path = "C:\Program Files\CMake\bin;$env:Path"
+          } else {
+            Write-Host "CMake is already installed"
+          }
+
+          # Check if Vulkan SDK is installed
+          if (-not (Test-Path "C:\VulkanSDK")) {
+            Write-Host "Installing Vulkan SDK..."
+            # Download and install Vulkan SDK
+            $vulkanUrl = "https://sdk.lunarg.com/sdk/download/1.4.321.1/windows/VulkanSDK-1.4.321.1-Installer.exe"
+            $vulkanInstaller = "$env:TEMP\VulkanSDK-Installer.exe"
+            Invoke-WebRequest -Uri $vulkanUrl -OutFile $vulkanInstaller
+            Start-Process -FilePath $vulkanInstaller -ArgumentList "/S" -Wait
+            # Set VULKAN_SDK environment variable for current session
+            $env:VULKAN_SDK = "C:\VulkanSDK\1.4.321.1"
+            $env:Path = "$env:VULKAN_SDK\Bin;$env:Path"
+          } else {
+            Write-Host "Vulkan SDK is already installed"
+            # Find the installed version and set environment variable
+            $vulkanVersion = Get-ChildItem "C:\VulkanSDK" | Select-Object -First 1 -ExpandProperty Name
+            $env:VULKAN_SDK = "C:\VulkanSDK\$vulkanVersion"
+          }
+
       - name: install frontend dependencies
         run: pnpm install
 
@@ -61,6 +97,7 @@ jobs:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
           VITE_API_URL: ${{ secrets.VITE_API_URL }}
+          VULKAN_SDK: ${{ matrix.platform == 'self-hosted' && 'C:\VulkanSDK\1.4.321.1' || '' }}
         with:
           tagName: app-v__VERSION__ # the action automatically replaces \_\_VERSION\_\_ with the app version.
           releaseName: "App v__VERSION__"
