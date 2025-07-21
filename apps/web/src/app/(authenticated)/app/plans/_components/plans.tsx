@@ -251,6 +251,44 @@ export default function Plans({ prices, subscription, error }: PlansProps) {
     return formatter.format(price.unitAmount / 100); // Convert from cents
   };
 
+  // Helper to format price as per-unit amount (for plans with minimum quantities)
+  const formatPricePerUnit = (price: PriceWithMetadata) => {
+    let unitAmount = price.unitAmount;
+
+    // If the price has a minimum quantity (like Teams plan with minimum 3 seats),
+    // divide by that quantity to get per-unit price
+    if (price.minimumQuantity && price.minimumQuantity > 1) {
+      unitAmount = unitAmount / price.minimumQuantity;
+    }
+
+    const formatter = new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: price.currency.toUpperCase(),
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    });
+    return formatter.format(unitAmount / 100); // Convert from cents
+  };
+
+  // Helper to format yearly price as monthly equivalent
+  const formatYearlyAsMonthly = (price: PriceWithMetadata, planId: string) => {
+    let monthlyAmount = price.unitAmount / 12; // Divide yearly price by 12
+
+    // If the price has a minimum quantity (like Teams plan with minimum 3 seats),
+    // divide by that quantity to get per-unit monthly price
+    if (price.minimumQuantity && price.minimumQuantity > 1) {
+      monthlyAmount = monthlyAmount / price.minimumQuantity;
+    }
+
+    const formatter = new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: price.currency.toUpperCase(),
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    });
+    return formatter.format(monthlyAmount / 100); // Convert from cents
+  };
+
   // Helper to find the right price for a plan
   const findPriceForPlan = (planId: string, interval: "monthly" | "yearly") => {
     // Find price that matches the plan name and interval type
@@ -269,6 +307,22 @@ export default function Plans({ prices, subscription, error }: PlansProps) {
   ) => {
     const price = findPriceForPlan(planId, interval);
     return price ? formatPrice(price) : fallback;
+  };
+
+  // Get per-unit price display (for plans with minimum quantities)
+  const getPerUnitPriceDisplay = (
+    planId: string,
+    interval: "monthly" | "yearly",
+    fallback: string,
+  ) => {
+    const price = findPriceForPlan(planId, interval);
+    return price ? formatPricePerUnit(price) : fallback;
+  };
+
+  // Get yearly price display as monthly equivalent
+  const getYearlyPriceAsMonthly = (planId: string, fallback: string) => {
+    const price = findPriceForPlan(planId, "yearly");
+    return price ? formatYearlyAsMonthly(price, planId) : fallback;
   };
 
   // Dynamic plans with prices from Stripe
@@ -295,7 +349,7 @@ export default function Plans({ prices, subscription, error }: PlansProps) {
       id: "voice gecko pro",
       stripeId: "voice gecko pro", // This matches the plan name in auth config
       monthlyPrice: getPriceDisplay("voice gecko pro", "monthly", "$29"),
-      yearlyMonthlyPrice: getPriceDisplay("voice gecko pro", "yearly", "$24"),
+      yearlyMonthlyPrice: getYearlyPriceAsMonthly("voice gecko pro", "$24"),
       subtitle: "All of our features",
       features: [
         "Unlimited transcriptions",
@@ -312,17 +366,19 @@ export default function Plans({ prices, subscription, error }: PlansProps) {
       name: "Teams",
       id: "voice gecko team",
       stripeId: "voice gecko team", // This matches the plan name in auth config
-      monthlyPrice: getPriceDisplay("voice gecko team", "monthly", "$12"),
-      yearlyMonthlyPrice: getPriceDisplay("voice gecko team", "yearly", "$10"),
+      monthlyPrice: getPerUnitPriceDisplay(
+        "voice gecko team",
+        "monthly",
+        "$12",
+      ),
+      yearlyMonthlyPrice: getYearlyPriceAsMonthly("voice gecko team", "$10"),
       period: "user",
       subtitle: "All of our features across your team",
       features: [
         "Everything in Pro",
-        "Team management",
-        "User permissions",
-        "API access",
-        "Custom integrations",
-        "Dedicated support",
+        "Minimum 3 seats",
+        "Centralized billing",
+        "Administrative controls",
       ],
       cta: "Get started",
       variant: "outline" as const,
@@ -533,8 +589,7 @@ export default function Plans({ prices, subscription, error }: PlansProps) {
                         {isYearly ? plan.yearlyMonthlyPrice : plan.monthlyPrice}
                       </span>
                       <span className="text-muted-foreground text-sm">
-                        /{plan.period ? `${plan.period}/` : ""}
-                        {isYearly ? "year" : "mo"}
+                        /{plan.period ? `${plan.period}/` : ""}mo
                       </span>
                     </>
                   )}
