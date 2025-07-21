@@ -413,9 +413,6 @@ importers:
       superjson:
         specifier: 2.2.2
         version: 2.2.2
-      tailwind-merge:
-        specifier: ^3.3.1
-        version: 3.3.1
       zod:
         specifier: 'catalog:'
         version: 3.25.67
