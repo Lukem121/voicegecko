@@ -80,14 +80,23 @@ const data: NavigationData = {
       url: "/transcriptions",
       icon: FileText,
     },
-
-    {
-      title: "History",
-      url: "/history",
-      icon: History,
-    },
   ],
   navSecondary: [
+    {
+      title: "Settings",
+      url: "/settings",
+      icon: Settings2,
+      items: [
+        {
+          title: "Models",
+          url: "/settings/models",
+        },
+        {
+          title: "Keyboard Shortcuts",
+          url: "/settings/shortcuts",
+        },
+      ],
+    },
     {
       title: "Help & Support",
       url: "/support",
