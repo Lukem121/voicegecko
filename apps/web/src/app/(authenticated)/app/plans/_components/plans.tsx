@@ -599,7 +599,7 @@ export default function Plans({ prices, subscription, error }: PlansProps) {
 
       {/* Plans and Features */}
       <div className="mt-16">
-        <div className="mb-12 text-center">
+        <div className="mb-12">
           <h2 className="mb-2 text-2xl font-medium">Plans and Features</h2>
           <p className="text-muted-foreground">
             Compare what's included in each plan
