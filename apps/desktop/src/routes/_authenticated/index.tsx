@@ -50,41 +50,6 @@ export const Route = createFileRoute("/_authenticated/")({
   component: RecordingPage,
 });
 
-interface RecentTranscription {
-  id: string;
-  timestamp: string;
-  content: string;
-  status: "normal" | "silent" | "dismissed";
-}
-
-const recentTranscriptions: RecentTranscription[] = [
-  {
-    id: "1",
-    timestamp: "09:40 PM",
-    content: "Cats and dogs make fun-looking frogs.",
-    status: "normal",
-  },
-  {
-    id: "2",
-    timestamp: "09:39 PM",
-    content: "Audio is silent.",
-    status: "silent",
-  },
-  {
-    id: "3",
-    timestamp: "09:38 PM",
-    content:
-      "This is a test, and I'm interested to see how it handles both mine and your transcription.",
-    status: "normal",
-  },
-  {
-    id: "4",
-    timestamp: "09:37 PM",
-    content: "The transcription was dismissed.",
-    status: "dismissed",
-  },
-];
-
 function RecordingPage() {
   const user = useUser();
   const { transcriptions } = useGetTranscriptions();
@@ -106,6 +71,11 @@ function RecordingPage() {
 
   const isAtLimit =
     usageStatus && !usageStatus.isUnlimited && !usageStatus.canTranscribe;
+
+  // Flatten and limit recent transcriptions for display
+  const recentTranscriptions = transcriptions
+    .flatMap((section) => section.items)
+    .slice(0, 5); // Show only the 5 most recent
 
   console.log(
     "[RecordingPage] Component render - transcript:",
@@ -145,12 +115,16 @@ function RecordingPage() {
     void navigator.clipboard.writeText(content);
   };
 
-  const handleSendFeedback = (id: string) => {
+  const handleSendFeedback = (id: number) => {
     console.log("Send feedback for:", id);
   };
 
-  const handleDeleteTranscript = (id: string) => {
-    console.log("Delete transcript for:", id);
+  const handleDeleteTranscript = async (id: number) => {
+    try {
+      await deleteTranscription({ id });
+    } catch (error) {
+      console.error("Failed to delete transcription:", error);
+    }
   };
 
   return (
@@ -231,130 +205,135 @@ function RecordingPage() {
 
           {/* Recent Transcriptions */}
           <div className="overflow-hidden rounded-lg border">
-            {recentTranscriptions.map((item, index) => (
-              <ContextMenu key={item.id}>
-                <ContextMenuTrigger>
-                  <div
-                    className={`group hover:bg-muted/50 flex items-start justify-between border-transparent p-3 transition-colors ${
-                      index < recentTranscriptions.length - 1
-                        ? "border-border border-b"
-                        : ""
-                    }`}
-                  >
-                    <div className="flex min-w-0 flex-1 items-start gap-3">
-                      <div className="text-muted-foreground text-sm whitespace-nowrap">
-                        {item.timestamp}
-                      </div>
-                      <div className="flex min-w-0 flex-1 items-start gap-2">
-                        <div
-                          className={`text-sm leading-relaxed ${
-                            item.status === "silent" ||
-                            item.status === "dismissed"
-                              ? "text-muted-foreground italic"
-                              : "text-foreground"
-                          }`}
-                        >
-                          {item.content.length > 80
-                            ? `${item.content.substring(0, 80)}...`
-                            : item.content}
+            {recentTranscriptions.length === 0 ? (
+              <div className="text-muted-foreground p-8 text-center">
+                <p>No recent transcriptions yet.</p>
+                <p className="text-sm">
+                  Start recording to see your transcriptions here.
+                </p>
+              </div>
+            ) : (
+              recentTranscriptions.map((item, index) => (
+                <ContextMenu key={item.id}>
+                  <ContextMenuTrigger>
+                    <div
+                      className={`group hover:bg-muted/50 flex items-start justify-between border-transparent p-3 transition-colors ${
+                        index < recentTranscriptions.length - 1
+                          ? "border-border border-b"
+                          : ""
+                      }`}
+                    >
+                      <div className="flex min-w-0 flex-1 items-start gap-3 pr-4">
+                        <div className="text-muted-foreground text-sm whitespace-nowrap">
+                          {item.timestamp}
                         </div>
-                        {(item.status === "silent" ||
-                          item.status === "dismissed") && (
-                          <Tooltip>
-                            <TooltipTrigger>
-                              <Info className="text-muted-foreground mt-0.5 h-4 w-4 flex-shrink-0" />
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <p>
-                                {item.status === "silent"
-                                  ? "No audio detected during this recording"
-                                  : "This transcription was manually dismissed"}
-                              </p>
-                            </TooltipContent>
-                          </Tooltip>
-                        )}
+                        <div className="flex min-w-0 flex-1 items-start gap-2">
+                          <div
+                            className={`text-sm leading-relaxed ${
+                              item.status === "silent"
+                                ? "text-muted-foreground italic"
+                                : "text-foreground"
+                            }`}
+                          >
+                            {item.content.length > 80
+                              ? `${item.content.substring(0, 80)}...`
+                              : item.content}
+                          </div>
+                          {item.status === "silent" && (
+                            <Tooltip>
+                              <TooltipTrigger>
+                                <Info className="text-muted-foreground mt-0.5 h-4 w-4 flex-shrink-0" />
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>No audio detected during this recording</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleCopy(item.content);
+                              }}
+                              className="h-8 w-8 p-0"
+                            >
+                              <Copy className="h-4 w-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Copy transcription</p>
+                          </TooltipContent>
+                        </Tooltip>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleSendFeedback(item.id);
+                              }}
+                              className="h-8 w-8 p-0"
+                            >
+                              <MessageSquare className="h-4 w-4" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Send feedback</p>
+                          </TooltipContent>
+                        </Tooltip>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="h-8 w-8 p-0"
+                            >
+                              <MoreVertical className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end" className="w-48">
+                            <DropdownMenuItem
+                              onClick={() => handleDeleteTranscript(item.id)}
+                              className="text-red-600 focus:text-red-600"
+                            >
+                              <Trash2 className="mr-2 h-4 w-4" />
+                              Delete transcription
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </div>
                     </div>
-                    <div className="flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleCopy(item.content);
-                            }}
-                            className="h-8 w-8 p-0"
-                          >
-                            <Copy className="h-4 w-4" />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>Copy transcription</p>
-                        </TooltipContent>
-                      </Tooltip>
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleSendFeedback(item.id);
-                            }}
-                            className="h-8 w-8 p-0"
-                          >
-                            <MessageSquare className="h-4 w-4" />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>Send feedback</p>
-                        </TooltipContent>
-                      </Tooltip>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-8 w-8 p-0"
-                          >
-                            <MoreVertical className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-48">
-                          <DropdownMenuItem
-                            onClick={() => handleDeleteTranscript(item.id)}
-                            className="text-red-600 focus:text-red-600"
-                          >
-                            <Trash2 className="mr-2 h-4 w-4" />
-                            Delete transcription
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </div>
-                  </div>
-                </ContextMenuTrigger>
-                <ContextMenuContent className="w-48">
-                  <ContextMenuItem onClick={() => handleCopy(item.content)}>
-                    <Copy className="mr-2 h-4 w-4" />
-                    Copy transcription
-                  </ContextMenuItem>
-                  <ContextMenuItem onClick={() => handleSendFeedback(item.id)}>
-                    <MessageSquare className="mr-2 h-4 w-4" />
-                    Send feedback
-                  </ContextMenuItem>
-                  <ContextMenuSeparator />
-                  <ContextMenuItem
-                    onClick={() => handleDeleteTranscript(item.id)}
-                    className="text-red-600 focus:text-red-600"
-                  >
-                    <Trash2 className="mr-2 h-4 w-4" />
-                    Delete transcription
-                  </ContextMenuItem>
-                </ContextMenuContent>
-              </ContextMenu>
-            ))}
+                  </ContextMenuTrigger>
+                  <ContextMenuContent className="w-48">
+                    <ContextMenuItem onClick={() => handleCopy(item.content)}>
+                      <Copy className="mr-2 h-4 w-4" />
+                      Copy transcription
+                    </ContextMenuItem>
+                    <ContextMenuItem
+                      onClick={() => handleSendFeedback(item.id)}
+                    >
+                      <MessageSquare className="mr-2 h-4 w-4" />
+                      Send feedback
+                    </ContextMenuItem>
+                    <ContextMenuSeparator />
+                    <ContextMenuItem
+                      onClick={() => handleDeleteTranscript(item.id)}
+                      className="text-red-600 focus:text-red-600"
+                    >
+                      <Trash2 className="mr-2 h-4 w-4" />
+                      Delete transcription
+                    </ContextMenuItem>
+                  </ContextMenuContent>
+                </ContextMenu>
+              ))
+            )}
           </div>
         </div>
       </div>
