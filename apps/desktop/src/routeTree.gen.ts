@@ -17,7 +17,6 @@ import { Route as AuthenticatedTranscriptionsRouteImport } from './routes/_authe
 import { Route as AuthenticatedRecordingRouteImport } from './routes/_authenticated/recording'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedNotificationsRouteImport } from './routes/_authenticated/notifications'
-import { Route as AuthenticatedHistoryRouteImport } from './routes/_authenticated/history'
 import { Route as AuthenticatedBillingRouteImport } from './routes/_authenticated/billing'
 import { Route as unauthenticatedAuthRouteImport } from './routes/(unauthenticated)/_auth'
 import { Route as AuthenticatedSettingsIndexRouteImport } from './routes/_authenticated/settings/index'
@@ -68,11 +67,6 @@ const AuthenticatedNotificationsRoute =
     path: '/notifications',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
-const AuthenticatedHistoryRoute = AuthenticatedHistoryRouteImport.update({
-  id: '/history',
-  path: '/history',
-  getParentRoute: () => AuthenticatedRoute,
-} as any)
 const AuthenticatedBillingRoute = AuthenticatedBillingRouteImport.update({
   id: '/billing',
   path: '/billing',
@@ -146,7 +140,6 @@ const unauthenticatedAuthAuthenticationErrorRoute =
 export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedIndexRoute
   '/billing': typeof AuthenticatedBillingRoute
-  '/history': typeof AuthenticatedHistoryRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/recording': typeof AuthenticatedRecordingRoute
@@ -165,7 +158,6 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof AuthenticatedIndexRoute
   '/billing': typeof AuthenticatedBillingRoute
-  '/history': typeof AuthenticatedHistoryRoute
   '/notifications': typeof AuthenticatedNotificationsRoute
   '/profile': typeof AuthenticatedProfileRoute
   '/recording': typeof AuthenticatedRecordingRoute
@@ -187,7 +179,6 @@ export interface FileRoutesById {
   '/(unauthenticated)': typeof unauthenticatedRouteWithChildren
   '/(unauthenticated)/_auth': typeof unauthenticatedAuthRouteWithChildren
   '/_authenticated/billing': typeof AuthenticatedBillingRoute
-  '/_authenticated/history': typeof AuthenticatedHistoryRoute
   '/_authenticated/notifications': typeof AuthenticatedNotificationsRoute
   '/_authenticated/profile': typeof AuthenticatedProfileRoute
   '/_authenticated/recording': typeof AuthenticatedRecordingRoute
@@ -209,7 +200,6 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/billing'
-    | '/history'
     | '/notifications'
     | '/profile'
     | '/recording'
@@ -228,7 +218,6 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/billing'
-    | '/history'
     | '/notifications'
     | '/profile'
     | '/recording'
@@ -249,7 +238,6 @@ export interface FileRouteTypes {
     | '/(unauthenticated)'
     | '/(unauthenticated)/_auth'
     | '/_authenticated/billing'
-    | '/_authenticated/history'
     | '/_authenticated/notifications'
     | '/_authenticated/profile'
     | '/_authenticated/recording'
@@ -321,13 +309,6 @@ declare module '@tanstack/react-router' {
       path: '/notifications'
       fullPath: '/notifications'
       preLoaderRoute: typeof AuthenticatedNotificationsRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
-    '/_authenticated/history': {
-      id: '/_authenticated/history'
-      path: '/history'
-      fullPath: '/history'
-      preLoaderRoute: typeof AuthenticatedHistoryRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/_authenticated/billing': {
@@ -419,7 +400,6 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteChildren {
   AuthenticatedBillingRoute: typeof AuthenticatedBillingRoute
-  AuthenticatedHistoryRoute: typeof AuthenticatedHistoryRoute
   AuthenticatedNotificationsRoute: typeof AuthenticatedNotificationsRoute
   AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
   AuthenticatedRecordingRoute: typeof AuthenticatedRecordingRoute
@@ -432,7 +412,6 @@ interface AuthenticatedRouteChildren {
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedBillingRoute: AuthenticatedBillingRoute,
-  AuthenticatedHistoryRoute: AuthenticatedHistoryRoute,
   AuthenticatedNotificationsRoute: AuthenticatedNotificationsRoute,
   AuthenticatedProfileRoute: AuthenticatedProfileRoute,
   AuthenticatedRecordingRoute: AuthenticatedRecordingRoute,
