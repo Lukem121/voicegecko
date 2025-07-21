@@ -47,7 +47,6 @@
     "@acme/api": "workspace:*",
     "@acme/eslint-config": "workspace:*",
     "@acme/prettier-config": "workspace:*",
-    "@acme/tailwind-config": "workspace:*",
     "@acme/tsconfig": "workspace:*",
     "@babel/core": "^7.27.7",
     "@babel/preset-env": "^7.27.2",
