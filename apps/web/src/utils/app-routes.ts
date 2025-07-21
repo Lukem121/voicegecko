@@ -13,33 +13,11 @@ export const APP_ROUTES = {
     VERIFY_EMAIL: "/verify-email",
     ERROR: "/authentication-error",
   },
-  SERVICES: {
-    ROOT: "/services",
-  },
-  CREDIT: {
-    ROOT: "/add-credit",
-    HISTORY: "/add-credit/history",
-    REFUNDS: "/add-credit/refunds",
-  },
-  XP: {
-    ROOT: "/xp",
-    LEADERBOARD: "/xp/leaderboard",
-    HISTORY: "/xp/history",
-  },
   SETTINGS: {
     ROOT: "/settings/profile",
     ACCOUNT: "/settings/account",
     SECURITY: "/settings/security",
     APPEARANCE: "/settings/appearance",
-  },
-  ADMIN: {
-    ROOT: "/admin",
-    USERS: "/admin/users",
-    SERVICES: "/admin/services",
-    SERVICES_INGEST: "/admin/services/ingest",
-    ANALYTICS: "/admin/analytics",
-    CRON: "/admin/cron",
-    SEED: "/admin/seed",
   },
   LEGAL: {
     TERMS: "/legal/terms",
