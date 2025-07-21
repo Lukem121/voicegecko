@@ -4,6 +4,12 @@
   "rsc": true,
   "tsx": true,
   "iconLibrary": "lucide",
+  "tailwind": {
+    "config": "",
+    "css": "../../packages/ui/src/styles/globals.css",
+    "baseColor": "neutral",
+    "cssVariables": true
+  },
   "aliases": {
     "components": "@/components",
     "hooks": "@/hooks",

@@ -1,26 +1,19 @@
 {
   "extends": "@acme/tsconfig/base.json",
   "compilerOptions": {
-    "target": "ESNext",
-    "useDefineForClassFields": true,
-    "lib": ["DOM", "DOM.Iterable", "ESNext"],
-    // "allowJs": false,
-
-    "esModuleInterop": false,
-    "allowSyntheticDefaultImports": true,
-    "strict": true,
-    "forceConsistentCasingInFileNames": true,
-    "module": "ESNext",
-    // "moduleResolution": "Node",
-    "resolveJsonModule": true,
-    "isolatedModules": true,
-    "noEmit": true,
-    "jsx": "react-jsx",
-    "tsBuildInfoFile": "node_modules/.cache/tsbuildinfo.json",
+    "baseUrl": ".",
     "paths": {
       "~/*": ["./src/*"],
       "@acme/ui/*": ["../../packages/ui/src/*"]
-    }
+    },
+
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "jsx": "react-jsx",
+    "noEmit": true,
+    "useDefineForClassFields": true,
+    "allowImportingTsExtensions": true,
+    "target": "ES2020"
   },
   "include": ["*.ts", "src", "src/routes/index.tsx"],
   "exclude": ["node_modules"]
