@@ -1,10 +1,13 @@
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
+import { open } from "@tauri-apps/plugin-shell";
 import {
   BarChart,
   Calendar,
   Clock,
+  CreditCard,
   Download,
+  ExternalLink,
   FileText,
   TrendingUp,
 } from "lucide-react";
@@ -213,17 +216,19 @@ function UsagePage() {
             <CardTitle className="text-lg font-medium">Quick Actions</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            <Button variant="outline" className="w-full justify-start" disabled>
-              <Download className="mr-2 h-4 w-4" />
-              Export Usage Report
-            </Button>
-            <Button variant="outline" className="w-full justify-start" disabled>
-              <Calendar className="mr-2 h-4 w-4" />
-              View Detailed Analytics
-            </Button>
-            <Button variant="outline" className="w-full justify-start" disabled>
-              <BarChart className="mr-2 h-4 w-4" />
-              Compare Previous Months
+            <Button
+              variant="outline"
+              className="w-full justify-start"
+              onClick={async () => {
+                const websiteUrl =
+                  import.meta.env.VITE_WEBSITE_URL ||
+                  "https://www.voicegecko.io";
+                await open(`${websiteUrl}/app/plans`);
+              }}
+            >
+              <CreditCard className="mr-2 h-4 w-4" />
+              Upgrade to Pro
+              <ExternalLink className="ml-auto h-4 w-4 opacity-50" />
             </Button>
           </CardContent>
         </Card>

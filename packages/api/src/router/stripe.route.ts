@@ -1,8 +1,9 @@
 import type { TRPCRouterRecord } from "@trpc/server";
 import { z } from "zod";
 
+import { stripeClient } from "@acme/payment/stripe";
+
 import { apiEnv } from "../../env";
-import { stripeClient } from "../lib/stripe";
 import { protectedProcedure } from "../trpc";
 
 type PriceId = string;

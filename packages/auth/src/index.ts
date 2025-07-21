@@ -15,9 +15,15 @@ import {
 
 import { db } from "@acme/db/client";
 import { sendResetPasswordEmail, sendVerificationEmail } from "@acme/email";
+import { stripeClient } from "@acme/payment/stripe";
+import {
+  onSubscriptionCancel,
+  onSubscriptionComplete,
+  onSubscriptionDeleted,
+  onSubscriptionUpdate,
+} from "@acme/payment/subscription-handlers";
 
 import { authEnv } from "../env";
-import { stripeClient } from "./lib/stripe";
 import { checkBannedMiddleware } from "./middleware/check-banned-middleware";
 import { usernameValidator } from "./schemas/username.schema";
 
@@ -73,6 +79,10 @@ export const serverAuth = betterAuth({
             annualDiscountPriceId: authEnv().STRIPE_PRICE_ID_TEAM_YEARLY,
           },
         ],
+        onSubscriptionComplete,
+        onSubscriptionUpdate,
+        onSubscriptionCancel,
+        onSubscriptionDeleted,
       },
     }),
     oAuthProxy({
