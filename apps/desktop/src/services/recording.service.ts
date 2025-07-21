@@ -1,14 +1,17 @@
 import { invoke } from "@tauri-apps/api/core";
+import { emit } from "@tauri-apps/api/event";
 import { toast } from "sonner";
 
-import { invokeTranscriptionFromBuffer } from "~/lib/transcription";
 import { useEventStore } from "~/stores/event.store";
 import { useSettingsStore } from "~/stores/settings.store";
+import { queryClient, trpc } from "~/trpc";
+import { invokeTranscriptionFromBuffer } from "../lib/transcription";
 
 export interface RecordingOptions {
+  device?: string;
   playStartSound?: boolean;
   playEndSound?: boolean;
-  device?: string;
+  isKeyboardShortcut?: boolean;
 }
 
 export class RecordingService {
@@ -18,8 +21,10 @@ export class RecordingService {
 
   private constructor() {}
 
-  public static getInstance(): RecordingService {
-    RecordingService.instance ??= new RecordingService();
+  static getInstance(): RecordingService {
+    if (!RecordingService.instance) {
+      RecordingService.instance = new RecordingService();
+    }
     return RecordingService.instance;
   }
 
@@ -40,6 +45,15 @@ export class RecordingService {
       );
 
       if (recordingStatus === "idle") {
+        // Check usage before starting recording
+        const canRecord = await this.checkUsageBeforeRecording(
+          options.isKeyboardShortcut,
+        );
+        if (!canRecord) {
+          console.log("[RecordingService] Usage limit reached, cannot record");
+          return;
+        }
+
         console.log("[RecordingService] Starting recording...");
         await this.startRecording(options);
       } else if (recordingStatus === "recording") {
@@ -53,6 +67,14 @@ export class RecordingService {
         console.log(
           "[RecordingService] Recording in error state, attempting to start...",
         );
+        // Check usage before starting recording
+        const canRecord = await this.checkUsageBeforeRecording(
+          options.isKeyboardShortcut,
+        );
+        if (!canRecord) {
+          console.log("[RecordingService] Usage limit reached, cannot record");
+          return;
+        }
         await this.startRecording(options);
       }
     } finally {
@@ -72,6 +94,13 @@ export class RecordingService {
     const { recordingStatus } = useEventStore.getState();
 
     if (recordingStatus === "idle") {
+      // Check usage before starting recording
+      const canRecord = await this.checkUsageBeforeRecording(true); // Pass true for keyboard shortcut
+      if (!canRecord) {
+        console.log("[RecordingService] Usage limit reached, cannot record");
+        this.isPushToTalkActive = false; // Reset the flag
+        return;
+      }
       await this.startRecording(options);
     }
   }
@@ -253,6 +282,67 @@ export class RecordingService {
     // Only play end sound on recording stop if timing is "start_stop"
     // "completion_only" and "start_completion" timings are handled by transcription service
     return settings.audio.notificationTiming === "start_stop";
+  }
+
+  /**
+   * Check if user can record based on usage limits
+   */
+  private async checkUsageBeforeRecording(
+    isKeyboardShortcut = false,
+  ): Promise<boolean> {
+    try {
+      // Get the current usage status
+      const queryKey = trpc.usage.getStatus.queryKey();
+      const cachedData = queryClient.getQueryData<any>(queryKey);
+
+      // If we have cached data and user can't transcribe, block immediately
+      if (cachedData && !cachedData.canTranscribe) {
+        const message = "Weekly usage limit reached";
+        const description = "Upgrade to Pro for unlimited transcriptions";
+
+        if (isKeyboardShortcut) {
+          // Emit event for gecko bar notification
+          await emit("gecko-bar-notification", {
+            message: "Usage limit reached",
+            duration: 3000,
+            priority: "high",
+          });
+        } else {
+          // Use toast for regular UI interactions
+          toast.error(message, { description });
+        }
+        return false;
+      }
+
+      // Otherwise, fetch fresh data using tRPC client
+      const { trpcClient } = await import("~/trpc");
+      const usageStatus = await trpcClient.usage.getStatus.query();
+
+      if (!usageStatus.canTranscribe) {
+        const message = "Weekly usage limit reached";
+        const description = "Upgrade to Pro for unlimited transcriptions";
+
+        if (isKeyboardShortcut) {
+          // Emit event for gecko bar notification
+          await emit("gecko-bar-notification", {
+            message: `${message}. ${description}`,
+            duration: 3000,
+            priority: "high",
+          });
+        } else {
+          // Use toast for regular UI interactions
+          toast.error(message, { description });
+        }
+        return false;
+      }
+
+      return true;
+    } catch (error) {
+      console.error("[RecordingService] Failed to check usage:", error);
+      // On error, allow recording (permissive approach)
+      // The backend will still enforce limits
+      return true;
+    }
   }
 
   /**

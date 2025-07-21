@@ -3,16 +3,7 @@
 import type { LucideIcon } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import {
-  CreditCard,
-  FileText,
-  HelpCircle,
-  History,
-  Mic,
-  Package,
-  PieChart,
-  Settings2,
-} from "lucide-react";
+import { ChartBar, CreditCard, Package } from "lucide-react";
 
 import LogoSquare from "@acme/ui/components/logos/logo-square";
 import {
@@ -51,7 +42,7 @@ const data: NavigationData = {
     {
       title: "Usage",
       url: "/app/usage",
-      icon: PieChart,
+      icon: ChartBar,
     },
     {
       title: "Plans",

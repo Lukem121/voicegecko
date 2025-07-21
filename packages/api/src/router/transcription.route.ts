@@ -1,11 +1,14 @@
 import type { TRPCRouterRecord } from "@trpc/server";
+import { TRPCError } from "@trpc/server";
 import { z } from "zod/v4";
 
 import { apiEnv } from "../../env";
 import { CloudTranscriptionService } from "../services/transcription/cloud-transcription.service";
 import { transcriptionService } from "../services/transcription/transcription.service";
+import { usageService } from "../services/usage/usage.service";
 import { protectedProcedure } from "../trpc";
 import { convertFloat32ToWav } from "../utils/audio-converter";
+import { countWords } from "../utils/word-counter";
 
 const env = apiEnv();
 const cloudTranscriptionService = new CloudTranscriptionService(
@@ -27,10 +30,26 @@ export const transcriptionRouter = {
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.session.user.id;
 
+      // Check if user can transcribe (under usage limit)
+      const canTranscribe = await usageService.canUserTranscribe(userId);
+      if (!canTranscribe) {
+        // TODO: Implement proper error handling and user-friendly messaging
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Weekly transcription limit exceeded",
+        });
+      }
+
       const result = await transcriptionService.createTranscription({
         ...input,
         userId,
       });
+
+      // Update usage tracking after successful transcription
+      if (result) {
+        const wordCount = countWords(input.content);
+        await usageService.updateUsageAfterTranscription(userId, wordCount);
+      }
 
       return result;
     }),
@@ -61,6 +80,16 @@ export const transcriptionRouter = {
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.session.user.id;
 
+      // Check if user can transcribe (under usage limit)
+      const canTranscribe = await usageService.canUserTranscribe(userId);
+      if (!canTranscribe) {
+        // TODO: Implement proper error handling and user-friendly messaging
+        throw new TRPCError({
+          code: "FORBIDDEN",
+          message: "Weekly transcription limit exceeded",
+        });
+      }
+
       // Convert Float32Array to WAV buffer
       const audioBuffer = convertFloat32ToWav(
         input.audioData,
@@ -85,6 +114,12 @@ export const transcriptionRouter = {
         sampleRate: input.sampleRate,
         userId,
       });
+
+      // Update usage tracking after successful transcription
+      if (result) {
+        const wordCount = countWords(transcript);
+        await usageService.updateUsageAfterTranscription(userId, wordCount);
+      }
 
       return {
         transcript,

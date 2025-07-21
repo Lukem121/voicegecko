@@ -10,6 +10,7 @@ export interface CreateTranscriptionData {
   modelUsed?: string;
   sampleRate?: number;
   appVersion?: string;
+  wordCount: number;
 }
 
 export interface TranscriptionItem {

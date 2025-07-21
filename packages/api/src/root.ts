@@ -3,12 +3,14 @@ import type { inferRouterInputs, inferRouterOutputs } from "@trpc/server";
 import { authRouter } from "./router/auth.route";
 import { stripeRouter } from "./router/stripe.route";
 import { transcriptionRouter } from "./router/transcription.route";
+import { usageRouter } from "./router/usage.route";
 import { createTRPCRouter } from "./trpc";
 
 export const appRouter = createTRPCRouter({
   auth: authRouter,
   transcription: transcriptionRouter,
   stripe: stripeRouter,
+  usage: usageRouter,
 });
 
 export type AppRouter = typeof appRouter;

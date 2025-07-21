@@ -1,291 +1,370 @@
-import { useMutation } from "@tanstack/react-query";
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import {
-  Clock,
-  FileText,
+  Copy,
+  Info,
+  List,
+  Loader2,
+  MessageSquare,
   Mic,
-  Pause,
-  Play,
+  MoreVertical,
+  RotateCw,
+  Search,
   Square,
-  TrendingUp,
+  Trash2,
 } from "lucide-react";
 
-import { Badge } from "@acme/ui/components/ui/badge";
 import { Button } from "@acme/ui/components/ui/button";
+import { Card, CardContent } from "@acme/ui/components/ui/card";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@acme/ui/components/ui/card";
-import { Progress } from "@acme/ui/components/ui/progress";
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuSeparator,
+  ContextMenuTrigger,
+} from "@acme/ui/components/ui/context-menu";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@acme/ui/components/ui/dropdown-menu";
+import { Textarea } from "@acme/ui/components/ui/textarea";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@acme/ui/components/ui/tooltip";
+import { cn } from "@acme/ui/lib/utils";
 
-import { useSignOut, useUser } from "~/hooks/auth";
+import { useDeleteTranscription } from "~/features/transcription/use-delete-transcription";
+import { useGetTranscriptions } from "~/features/transcription/use-get-transcriptions";
+import { useUser } from "~/hooks/auth";
+import { recordingService } from "~/services/recording.service";
+import { useEventStore } from "~/stores/event.store";
 import { trpc } from "~/trpc";
 
-const Home = () => {
-  const user = useUser();
-  const signOut = useSignOut();
+export const Route = createFileRoute("/_authenticated/")({
+  component: RecordingPage,
+});
 
-  const secretMessage = useMutation(
-    trpc.auth.getSecretMessage.mutationOptions({
-      onSuccess: (data) => {
-        console.log("secretMessage", data);
-      },
-      onError: (error) => {
-        console.error("error", error);
-      },
-    }),
+interface RecentTranscription {
+  id: string;
+  timestamp: string;
+  content: string;
+  status: "normal" | "silent" | "dismissed";
+}
+
+const recentTranscriptions: RecentTranscription[] = [
+  {
+    id: "1",
+    timestamp: "09:40 PM",
+    content: "Cats and dogs make fun-looking frogs.",
+    status: "normal",
+  },
+  {
+    id: "2",
+    timestamp: "09:39 PM",
+    content: "Audio is silent.",
+    status: "silent",
+  },
+  {
+    id: "3",
+    timestamp: "09:38 PM",
+    content:
+      "This is a test, and I'm interested to see how it handles both mine and your transcription.",
+    status: "normal",
+  },
+  {
+    id: "4",
+    timestamp: "09:37 PM",
+    content: "The transcription was dismissed.",
+    status: "dismissed",
+  },
+];
+
+function RecordingPage() {
+  const user = useUser();
+  const { transcriptions } = useGetTranscriptions();
+  const { deleteTranscription } = useDeleteTranscription();
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  // External state from main event store
+  const recordingStatus = useEventStore((state) => state.recordingStatus);
+  const transcript = useEventStore((state) => state.transcript);
+  const transcriptionStatus = useEventStore(
+    (state) => state.transcriptionStatus,
+  );
+  const transcriptionError = useEventStore((state) => state.transcriptionError);
+  const isRecording = useEventStore((state) => state.isRecording());
+  const isTranscribing = useEventStore((state) => state.isTranscribing());
+
+  // Fetch usage status
+  const { data: usageStatus } = useQuery(trpc.usage.getStatus.queryOptions());
+
+  const canRecord = usageStatus?.canTranscribe ?? true;
+  const isAtLimit =
+    usageStatus && !usageStatus.isUnlimited && !usageStatus.canTranscribe;
+
+  console.log(
+    "[RecordingPage] Component render - transcript:",
+    transcript,
+    "transcriptionStatus:",
+    transcriptionStatus,
+    "recordingStatus:",
+    recordingStatus,
+    "error:",
+    transcriptionError,
   );
 
-  // Mock data for the dashboard
-  const stats = [
-    {
-      title: "Total Transcriptions",
-      value: "1,234",
-      description: "All time",
-      icon: FileText,
-      trend: "+12%",
-      trendUp: true,
-    },
-    {
-      title: "This Month",
-      value: "89",
-      description: "New transcriptions",
-      icon: TrendingUp,
-      trend: "+23%",
-      trendUp: true,
-    },
-    {
-      title: "Hours Transcribed",
-      value: "342",
-      description: "Total time",
-      icon: Clock,
-      trend: "+8%",
-      trendUp: true,
-    },
-    {
-      title: "Active Sessions",
-      value: "3",
-      description: "Currently recording",
-      icon: Mic,
-      trend: "Live",
-      trendUp: true,
-    },
-  ];
+  const handleMicClick = async () => {
+    console.log(
+      "[Recording] 🎯 handleMicClick called, status:",
+      recordingStatus,
+    );
 
-  const recentTranscriptions = [
-    {
-      id: 1,
-      title: "Meeting Notes - Q4 Planning",
-      duration: "45:23",
-      status: "completed",
-      createdAt: "2 hours ago",
-    },
-    {
-      id: 2,
-      title: "Interview with John Smith",
-      duration: "32:15",
-      status: "processing",
-      createdAt: "4 hours ago",
-    },
-    {
-      id: 3,
-      title: "Lecture Recording - AI Ethics",
-      duration: "78:42",
-      status: "completed",
-      createdAt: "1 day ago",
-    },
-  ];
+    if (recordingStatus === "recording") {
+      setIsProcessing(true);
+    }
+
+    try {
+      console.log(
+        "[Recording] 🚀 Calling recordingService.toggleRecording()...",
+      );
+      await recordingService.toggleRecording();
+      console.log("[Recording] ✅ Recording toggled successfully");
+    } catch (error) {
+      console.error("[Recording] ❌ Error during recording flow:", error);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleCopy = (content: string) => {
+    void navigator.clipboard.writeText(content);
+  };
+
+  const handleSendFeedback = (id: string) => {
+    console.log("Send feedback for:", id);
+  };
+
+  const handleDeleteTranscript = (id: string) => {
+    console.log("Delete transcript for:", id);
+  };
 
   return (
-    <div className="flex flex-1 flex-col gap-4">
-      {/* Welcome Section */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">
-            Welcome back, {user?.name?.split(" ")[0]}!
-          </h1>
-          <p className="text-muted-foreground">
-            Here's what's happening with your transcriptions today.
-          </p>
-        </div>
-        <Button size="lg" className="gap-2">
-          <Mic className="h-4 w-4" />
-          Start Recording
-        </Button>
-      </div>
-
-      {/* Stats Grid */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {stats.map((stat) => (
-          <Card key={stat.title}>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">
-                {stat.title}
-              </CardTitle>
-              <stat.icon className="text-muted-foreground h-4 w-4" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">{stat.value}</div>
-              <div className="text-muted-foreground flex items-center gap-1 text-xs">
-                <span>{stat.description}</span>
-                {stat.trend && (
-                  <Badge
-                    variant={stat.trendUp ? "default" : "secondary"}
-                    className="ml-auto"
-                  >
-                    {stat.trend}
-                  </Badge>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-
-      {/* Main Content Grid */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
-        {/* Recent Transcriptions */}
-        <Card className="col-span-4">
-          <CardHeader>
-            <CardTitle>Recent Transcriptions</CardTitle>
-            <CardDescription>
-              Your latest transcription activities
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
+    <TooltipProvider>
+      <div className="flex flex-1 flex-col gap-6">
+        {/* Main Note Input */}
+        <Card>
+          <CardContent className="p-6">
             <div className="space-y-4">
-              {recentTranscriptions.map((transcription) => (
-                <div
-                  key={transcription.id}
-                  className="flex items-center justify-between rounded-lg border p-3"
-                >
-                  <div className="flex items-center gap-3">
-                    <div className="bg-muted flex h-10 w-10 items-center justify-center rounded-full">
-                      <FileText className="h-5 w-5" />
-                    </div>
-                    <div className="grid gap-1">
-                      <p className="text-sm leading-none font-medium">
-                        {transcription.title}
-                      </p>
-                      <p className="text-muted-foreground text-xs">
-                        {transcription.createdAt}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Badge
+              <div className="relative">
+                <Textarea
+                  placeholder="Start typing or click the microphone to record..."
+                  className="min-h-[200px] resize-none border-0 text-base focus-visible:ring-0"
+                  value={transcript ?? ""}
+                  readOnly
+                />
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Button
                       variant={
-                        transcription.status === "completed"
-                          ? "default"
-                          : "secondary"
+                        isRecording
+                          ? "destructive"
+                          : isAtLimit
+                            ? "secondary"
+                            : "secondary"
                       }
+                      size="icon"
+                      className={cn(
+                        `absolute top-3 right-3 h-10 w-10 rounded-full`,
+                        isRecording && "animate-pulse",
+                        isAtLimit && "opacity-50",
+                      )}
+                      onClick={handleMicClick}
+                      disabled={isTranscribing || isProcessing || isAtLimit}
                     >
-                      {transcription.status}
-                    </Badge>
-                    <span className="text-muted-foreground text-xs">
-                      {transcription.duration}
-                    </span>
-                  </div>
+                      {isTranscribing ? (
+                        <Loader2 className="h-5 w-5 animate-spin" />
+                      ) : isRecording ? (
+                        <Square className="h-5 w-5" />
+                      ) : (
+                        <Mic className="h-5 w-5" />
+                      )}
+                    </Button>
+                  </TooltipTrigger>
+                  {isAtLimit && (
+                    <TooltipContent>
+                      <p>
+                        Usage limit reached. Upgrade to Pro for unlimited
+                        transcriptions.
+                      </p>
+                    </TooltipContent>
+                  )}
+                </Tooltip>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  {/* Removed spinner section */}
                 </div>
-              ))}
+                <Button variant="secondary">Finish</Button>
+              </div>
             </div>
           </CardContent>
         </Card>
 
-        {/* Quick Actions */}
-        <Card className="col-span-3">
-          <CardHeader>
-            <CardTitle>Quick Actions</CardTitle>
-            <CardDescription>Get started with common tasks</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <Button className="w-full justify-start gap-2" variant="outline">
-              <Mic className="h-4 w-4" />
-              Start New Recording
-            </Button>
-            <Button className="w-full justify-start gap-2" variant="outline">
-              <FileText className="h-4 w-4" />
-              Upload Audio File
-            </Button>
-            <Button className="w-full justify-start gap-2" variant="outline">
-              <TrendingUp className="h-4 w-4" />
-              View Analytics
-            </Button>
-
-            {/* Current Recording Status */}
-            <div className="bg-muted mt-6 rounded-lg p-4">
-              <div className="mb-2 flex items-center justify-between">
-                <span className="text-sm font-medium">Current Recording</span>
-                <Badge variant="outline">Live</Badge>
-              </div>
-              <p className="text-muted-foreground mb-2 text-xs">
-                Meeting Notes - Daily Standup
-              </p>
-              <div className="flex items-center gap-2">
-                <Button size="sm" variant="outline">
-                  <Pause className="h-3 w-3" />
-                </Button>
-                <Button size="sm" variant="outline">
-                  <Square className="h-3 w-3" />
-                </Button>
-                <span className="text-muted-foreground ml-auto text-xs">
-                  23:45
-                </span>
-              </div>
-              <Progress value={65} className="mt-2" />
+        {/* Recents Section */}
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-lg font-medium tracking-wide text-gray-500 uppercase">
+              RECENTS
+            </h2>
+            <div className="flex items-center gap-1">
+              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                <Search className="h-4 w-4" />
+              </Button>
+              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                <List className="h-4 w-4" />
+              </Button>
+              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                <RotateCw className="h-4 w-4" />
+              </Button>
             </div>
-          </CardContent>
-        </Card>
-      </div>
-
-      {/* API Test Section - Development Only */}
-      <Card className="mt-4">
-        <CardHeader>
-          <CardTitle className="text-lg">Development Tools</CardTitle>
-          <CardDescription>
-            Test API connections and authentication
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex items-center gap-4">
-            <Button
-              onClick={() =>
-                secretMessage.mutate({
-                  message: "Hello from authenticated user!",
-                })
-              }
-              disabled={secretMessage.isPending}
-              variant="outline"
-            >
-              {secretMessage.isPending ? "Loading..." : "Test Protected API"}
-            </Button>
-
-            <Button onClick={signOut} variant="outline">
-              Sign Out
-            </Button>
           </div>
 
-          {secretMessage.data && (
-            <div className="rounded border border-green-200 bg-green-50 p-3">
-              <strong>API Response:</strong>{" "}
-              {JSON.stringify(secretMessage.data, null, 2)}
-            </div>
-          )}
-
-          {secretMessage.error && (
-            <div className="rounded border border-red-200 bg-red-50 p-3">
-              <strong>API Error:</strong> {secretMessage.error.message}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-    </div>
+          {/* Recent Transcriptions */}
+          <div className="overflow-hidden rounded-lg border">
+            {recentTranscriptions.map((item, index) => (
+              <ContextMenu key={item.id}>
+                <ContextMenuTrigger>
+                  <div
+                    className={`group hover:bg-muted/50 flex items-start justify-between border-transparent p-3 transition-colors ${
+                      index < recentTranscriptions.length - 1
+                        ? "border-border border-b"
+                        : ""
+                    }`}
+                  >
+                    <div className="flex min-w-0 flex-1 items-start gap-3">
+                      <div className="text-muted-foreground text-sm whitespace-nowrap">
+                        {item.timestamp}
+                      </div>
+                      <div className="flex min-w-0 flex-1 items-start gap-2">
+                        <div
+                          className={`text-sm leading-relaxed ${
+                            item.status === "silent" ||
+                            item.status === "dismissed"
+                              ? "text-muted-foreground italic"
+                              : "text-foreground"
+                          }`}
+                        >
+                          {item.content.length > 80
+                            ? `${item.content.substring(0, 80)}...`
+                            : item.content}
+                        </div>
+                        {(item.status === "silent" ||
+                          item.status === "dismissed") && (
+                          <Tooltip>
+                            <TooltipTrigger>
+                              <Info className="text-muted-foreground mt-0.5 h-4 w-4 flex-shrink-0" />
+                            </TooltipTrigger>
+                            <TooltipContent>
+                              <p>
+                                {item.status === "silent"
+                                  ? "No audio detected during this recording"
+                                  : "This transcription was manually dismissed"}
+                              </p>
+                            </TooltipContent>
+                          </Tooltip>
+                        )}
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleCopy(item.content);
+                            }}
+                            className="h-8 w-8 p-0"
+                          >
+                            <Copy className="h-4 w-4" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Copy transcription</p>
+                        </TooltipContent>
+                      </Tooltip>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleSendFeedback(item.id);
+                            }}
+                            className="h-8 w-8 p-0"
+                          >
+                            <MessageSquare className="h-4 w-4" />
+                          </Button>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p>Send feedback</p>
+                        </TooltipContent>
+                      </Tooltip>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            className="h-8 w-8 p-0"
+                          >
+                            <MoreVertical className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end" className="w-48">
+                          <DropdownMenuItem
+                            onClick={() => handleDeleteTranscript(item.id)}
+                            className="text-red-600 focus:text-red-600"
+                          >
+                            <Trash2 className="mr-2 h-4 w-4" />
+                            Delete transcription
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
+                  </div>
+                </ContextMenuTrigger>
+                <ContextMenuContent className="w-48">
+                  <ContextMenuItem onClick={() => handleCopy(item.content)}>
+                    <Copy className="mr-2 h-4 w-4" />
+                    Copy transcription
+                  </ContextMenuItem>
+                  <ContextMenuItem onClick={() => handleSendFeedback(item.id)}>
+                    <MessageSquare className="mr-2 h-4 w-4" />
+                    Send feedback
+                  </ContextMenuItem>
+                  <ContextMenuSeparator />
+                  <ContextMenuItem
+                    onClick={() => handleDeleteTranscript(item.id)}
+                    className="text-red-600 focus:text-red-600"
+                  >
+                    <Trash2 className="mr-2 h-4 w-4" />
+                    Delete transcription
+                  </ContextMenuItem>
+                </ContextMenuContent>
+              </ContextMenu>
+            ))}
+          </div>
+        </div>
+      </div>
+    </TooltipProvider>
   );
-};
-
-export const Route = createFileRoute("/_authenticated/")({
-  component: Home,
-});
+}
