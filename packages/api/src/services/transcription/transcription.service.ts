@@ -5,6 +5,7 @@ import type {
   TranscriptionItem,
 } from "../../repository/transcription.repository";
 import { transcriptionRepository } from "../../repository/transcription.repository";
+import { countWords } from "../../utils/word-counter";
 
 export interface TranscriptionGroup {
   date: string;
@@ -17,9 +18,15 @@ export interface TranscriptionGroup {
 }
 
 export class TranscriptionService {
-  async createTranscription(data: CreateTranscriptionData) {
+  async createTranscription(data: Omit<CreateTranscriptionData, "wordCount">) {
     try {
-      const result = await transcriptionRepository.create(data);
+      // Count words in the content
+      const wordCount = countWords(data.content);
+
+      const result = await transcriptionRepository.create({
+        ...data,
+        wordCount,
+      });
       return result;
     } catch (error) {
       console.error(error);

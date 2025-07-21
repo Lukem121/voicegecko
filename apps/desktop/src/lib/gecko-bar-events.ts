@@ -1,6 +1,10 @@
 import { listen } from "@tauri-apps/api/event";
 
-import type { AudioLevelEvent } from "~/types/events";
+import type {
+  AudioLevelEvent,
+  GeckoBarNotificationEvent,
+} from "~/types/events";
+import { useGeckoBarNotificationStore } from "~/stores/gecko-bar-notification.store";
 
 let initialized = false;
 
@@ -23,6 +27,15 @@ export async function initializeGeckoBarEvents(): Promise<void> {
       const payload = event.payload as AudioLevelEvent;
       // Emit to any components that need real-time audio levels
       window.dispatchEvent(new CustomEvent("audio-level", { detail: payload }));
+    });
+
+    // Listen for gecko bar notifications
+    await listen("gecko-bar-notification", (event) => {
+      const payload = event.payload as GeckoBarNotificationEvent;
+      console.log("[GeckoBarEvents] 📢 Received notification:", payload);
+
+      // Update the notification store
+      useGeckoBarNotificationStore.getState().showNotification(payload);
     });
 
     // NOTE: Recording state is now handled by main tauri events (initializeTauriEvents)

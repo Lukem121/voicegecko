@@ -8,8 +8,9 @@ import type {
   RecordingStateChangedEvent,
   TranscriptionProgressEvent,
 } from "~/types/events";
+import { transcriptionService } from "~/services/transcription.service";
 import { useEventStore } from "~/stores/event.store";
-import { trpcClient } from "~/trpc";
+import { queryClient, trpc, trpcClient } from "~/trpc";
 
 let initialized = false;
 let initializationId: string | null = null;
@@ -108,7 +109,25 @@ export async function initializeTauriEvents(
 
         // Handle completion business logic only if not in gecko bar
         if (!options.isGeckoBar && result.transcript) {
-          await store.handleTranscriptionComplete(result.transcript, metadata);
+          // For cloud transcriptions, the backend already saved the transcription
+          // So we only need to handle clipboard and play notification sound
+          await transcriptionService.handleCompletedTranscription(
+            result.transcript,
+          );
+          await transcriptionService.playEndSoundIfEnabled();
+
+          // Invalidate queries to update UI
+          await Promise.all([
+            queryClient.invalidateQueries({
+              queryKey: trpc.transcription.getAll.queryKey(),
+            }),
+            queryClient.invalidateQueries({
+              queryKey: trpc.usage.getStatus.queryKey(),
+            }),
+            queryClient.invalidateQueries({
+              queryKey: trpc.usage.getStats.queryKey(),
+            }),
+          ]);
         }
       } catch (error) {
         console.error("[TauriEvents] Cloud transcription error:", error);

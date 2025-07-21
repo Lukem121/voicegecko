@@ -11,6 +11,7 @@ export interface TauriEventMap {
   "model-download-complete": ModelDownloadCompleteEvent;
   "model-delete-complete": ModelDeleteCompleteEvent;
   "audio-level": AudioLevelEvent;
+  "gecko-bar-notification": GeckoBarNotificationEvent;
 }
 
 // Transcription Events
@@ -31,6 +32,13 @@ export type RecordingStateChangedEvent =
 
 // Backend sends raw string, not an object
 export type RecordingErrorEvent = string;
+
+// Gecko Bar notification event
+export interface GeckoBarNotificationEvent {
+  message: string;
+  duration?: number;
+  priority?: "high" | "normal";
+}
 
 export interface ModelDownloadProgressEvent {
   modelId: string;
