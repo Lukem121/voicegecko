@@ -6,7 +6,7 @@ import { openUrl } from "@tauri-apps/plugin-opener";
 import { authClient } from "~/lib/client";
 
 export const signIn = async () => {
-  const signInUrl = `${import.meta.env.VITE_API_URL}/api/auth/signin?redirect=voicegecko://login`;
+  const signInUrl = `${import.meta.env.VITE_PUBLIC_VOICEGECKO_URL}/api/auth/signin?redirect=voicegecko://login`;
   await openUrl(signInUrl);
 };
 

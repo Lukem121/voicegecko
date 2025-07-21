@@ -173,7 +173,7 @@ function SignIn() {
                           <a
                             onClick={() => {
                               void openUrl(
-                                `${import.meta.env.VITE_API_URL}/auth/forgot-password`,
+                                `${import.meta.env.VITE_PUBLIC_VOICEGECKO_URL}/auth/forgot-password`,
                               );
                             }}
                             className="text-primary focus:ring-primary cursor-pointer text-xs hover:underline focus:ring-2 focus:outline-none sm:text-sm"
