@@ -91,7 +91,7 @@ export const LinkTemplate = ({ heading, description, url }: LinkEmailProps) => (
             &nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;
             <Link
               className="text-[#b7b7b7] underline hover:text-gray-600"
-              href="https://discord.gg/VJh8GyAnuK"
+              href="https://discord.gg/BFxNQCzZjB"
               target="_blank"
               rel="noopener noreferrer"
             >
