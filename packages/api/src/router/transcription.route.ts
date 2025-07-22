@@ -66,7 +66,7 @@ export const transcriptionRouter = {
     )
     .query(async ({ ctx, input }) => {
       const userId = ctx.session.user.id;
-      const params = input ?? {};
+      const params = input ?? { limit: 50 };
       return transcriptionService.getUserTranscriptions(userId, params);
     }),
 

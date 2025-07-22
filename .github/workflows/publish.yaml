@@ -13,21 +13,21 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # - platform: "macos-latest" # for Arm based macs (M1 and above).
-          #   args: "--target aarch64-apple-darwin"
-          # - platform: "macos-latest" # for Intel based macs.
-          #   args: "--target x86_64-apple-darwin"
-          # - platform: "ubuntu-22.04"
-          #   args: ""
-          # - platform: "windows-latest"
-          #   args: ""
+          - platform: "macos-latest" # for Arm based macs (M1 and above).
+            args: "--target aarch64-apple-darwin"
+          - platform: "macos-latest" # for Intel based macs.
+            args: "--target x86_64-apple-darwin"
+          - platform: "ubuntu-22.04"
+            args: ""
+          - platform: "windows-latest"
+            args: ""
           - platform: "self-hosted"
             args: ""
 
     runs-on: ${{ matrix.platform }}
     defaults:
       run:
-        shell: powershell
+        shell: ${{ matrix.platform == 'self-hosted' && 'powershell' || (contains(matrix.platform, 'windows') && 'powershell' || 'bash') }}
     steps:
       - uses: actions/checkout@v4
 
@@ -41,10 +41,24 @@ jobs:
         with:
           version: latest
 
+      - name: setup Node.js cache
+        uses: actions/cache@v4
+        with:
+          path: ~/.pnpm-store
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
       - name: install Rust stable
         uses: dtolnay/rust-toolchain@stable
         with:
           targets: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
+        if: matrix.platform != 'self-hosted'
+
+      - name: Rust cache
+        uses: swatinem/rust-cache@v2
+        with:
+          workspaces: "./apps/desktop/src-tauri -> target"
         if: matrix.platform != 'self-hosted'
 
       - name: setup Rust on self-hosted Windows
@@ -131,7 +145,7 @@ jobs:
           }
 
       - name: install frontend dependencies
-        run: pnpm install
+        run: pnpm install --frozen-lockfile
 
       - uses: tauri-apps/tauri-action@v0
         env:
@@ -149,16 +163,18 @@ jobs:
           projectPath: apps/desktop
 
       # Publish to separate public releases repository
-      - name: Create Release in Public Repository
+      - name: Create Release in Public Repository (Windows/Self-hosted)
+        if: matrix.platform == 'self-hosted' || contains(matrix.platform, 'windows')
         env:
           GITHUB_TOKEN: ${{ secrets.RELEASES_REPO_TOKEN }}
+        shell: powershell
         run: |
           # Get the version from the package.json
           $VERSION = (Get-Content "apps/desktop/package.json" | ConvertFrom-Json).version
           $TAG_NAME = "app-v$VERSION"
 
-          # Create release in public repository
-          $RELEASE_RESPONSE = gh release create $TAG_NAME --repo "Lukem121/voicegecko-releases" --title "App v$VERSION" --notes "See the assets to download this version and install."
+          # Create release in public repository (will fail gracefully if already exists)
+          gh release create $TAG_NAME --repo "Lukem121/voicegecko-releases" --title "App v$VERSION" --notes "See the assets to download this version and install." 2>$null || Write-Host "Release already exists"
 
           # Upload all built artifacts to the public repository
           $ARTIFACTS = Get-ChildItem -Path "target/release/bundle" -Recurse -File | Where-Object { $_.Extension -in @('.msi', '.exe', '.sig') }
@@ -166,3 +182,21 @@ jobs:
           foreach ($artifact in $ARTIFACTS) {
             gh release upload $TAG_NAME $artifact.FullName --repo "Lukem121/voicegecko-releases"
           }
+
+      - name: Create Release in Public Repository (macOS/Linux)
+        if: matrix.platform == 'macos-latest' || matrix.platform == 'ubuntu-22.04'
+        env:
+          GITHUB_TOKEN: ${{ secrets.RELEASES_REPO_TOKEN }}
+        shell: bash
+        run: |
+          # Get the version from the package.json
+          VERSION=$(node -p "require('./apps/desktop/package.json').version")
+          TAG_NAME="app-v$VERSION"
+
+          # Create release in public repository (will fail gracefully if already exists)
+          gh release create $TAG_NAME --repo "Lukem121/voicegecko-releases" --title "App v$VERSION" --notes "See the assets to download this version and install." 2>/dev/null || echo "Release already exists"
+
+          # Upload all built artifacts to the public repository
+          find target/release/bundle -type f \( -name "*.dmg" -o -name "*.app.tar.gz" -o -name "*.deb" -o -name "*.AppImage" -o -name "*.sig" \) | while read artifact; do
+            gh release upload $TAG_NAME "$artifact" --repo "Lukem121/voicegecko-releases"
+          done
