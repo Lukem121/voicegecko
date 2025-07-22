@@ -17,6 +17,19 @@ export interface TranscriptionGroup {
   }[];
 }
 
+export interface PaginationParams {
+  cursor?: number;
+  limit: number;
+  search?: string;
+}
+
+export interface PaginatedTranscriptionsResult {
+  groups: TranscriptionGroup[];
+  hasNextPage: boolean;
+  nextCursor?: number;
+  totalResults?: number;
+}
+
 export class TranscriptionService {
   async createTranscription(data: Omit<CreateTranscriptionData, "wordCount">) {
     try {
@@ -37,13 +50,38 @@ export class TranscriptionService {
     }
   }
 
-  async getUserTranscriptions(userId: string): Promise<TranscriptionGroup[]> {
-    const transcriptions = await transcriptionRepository.findByUserId(userId);
+  async getUserTranscriptions(
+    userId: string,
+    params: PaginationParams = { limit: 20 },
+  ): Promise<PaginatedTranscriptionsResult> {
+    const { cursor, limit, search } = params;
+
+    // Fetch transcriptions with pagination and search
+    const result = await transcriptionRepository.findByUserIdPaginated(userId, {
+      cursor,
+      limit: limit + 1, // Fetch one extra to check if there's a next page
+      search,
+    });
+
+    const { transcriptions, totalResults } = result;
+
+    // Check if there are more results
+    const hasNextPage = transcriptions.length > limit;
+    const items = hasNextPage ? transcriptions.slice(0, limit) : transcriptions;
 
     // Group transcriptions by date
-    const grouped = this.groupTranscriptionsByDate(transcriptions);
+    const grouped = this.groupTranscriptionsByDate(items);
 
-    return grouped;
+    // Determine next cursor (ID of the last item)
+    const nextCursor =
+      hasNextPage && items.length > 0 ? items[items.length - 1]!.id : undefined;
+
+    return {
+      groups: grouped,
+      hasNextPage,
+      nextCursor,
+      totalResults,
+    };
   }
 
   async deleteTranscription(id: number, userId: string) {

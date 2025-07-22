@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import Fuse from "fuse.js";
 import {
   Copy,
   Info,
@@ -13,6 +14,7 @@ import {
   Search,
   Square,
   Trash2,
+  X,
 } from "lucide-react";
 
 import { Button } from "@acme/ui/components/ui/button";
@@ -30,6 +32,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@acme/ui/components/ui/dropdown-menu";
+import { Input } from "@acme/ui/components/ui/input";
 import { Textarea } from "@acme/ui/components/ui/textarea";
 import {
   Tooltip,
@@ -42,6 +45,7 @@ import { cn } from "@acme/ui/lib/utils";
 import { useDeleteTranscription } from "~/features/transcription/use-delete-transcription";
 import { useGetTranscriptions } from "~/features/transcription/use-get-transcriptions";
 import { useUser } from "~/hooks/auth";
+import { useDebouncedSearch } from "~/hooks/use-debounced-search";
 import { recordingService } from "~/services/recording.service";
 import { useEventStore } from "~/stores/event.store";
 import { trpc } from "~/trpc";
@@ -55,6 +59,10 @@ function RecordingPage() {
   const { transcriptions } = useGetTranscriptions();
   const { deleteTranscription } = useDeleteTranscription();
   const [isProcessing, setIsProcessing] = useState(false);
+  const [isSearchExpanded, setIsSearchExpanded] = useState(false);
+
+  // Search functionality
+  const search = useDebouncedSearch({ delay: 300 });
 
   // External state from main event store
   const recordingStatus = useEventStore((state) => state.recordingStatus);
@@ -72,10 +80,28 @@ function RecordingPage() {
   const isAtLimit =
     usageStatus && !usageStatus.isUnlimited && !usageStatus.canTranscribe;
 
-  // Flatten and limit recent transcriptions for display
-  const recentTranscriptions = transcriptions
-    .flatMap((section) => section.items)
-    .slice(0, 5); // Show only the 5 most recent
+  // Flatten all transcriptions for search
+  const allTranscriptions = transcriptions.flatMap((section) => section.items);
+
+  // Filter and limit recent transcriptions for display
+  const filteredTranscriptions = (() => {
+    if (!search.debouncedSearchTerm) {
+      // No search - show recent 5 items
+      return allTranscriptions.slice(0, 5);
+    }
+
+    // Perform fuzzy search on all transcriptions
+    const fuse = new Fuse(allTranscriptions, {
+      keys: ["content"],
+      threshold: 0.4,
+      includeScore: true,
+    });
+
+    const fuzzyResults = fuse.search(search.debouncedSearchTerm);
+
+    // Return up to 10 search results (more than normal since user is actively searching)
+    return fuzzyResults.slice(0, 10).map((result) => result.item);
+  })();
 
   console.log(
     "[RecordingPage] Component render - transcript:",
@@ -130,7 +156,7 @@ function RecordingPage() {
   return (
     <TooltipProvider>
       <div className="flex flex-1 flex-col gap-6">
-        {/* Main Note Input */}
+        <h1 className="text-2xl font-bold tracking-tight">Record</h1>
         <Card>
           <CardContent>
             <div className="space-y-4">
@@ -191,34 +217,91 @@ function RecordingPage() {
               RECENTS
             </h2>
             <div className="flex items-center gap-1">
-              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                <Search className="h-4 w-4" />
-              </Button>
-              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                <List className="h-4 w-4" />
-              </Button>
-              <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                <RotateCw className="h-4 w-4" />
-              </Button>
+              {isSearchExpanded ? (
+                <div className="flex items-center gap-2">
+                  <div className="relative">
+                    <Input
+                      placeholder="Search transcriptions..."
+                      value={search.searchTerm}
+                      onChange={(e) => search.setSearchTerm(e.target.value)}
+                      className="h-8 w-64 pr-8"
+                      autoFocus
+                    />
+                    {search.searchTerm && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={search.clearSearch}
+                        className="absolute top-0 right-1 h-8 w-8 p-0"
+                      >
+                        <X className="h-3 w-3" />
+                      </Button>
+                    )}
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-8 w-8 p-0"
+                    onClick={() => {
+                      setIsSearchExpanded(false);
+                      search.clearSearch();
+                    }}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+              ) : (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 w-8 p-0"
+                  onClick={() => setIsSearchExpanded(true)}
+                >
+                  <Search className="h-4 w-4" />
+                </Button>
+              )}
             </div>
           </div>
 
+          {/* Search results info */}
+          {search.debouncedSearchTerm && (
+            <div className="text-muted-foreground flex items-center gap-2 text-sm">
+              <span>
+                Found {filteredTranscriptions.length} result
+                {filteredTranscriptions.length !== 1 ? "s" : ""} for "
+                {search.debouncedSearchTerm}"
+              </span>
+            </div>
+          )}
+
           {/* Recent Transcriptions */}
           <div className="overflow-hidden rounded-lg border">
-            {recentTranscriptions.length === 0 ? (
+            {filteredTranscriptions.length === 0 ? (
               <div className="text-muted-foreground p-8 text-center">
-                <p>No recent transcriptions yet.</p>
-                <p className="text-sm">
-                  Start recording to see your transcriptions here.
-                </p>
+                {search.debouncedSearchTerm ? (
+                  <>
+                    <p>
+                      No transcriptions found matching "
+                      {search.debouncedSearchTerm}".
+                    </p>
+                    <p className="text-sm">Try adjusting your search terms.</p>
+                  </>
+                ) : (
+                  <>
+                    <p>No recent transcriptions yet.</p>
+                    <p className="text-sm">
+                      Start recording to see your transcriptions here.
+                    </p>
+                  </>
+                )}
               </div>
             ) : (
-              recentTranscriptions.map((item, index) => (
+              filteredTranscriptions.map((item, index) => (
                 <ContextMenu key={item.id}>
                   <ContextMenuTrigger>
                     <div
                       className={`group hover:bg-muted/50 flex items-start justify-between border-transparent p-3 transition-colors ${
-                        index < recentTranscriptions.length - 1
+                        index < filteredTranscriptions.length - 1
                           ? "border-border border-b"
                           : ""
                       }`}
@@ -335,6 +418,25 @@ function RecordingPage() {
               ))
             )}
           </div>
+
+          {/* View all transcriptions link */}
+          {(search.debouncedSearchTerm || allTranscriptions.length > 5) && (
+            <div className="flex justify-center py-2">
+              <Link
+                to="/transcriptions"
+                search={
+                  search.debouncedSearchTerm
+                    ? { search: search.debouncedSearchTerm }
+                    : {}
+                }
+                className="text-muted-foreground hover:text-foreground text-sm transition-colors"
+              >
+                {search.debouncedSearchTerm
+                  ? "View all search results in transcriptions →"
+                  : "View all transcriptions →"}
+              </Link>
+            </div>
+          )}
         </div>
       </div>
     </TooltipProvider>

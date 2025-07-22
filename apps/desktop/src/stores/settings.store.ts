@@ -5,6 +5,7 @@ import { LazyStore, load } from "@tauri-apps/plugin-store";
 import { create } from "zustand";
 import { devtools } from "zustand/middleware";
 
+import type { HardwareInfo } from "~/types/models";
 import type {
   AudioDevice,
   NotificationSound,
@@ -75,6 +76,7 @@ interface SettingsState {
   // Settings data
   settings: AppSettings;
   audioDevices: AudioDevice[];
+  hardwareInfo: HardwareInfo | null;
   isInitialized: boolean;
   isLoading: boolean;
 
@@ -148,6 +150,7 @@ export const useSettingsStore = create<SettingsState>()(
     (set, get) => ({
       settings: defaultSettings,
       audioDevices: [],
+      hardwareInfo: null,
       isInitialized: false,
       isLoading: false,
 
@@ -167,6 +170,7 @@ export const useSettingsStore = create<SettingsState>()(
             personalizationSettings,
             models,
             selectedTier,
+            hardwareInfo,
           ] = await Promise.all([
             loadAudioSettings(),
             invoke<{ enabled: boolean; hideOnFullscreen?: boolean }>(
@@ -178,6 +182,7 @@ export const useSettingsStore = create<SettingsState>()(
             loadPersonalizationSettings(),
             invoke<Record<string, Model>>("list_models"),
             invoke<string | null>("get_selected_tier"),
+            invoke<HardwareInfo>("get_hardware_info"),
           ]);
 
           // Find selected device from saved settings
@@ -205,6 +210,7 @@ export const useSettingsStore = create<SettingsState>()(
               },
             },
             audioDevices,
+            hardwareInfo,
             isInitialized: true,
             isLoading: false,
           });
@@ -241,8 +247,9 @@ export const useSettingsStore = create<SettingsState>()(
             await get().refreshModels();
           });
         } catch (error) {
-          console.error("Failed to initialize settings:", error);
+          console.error("[Settings] Failed to initialize:", error);
           set({ isLoading: false });
+          throw error;
         }
       },
 
@@ -498,6 +505,10 @@ export const useSettingsStore = create<SettingsState>()(
     },
   ),
 );
+
+// Custom hooks for specific data
+export const useHardwareInfo = () =>
+  useSettingsStore((state) => state.hardwareInfo);
 
 // Helper functions for loading settings
 async function loadAudioSettings(): Promise<AudioSettings> {
