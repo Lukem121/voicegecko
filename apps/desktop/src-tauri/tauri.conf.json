@@ -68,7 +68,10 @@
     "targets": "all",
     "icon": ["icons/icon.ico"],
     "createUpdaterArtifacts": true,
-    "resources": ["resources/**/*"]
+    "resources": ["resources/**/*"],
+    "macOS": {
+      "minimumSystemVersion": "10.15"
+    }
   },
   "$schema": "../../../node_modules/@tauri-apps/cli/schema.json"
 }
