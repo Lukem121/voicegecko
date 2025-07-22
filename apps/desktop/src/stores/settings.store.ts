@@ -1,5 +1,7 @@
+import type { Store } from "@tauri-apps/plugin-store";
 import { invoke } from "@tauri-apps/api/core";
-import { LazyStore } from "@tauri-apps/plugin-store";
+import { listen } from "@tauri-apps/api/event";
+import { LazyStore, load } from "@tauri-apps/plugin-store";
 import { create } from "zustand";
 import { devtools } from "zustand/middleware";
 
@@ -53,10 +55,11 @@ export interface Model {
   sha: string;
   url: string;
   recommended: boolean;
+  tier: string;
 }
 
 interface ModelSettings {
-  selectedModel: string;
+  selectedTier: string;
   availableModels: Record<string, Model>;
 }
 
@@ -96,9 +99,13 @@ interface SettingsState {
   refreshAudioDevices: () => Promise<void>;
 
   // Model actions
-  updateSelectedModel: (modelId: string) => Promise<void>;
+  updateSelectedTier: (tier: string) => Promise<void>;
   refreshModels: () => Promise<void>;
   updateModelStatus: (modelId: string, status: ModelStatus) => void;
+  getModelsForTier: (tier: string) => Model[];
+  getTierDownloadStatus: (
+    tier: string,
+  ) => "none" | "partial" | "complete" | "downloading";
 
   // Test sound
   playTestSound: () => Promise<void>;
@@ -131,7 +138,7 @@ const defaultSettings: AppSettings = {
     autoAddToDictionary: true,
   },
   models: {
-    selectedModel: "cloud",
+    selectedTier: "cloud",
     availableModels: {},
   },
 };
@@ -159,7 +166,7 @@ export const useSettingsStore = create<SettingsState>()(
             privacySettings,
             personalizationSettings,
             models,
-            selectedModel,
+            selectedTier,
           ] = await Promise.all([
             loadAudioSettings(),
             invoke<{ enabled: boolean; hideOnFullscreen?: boolean }>(
@@ -170,7 +177,7 @@ export const useSettingsStore = create<SettingsState>()(
             loadPrivacySettings(),
             loadPersonalizationSettings(),
             invoke<Record<string, Model>>("list_models"),
-            invoke<string | null>("get_selected_model"),
+            invoke<string | null>("get_selected_tier"),
           ]);
 
           // Find selected device from saved settings
@@ -193,7 +200,7 @@ export const useSettingsStore = create<SettingsState>()(
               privacy: privacySettings,
               personalization: personalizationSettings,
               models: {
-                selectedModel: selectedModel ?? "cloud",
+                selectedTier: selectedTier ?? "cloud",
                 availableModels: models,
               },
             },
@@ -208,6 +215,31 @@ export const useSettingsStore = create<SettingsState>()(
               volume: audioSettings.notificationVolume,
             });
           }
+
+          // Refresh models again to ensure we have the latest status after synchronization
+          // This is important for detecting bundled models
+          const refreshedModels =
+            await invoke<Record<string, Model>>("list_models");
+          set((state) => ({
+            settings: {
+              ...state.settings,
+              models: {
+                ...state.settings.models,
+                availableModels: refreshedModels,
+              },
+            },
+          }));
+
+          // Set up listeners for model download events
+          // This ensures the store is updated even when downloads happen in the background
+          listen<[string, number]>("model-download-progress", (event) => {
+            const [modelId, progress] = event.payload;
+            get().updateModelStatus(modelId, { Downloading: progress });
+          });
+
+          listen<string>("model-download-complete", async (event) => {
+            await get().refreshModels();
+          });
         } catch (error) {
           console.error("Failed to initialize settings:", error);
           set({ isLoading: false });
@@ -342,48 +374,114 @@ export const useSettingsStore = create<SettingsState>()(
       },
 
       // Model actions
-      updateSelectedModel: async (modelId) => {
+      updateSelectedTier: async (tier) => {
         const { settings } = get();
         const newSettings = {
           ...settings,
-          models: { ...settings.models, selectedModel: modelId },
+          models: { ...settings.models, selectedTier: tier },
         };
         set({ settings: newSettings });
-        await invoke("set_selected_model", { modelId });
+        await invoke("set_selected_tier", { tier });
       },
 
       refreshModels: async () => {
         try {
-          const models = await invoke<Record<string, Model>>("list_models");
-          const { settings } = get();
-          set({
+          const [models, selectedTier] = await Promise.all([
+            invoke<Record<string, Model>>("list_models"),
+            invoke<string | null>("get_selected_tier"),
+          ]);
+
+          set((state) => ({
             settings: {
-              ...settings,
-              models: { ...settings.models, availableModels: models },
+              ...state.settings,
+              models: {
+                ...state.settings.models,
+                availableModels: models,
+                selectedTier:
+                  selectedTier || state.settings.models.selectedTier,
+              },
             },
-          });
+          }));
         } catch (error) {
-          console.error("Failed to refresh models:", error);
+          console.error("[Store] Failed to refresh models:", error);
         }
       },
 
       updateModelStatus: (modelId, status) => {
-        const { settings } = get();
-        const model = settings.models.availableModels[modelId];
-        if (!model) return;
+        set((state) => {
+          const model = state.settings.models.availableModels[modelId];
+          if (!model) {
+            return state;
+          }
 
-        set({
-          settings: {
-            ...settings,
-            models: {
-              ...settings.models,
-              availableModels: {
-                ...settings.models.availableModels,
-                [modelId]: { ...model, status },
+          return {
+            settings: {
+              ...state.settings,
+              models: {
+                ...state.settings.models,
+                availableModels: {
+                  ...state.settings.models.availableModels,
+                  [modelId]: {
+                    ...model,
+                    status,
+                  },
+                },
               },
             },
-          },
+          };
         });
+      },
+
+      getModelsForTier: (tier) => {
+        const { settings } = get();
+        return Object.values(settings.models.availableModels).filter(
+          (model) => {
+            // Convert tier enum to lowercase string for comparison
+            const modelTier =
+              typeof model.tier === "string"
+                ? model.tier.toLowerCase()
+                : model.tier;
+            return modelTier === tier.toLowerCase();
+          },
+        );
+      },
+
+      getTierDownloadStatus: (tier) => {
+        const { settings } = get();
+        const models = Object.values(settings.models.availableModels);
+        const tierModels = models.filter((model) => {
+          // Handle case-insensitive comparison
+          const modelTier =
+            typeof model.tier === "string"
+              ? model.tier.toLowerCase()
+              : model.tier;
+          return modelTier === tier.toLowerCase();
+        });
+
+        if (tierModels.length === 0) {
+          return "none";
+        }
+
+        const downloading = tierModels.some(
+          (model) =>
+            typeof model.status === "object" && "Downloading" in model.status,
+        );
+
+        // If any model in the tier is downloaded, the tier is complete
+        // Users only need one model per tier to use that quality level
+        const anyDownloaded = tierModels.some(
+          (model) => model.status === "Downloaded",
+        );
+
+        if (downloading) {
+          return "downloading";
+        }
+
+        if (anyDownloaded) {
+          return "complete";
+        }
+
+        return "none";
       },
 
       playTestSound: async () => {

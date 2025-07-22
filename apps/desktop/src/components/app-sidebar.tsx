@@ -120,7 +120,7 @@ const data: NavigationData = {
       icon: Settings2,
       items: [
         {
-          title: "Models",
+          title: "Quality",
           url: "/settings/models",
         },
         {
