@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import {
   Copy,
@@ -61,6 +62,7 @@ function TranscriptionsPage() {
   } = useInfiniteTranscriptions({ limit: 20 });
 
   const { deleteTranscription, isDeleting } = useDeleteTranscription();
+  const [isSearchExpanded, setIsSearchExpanded] = useState(false);
 
   // Set up infinite scroll
   const { loadMoreRef } = useInfiniteScroll({
@@ -99,32 +101,59 @@ function TranscriptionsPage() {
   return (
     <TooltipProvider>
       <div className="flex flex-1 flex-col gap-4">
-        <div className="flex items-start justify-between">
+        <div className="flex items-center justify-between">
           <h1 className="text-2xl font-bold tracking-tight">Recent activity</h1>
-          <div className="relative w-80">
-            <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
-            <Input
-              placeholder="Search transcriptions..."
-              value={searchTerm}
-              onChange={(e) => handleSearch(e.target.value)}
-              className="pr-12 pl-10"
-            />
-            <div className="absolute top-1/2 right-1 flex -translate-y-1/2 items-center gap-1">
-              {/* Show subtle loading spinner while searching */}
-              {searchTerm && isLoading && (
-                <Loader2 className="text-muted-foreground h-3 w-3 animate-spin" />
-              )}
-              {searchTerm && (
+          <div className="flex items-center gap-1">
+            {isSearchExpanded ? (
+              <div className="flex items-center gap-2">
+                <div className="relative">
+                  <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
+                  <Input
+                    placeholder="Search transcriptions..."
+                    value={searchTerm}
+                    onChange={(e) => handleSearch(e.target.value)}
+                    className="w-80 pr-12 pl-10"
+                    autoFocus
+                  />
+                  <div className="absolute top-1/2 right-1 flex -translate-y-1/2 items-center gap-1">
+                    {/* Show subtle loading spinner while searching */}
+                    {searchTerm && isLoading && (
+                      <Loader2 className="text-muted-foreground h-3 w-3 animate-spin" />
+                    )}
+                    {searchTerm && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={clearSearch}
+                        className="h-7 w-7 p-0"
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
+                </div>
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={clearSearch}
-                  className="h-7 w-7 p-0"
+                  className="h-8 w-8 p-0"
+                  onClick={() => {
+                    setIsSearchExpanded(false);
+                    clearSearch();
+                  }}
                 >
                   <X className="h-4 w-4" />
                 </Button>
-              )}
-            </div>
+              </div>
+            ) : (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-8 w-8 p-0"
+                onClick={() => setIsSearchExpanded(true)}
+              >
+                <Search className="h-4 w-4" />
+              </Button>
+            )}
           </div>
         </div>
 
