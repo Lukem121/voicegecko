@@ -45,7 +45,6 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
         with:
           targets: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
-        # Add manual cleanup for self-hosted runners
         if: matrix.platform != 'self-hosted'
 
       - name: setup Rust on self-hosted Windows
@@ -65,9 +64,17 @@ jobs:
             $rustupInstaller = "$env:TEMP\rustup-init.exe"
             Invoke-WebRequest -Uri $rustupUrl -OutFile $rustupInstaller
             & $rustupInstaller -y --default-toolchain stable --default-host x86_64-pc-windows-msvc
-            # Add Rust to PATH for current session
-            $env:PATH = "$env:USERPROFILE\.cargo\bin;$env:PATH"
           }
+
+          # Ensure Rust binaries are in GitHub Actions PATH for subsequent steps
+          $cargoPath = "$env:USERPROFILE\.cargo\bin"
+          if (Test-Path $cargoPath) {
+            "$cargoPath" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+            Write-Host "Added $cargoPath to GITHUB_PATH"
+          }
+
+          # Also set for current session
+          $env:PATH = "$cargoPath;$env:PATH"
 
           # Verify Rust installation
           rustc --version
