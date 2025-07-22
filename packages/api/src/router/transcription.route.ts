@@ -54,10 +54,21 @@ export const transcriptionRouter = {
       return result;
     }),
 
-  getAll: protectedProcedure.query(async ({ ctx }) => {
-    const userId = ctx.session.user.id;
-    return transcriptionService.getUserTranscriptions(userId);
-  }),
+  getAll: protectedProcedure
+    .input(
+      z
+        .object({
+          cursor: z.number().optional(), // ID of the last item from previous page
+          limit: z.number().min(1).max(50).default(20), // Page size with reasonable limits
+          search: z.string().optional(), // Search query
+        })
+        .optional(),
+    )
+    .query(async ({ ctx, input }) => {
+      const userId = ctx.session.user.id;
+      const params = input ?? {};
+      return transcriptionService.getUserTranscriptions(userId, params);
+    }),
 
   delete: protectedProcedure
     .input(
