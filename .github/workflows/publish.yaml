@@ -45,6 +45,33 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
         with:
           targets: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
+        # Add manual cleanup for self-hosted runners
+        if: matrix.platform != 'self-hosted'
+
+      - name: setup Rust on self-hosted Windows
+        if: matrix.platform == 'self-hosted'
+        run: |
+          # Check if Rust is already installed
+          $rustInstalled = Get-Command rustc -ErrorAction SilentlyContinue
+          if ($rustInstalled) {
+            Write-Host "Rust is already installed at: $($rustInstalled.Path)"
+            # Update Rust to ensure we have the latest stable
+            rustup update stable
+            rustup default stable
+          } else {
+            Write-Host "Installing Rust..."
+            # Download and install rustup
+            $rustupUrl = "https://win.rustup.rs/x86_64"
+            $rustupInstaller = "$env:TEMP\rustup-init.exe"
+            Invoke-WebRequest -Uri $rustupUrl -OutFile $rustupInstaller
+            & $rustupInstaller -y --default-toolchain stable --default-host x86_64-pc-windows-msvc
+            # Add Rust to PATH for current session
+            $env:PATH = "$env:USERPROFILE\.cargo\bin;$env:PATH"
+          }
+
+          # Verify Rust installation
+          rustc --version
+          cargo --version
 
       - name: install dependencies (ubuntu only)
         if: matrix.platform == 'ubuntu-22.04' # This must match the platform value defined above.
