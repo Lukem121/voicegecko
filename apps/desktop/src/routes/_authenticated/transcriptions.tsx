@@ -99,12 +99,8 @@ function TranscriptionsPage() {
   return (
     <TooltipProvider>
       <div className="flex flex-1 flex-col gap-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight">
-              Recent activity
-            </h1>
-          </div>
+        <div className="flex items-start justify-between">
+          <h1 className="text-2xl font-bold tracking-tight">Recent activity</h1>
           <div className="relative w-80">
             <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
             <Input
