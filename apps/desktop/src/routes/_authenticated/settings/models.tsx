@@ -3,13 +3,11 @@ import { createFileRoute } from "@tanstack/react-router";
 import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import {
-  AlertCircle,
   CheckCircle,
   Cpu,
   Download,
   HardDrive,
   MemoryStick,
-  RefreshCw,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -22,16 +20,11 @@ import {
   CardHeader,
   CardTitle,
 } from "@acme/ui/components/ui/card";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@acme/ui/components/ui/collapsible";
 import { Progress } from "@acme/ui/components/ui/progress";
 import { RadioGroup, RadioGroupItem } from "@acme/ui/components/ui/radio-group";
 
 import type { HardwareInfo, ModelTier } from "~/types/models";
-import { useSettingsStore } from "~/stores/settings.store";
+import { useHardwareInfo, useSettingsStore } from "~/stores/settings.store";
 import { tierDisplayInfo } from "~/types/models";
 
 export const Route = createFileRoute("/_authenticated/settings/models")({
@@ -48,9 +41,8 @@ function SettingsModelsPage() {
     getTierDownloadStatus,
   } = useSettingsStore();
 
+  const hardwareInfo = useHardwareInfo();
   const selectedTier = settings.models.selectedTier;
-  const [hardwareInfo, setHardwareInfo] = useState<HardwareInfo | null>(null);
-  const [showAdvanced, setShowAdvanced] = useState(false);
   const [downloadingTiers, setDownloadingTiers] = useState<Set<string>>(
     new Set(),
   );
@@ -60,15 +52,6 @@ function SettingsModelsPage() {
 
   // Track when the component was mounted for early session detection
   const sessionStartTime = useRef(Date.now()).current;
-
-  // Load hardware info on mount
-  useEffect(() => {
-    invoke<HardwareInfo>("get_hardware_info")
-      .then((info) => {
-        setHardwareInfo(info);
-      })
-      .catch(console.error);
-  }, []);
 
   // Periodically refresh models to catch background downloads
   useEffect(() => {
@@ -157,17 +140,15 @@ function SettingsModelsPage() {
       "model-download-complete",
       (event) => {
         toast.success(`Model downloaded successfully!`);
-        void refreshModels();
 
-        // Add a small delay to show 100% completion before clearing
-        setTimeout(() => {
-          setSmoothedProgress((prev) => {
-            const next = { ...prev };
-            delete next[event.payload];
-            return next;
-          });
-        }, 1000);
+        // Immediately remove from progress tracking
+        setSmoothedProgress((prev) => {
+          const next = { ...prev };
+          delete next[event.payload];
+          return next;
+        });
 
+        // Immediately remove tier from downloading set
         setDownloadingTiers((prev) => {
           const next = new Set(prev);
           // Remove tier from downloading set when any model completes
@@ -187,6 +168,11 @@ function SettingsModelsPage() {
           });
           return next;
         });
+
+        // Refresh models after a short delay
+        setTimeout(() => {
+          void refreshModels();
+        }, 100);
       },
     );
 
@@ -304,6 +290,16 @@ function SettingsModelsPage() {
       return <Badge variant="secondary">Ready</Badge>;
     }
 
+    // Check if tier is complete first, before checking downloading status
+    if (status === "complete") {
+      return (
+        <Badge variant="secondary" className="gap-1">
+          <CheckCircle className="h-3 w-3" />
+          Ready
+        </Badge>
+      );
+    }
+
     if (isDownloading || status === "downloading") {
       const downloadingModel = models.find(
         (m) => typeof m.status === "object" && "Downloading" in m.status,
@@ -331,13 +327,6 @@ function SettingsModelsPage() {
     }
 
     switch (status) {
-      case "complete":
-        return (
-          <Badge variant="secondary" className="gap-1">
-            <CheckCircle className="h-3 w-3" />
-            Ready
-          </Badge>
-        );
       case "none":
         return (
           <Button
@@ -388,31 +377,11 @@ function SettingsModelsPage() {
 
   return (
     <div className="space-y-8">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold">Quality Settings</h2>
-          <p className="text-muted-foreground">
-            Choose your preferred transcription quality based on your hardware
-          </p>
-        </div>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={async () => {
-            try {
-              await invoke("force_sync_models");
-              await refreshModels();
-              toast.success("Models synchronized");
-            } catch (error) {
-              toast.error("Sync failed", {
-                description: error as string,
-              });
-            }
-          }}
-        >
-          <RefreshCw className="mr-2 h-4 w-4" />
-          Refresh
-        </Button>
+      <div>
+        <h2 className="text-2xl font-bold">Quality Settings</h2>
+        <p className="text-muted-foreground">
+          Choose your preferred transcription quality based on your hardware
+        </p>
       </div>
       {/* Hardware Info Card */}
       {hardwareInfo && (
@@ -561,79 +530,6 @@ function SettingsModelsPage() {
           </RadioGroup>
         </CardContent>
       </Card>
-
-      {/* Advanced Section */}
-      <Collapsible open={showAdvanced} onOpenChange={setShowAdvanced}>
-        <CollapsibleTrigger asChild>
-          <Button variant="ghost" className="gap-2">
-            <AlertCircle className="h-4 w-4" />
-            Advanced Details
-          </Button>
-        </CollapsibleTrigger>
-        <CollapsibleContent>
-          <Card className="mt-4">
-            <CardHeader>
-              <CardTitle className="text-base">Individual Models</CardTitle>
-              <CardDescription>
-                View all models available for each quality tier
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {(Object.keys(tierDisplayInfo) as ModelTier[]).map((tier) => {
-                  const models = getModelsForTier(tier);
-                  if (tier === "cloud" || models.length === 0) return null;
-
-                  return (
-                    <div key={tier}>
-                      <h4 className="mb-2 font-medium">
-                        {tierDisplayInfo[tier].name} Tier
-                      </h4>
-                      <div className="space-y-2">
-                        {models.map((model, index) => {
-                          const modelId = Object.keys(
-                            settings.models.availableModels,
-                          ).find(
-                            (id) =>
-                              settings.models.availableModels[id] === model,
-                          );
-                          const isDownloaded = model.status === "Downloaded";
-
-                          return (
-                            <div
-                              key={index}
-                              className="flex items-center justify-between text-sm"
-                            >
-                              <div>
-                                <span className="font-medium">
-                                  {model.name}
-                                </span>
-                                <span className="text-muted-foreground ml-2">
-                                  ({model.size})
-                                </span>
-                              </div>
-                              {isDownloaded ? (
-                                <Badge variant="outline" className="gap-1">
-                                  <CheckCircle className="h-3 w-3" />
-                                  Downloaded
-                                </Badge>
-                              ) : (
-                                <span className="text-muted-foreground text-xs">
-                                  Not downloaded
-                                </span>
-                              )}
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </CardContent>
-          </Card>
-        </CollapsibleContent>
-      </Collapsible>
     </div>
   );
 }
