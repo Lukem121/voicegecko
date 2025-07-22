@@ -1,3 +1,4 @@
+import { toast } from "sonner";
 import { create } from "zustand";
 import { devtools } from "zustand/middleware";
 
@@ -174,6 +175,17 @@ export const useEventStore = create<EventState>()(
           console.log("[EventStore] ✅ Transcription saved to database");
         } catch (error) {
           console.error("[EventStore] ❌ Failed to save transcription:", error);
+
+          // Check if it's a usage limit error
+          if (
+            error instanceof Error &&
+            error.message.includes("limit exceeded")
+          ) {
+            toast.error("Weekly usage limit reached", {
+              description:
+                "Your transcription was copied to clipboard but not saved. Upgrade to Pro for unlimited transcriptions.",
+            });
+          }
           // Don't throw - we already copied to clipboard, so the user has their transcription
         }
 

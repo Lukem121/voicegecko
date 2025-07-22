@@ -16,19 +16,46 @@ import {
   CardTitle,
 } from "@acme/ui/components/ui/card";
 
-export default function UsagePage() {
+import { caller } from "~/trpc/server";
+
+export default async function UsagePage() {
+  const stats = await caller.usage.getStats();
+
   const currentPeriod = {
-    transcriptions: { used: 247, limit: "Unlimited" },
-    wordsProcessed: 45832,
-    timeSaved: 2.4,
-    storageUsed: 1.2,
-    apiCalls: 1580,
+    transcriptions: {
+      used: stats.current.isUnlimited
+        ? stats.monthly.transcriptions
+        : stats.current.transcriptionCount,
+      limit: stats.current.isUnlimited
+        ? "Unlimited"
+        : stats.current.wordsLimit + " words",
+    },
+    wordsProcessed: stats.monthly.words,
+    timeSaved: stats.monthly.timeSaved,
+    apiCalls: stats.monthly.transcriptions, // Using transcriptions as a proxy for API calls
   };
 
   const usageStats = [
-    { label: "Average Accuracy", value: "97.8%", trend: "+2%" },
-    { label: "Avg. Processing Speed", value: "3.2x", trend: "+15%" },
-    { label: "Most Active Hour", value: "2-3 PM", trend: "" },
+    {
+      label: "Total Words",
+      value: stats.total.words.toLocaleString(),
+      trend: "",
+    },
+    {
+      label: "Total Time Saved",
+      value: `${stats.total.timeSaved.toFixed(1)}h`,
+      trend: "",
+    },
+    {
+      label: "Avg. Words per Transcription",
+      value:
+        stats.total.transcriptions > 0
+          ? Math.round(
+              stats.total.words / stats.total.transcriptions,
+            ).toString()
+          : "0",
+      trend: "",
+    },
   ];
 
   return (
@@ -54,7 +81,9 @@ export default function UsagePage() {
               {currentPeriod.transcriptions.used}
             </div>
             <p className="text-muted-foreground mt-1 text-xs">
-              of {currentPeriod.transcriptions.limit}
+              {stats.current.isUnlimited
+                ? "this month"
+                : `of ${currentPeriod.transcriptions.limit}`}
             </p>
           </CardContent>
         </Card>
@@ -82,7 +111,9 @@ export default function UsagePage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{currentPeriod.timeSaved}h</div>
+            <div className="text-2xl font-bold">
+              {currentPeriod.timeSaved.toFixed(1)}h
+            </div>
             <p className="text-muted-foreground mt-1 text-xs">estimated</p>
           </CardContent>
         </Card>
@@ -91,14 +122,14 @@ export default function UsagePage() {
           <CardHeader className="pb-3">
             <CardTitle className="text-muted-foreground flex items-center gap-2 text-sm font-medium">
               <BarChart className="h-4 w-4" />
-              API Calls
+              Total Transcriptions
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {currentPeriod.apiCalls.toLocaleString()}
+              {stats.total.transcriptions.toLocaleString()}
             </div>
-            <p className="text-muted-foreground mt-1 text-xs">this month</p>
+            <p className="text-muted-foreground mt-1 text-xs">all time</p>
           </CardContent>
         </Card>
       </div>
@@ -125,27 +156,6 @@ export default function UsagePage() {
                 </div>
               </div>
             ))}
-          </CardContent>
-        </Card>
-
-        {/* Quick Actions */}
-        <Card className="border-0 shadow-sm">
-          <CardHeader>
-            <CardTitle className="text-lg font-medium">Quick Actions</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <Button variant="outline" className="w-full justify-start">
-              <Download className="mr-2 h-4 w-4" />
-              Export Usage Report
-            </Button>
-            <Button variant="outline" className="w-full justify-start">
-              <Calendar className="mr-2 h-4 w-4" />
-              View Detailed Analytics
-            </Button>
-            <Button variant="outline" className="w-full justify-start">
-              <BarChart className="mr-2 h-4 w-4" />
-              Compare Previous Months
-            </Button>
           </CardContent>
         </Card>
       </div>

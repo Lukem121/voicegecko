@@ -17,6 +17,7 @@ import { isGeckoBarWindow } from "~/lib/window-detection";
 import { routeTree } from "~/routeTree.gen";
 import { useSettingsStore } from "~/stores/settings.store";
 import { TRPCReactProvider } from "~/trpc";
+import PostHogProvider from "./lib/posthog/posthog-provider";
 import { ThemeProvider } from "./providers/theme";
 
 // Create a new router instance
@@ -128,9 +129,11 @@ if (!rootElement.innerHTML) {
   const root = ReactDOM.createRoot(rootElement);
   root.render(
     <StrictMode>
-      <ThemeProvider>
-        <App />
-      </ThemeProvider>
+      <PostHogProvider>
+        <ThemeProvider>
+          <App />
+        </ThemeProvider>
+      </PostHogProvider>
     </StrictMode>,
   );
 }

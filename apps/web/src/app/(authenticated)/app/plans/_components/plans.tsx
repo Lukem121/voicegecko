@@ -46,7 +46,6 @@ interface ComparisonTableProps {
     feature: string;
     basic: CellValue;
     pro: CellValue;
-    teams: CellValue;
   }[];
 }
 
@@ -78,21 +77,19 @@ const ComparisonTable = ({ firstColumnHeader, data }: ComparisonTableProps) => {
         <table className="w-full table-fixed border-collapse">
           <thead>
             <tr className="border-b">
-              <th className="w-1/4 px-4 py-3 text-left font-medium">
+              <th className="w-1/3 px-4 py-3 text-left font-medium">
                 {firstColumnHeader}
               </th>
-              <th className="w-1/4 px-4 py-3 text-center font-medium">Basic</th>
-              <th className="w-1/4 px-4 py-3 text-center font-medium">Pro</th>
-              <th className="w-1/4 px-4 py-3 text-center font-medium">Teams</th>
+              <th className="w-1/3 px-4 py-3 text-center font-medium">Basic</th>
+              <th className="w-1/3 px-4 py-3 text-center font-medium">Pro</th>
             </tr>
           </thead>
           <tbody>
             {data.map((row, index) => (
               <tr key={index} className="border-b border-gray-100">
-                <td className="w-1/4 px-4 py-3 text-sm">{row.feature}</td>
-                <td className="w-1/4 px-4 py-3">{renderCell(row.basic)}</td>
-                <td className="w-1/4 px-4 py-3">{renderCell(row.pro)}</td>
-                <td className="w-1/4 px-4 py-3">{renderCell(row.teams)}</td>
+                <td className="w-1/3 px-4 py-3 text-sm">{row.feature}</td>
+                <td className="w-1/3 px-4 py-3">{renderCell(row.basic)}</td>
+                <td className="w-1/3 px-4 py-3">{renderCell(row.pro)}</td>
               </tr>
             ))}
           </tbody>
@@ -362,27 +359,6 @@ export default function Plans({ prices, subscription, error }: PlansProps) {
       cta: "Get started",
       variant: "outline" as const,
     },
-    {
-      name: "Teams",
-      id: "voice gecko team",
-      stripeId: "voice gecko team", // This matches the plan name in auth config 1
-      monthlyPrice: getPerUnitPriceDisplay(
-        "voice gecko team",
-        "monthly",
-        "$12",
-      ),
-      yearlyMonthlyPrice: getYearlyPriceAsMonthly("voice gecko team", "$10"),
-      period: "user",
-      subtitle: "All of our features across your team",
-      features: [
-        "Everything in Pro",
-        "Minimum 3 seats",
-        "Centralized billing",
-        "Administrative controls",
-      ],
-      cta: "Get started",
-      variant: "outline" as const,
-    },
   ];
 
   const handlePlanClick = async (plan: (typeof plans)[0]) => {
@@ -453,25 +429,21 @@ export default function Plans({ prices, subscription, error }: PlansProps) {
       feature: "Desktop Mac",
       basic: "check" as const,
       pro: "check" as const,
-      teams: "check" as const,
     },
     {
       feature: "Desktop Windows",
       basic: "check" as const,
       pro: "check" as const,
-      teams: "check" as const,
     },
     {
       feature: "iPhone",
       basic: "Coming soon",
       pro: "Coming soon",
-      teams: "Coming soon",
     },
     {
       feature: "Android",
       basic: "Coming soon",
       pro: "Coming soon",
-      teams: "Coming soon",
     },
   ];
 
@@ -480,46 +452,29 @@ export default function Plans({ prices, subscription, error }: PlansProps) {
       feature: "Word Limit",
       basic: "2,000 a week",
       pro: "Unlimited",
-      teams: "Unlimited",
     },
     {
       feature: "Add Words to Dictionary",
       basic: "check" as const,
       pro: "check" as const,
-      teams: "check" as const,
     },
     {
       feature: "Prioritized Feature Requests",
       basic: "x" as const,
       pro: "check" as const,
-      teams: "check" as const,
     },
     {
       feature: "Early Access to New Features",
       basic: "x" as const,
       pro: "check" as const,
-      teams: "check" as const,
     },
   ];
 
   const teamCollaborationData = [
     {
-      feature: "Centralized Billing",
-      basic: "x" as const,
-      pro: "x" as const,
-      teams: "check" as const,
-    },
-    {
-      feature: "Shared Contacts",
-      basic: "x" as const,
-      pro: "x" as const,
-      teams: "Coming soon",
-    },
-    {
       feature: "Customer Support",
       basic: "Standard",
       pro: "Prioritized",
-      teams: "Prioritized",
     },
   ];
 
@@ -556,7 +511,7 @@ export default function Plans({ prices, subscription, error }: PlansProps) {
       )}
 
       {/* Plans */}
-      <div className="mb-8 grid gap-6 md:grid-cols-3">
+      <div className="mb-8 grid gap-6 md:grid-cols-2">
         {plans.map((plan) => {
           const isCurrent = getCurrentPlanStatus(plan.id) === "current";
           const isLoading = loadingPlan === plan.id;
@@ -565,13 +520,13 @@ export default function Plans({ prices, subscription, error }: PlansProps) {
             <Card
               key={plan.name}
               className={cn(
-                "flex h-full flex-col border-0 shadow-sm",
+                "shadow-sm, flex h-full flex-col gap-0 border-0",
                 isCurrent && "ring-primary ring-2",
               )}
             >
-              <CardHeader className="pb-3">
+              <CardHeader className="pb-2">
                 <div className="flex items-center justify-between">
-                  <CardTitle className="text-xl font-medium">
+                  <CardTitle className="text-lg font-medium">
                     {plan.name}
                   </CardTitle>
                   {isCurrent && (
@@ -580,37 +535,35 @@ export default function Plans({ prices, subscription, error }: PlansProps) {
                     </span>
                   )}
                 </div>
-                <div className="mt-4 flex items-baseline gap-1">
+                <div className="mt-2 flex items-baseline gap-1">
                   {plan.isFree ? (
-                    <span className="text-3xl font-bold">Free</span>
+                    <span className="text-2xl font-bold">Free</span>
                   ) : (
                     <>
-                      <span className="text-3xl font-bold">
+                      <span className="text-2xl font-bold">
                         {isYearly ? plan.yearlyMonthlyPrice : plan.monthlyPrice}
                       </span>
-                      <span className="text-muted-foreground text-sm">
-                        /{plan.period ? `${plan.period}/` : ""}mo
-                      </span>
+                      <span className="text-muted-foreground text-sm">/mo</span>
                     </>
                   )}
                 </div>
-                <p className="text-muted-foreground mt-2 text-xs">
+                <p className="text-muted-foreground mt-1 text-xs">
                   {plan.subtitle}
                 </p>
               </CardHeader>
 
-              <CardContent className="flex-grow">
-                <ul className="space-y-3">
+              <CardContent className="flex-grow py-3">
+                <ul className="grid grid-cols-2 gap-x-3 gap-y-2">
                   {plan.features.map((feature, index) => (
-                    <li key={index} className="flex items-start gap-3">
-                      <Check className="text-muted-foreground mt-0.5 h-4 w-4 flex-shrink-0" />
-                      <span className="text-sm">{feature}</span>
+                    <li key={index} className="flex items-start gap-2">
+                      <Check className="text-muted-foreground mt-0.5 h-3 w-3 flex-shrink-0" />
+                      <span className="text-xs">{feature}</span>
                     </li>
                   ))}
                 </ul>
               </CardContent>
 
-              <CardFooter className="mt-auto pt-6">
+              <CardFooter className="mt-auto pt-3">
                 <Button
                   className="w-full"
                   variant={plan.variant}
@@ -646,7 +599,7 @@ export default function Plans({ prices, subscription, error }: PlansProps) {
 
       {/* Plans and Features */}
       <div className="mt-16">
-        <div className="mb-12 text-center">
+        <div className="mb-12">
           <h2 className="mb-2 text-2xl font-medium">Plans and Features</h2>
           <p className="text-muted-foreground">
             Compare what's included in each plan
@@ -662,7 +615,7 @@ export default function Plans({ prices, subscription, error }: PlansProps) {
           data={voiceTypingData}
         />
         <ComparisonTable
-          firstColumnHeader="Team and Collaboration"
+          firstColumnHeader="Support"
           data={teamCollaborationData}
         />
       </div>

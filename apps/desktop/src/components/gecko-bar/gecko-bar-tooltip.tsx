@@ -3,10 +3,16 @@ import { motion } from "motion/react";
 import type { GeckoBarTooltipProps } from "./gecko-bar-app.types";
 import { ANIMATIONS } from "./gecko-bar-app.constants";
 
-export function GeckoBarTooltip({ show, isRecording }: GeckoBarTooltipProps) {
+export function GeckoBarTooltip({
+  show,
+  isRecording,
+  message,
+}: GeckoBarTooltipProps) {
   if (!show || isRecording) {
     return null;
   }
+
+  const displayMessage = message ?? "Click to start dictating";
 
   return (
     <motion.div
@@ -19,10 +25,14 @@ export function GeckoBarTooltip({ show, isRecording }: GeckoBarTooltipProps) {
         damping: ANIMATIONS.TOOLTIP.DAMPING,
         duration: ANIMATIONS.TOOLTIP.DURATION,
       }}
-      className="absolute bottom-full left-1/2 mb-1 -translate-x-1/2 !border-none whitespace-nowrap"
+      className="absolute bottom-full left-1/2 z-[100] -translate-x-1/2"
+      style={{
+        minHeight: "fit-content",
+        transform: "translateX(-50%) translateY(0)",
+      }}
     >
-      <div className="bg-background border-border rounded-full border px-2 py-1 text-sm shadow-lg">
-        <span className="text-foreground">Click to start dictating</span>
+      <div className="bg-background text-foreground border-border rounded-full border px-3 py-1.5 text-sm whitespace-nowrap shadow-lg">
+        {displayMessage}
       </div>
     </motion.div>
   );

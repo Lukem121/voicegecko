@@ -7,7 +7,8 @@ export const shortcutActions: Record<
   ShortcutAction,
   () => void | Promise<void>
 > = {
-  "toggle-recording": () => recordingService.toggleRecording(),
+  "toggle-recording": () =>
+    recordingService.toggleRecording({ isKeyboardShortcut: true }),
 
   "paste-last-transcription": () =>
     transcriptionService.pasteLastTranscription(),

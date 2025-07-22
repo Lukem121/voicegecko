@@ -1,14 +1,15 @@
 import { invoke } from "@tauri-apps/api/core";
 import { toast } from "sonner";
 
-import { invokeTranscriptionFromBuffer } from "~/lib/transcription";
 import { useEventStore } from "~/stores/event.store";
 import { useSettingsStore } from "~/stores/settings.store";
+import { invokeTranscriptionFromBuffer } from "../lib/transcription";
 
 export interface RecordingOptions {
+  device?: string;
   playStartSound?: boolean;
   playEndSound?: boolean;
-  device?: string;
+  isKeyboardShortcut?: boolean;
 }
 
 export class RecordingService {
@@ -18,8 +19,10 @@ export class RecordingService {
 
   private constructor() {}
 
-  public static getInstance(): RecordingService {
-    RecordingService.instance ??= new RecordingService();
+  static getInstance(): RecordingService {
+    if (!RecordingService.instance) {
+      RecordingService.instance = new RecordingService();
+    }
     return RecordingService.instance;
   }
 

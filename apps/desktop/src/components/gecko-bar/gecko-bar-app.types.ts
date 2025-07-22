@@ -35,15 +35,23 @@ export interface RecordingState {
 }
 
 // Combined state for the main hook
-export interface GeckoBarState extends UIState, RecordingState {
+export interface GeckoBarState {
+  isExpanded: boolean;
+  isHovered: boolean;
+  showTooltip: boolean;
+  isLoading: boolean;
+  isTransitioning: boolean;
+  wasRecentlyRecording: boolean;
+  visualizerActive: boolean;
   audioLevel: AudioLevelEvent;
+  tooltipMessage?: string;
 }
 
 // Event handler types
 export interface GeckoBarEventHandlers {
   onMouseEnter: () => void;
   onMouseLeave: () => void;
-  onClick: () => Promise<void>;
+  onClick: () => void | Promise<void>;
   onCancel: (e: React.MouseEvent<HTMLButtonElement>) => Promise<void>;
   onFinish: (e: React.MouseEvent<HTMLButtonElement>) => Promise<void>;
 }
@@ -83,6 +91,7 @@ export interface AnimationState {
 export interface GeckoBarTooltipProps {
   show: boolean;
   isRecording: boolean;
+  message?: string;
 }
 
 export interface GeckoBarButtonProps {

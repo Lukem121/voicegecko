@@ -16,10 +16,18 @@ export interface CreateTranscriptionInput {
 export async function createTranscription(input: CreateTranscriptionInput) {
   const result = await trpcClient.transcription.create.mutate(input);
 
-  // Invalidate queries to refresh the list
-  await queryClient.invalidateQueries({
-    queryKey: trpc.transcription.getAll.queryKey(),
-  });
+  // Invalidate queries to refresh the list and usage status
+  await Promise.all([
+    queryClient.invalidateQueries({
+      queryKey: trpc.transcription.getAll.queryKey(),
+    }),
+    queryClient.invalidateQueries({
+      queryKey: trpc.usage.getStatus.queryKey(),
+    }),
+    queryClient.invalidateQueries({
+      queryKey: trpc.usage.getStats.queryKey(),
+    }),
+  ]);
 
   return result;
 }
