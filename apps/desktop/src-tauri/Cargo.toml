@@ -46,6 +46,7 @@ tauri-plugin-clipboard-manager = "2"
 rustfft = "6.1"
 num-complex = "0.4"
 nnnoiseless = "0.5"
+sysinfo = "0.32"
 
 
 [target."cfg(not(any(target_os = \"android\", target_os = \"ios\")))".dependencies]
