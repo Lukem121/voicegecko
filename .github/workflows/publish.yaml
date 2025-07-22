@@ -105,8 +105,11 @@ jobs:
       - name: install dependencies (macOS only)
         if: matrix.platform == 'macos-latest'
         run: |
+          # Set macOS deployment target to 10.15 for C++ filesystem support
+          echo "MACOSX_DEPLOYMENT_TARGET=10.15" >> $GITHUB_ENV
+
           # macOS will use Metal acceleration (configured in Cargo.toml)
-          echo "macOS dependencies configured - using Metal acceleration"
+          echo "macOS dependencies configured - using Metal acceleration with 10.15+ deployment target"
 
       - name: install dependencies (windows self-hosted)
         if: matrix.platform == 'self-hosted'
@@ -189,10 +192,28 @@ jobs:
           }
 
           # Upload all built artifacts to the public repository
-          $ARTIFACTS = Get-ChildItem -Path "target/release/bundle" -Recurse -File | Where-Object { $_.Extension -in @('.msi', '.exe', '.sig') }
+          # Check for artifacts in the standard location first
+          $BUNDLE_DIR = "target/release/bundle"
+          if (-not (Test-Path $BUNDLE_DIR)) {
+            Write-Host "Standard bundle directory not found, checking for target-specific directories..."
+            # Look for any target-specific bundle directories
+            $TARGET_DIRS = Get-ChildItem -Path "target" -Directory | Where-Object { Test-Path "$($_.FullName)/release/bundle" }
+            if ($TARGET_DIRS) {
+              $BUNDLE_DIR = "$($TARGET_DIRS[0].FullName)/release/bundle"
+              Write-Host "Found target-specific bundle directory: $BUNDLE_DIR"
+            }
+          }
 
-          foreach ($artifact in $ARTIFACTS) {
-            gh release upload $TAG_NAME $artifact.FullName --repo "Lukem121/voicegecko-releases" --clobber
+          Write-Host "Looking for artifacts in: $BUNDLE_DIR"
+          if (Test-Path $BUNDLE_DIR) {
+            $ARTIFACTS = Get-ChildItem -Path $BUNDLE_DIR -Recurse -File | Where-Object { $_.Extension -in @('.msi', '.exe', '.sig') }
+            foreach ($artifact in $ARTIFACTS) {
+              Write-Host "Uploading: $($artifact.FullName)"
+              gh release upload $TAG_NAME $artifact.FullName --repo "Lukem121/voicegecko-releases" --clobber
+            }
+          } else {
+            Write-Host "ERROR: No bundle directory found in any target location"
+            exit 1
           }
 
       - name: Create Release in Public Repository (macOS/Linux)
@@ -209,6 +230,17 @@ jobs:
           gh release create $TAG_NAME --repo "Lukem121/voicegecko-releases" --title "App v$VERSION" --notes "See the assets to download this version and install." 2>/dev/null || echo "Release already exists"
 
           # Upload all built artifacts to the public repository
-          find target/release/bundle -type f \( -name "*.dmg" -o -name "*.app.tar.gz" -o -name "*.deb" -o -name "*.AppImage" -o -name "*.sig" \) | while read artifact; do
+          # Check both target-specific and general bundle directories
+          if [[ "${{ matrix.args }}" == *"--target"* ]]; then
+            # Extract target from args (e.g., "--target aarch64-apple-darwin" -> "aarch64-apple-darwin")
+            TARGET=$(echo "${{ matrix.args }}" | sed 's/.*--target \([^ ]*\).*/\1/')
+            BUNDLE_DIR="target/$TARGET/release/bundle"
+          else
+            BUNDLE_DIR="target/release/bundle"
+          fi
+
+          echo "Looking for artifacts in: $BUNDLE_DIR"
+          find $BUNDLE_DIR -type f \( -name "*.dmg" -o -name "*.app.tar.gz" -o -name "*.deb" -o -name "*.AppImage" -o -name "*.sig" \) 2>/dev/null | while read artifact; do
+            echo "Uploading: $artifact"
             gh release upload $TAG_NAME "$artifact" --repo "Lukem121/voicegecko-releases" --clobber
           done
