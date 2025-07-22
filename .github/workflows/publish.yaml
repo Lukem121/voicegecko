@@ -44,7 +44,9 @@ jobs:
       - name: setup Node.js cache
         uses: actions/cache@v4
         with:
-          path: ~/.pnpm-store
+          path: |
+            ~/.pnpm-store
+            ~/AppData/Local/pnpm/store
           key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
           restore-keys: |
             ${{ runner.os }}-pnpm-store-
@@ -174,7 +176,11 @@ jobs:
           $TAG_NAME = "app-v$VERSION"
 
           # Create release in public repository (will fail gracefully if already exists)
-          gh release create $TAG_NAME --repo "Lukem121/voicegecko-releases" --title "App v$VERSION" --notes "See the assets to download this version and install." 2>$null || Write-Host "Release already exists"
+          try {
+            gh release create $TAG_NAME --repo "Lukem121/voicegecko-releases" --title "App v$VERSION" --notes "See the assets to download this version and install." 2>$null
+          } catch {
+            Write-Host "Release already exists or creation failed - continuing with upload"
+          }
 
           # Upload all built artifacts to the public repository
           $ARTIFACTS = Get-ChildItem -Path "target/release/bundle" -Recurse -File | Where-Object { $_.Extension -in @('.msi', '.exe', '.sig') }
