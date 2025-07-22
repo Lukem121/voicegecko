@@ -105,17 +105,8 @@ jobs:
       - name: install dependencies (macOS only)
         if: matrix.platform == 'macos-latest'
         run: |
-          # Install Vulkan SDK for whisper-rs dependency using Homebrew
-          echo "Installing Vulkan SDK for macOS..."
-          brew install vulkan-loader vulkan-headers
-
-          # Set environment variables for Vulkan (using Homebrew installation paths)
-          echo "VULKAN_SDK=/opt/homebrew" >> $GITHUB_ENV
-          echo "/opt/homebrew/bin" >> $GITHUB_PATH
-
-          # Verify installation
-          echo "Vulkan SDK installed successfully"
-          ls -la /opt/homebrew/include/vulkan/ || echo "Vulkan headers not found in expected location"
+          # macOS will use Metal acceleration (configured in Cargo.toml)
+          echo "macOS dependencies configured - using Metal acceleration"
 
       - name: install dependencies (windows self-hosted)
         if: matrix.platform == 'self-hosted'
