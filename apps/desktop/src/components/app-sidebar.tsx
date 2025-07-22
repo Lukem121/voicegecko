@@ -120,10 +120,6 @@ const data: NavigationData = {
       icon: Settings2,
       items: [
         {
-          title: "Quality",
-          url: "/settings/models",
-        },
-        {
           title: "Keyboard Shortcuts",
           url: "/settings/shortcuts",
         },
@@ -136,6 +132,15 @@ const data: NavigationData = {
     },
   ],
 };
+
+const isDev = import.meta.env.DEV;
+
+if (isDev) {
+  data.navSecondary[2]!.items?.push({
+    title: "Quality",
+    url: "/settings/models",
+  });
+}
 
 export function AppSidebar() {
   const user = useUser();

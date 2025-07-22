@@ -504,14 +504,21 @@ function SettingsModelsPage() {
                         <p className="text-muted-foreground mt-1 text-sm">
                           {info.description}
                         </p>
-                        {tier !== "cloud" && (
-                          <div className="text-muted-foreground mt-2 flex items-center gap-4 text-xs">
-                            <span>Min RAM: {info.min_ram_gb} GB</span>
-                            <span>
-                              Size: ~{formatMemory(info.typical_model_size_mb)}
-                            </span>
-                          </div>
-                        )}
+                        <div className="text-muted-foreground mt-2 flex items-center gap-4 text-xs">
+                          {tier === "cloud" ? (
+                            <>
+                              <span>Internet required</span>
+                            </>
+                          ) : (
+                            <>
+                              <span>Min RAM: {info.min_ram_gb} GB</span>
+                              <span>
+                                Size: ~
+                                {formatMemory(info.typical_model_size_mb)}
+                              </span>
+                            </>
+                          )}
+                        </div>
                       </div>
                     </div>
                     <div className="flex items-center gap-3">
