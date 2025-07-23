@@ -51,7 +51,7 @@ export const useInfiniteTranscriptions = ({
     !infiniteQuery.isLoading;
 
   const { transcriptions: allTranscriptions } = useGetTranscriptions({
-    limit: 100, // Get more for fuzzy search
+    limit: 50, // Get more for fuzzy search (max allowed by backend is 50)
   });
 
   // Perform fuzzy search with memoization

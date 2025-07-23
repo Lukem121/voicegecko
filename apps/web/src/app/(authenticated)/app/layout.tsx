@@ -7,7 +7,7 @@ import AppSidebar from "../_components/web-sidebar";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="relative mx-auto my-10 max-w-7xl">
+    <div className="relative mx-auto my-4 max-w-7xl">
       <SidebarProvider>
         <AppSidebar />
         <SidebarInset className="!ml-0 !shadow-none">
