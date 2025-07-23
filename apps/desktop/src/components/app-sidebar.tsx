@@ -1,4 +1,5 @@
 import type { LucideIcon } from "lucide-react";
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link, useLocation } from "@tanstack/react-router";
 import { open } from "@tauri-apps/plugin-shell";
@@ -6,6 +7,7 @@ import {
   Bell,
   ChartBar,
   ChevronUp,
+  Copy,
   CreditCard,
   ExternalLink,
   FileText,
@@ -22,6 +24,14 @@ import {
   AvatarFallback,
   AvatarImage,
 } from "@acme/ui/components/ui/avatar";
+import { Button } from "@acme/ui/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@acme/ui/components/ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -76,11 +86,16 @@ const isSpecialLink = (url: string) => {
   return url.startsWith("#");
 };
 
-const handleLinkClick = async (url: string) => {
+const handleLinkClick = async (
+  url: string,
+  setShowSupportDialog?: (show: boolean) => void,
+) => {
   if (url === "#plans") {
     const websiteUrl =
       import.meta.env.VITE_PUBLIC_VOICEGECKO_URL || "https://www.voicegecko.io";
     await open(`${websiteUrl}/app/plans`);
+  } else if (url === "#support") {
+    setShowSupportDialog?.(true);
   } else if (isExternalLink(url)) {
     await open(url);
   }
@@ -127,7 +142,7 @@ const data: NavigationData = {
     },
     {
       title: "Help & Support",
-      url: "https://discord.gg/BFxNQCzZjB",
+      url: "#support",
       icon: HelpCircle,
     },
   ],
@@ -146,6 +161,7 @@ export function AppSidebar() {
   const user = useUser();
   const signOut = useSignOut();
   const location = useLocation();
+  const [showSupportDialog, setShowSupportDialog] = useState(false);
 
   // Fetch usage status
   const { data: usageStatus } = useQuery({
@@ -159,6 +175,14 @@ export function AppSidebar() {
   const usagePercentage = isFreePlan
     ? (usageStatus.wordsUsed / usageStatus.wordsLimit) * 100
     : 0;
+
+  const copyToClipboard = async (text: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+    } catch (err) {
+      console.error("Failed to copy text: ", err);
+    }
+  };
 
   return (
     <Sidebar variant="inset" collapsible="icon">
@@ -243,7 +267,8 @@ export function AppSidebar() {
                       }
                       onClick={
                         !isInternal
-                          ? () => handleLinkClick(item.url)
+                          ? () =>
+                              handleLinkClick(item.url, setShowSupportDialog)
                           : undefined
                       }
                       className="cursor-pointer"
@@ -394,6 +419,18 @@ export function AppSidebar() {
                     Settings
                   </Link>
                 </DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={async () => {
+                    const websiteUrl =
+                      import.meta.env.VITE_PUBLIC_VOICEGECKO_URL ||
+                      "https://www.voicegecko.io";
+                    await open(`${websiteUrl}/app/billing`);
+                  }}
+                  className="cursor-pointer"
+                >
+                  <CreditCard className="mr-2 size-4" />
+                  Billing
+                </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={signOut}>
                   <LogOut className="mr-2 size-4" />
@@ -404,6 +441,57 @@ export function AppSidebar() {
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarFooter>
+
+      {/* Support Dialog */}
+      <Dialog open={showSupportDialog} onOpenChange={setShowSupportDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Help & Support</DialogTitle>
+            <DialogDescription>
+              Need help? We're here to support you! Please reach out to us with
+              any questions or issues.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Email Support</label>
+              <div className="flex items-center space-x-2">
+                <div className="bg-muted flex-1 rounded p-2 font-mono text-sm">
+                  support@voicegecko.io
+                </div>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => copyToClipboard("support@voicegecko.io")}
+                >
+                  <Copy className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+            {user?.id && (
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Your User ID</label>
+                <div className="flex items-center space-x-2">
+                  <div className="bg-muted flex-1 rounded p-2 font-mono text-sm">
+                    {user.id}
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => copyToClipboard(user.id)}
+                  >
+                    <Copy className="h-4 w-4" />
+                  </Button>
+                </div>
+                <p className="text-muted-foreground text-xs">
+                  Please include this User ID when contacting support to help us
+                  assist you faster.
+                </p>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </Sidebar>
   );
 }
