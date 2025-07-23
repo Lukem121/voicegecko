@@ -3,7 +3,7 @@
 import type { LucideIcon } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ChartBar, CreditCard, Package } from "lucide-react";
+import { ChartBar, CreditCard, Package, User2 } from "lucide-react";
 
 import LogoSquare from "@acme/ui/components/logos/logo-square";
 import {
@@ -53,6 +53,11 @@ const data: NavigationData = {
       title: "Billing",
       url: "/app/billing",
       icon: CreditCard,
+    },
+    {
+      title: "Profile",
+      url: "/app/profile",
+      icon: User2,
     },
   ],
 };
