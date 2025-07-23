@@ -389,27 +389,9 @@ export function AppSidebar() {
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem asChild>
-                  <Link to="/profile">
-                    <User2 className="mr-2 size-4" />
-                    Profile
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
                   <Link to="/settings">
                     <Settings2 className="mr-2 size-4" />
                     Settings
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link to="/billing">
-                    <CreditCard className="mr-2 size-4" />
-                    Billing
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem asChild>
-                  <Link to="/notifications">
-                    <Bell className="mr-2 size-4" />
-                    Notifications
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
