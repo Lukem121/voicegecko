@@ -5,6 +5,7 @@ import { Download, Loader2, RefreshCw } from "lucide-react";
 import LogoFull from "@acme/ui/components/logos/logo-full";
 import { Progress } from "@acme/ui/components/ui/progress";
 
+import { useIsAuthenticated } from "~/hooks/auth";
 import { initializeApp } from "~/lib/initialize-app";
 
 export function AppLauncher({ onReady }: { onReady: () => void }) {
@@ -13,6 +14,9 @@ export function AppLauncher({ onReady }: { onReady: () => void }) {
   const [updateStatus, setUpdateStatus] = useState<string>("");
   const [updateProgress, setUpdateProgress] = useState<number>(0);
   const [showProgress, setShowProgress] = useState(false);
+
+  // Get authentication state
+  const auth = useIsAuthenticated();
 
   useEffect(() => {
     async function init() {
@@ -41,17 +45,28 @@ export function AppLauncher({ onReady }: { onReady: () => void }) {
           await invoke("show_gecko_bar");
         }
 
-        onReady();
+        setIsInitializing(false);
       } catch (error) {
         console.error("Failed to initialize app:", error);
         setError(error instanceof Error ? error.message : "Unknown error");
-      } finally {
         setIsInitializing(false);
       }
     }
 
     void init();
-  }, [onReady]);
+  }, []);
+
+  // Wait for both app initialization and authentication to be ready
+  useEffect(() => {
+    if (!isInitializing && !auth.isLoading) {
+      console.log("App launcher: Both app and auth are ready", {
+        isInitializing,
+        authLoading: auth.isLoading,
+        authState: auth.getAuthIssueType(),
+      });
+      onReady();
+    }
+  }, [isInitializing, auth.isLoading, onReady]);
 
   if (error) {
     return (
@@ -66,7 +81,14 @@ export function AppLauncher({ onReady }: { onReady: () => void }) {
     );
   }
 
-  if (isInitializing) {
+  // Show launcher while initializing OR while auth is loading
+  if (isInitializing || auth.isLoading) {
+    // Determine the current status message
+    let currentStatus = updateStatus;
+    if (!isInitializing && auth.isLoading) {
+      currentStatus = "Checking authentication...";
+    }
+
     return (
       <div className="bg-background fixed inset-0 z-50 flex items-center justify-center">
         {/* Background gradient */}
@@ -90,20 +112,20 @@ export function AppLauncher({ onReady }: { onReady: () => void }) {
           </div>
 
           {/* Update status and progress */}
-          {updateStatus && (
+          {currentStatus && (
             <div className="space-y-4">
               <div className="text-muted-foreground flex items-center justify-center gap-2 text-sm">
-                {updateStatus.includes("Downloading") && (
+                {currentStatus.includes("Downloading") && (
                   <Download className="h-4 w-4" />
                 )}
-                {updateStatus.includes("Installing") && (
+                {currentStatus.includes("Installing") && (
                   <RefreshCw className="h-4 w-4 animate-spin" />
                 )}
-                {!updateStatus.includes("Downloading") &&
-                  !updateStatus.includes("Installing") && (
+                {!currentStatus.includes("Downloading") &&
+                  !currentStatus.includes("Installing") && (
                     <Loader2 className="h-4 w-4 animate-spin" />
                   )}
-                <span>{updateStatus}</span>
+                <span>{currentStatus}</span>
               </div>
 
               {/* Progress bar for downloads */}

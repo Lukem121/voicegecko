@@ -5,7 +5,36 @@ import superjson from "superjson";
 
 import type { AppRouter } from "@acme/api/src/root";
 
-export const queryClient = new QueryClient();
+import { isNetworkError } from "./hooks/use-connectivity";
+
+export const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: (failureCount, error) => {
+        // Don't retry network errors more than 2 times
+        if (isNetworkError(error)) {
+          return failureCount < 2;
+        }
+        // For other errors, use default retry logic (3 times)
+        return failureCount < 3;
+      },
+      retryDelay: (attemptIndex) => {
+        // Exponential backoff with jitter for network errors
+        return Math.min(1000 * 2 ** attemptIndex + Math.random() * 1000, 30000);
+      },
+      staleTime: 1000 * 60 * 5, // 5 minutes
+    },
+    mutations: {
+      retry: (failureCount, error) => {
+        // Don't retry mutations on network errors to avoid duplicate actions
+        if (isNetworkError(error)) {
+          return false;
+        }
+        return failureCount < 1; // Only retry once for non-network errors
+      },
+    },
+  },
+});
 
 export const trpcClient = createTRPCClient<AppRouter>({
   links: [
@@ -16,6 +45,22 @@ export const trpcClient = createTRPCClient<AppRouter>({
         return fetch(url, {
           ...options,
           credentials: "include",
+        }).catch((error) => {
+          // Enhance fetch errors with better error messages
+          if (
+            error.name === "TypeError" &&
+            error.message === "Failed to fetch"
+          ) {
+            throw new Error(
+              "Network error: Unable to connect to VoiceGecko servers. Please check your internet connection.",
+            );
+          }
+          if (error.name === "AbortError") {
+            throw new Error(
+              "Network error: Request timed out. Please check your internet connection.",
+            );
+          }
+          throw error;
         });
       },
     }),
