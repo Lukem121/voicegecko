@@ -34,17 +34,16 @@ async function checkAndInstallUpdates(options?: InitializeOptions) {
     let contentLength = 0;
 
     await update.downloadAndInstall((event) => {
+      const progress =
+        contentLength > 0 ? Math.round((downloaded / contentLength) * 100) : 0;
+
       switch (event.event) {
         case "Started":
           console.log("[Updater] Download started");
-          contentLength = event.data.contentLength || 0;
+          contentLength = event.data.contentLength ?? 0;
           break;
         case "Progress":
           downloaded += event.data.chunkLength;
-          const progress =
-            contentLength > 0
-              ? Math.round((downloaded / contentLength) * 100)
-              : 0;
           console.log(`[Updater] Download progress: ${progress}%`);
           options?.onUpdateProgress?.(progress);
           options?.onUpdateStatus?.(`Downloading update... ${progress}%`);

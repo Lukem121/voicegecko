@@ -222,18 +222,20 @@ function TranscriptionsPage() {
                       </div>
                     </div>
                     <div className="flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <CopyButton
-                            text={item.content}
-                            variant="ghost"
-                            className="h-8 w-8 p-0"
-                          />
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>Copy transcription</p>
-                        </TooltipContent>
-                      </Tooltip>
+                      {item.status !== "silent" && (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <CopyButton
+                              text={item.content}
+                              variant="ghost"
+                              className="h-8 w-8 p-0"
+                            />
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Copy transcription</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      )}
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <Button

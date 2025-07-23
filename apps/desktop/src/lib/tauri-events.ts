@@ -58,11 +58,7 @@ export async function initializeTauriEvents(
       store.setTranscriptionProgress(payload.status, payload.data, metadata);
 
       // Only handle completion business logic in main window
-      if (
-        !options.isGeckoBar &&
-        payload.status === "Complete" &&
-        payload.data
-      ) {
+      if (!options.isGeckoBar && payload.status === "Complete") {
         console.log(
           "[TauriEvents] Handling transcription completion in main window",
         );
