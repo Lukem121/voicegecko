@@ -190,8 +190,9 @@ export default function LandingPage() {
                 Stop Typing. Start Speaking.
               </h1>
               <p className="mx-auto mb-8 max-w-2xl text-lg leading-tight font-bold tracking-tight md:text-xl">
-                Instant voice-to-text transcription that works everywhere. 3x
-                faster than typing, with AI auto-editing.
+                Instant voice-to-text transcription that works everywhere.
+                <br />
+                4x faster than typing, with AI auto-editing.
               </p>
               <div className="flex flex-col justify-center gap-4 sm:flex-row">
                 <Link
