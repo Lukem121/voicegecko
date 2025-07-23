@@ -6,7 +6,7 @@ use rubato::{FftFixedIn, Resampler};
 use rustfft::{num_complex::Complex, FftPlanner};
 use serde::{Deserialize, Serialize};
 use std::fs::{self, File};
-use std::io::BufReader;
+use std::io::{BufReader, Write};
 use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
@@ -535,8 +535,28 @@ pub fn stop_recording(
         .take()
         .ok_or_else(|| "No audio data recorded".to_string())?;
 
+    // Generate timestamp for debug files
+    let timestamp = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .unwrap()
+        .as_secs();
+
+    // Save pre-processed (raw) audio for debugging
+    if let Err(e) = save_audio_debug(&samples, &format!("raw_audio_{}.wav", timestamp), &app) {
+        println!("[Audio Debug] Failed to save raw audio: {}", e);
+    }
+
     // Apply noise suppression to the recorded audio
     let denoised_samples = denoise_audio(samples);
+
+    // Save post-processed audio for debugging
+    if let Err(e) = save_audio_debug(
+        &denoised_samples,
+        &format!("processed_audio_{}.wav", timestamp),
+        &app,
+    ) {
+        println!("[Audio Debug] Failed to save processed audio: {}", e);
+    }
 
     Ok(AudioData {
         samples: denoised_samples,
@@ -545,102 +565,150 @@ pub fn stop_recording(
     })
 }
 
-/// Apply noise suppression to audio samples using nnnoiseless
+/// Apply conservative noise suppression focused on preserving speech intelligibility
 fn denoise_audio(samples: Vec<f32>) -> Vec<f32> {
-    // First, remove electrical hum (50/60Hz and harmonics)
-    let dehum_samples = remove_electrical_hum(samples);
+    println!(
+        "[Audio Processing] Starting conservative audio processing on {} samples",
+        samples.len()
+    );
 
-    // Apply high-pass filter to remove low-frequency rumble
-    let filtered_samples = apply_high_pass_filter(dehum_samples);
+    // Step 1: Light high-pass filter to remove only very low frequency rumble
+    println!("[Audio Processing] Step 1: Applying gentle high-pass filter (40Hz cutoff)");
+    let high_pass_filtered = apply_gentle_high_pass_filter(samples);
 
-    const FRAME_SIZE: usize = 480; // nnnoiseless requires exactly 480 samples per frame
+    // Step 1.5: Remove electrical hum (50/60Hz and harmonics) - very conservative
+    println!("[Audio Processing] Step 1.5: Removing electrical hum (50/60Hz and key harmonics)");
+    let hum_filtered = remove_electrical_hum_conservative(high_pass_filtered);
 
-    let mut denoise_state = DenoiseState::new();
-    let mut denoised_samples = Vec::with_capacity(filtered_samples.len());
+    // Step 1.6: Apply gentle low-pass filter to remove high-frequency digital noise
+    println!("[Audio Processing] Step 1.6: Removing high-frequency digital noise");
+    let filtered_samples = apply_gentle_low_pass_filter(hum_filtered);
 
-    // Process complete frames
-    for chunk in filtered_samples.chunks_exact(FRAME_SIZE) {
-        let mut frame = [0.0; FRAME_SIZE];
-        frame.copy_from_slice(chunk);
+    // Step 2: Analyze audio to determine if denoising is needed
+    println!("[Audio Processing] Step 2: Analyzing audio characteristics");
+    let (needs_denoising, snr_estimate) = analyze_audio_quality(&filtered_samples);
 
-        // Apply denoising
-        let mut output = [0.0; FRAME_SIZE];
-        denoise_state.process_frame(&mut output, &frame);
+    let processed_samples = if needs_denoising {
+        println!("[Audio Processing] Step 3: Applying adaptive neural denoising");
 
-        // Collect denoised samples
-        denoised_samples.extend_from_slice(&output);
-    }
+        // For very noisy audio, apply light spectral subtraction first
+        let pre_processed = if snr_estimate < 8.0 {
+            println!("[Audio Processing] Step 3a: Applying light spectral subtraction for background noise");
+            apply_light_spectral_subtraction(filtered_samples)
+        } else {
+            filtered_samples
+        };
 
-    // Handle remaining samples (if any) by padding with zeros
-    let remainder = filtered_samples.len() % FRAME_SIZE;
-    if remainder > 0 {
-        let mut last_frame = [0.0; FRAME_SIZE];
-        let last_chunk = &filtered_samples[filtered_samples.len() - remainder..];
-        last_frame[..remainder].copy_from_slice(last_chunk);
+        apply_adaptive_denoising(pre_processed, snr_estimate)
+    } else {
+        println!("[Audio Processing] Step 3: Skipping denoising - audio quality is good");
+        filtered_samples
+    };
 
-        // Apply denoising to padded frame
-        let mut output = [0.0; FRAME_SIZE];
-        denoise_state.process_frame(&mut output, &last_frame);
+    // Step 3: Adaptive gain control for optimal volume
+    println!("[Audio Processing] Step 4: Applying adaptive gain control");
+    let normalized = apply_adaptive_gain_control(processed_samples);
 
-        // Only keep the non-padded samples
-        denoised_samples.extend_from_slice(&output[..remainder]);
-    }
-
-    // Run through denoising a second time for more aggressive noise removal
-    let mut second_pass = Vec::with_capacity(denoised_samples.len());
-    let mut denoise_state_2 = DenoiseState::new();
-
-    for chunk in denoised_samples.chunks_exact(FRAME_SIZE) {
-        let mut frame = [0.0; FRAME_SIZE];
-        frame.copy_from_slice(chunk);
-
-        let mut output = [0.0; FRAME_SIZE];
-        denoise_state_2.process_frame(&mut output, &frame);
-
-        second_pass.extend_from_slice(&output);
-    }
-
-    // Handle remainder for second pass
-    let remainder = denoised_samples.len() % FRAME_SIZE;
-    if remainder > 0 {
-        let mut last_frame = [0.0; FRAME_SIZE];
-        let last_chunk = &denoised_samples[denoised_samples.len() - remainder..];
-        last_frame[..remainder].copy_from_slice(last_chunk);
-
-        let mut output = [0.0; FRAME_SIZE];
-        denoise_state_2.process_frame(&mut output, &last_frame);
-
-        second_pass.extend_from_slice(&output[..remainder]);
-    }
-
-    // Apply simple normalization to boost volume
-    normalize_audio(second_pass)
+    println!(
+        "[Audio Processing] Conservative audio processing complete - {} samples processed",
+        normalized.len()
+    );
+    normalized
 }
 
-/// Remove electrical hum at 50/60Hz and harmonics
-fn remove_electrical_hum(samples: Vec<f32>) -> Vec<f32> {
-    // Apply notch filters at common electrical frequencies
+/// Analyze audio characteristics to determine if denoising is beneficial
+fn analyze_audio_quality(samples: &[f32]) -> (bool, f32) {
+    if samples.is_empty() {
+        return (false, 0.0);
+    }
+
+    // Calculate signal-to-noise ratio estimate
+    let mut signal_energy = 0.0;
+    let mut noise_energy = 0.0;
+    let mut speech_segments = 0;
+    let mut quiet_segments = 0;
+
+    // Analyze in 20ms windows (320 samples at 16kHz)
+    const WINDOW_SIZE: usize = 320;
+
+    for window in samples.chunks(WINDOW_SIZE) {
+        let rms = (window.iter().map(|&x| x * x).sum::<f32>() / window.len() as f32).sqrt();
+
+        if rms > 0.02 {
+            // Likely speech or significant audio
+            signal_energy += rms;
+            speech_segments += 1;
+        } else if rms > 0.005 {
+            // Quiet but not silent - likely background noise
+            noise_energy += rms;
+            quiet_segments += 1;
+        }
+    }
+
+    // If we have very little speech, don't denoise
+    if speech_segments < 5 {
+        return (false, 0.0);
+    }
+
+    // Calculate estimated SNR
+    let avg_signal = if speech_segments > 0 {
+        signal_energy / speech_segments as f32
+    } else {
+        0.0
+    };
+    let avg_noise = if quiet_segments > 0 {
+        noise_energy / quiet_segments as f32
+    } else {
+        0.001
+    };
+
+    let snr_estimate = 20.0 * (avg_signal / avg_noise).log10();
+
+    // Apply denoising if SNR suggests noise (< 12dB) or if we detect consistent background noise
+    println!("[Audio Processing] Estimated SNR: {:.1}dB", snr_estimate);
+
+    // Also consider applying denoising if we have a lot of quiet segments (background noise)
+    let noise_ratio = quiet_segments as f32 / (speech_segments + quiet_segments) as f32;
+    let has_background_noise = noise_ratio > 0.3 && avg_noise > 0.008;
+
+    println!(
+        "[Audio Processing] Noise ratio: {:.2}, Has background noise: {}",
+        noise_ratio, has_background_noise
+    );
+
+    let needs_denoising = snr_estimate < 12.0 || has_background_noise;
+    (needs_denoising, snr_estimate)
+}
+
+/// Remove electrical hum conservatively - only target clear electrical interference
+fn remove_electrical_hum_conservative(samples: Vec<f32>) -> Vec<f32> {
+    // Only target the most problematic electrical frequencies with gentle filtering
     let mut filtered = samples;
 
-    // 50Hz (European) and 60Hz (American) mains frequency and their harmonics
-    let hum_frequencies = [50.0, 60.0, 100.0, 120.0, 150.0, 180.0];
+    // Apply very narrow notch filters only for clear electrical interference
+    // Using higher Q factor (narrower notch) to minimize impact on speech
+    let electrical_frequencies = [
+        50.0,  // European mains frequency
+        60.0,  // American mains frequency
+        120.0, // First harmonic of 60Hz (most common and annoying)
+    ];
 
-    for freq in hum_frequencies {
-        filtered = apply_notch_filter(filtered, freq, 16000.0);
+    for freq in electrical_frequencies {
+        filtered = apply_gentle_notch_filter(filtered, freq, 16000.0);
     }
 
     filtered
 }
 
-/// Apply a notch filter to remove a specific frequency
-fn apply_notch_filter(samples: Vec<f32>, frequency: f32, sample_rate: f32) -> Vec<f32> {
-    // Notch filter coefficients
+/// Apply a very gentle notch filter to remove specific electrical frequencies
+fn apply_gentle_notch_filter(samples: Vec<f32>, frequency: f32, sample_rate: f32) -> Vec<f32> {
+    // Much gentler notch filter with higher Q factor (narrower, less impact)
     let omega = 2.0 * std::f32::consts::PI * frequency / sample_rate;
     let cos_omega = omega.cos();
-    let q = 30.0; // Quality factor - higher = narrower notch
+    let q = 50.0; // Much higher Q = much narrower notch (was 30.0 in aggressive version)
     let alpha = omega.sin() / (2.0 * q);
 
-    // Normalized coefficients
+    // Notch filter coefficients
     let b0 = 1.0;
     let b1 = -2.0 * cos_omega;
     let b2 = 1.0;
@@ -675,10 +743,57 @@ fn apply_notch_filter(samples: Vec<f32>, frequency: f32, sample_rate: f32) -> Ve
     filtered
 }
 
-/// Apply high-pass filter to remove low-frequency rumble
-fn apply_high_pass_filter(samples: Vec<f32>) -> Vec<f32> {
-    // Butterworth high-pass filter at 80Hz
-    let cutoff = 80.0;
+/// Apply gentle low-pass filter to remove high-frequency digital noise
+fn apply_gentle_low_pass_filter(samples: Vec<f32>) -> Vec<f32> {
+    // Butterworth low-pass filter at 7.5kHz (speech rarely goes above this)
+    // This removes high-frequency digital noise while preserving speech clarity
+    let cutoff = 7500.0;
+    let sample_rate = 16000.0;
+
+    let omega = 2.0 * std::f32::consts::PI * cutoff / sample_rate;
+    let cos_omega = omega.cos();
+    let sin_omega = omega.sin();
+    let alpha = sin_omega / std::f32::consts::SQRT_2;
+
+    // Low-pass filter coefficients
+    let b0 = (1.0 - cos_omega) / 2.0;
+    let b1 = 1.0 - cos_omega;
+    let b2 = (1.0 - cos_omega) / 2.0;
+    let a0 = 1.0 + alpha;
+    let a1 = -2.0 * cos_omega;
+    let a2 = 1.0 - alpha;
+
+    // Normalize
+    let b0 = b0 / a0;
+    let b1 = b1 / a0;
+    let b2 = b2 / a0;
+    let a1 = a1 / a0;
+    let a2 = a2 / a0;
+
+    let mut filtered = Vec::with_capacity(samples.len());
+    let mut x1 = 0.0;
+    let mut x2 = 0.0;
+    let mut y1 = 0.0;
+    let mut y2 = 0.0;
+
+    for &sample in samples.iter() {
+        let output = b0 * sample + b1 * x1 + b2 * x2 - a1 * y1 - a2 * y2;
+
+        x2 = x1;
+        x1 = sample;
+        y2 = y1;
+        y1 = output;
+
+        filtered.push(output);
+    }
+
+    filtered
+}
+
+/// Apply gentle high-pass filter to remove only very low frequency rumble
+fn apply_gentle_high_pass_filter(samples: Vec<f32>) -> Vec<f32> {
+    // Butterworth high-pass filter at 40Hz (much gentler than the old 80Hz)
+    let cutoff = 40.0;
     let sample_rate = 16000.0;
 
     let omega = 2.0 * std::f32::consts::PI * cutoff / sample_rate;
@@ -721,32 +836,284 @@ fn apply_high_pass_filter(samples: Vec<f32>) -> Vec<f32> {
     filtered
 }
 
-/// Simple normalization to ensure good volume levels
-fn normalize_audio(samples: Vec<f32>) -> Vec<f32> {
+/// Apply adaptive single-pass neural denoising based on audio characteristics
+fn apply_adaptive_denoising(samples: Vec<f32>, snr_estimate: f32) -> Vec<f32> {
+    const FRAME_SIZE: usize = 480; // nnnoiseless requires exactly 480 samples per frame
+
+    let mut denoise_state = DenoiseState::new();
+    let mut denoised_samples = Vec::with_capacity(samples.len());
+
+    // Process complete frames
+    for chunk in samples.chunks_exact(FRAME_SIZE) {
+        let mut frame = [0.0; FRAME_SIZE];
+        frame.copy_from_slice(chunk);
+
+        // Apply single-pass denoising (no double processing)
+        let mut output = [0.0; FRAME_SIZE];
+        denoise_state.process_frame(&mut output, &frame);
+
+        // Adaptive blending based on SNR - more aggressive for noisier audio
+        // Lower SNR = more denoising, Higher SNR = more preservation
+        let blend_factor = if snr_estimate < 5.0 {
+            0.85 // Very noisy - aggressive denoising
+        } else if snr_estimate < 8.0 {
+            0.75 // Moderately noisy
+        } else if snr_estimate < 12.0 {
+            0.65 // Slightly noisy
+        } else {
+            0.5 // Clean but still processing - very conservative
+        };
+
+        println!(
+            "[Audio Processing] Using adaptive blend factor: {:.2} (SNR: {:.1}dB)",
+            blend_factor, snr_estimate
+        );
+
+        for i in 0..FRAME_SIZE {
+            let blended = output[i] * blend_factor + frame[i] * (1.0 - blend_factor);
+            denoised_samples.push(blended);
+        }
+    }
+
+    // Handle remaining samples (if any) by padding with zeros
+    let remainder = samples.len() % FRAME_SIZE;
+    if remainder > 0 {
+        let mut last_frame = [0.0; FRAME_SIZE];
+        let last_chunk = &samples[samples.len() - remainder..];
+        last_frame[..remainder].copy_from_slice(last_chunk);
+
+        // Apply denoising to padded frame
+        let mut output = [0.0; FRAME_SIZE];
+        denoise_state.process_frame(&mut output, &last_frame);
+
+        // Apply same adaptive blending for remainder samples
+        let blend_factor = if snr_estimate < 5.0 {
+            0.85
+        } else if snr_estimate < 8.0 {
+            0.75
+        } else if snr_estimate < 12.0 {
+            0.65
+        } else {
+            0.5
+        };
+
+        for i in 0..remainder {
+            let blended = output[i] * blend_factor + last_frame[i] * (1.0 - blend_factor);
+            denoised_samples.push(blended);
+        }
+    }
+
+    denoised_samples
+}
+
+/// Adaptive gain control that preserves dynamics while ensuring good volume
+fn apply_adaptive_gain_control(samples: Vec<f32>) -> Vec<f32> {
     if samples.is_empty() {
         return samples;
     }
 
-    // Find the peak absolute value
+    // Calculate both peak and RMS levels for better gain decisions
     let peak = samples
         .iter()
         .map(|&s| s.abs())
         .fold(0.0f32, |a, b| a.max(b));
+    let rms = (samples.iter().map(|&s| s * s).sum::<f32>() / samples.len() as f32).sqrt();
 
-    if peak < 0.1 {
-        // If audio is very quiet, apply more aggressive normalization
-        let target = 0.5;
-        let gain = target / peak.max(0.001);
-        samples
-            .into_iter()
-            .map(|s| (s * gain).clamp(-1.0, 1.0))
-            .collect()
+    // Calculate crest factor (peak-to-RMS ratio) to understand dynamics
+    let crest_factor = if rms > 0.001 { peak / rms } else { 1.0 };
+
+    println!(
+        "[Audio Processing] Peak: {:.3}, RMS: {:.3}, Crest Factor: {:.1}",
+        peak, rms, crest_factor
+    );
+
+    // Determine target levels based on content analysis
+    let (target_rms, max_peak) = if rms < 0.05 {
+        // Very quiet audio - likely needs significant boost
+        (0.15, 0.7)
+    } else if rms < 0.15 {
+        // Moderately quiet - gentle boost
+        (0.25, 0.8)
+    } else if rms > 0.4 {
+        // Already loud - just prevent clipping
+        (rms.min(0.35), 0.9)
     } else {
-        // Otherwise just ensure we're using full dynamic range
-        let target = 0.9;
-        let gain = target / peak;
-        samples.into_iter().map(|s| s * gain).collect()
+        // Good level - minor adjustment
+        (rms * 1.1, 0.85)
+    };
+
+    // Calculate gain based on RMS but limited by peak
+    let rms_gain = if rms > 0.001 { target_rms / rms } else { 1.0 };
+    let peak_gain = if peak > 0.001 { max_peak / peak } else { 1.0 };
+
+    // Use the more conservative gain to avoid clipping
+    let final_gain = rms_gain.min(peak_gain).min(4.0); // Cap at 4x gain for safety
+
+    println!("[Audio Processing] Applying gain: {:.2}x", final_gain);
+
+    // Apply gain with soft limiting to prevent harsh clipping
+    samples
+        .into_iter()
+        .map(|s| {
+            let amplified = s * final_gain;
+            // Soft limiting using tanh for smooth saturation
+            if amplified.abs() > 0.9 {
+                amplified.signum() * (amplified.abs() * 0.9).tanh()
+            } else {
+                amplified
+            }
+        })
+        .collect()
+}
+
+/// Apply light spectral subtraction to reduce consistent background noise
+fn apply_light_spectral_subtraction(samples: Vec<f32>) -> Vec<f32> {
+    const FFT_SIZE: usize = 512;
+    const OVERLAP: usize = FFT_SIZE / 2;
+    const ALPHA: f32 = 2.0; // Over-subtraction factor
+    const BETA: f32 = 0.001; // Spectral floor
+
+    if samples.len() < FFT_SIZE {
+        return samples;
     }
+
+    let mut output = vec![0.0; samples.len()];
+    let mut planner = FftPlanner::new();
+    let fft = planner.plan_fft_forward(FFT_SIZE);
+    let ifft = planner.plan_fft_inverse(FFT_SIZE);
+
+    // Estimate noise spectrum from first 0.5 seconds
+    let noise_frames = (8000.0 / OVERLAP as f32) as usize; // ~0.5s at 16kHz
+    let mut noise_spectrum = vec![0.0; FFT_SIZE / 2];
+    let mut noise_count = 0;
+
+    // Collect noise spectrum estimate
+    for i in (0..samples.len() - FFT_SIZE).step_by(OVERLAP) {
+        if noise_count >= noise_frames {
+            break;
+        }
+
+        let window = &samples[i..i + FFT_SIZE];
+        let mut fft_input: Vec<Complex<f32>> =
+            window.iter().map(|&x| Complex::new(x, 0.0)).collect();
+        fft.process(&mut fft_input);
+
+        for (j, &complex_val) in fft_input[..FFT_SIZE / 2].iter().enumerate() {
+            noise_spectrum[j] += complex_val.norm().powi(2);
+        }
+        noise_count += 1;
+    }
+
+    // Average the noise spectrum
+    if noise_count > 0 {
+        for val in noise_spectrum.iter_mut() {
+            *val /= noise_count as f32;
+        }
+    }
+
+    // Process audio in overlapping frames
+    for i in (0..samples.len() - FFT_SIZE).step_by(OVERLAP) {
+        let window = &samples[i..i + FFT_SIZE];
+
+        // Forward FFT
+        let mut fft_input: Vec<Complex<f32>> =
+            window.iter().map(|&x| Complex::new(x, 0.0)).collect();
+        fft.process(&mut fft_input);
+
+        // Spectral subtraction
+        for j in 0..FFT_SIZE / 2 {
+            let magnitude = fft_input[j].norm();
+            let phase = fft_input[j].arg();
+
+            // Subtract noise with over-subtraction and spectral floor
+            let clean_mag = (magnitude.powi(2) - ALPHA * noise_spectrum[j])
+                .max(BETA * magnitude.powi(2))
+                .sqrt();
+
+            fft_input[j] = Complex::from_polar(clean_mag, phase);
+            if j > 0 && j < FFT_SIZE / 2 - 1 {
+                fft_input[FFT_SIZE - j] = fft_input[j].conj();
+            }
+        }
+
+        // Inverse FFT
+        ifft.process(&mut fft_input);
+
+        // Overlap-add to output
+        for (j, &complex_val) in fft_input.iter().enumerate() {
+            if i + j < output.len() {
+                output[i + j] += complex_val.re / FFT_SIZE as f32;
+            }
+        }
+    }
+
+    output
+}
+
+/// Save audio samples as a WAV file for debugging purposes
+fn save_audio_debug(samples: &[f32], filename: &str, app: &tauri::AppHandle) -> Result<(), String> {
+    let app_data_dir = app.path().app_data_dir().map_err(|e| e.to_string())?;
+    let debug_dir = app_data_dir.join("audio_debug");
+
+    // Create debug directory if it doesn't exist
+    if !debug_dir.exists() {
+        fs::create_dir_all(&debug_dir)
+            .map_err(|e| format!("Failed to create debug directory: {}", e))?;
+    }
+
+    let file_path = debug_dir.join(filename);
+    let mut file =
+        File::create(&file_path).map_err(|e| format!("Failed to create debug file: {}", e))?;
+
+    // Write simple WAV header (44 bytes)
+    let sample_rate = 16000u32;
+    let num_channels = 1u16;
+    let bits_per_sample = 32u16; // 32-bit float
+    let byte_rate = sample_rate * num_channels as u32 * (bits_per_sample as u32 / 8);
+    let block_align = num_channels * (bits_per_sample / 8);
+    let data_size = samples.len() as u32 * (bits_per_sample as u32 / 8);
+    let file_size = 36 + data_size;
+
+    // RIFF header
+    file.write_all(b"RIFF").map_err(|e| e.to_string())?;
+    file.write_all(&file_size.to_le_bytes())
+        .map_err(|e| e.to_string())?;
+    file.write_all(b"WAVE").map_err(|e| e.to_string())?;
+
+    // fmt chunk
+    file.write_all(b"fmt ").map_err(|e| e.to_string())?;
+    file.write_all(&16u32.to_le_bytes())
+        .map_err(|e| e.to_string())?; // chunk size
+    file.write_all(&3u16.to_le_bytes())
+        .map_err(|e| e.to_string())?; // IEEE float format
+    file.write_all(&num_channels.to_le_bytes())
+        .map_err(|e| e.to_string())?;
+    file.write_all(&sample_rate.to_le_bytes())
+        .map_err(|e| e.to_string())?;
+    file.write_all(&byte_rate.to_le_bytes())
+        .map_err(|e| e.to_string())?;
+    file.write_all(&block_align.to_le_bytes())
+        .map_err(|e| e.to_string())?;
+    file.write_all(&bits_per_sample.to_le_bytes())
+        .map_err(|e| e.to_string())?;
+
+    // data chunk
+    file.write_all(b"data").map_err(|e| e.to_string())?;
+    file.write_all(&data_size.to_le_bytes())
+        .map_err(|e| e.to_string())?;
+
+    // Write audio data as 32-bit float
+    for &sample in samples {
+        file.write_all(&sample.to_le_bytes())
+            .map_err(|e| e.to_string())?;
+    }
+
+    println!(
+        "[Audio Debug] Saved {} samples to: {:?}",
+        samples.len(),
+        file_path
+    );
+    Ok(())
 }
 
 #[tauri::command]

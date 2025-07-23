@@ -115,6 +115,8 @@ impl LocalWhisperProvider {
         params.set_print_progress(false);
         params.set_print_realtime(false);
         params.set_print_timestamps(false);
+        // params.set_grammar(grammar);
+        params.set_suppress_blank(false);
 
         app.emit(
             "transcription-progress",
