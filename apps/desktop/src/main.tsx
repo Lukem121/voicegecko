@@ -96,7 +96,7 @@ function App() {
 
   // Don't render anything until we know which window we're in
   if (isGeckoBar === null) {
-    return <div>Loading...</div>;
+    return null;
   }
 
   // If this is the gecko bar window, render the gecko bar app directly
