@@ -4,6 +4,7 @@ import { isRegistered, register } from "@tauri-apps/plugin-deep-link";
 import { openUrl } from "@tauri-apps/plugin-opener";
 
 import { authClient } from "~/lib/client";
+import { isNetworkError, useConnectivity } from "./use-connectivity";
 
 export const signIn = async () => {
   const signInUrl = `${import.meta.env.VITE_PUBLIC_VOICEGECKO_URL}/api/auth/signin?redirect=voicegecko://login`;
@@ -20,6 +21,7 @@ export const useUser = () => {
  */
 export const useIsAuthenticated = () => {
   const { data: session, isPending, error } = authClient.useSession();
+  const connectivity = useConnectivity({ checkInterval: 15000 }); // Check every 15 seconds
 
   console.log("useIsAuthenticated", session, isPending, error);
 
@@ -29,10 +31,39 @@ export const useIsAuthenticated = () => {
     }
   }, [error]);
 
+  // Determine if the auth error is likely due to connectivity issues
+  const isConnectivityError =
+    error && (isNetworkError(error) || connectivity.hasConnectivityIssue);
+
   return {
     isAuthenticated: !!session?.user,
     isLoading: isPending,
     user: session?.user ?? null,
+    // Enhanced connectivity information
+    connectivity: {
+      isOnline: connectivity.isOnline,
+      isApiReachable: connectivity.isApiReachable,
+      isChecking: connectivity.isChecking,
+      hasConnectivityIssue: connectivity.hasConnectivityIssue,
+      checkConnectivity: connectivity.checkConnectivity,
+      // Enhanced diagnostic information
+      diagnosis: connectivity.diagnosis,
+      getDiagnosisMessage: connectivity.getDiagnosisMessage,
+      lastSuccessfulCheck: connectivity.lastSuccessfulCheck,
+      isVoiceGeckoIssue: connectivity.isVoiceGeckoIssue,
+      isInternetIssue: connectivity.isInternetIssue,
+    },
+    // Error handling
+    error,
+    isConnectivityError: !!isConnectivityError,
+    // Helper to determine what kind of issue we're dealing with
+    getAuthIssueType: () => {
+      if (isPending) return "loading";
+      if (isConnectivityError) return "connectivity";
+      if (error) return "auth";
+      if (!session?.user) return "unauthenticated";
+      return "authenticated";
+    },
   };
 };
 

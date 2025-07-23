@@ -10,6 +10,27 @@ interface MyRouterContext {
     isAuthenticated: boolean;
     isLoading: boolean;
     user: Session["user"] | null;
+    connectivity?: {
+      isOnline: boolean;
+      isApiReachable: boolean;
+      isChecking: boolean;
+      hasConnectivityIssue: boolean;
+      checkConnectivity: () => void;
+      // Enhanced diagnostic information
+      diagnosis: "healthy" | "no_internet" | "api_down" | "unknown";
+      getDiagnosisMessage: () => string;
+      lastSuccessfulCheck: Date | null;
+      isVoiceGeckoIssue: boolean;
+      isInternetIssue: boolean;
+    };
+    error?: unknown;
+    isConnectivityError?: boolean;
+    getAuthIssueType?: () =>
+      | "loading"
+      | "connectivity"
+      | "auth"
+      | "unauthenticated"
+      | "authenticated";
   };
 }
 
