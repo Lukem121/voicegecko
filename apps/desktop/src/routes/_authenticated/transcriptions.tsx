@@ -50,6 +50,7 @@ function TranscriptionsPage() {
 
   const { deleteTranscription, isDeleting } = useDeleteTranscription();
   const [isSearchExpanded, setIsSearchExpanded] = useState(false);
+  const [deletingId, setDeletingId] = useState<number | null>(null);
 
   const { loadMoreRef } = useInfiniteScroll({
     hasNextPage,
@@ -64,9 +65,13 @@ function TranscriptionsPage() {
 
   const handleDeleteTranscript = async (id: number) => {
     try {
+      console.log("Deleting transcription:", id);
+      setDeletingId(id);
       await deleteTranscription({ id });
     } catch (error) {
       console.error("Failed to delete transcription:", error);
+    } finally {
+      setDeletingId(null);
     }
   };
 
@@ -186,102 +191,125 @@ function TranscriptionsPage() {
                 {section.date}
               </h2>
               <div className="overflow-hidden rounded-lg border">
-                {section.items.map((item, index) => (
-                  <div
-                    className={`group hover:bg-muted/50 flex items-start justify-between border-transparent p-3 transition-colors will-change-auto ${
-                      index < section.items.length - 1
-                        ? "border-border border-b"
-                        : ""
-                    }`}
-                    style={{ minHeight: "60px" }} // Ensure consistent minimum height
-                  >
-                    <div className="flex min-w-0 flex-1 items-start gap-3">
-                      <div className="text-muted-foreground text-sm whitespace-nowrap">
-                        {item.timestamp}
-                      </div>
-                      <div className="flex min-w-0 flex-1 items-start gap-2">
-                        <div
-                          className={`text-sm leading-relaxed ${
-                            item.status === "silent"
-                              ? "text-muted-foreground italic"
-                              : "text-foreground"
-                          }`}
-                        >
-                          {item.content}
+                {section.items.map((item, index) => {
+                  const isBeingDeleted = deletingId === item.id;
+
+                  return (
+                    <div
+                      key={item.id}
+                      className={`group hover:bg-muted/50 flex items-start justify-between border-transparent p-3 transition-all will-change-auto ${
+                        index < section.items.length - 1
+                          ? "border-border border-b"
+                          : ""
+                      } ${
+                        isBeingDeleted
+                          ? "bg-muted/30 pointer-events-none opacity-50"
+                          : ""
+                      }`}
+                      style={{ minHeight: "60px" }} // Ensure consistent minimum height
+                    >
+                      <div className="flex min-w-0 flex-1 items-start gap-3">
+                        <div className="text-muted-foreground text-sm whitespace-nowrap">
+                          {item.timestamp}
                         </div>
-                        {item.status === "silent" && (
-                          <Tooltip>
-                            <TooltipTrigger>
-                              <Info className="text-muted-foreground mt-0.5 h-4 w-4 flex-shrink-0" />
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <p>No audio detected during this recording</p>
-                            </TooltipContent>
-                          </Tooltip>
+                        <div className="flex min-w-0 flex-1 items-start gap-2">
+                          <div
+                            className={`text-sm leading-relaxed ${
+                              item.status === "silent"
+                                ? "text-muted-foreground italic"
+                                : "text-foreground"
+                            }`}
+                          >
+                            {item.content}
+                          </div>
+                          {item.status === "silent" && (
+                            <Tooltip>
+                              <TooltipTrigger>
+                                <Info className="text-muted-foreground mt-0.5 h-4 w-4 flex-shrink-0" />
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>No audio detected during this recording</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          )}
+                        </div>
+                      </div>
+                      <div
+                        className={`flex items-center gap-1 transition-opacity ${
+                          isBeingDeleted
+                            ? "opacity-100"
+                            : "opacity-0 group-hover:opacity-100"
+                        }`}
+                      >
+                        {isBeingDeleted && (
+                          <div className="text-muted-foreground flex items-center gap-2 text-sm">
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                            <span>Deleting...</span>
+                          </div>
+                        )}
+                        {!isBeingDeleted && (
+                          <>
+                            {item.status !== "silent" && (
+                              <Tooltip>
+                                <TooltipTrigger asChild>
+                                  <CopyButton
+                                    text={item.content}
+                                    variant="ghost"
+                                    className="h-8 w-8 p-0"
+                                  />
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p>Copy transcription</p>
+                                </TooltipContent>
+                              </Tooltip>
+                            )}
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    handleSendFeedback(item.id);
+                                  }}
+                                  className="h-8 w-8 p-0"
+                                >
+                                  <MessageSquare className="h-4 w-4" />
+                                </Button>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>Send feedback</p>
+                              </TooltipContent>
+                            </Tooltip>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-8 w-8 p-0"
+                                >
+                                  <MoreVertical className="h-4 w-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end" className="w-48">
+                                <DropdownMenuItem
+                                  onClick={() =>
+                                    handleDeleteTranscript(item.id)
+                                  }
+                                  className="text-red-600 focus:text-red-600"
+                                  disabled={isDeleting}
+                                >
+                                  <Trash2 className="mr-2 h-4 w-4" />
+                                  Delete transcription
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </>
                         )}
                       </div>
                     </div>
-                    <div className="flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
-                      {item.status !== "silent" && (
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <CopyButton
-                              text={item.content}
-                              variant="ghost"
-                              className="h-8 w-8 p-0"
-                            />
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p>Copy transcription</p>
-                          </TooltipContent>
-                        </Tooltip>
-                      )}
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleSendFeedback(item.id);
-                            }}
-                            className="h-8 w-8 p-0"
-                          >
-                            <MessageSquare className="h-4 w-4" />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>Send feedback</p>
-                        </TooltipContent>
-                      </Tooltip>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-8 w-8 p-0"
-                          >
-                            <MoreVertical className="h-4 w-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-48">
-                          <DropdownMenuItem
-                            onClick={() => handleDeleteTranscript(item.id)}
-                            className="text-red-600 focus:text-red-600"
-                            disabled={isDeleting}
-                          >
-                            {isDeleting ? (
-                              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                            ) : (
-                              <Trash2 className="mr-2 h-4 w-4" />
-                            )}
-                            Delete transcription
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           ))

@@ -36,14 +36,6 @@ export function ConnectivityError({
   onRetry,
   className,
 }: ConnectivityErrorProps) {
-  // DEBUG: Log what props we're receiving
-  console.log("🔍 [ConnectivityError] Props received:", {
-    isOnline,
-    isApiReachable,
-    isChecking,
-    diagnosis,
-  });
-
   const [manualRetryDisabledUntil, setManualRetryDisabledUntil] =
     useState<Date | null>(null);
   const [nextAutoRetryIn, setNextAutoRetryIn] = useState<number>(30);
@@ -229,9 +221,6 @@ export function ConnectivityError({
 
                   <Button
                     onClick={() => {
-                      console.log(
-                        "🔴 [ConnectivityError] Button clicked! Starting manual retry...",
-                      );
                       setNextAutoRetryIn(30);
                       // Disable auto-retry for 60 seconds after manual retry
                       setManualRetryDisabledUntil(new Date(Date.now() + 60000));
@@ -244,33 +233,24 @@ export function ConnectivityError({
                     )}
                     variant="outline"
                   >
-                    {(() => {
-                      console.log(
-                        "🔍 [ConnectivityError] Button render - isChecking:",
-                        isChecking,
-                      );
-                      return isChecking ? (
-                        <>
-                          <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-                          Checking connection...
-                        </>
-                      ) : (
-                        <>
-                          <RefreshCw className="mr-2 h-4 w-4" />
-                          <span>Check Again</span>
-                          <span
-                            className={cn(
-                              "ml-2 rounded px-2 py-0.5 font-mono text-xs transition-all duration-200 ease-in-out",
-                              nextAutoRetryIn <= 5
-                                ? "animate-pulse bg-orange-100 text-orange-700"
-                                : "bg-muted",
-                            )}
-                          >
-                            {nextAutoRetryIn}s
-                          </span>
-                        </>
-                      );
-                    })()}
+                    {isChecking ? (
+                      <>
+                        <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                        Checking connection...
+                      </>
+                    ) : (
+                      <>
+                        <RefreshCw className="mr-2 h-4 w-4" />
+                        <span>Check Again</span>
+                        <span
+                          className={cn(
+                            "bg-muted ml-2 rounded px-2 py-0.5 font-mono text-xs transition-all duration-200 ease-in-out",
+                          )}
+                        >
+                          {nextAutoRetryIn}s
+                        </span>
+                      </>
+                    )}
                   </Button>
                 </div>
 
@@ -342,6 +322,7 @@ interface ConnectivityIndicatorProps {
   isApiReachable: boolean;
   isChecking: boolean;
   diagnosis: "healthy" | "no_internet" | "api_down" | "unknown";
+  lastChecked?: Date | null;
   className?: string;
 }
 
@@ -350,10 +331,16 @@ export function ConnectivityIndicator({
   isApiReachable,
   isChecking,
   diagnosis,
+  lastChecked,
   className,
 }: ConnectivityIndicatorProps) {
   if (diagnosis === "healthy") {
     return null; // Don't show anything when everything is working
+  }
+
+  // Don't show indicator for initial "unknown" state before any checks have been performed
+  if (diagnosis === "unknown" && !lastChecked) {
+    return null;
   }
 
   const getIndicator = () => {

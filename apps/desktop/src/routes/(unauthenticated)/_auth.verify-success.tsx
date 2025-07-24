@@ -12,7 +12,7 @@ import {
   CardTitle,
 } from "@acme/ui/components/ui/card";
 
-import { authClient } from "~/lib/client";
+import { useSession } from "~/hooks/auth";
 
 export const Route = createFileRoute("/(unauthenticated)/_auth/verify-success")(
   {
@@ -28,22 +28,22 @@ export const Route = createFileRoute("/(unauthenticated)/_auth/verify-success")(
 function VerifySuccess() {
   const router = useRouter();
   const search = Route.useSearch();
-  const { refetch } = authClient.useSession();
+  const { query } = useSession();
 
   useEffect(() => {
     // Refetch the session to ensure we have the latest authentication state
-    refetch();
+    void query.refetch();
 
     // Small delay to ensure session is updated before redirecting
     const timer = setTimeout(() => {
-      router.navigate({ to: search.redirect });
+      void router.navigate({ to: search.redirect });
     }, 2000);
 
     return () => clearTimeout(timer);
-  }, [refetch, router, search.redirect]);
+  }, [query, router, search.redirect]);
 
   const handleContinue = () => {
-    router.navigate({ to: search.redirect });
+    void router.navigate({ to: search.redirect });
   };
 
   return (

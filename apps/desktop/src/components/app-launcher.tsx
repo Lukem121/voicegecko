@@ -5,7 +5,7 @@ import { Download, Loader2, RefreshCw } from "lucide-react";
 import LogoFull from "@acme/ui/components/logos/logo-full";
 import { Progress } from "@acme/ui/components/ui/progress";
 
-import { useIsAuthenticated } from "~/hooks/auth";
+import { useAuth } from "~/hooks/use-auth";
 import { initializeApp } from "~/lib/initialize-app";
 
 export function AppLauncher({ onReady }: { onReady: () => void }) {
@@ -16,7 +16,7 @@ export function AppLauncher({ onReady }: { onReady: () => void }) {
   const [showProgress, setShowProgress] = useState(false);
 
   // Get authentication state
-  const auth = useIsAuthenticated();
+  const auth = useAuth();
 
   useEffect(() => {
     async function init() {
@@ -62,11 +62,11 @@ export function AppLauncher({ onReady }: { onReady: () => void }) {
       console.log("App launcher: Both app and auth are ready", {
         isInitializing,
         authLoading: auth.isLoading,
-        authState: auth.getAuthIssueType(),
+        authState: auth.getAuthState(),
       });
       onReady();
     }
-  }, [isInitializing, auth.isLoading, onReady]);
+  }, [isInitializing, auth, onReady]);
 
   if (error) {
     return (

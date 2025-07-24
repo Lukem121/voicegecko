@@ -12,11 +12,12 @@ import ReactDOM from "react-dom/client";
 import { AppLauncher } from "~/components/app-launcher";
 import { FullscreenDetector } from "~/components/fullscreen-detector";
 import { GeckoBarApp } from "~/components/gecko-bar/gecko-bar-app";
-import { useIsAuthenticated } from "~/hooks/auth";
+import { useAuth } from "~/hooks/use-auth";
 import { isGeckoBarWindow } from "~/lib/window-detection";
 import { routeTree } from "~/routeTree.gen";
 import { useSettingsStore } from "~/stores/settings.store";
 import { TRPCReactProvider } from "~/trpc";
+import { useSession } from "./hooks/auth";
 import PostHogProvider from "./lib/posthog/posthog-provider";
 import { ThemeProvider } from "./providers/theme";
 
@@ -40,8 +41,8 @@ declare module "@tanstack/react-router" {
 }
 
 function InnerApp() {
-  const auth = useIsAuthenticated();
-  const session = authClient.useSession();
+  const auth = useAuth();
+  const { session, query } = useSession();
   const settings = useSettingsStore((state) => state.settings);
 
   useBetterAuthTauri({
@@ -53,7 +54,7 @@ function InnerApp() {
     },
     onSuccess: (callbackURL) => {
       console.log("✅ Auth successful, callback URL:", callbackURL);
-      session.refetch();
+      void query.refetch();
     },
     onError: (error) => {
       console.error("❌ Auth error:", error);
@@ -61,9 +62,9 @@ function InnerApp() {
   });
 
   useEffect(() => {
-    console.log("Auth state changed", session.data, session.isPending);
+    console.log("Auth state changed", session, query.isPending);
     void router.invalidate();
-  }, [session.data, session.isPending]);
+  }, [session, query.isPending]);
 
   return (
     <>
@@ -101,11 +102,7 @@ function App() {
 
   // If this is the gecko bar window, render the gecko bar app directly
   if (isGeckoBar) {
-    return (
-      <TRPCReactProvider>
-        <GeckoBarApp />
-      </TRPCReactProvider>
-    );
+    return <GeckoBarApp />;
   }
 
   // Otherwise, this is the main window
@@ -113,11 +110,7 @@ function App() {
     return <AppLauncher onReady={() => setIsAppReady(true)} />;
   }
 
-  return (
-    <TRPCReactProvider>
-      <InnerApp />
-    </TRPCReactProvider>
-  );
+  return <InnerApp />;
 }
 
 // Render the app
@@ -129,11 +122,13 @@ if (!rootElement.innerHTML) {
   const root = ReactDOM.createRoot(rootElement);
   root.render(
     <StrictMode>
-      <PostHogProvider>
-        <ThemeProvider>
-          <App />
-        </ThemeProvider>
-      </PostHogProvider>
+      <TRPCReactProvider>
+        <PostHogProvider>
+          <ThemeProvider>
+            <App />
+          </ThemeProvider>
+        </PostHogProvider>
+      </TRPCReactProvider>
     </StrictMode>,
   );
 }

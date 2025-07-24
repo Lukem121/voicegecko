@@ -5,7 +5,7 @@ import superjson from "superjson";
 
 import type { AppRouter } from "@acme/api/src/root";
 
-import { isNetworkError } from "./hooks/use-connectivity";
+import { isNetworkError } from "./hooks/auth";
 
 export const queryClient = new QueryClient({
   defaultOptions: {
