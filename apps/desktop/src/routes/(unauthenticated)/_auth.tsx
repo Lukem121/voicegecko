@@ -1,7 +1,7 @@
 import { useEffect } from "react";
 import { createFileRoute, Outlet, useRouter } from "@tanstack/react-router";
 
-import { useIsAuthenticated } from "~/hooks/auth";
+import { useAuth } from "~/hooks/use-auth";
 
 export const Route = createFileRoute("/(unauthenticated)/_auth")({
   component: AuthLayout,
@@ -9,7 +9,7 @@ export const Route = createFileRoute("/(unauthenticated)/_auth")({
 
 function AuthLayout() {
   const router = useRouter();
-  const auth = useIsAuthenticated();
+  const auth = useAuth();
 
   // If user is authenticated, redirect away from auth pages
   useEffect(() => {

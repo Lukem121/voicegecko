@@ -57,7 +57,8 @@ import {
   SidebarMenuSubItem,
 } from "@acme/ui/components/ui/sidebar";
 
-import { useSignOut, useUser } from "~/hooks/auth";
+import { useSignOut } from "~/hooks/auth";
+import { useAuthWithConnectivity } from "~/hooks/use-auth-with-connectivity";
 import { trpc } from "~/trpc";
 
 interface NavigationSubItem {
@@ -158,7 +159,8 @@ if (isDev) {
 }
 
 export function AppSidebar() {
-  const user = useUser();
+  const auth = useAuthWithConnectivity();
+  const user = auth.user;
   const signOut = useSignOut();
   const location = useLocation();
   const [showSupportDialog, setShowSupportDialog] = useState(false);
