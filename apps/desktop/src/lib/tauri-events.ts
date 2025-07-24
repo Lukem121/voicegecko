@@ -113,17 +113,19 @@ export async function initializeTauriEvents(
           await transcriptionService.playEndSoundIfEnabled();
 
           // Invalidate queries to update UI
-          await Promise.all([
-            queryClient.invalidateQueries({
-              queryKey: trpc.transcription.getAll.queryKey(),
-            }),
-            queryClient.invalidateQueries({
-              queryKey: trpc.usage.getStatus.queryKey(),
-            }),
-            queryClient.invalidateQueries({
-              queryKey: trpc.usage.getStats.queryKey(),
-            }),
-          ]);
+          console.log(
+            "[TauriEvents] 🔄 Invalidating queries after cloud transcription...",
+          );
+
+          await queryClient.invalidateQueries({
+            queryKey: ["transcription"],
+          });
+
+          await queryClient.invalidateQueries({
+            queryKey: ["usage"],
+          });
+
+          console.log("[TauriEvents] ✅ Cache invalidation completed");
         }
       } catch (error) {
         console.error("[TauriEvents] Cloud transcription error:", error);

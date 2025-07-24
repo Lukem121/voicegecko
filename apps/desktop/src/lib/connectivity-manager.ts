@@ -1,0 +1,264 @@
+/**
+ * Global Connectivity Manager
+ *
+ * This singleton manages connectivity checking across the entire app.
+ * Key features:
+ * - Only runs when there's an actual connectivity issue
+ * - Single source of truth for connectivity state
+ * - Automatic cleanup when issues resolve
+ * - No continuous background polling
+ */
+
+export interface ConnectivityState {
+  isOnline: boolean;
+  isApiReachable: boolean;
+  isChecking: boolean;
+  lastChecked: Date | null;
+  error: string | null;
+  diagnosis: "healthy" | "no_internet" | "api_down" | "unknown";
+  lastSuccessfulCheck: Date | null;
+}
+
+type ConnectivityListener = (state: ConnectivityState) => void;
+
+class ConnectivityManager {
+  private state: ConnectivityState = {
+    isOnline: navigator.onLine,
+    isApiReachable: false,
+    isChecking: false,
+    lastChecked: null,
+    error: null,
+    diagnosis: "unknown",
+    lastSuccessfulCheck: null,
+  };
+
+  private listeners = new Set<ConnectivityListener>();
+  private retryInterval: NodeJS.Timeout | null = null;
+  private isActive = false;
+
+  /**
+   * Subscribe to connectivity state changes
+   */
+  subscribe(listener: ConnectivityListener): () => void {
+    this.listeners.add(listener);
+    // Immediately call with current state
+    listener(this.state);
+
+    return () => {
+      this.listeners.delete(listener);
+      // If no more listeners, deactivate
+      if (this.listeners.size === 0) {
+        this.deactivate();
+      }
+    };
+  }
+
+  /**
+   * Activate connectivity monitoring (only when there's an issue)
+   */
+  activate(): void {
+    if (this.isActive) return;
+
+    console.log("🔄 [ConnectivityManager] Activating connectivity monitoring");
+    this.isActive = true;
+
+    // Start immediate check
+    this.checkConnectivity();
+
+    // Set up retry interval (30 seconds)
+    this.retryInterval = setInterval(() => {
+      this.checkConnectivity();
+    }, 30000);
+
+    // Browser events
+    window.addEventListener("online", this.handleOnline);
+    window.addEventListener("offline", this.handleOffline);
+  }
+
+  /**
+   * Deactivate connectivity monitoring (when issue is resolved)
+   */
+  private deactivate(): void {
+    if (!this.isActive) return;
+
+    console.log(
+      "✅ [ConnectivityManager] Deactivating connectivity monitoring",
+    );
+    this.isActive = false;
+
+    if (this.retryInterval) {
+      clearInterval(this.retryInterval);
+      this.retryInterval = null;
+    }
+
+    window.removeEventListener("online", this.handleOnline);
+    window.removeEventListener("offline", this.handleOffline);
+  }
+
+  /**
+   * Manual connectivity check (can be called by UI)
+   */
+  async checkConnectivity(): Promise<void> {
+    if (this.state.isChecking) {
+      console.log("⏸️ [ConnectivityManager] Check already in progress");
+      return;
+    }
+
+    console.log("🔍 [ConnectivityManager] Starting connectivity check");
+
+    this.updateState({ isChecking: true, error: null });
+
+    try {
+      const result = await this.runConnectivityCheck();
+      this.updateState(result);
+
+      // If we're healthy, deactivate monitoring
+      if (result.diagnosis === "healthy") {
+        this.deactivate();
+      }
+    } catch (error) {
+      console.error("💥 [ConnectivityManager] Check failed:", error);
+      this.updateState({
+        ...this.state,
+        isChecking: false,
+        error: error instanceof Error ? error.message : "Check failed",
+        diagnosis: "unknown",
+        lastChecked: new Date(),
+      });
+    }
+  }
+
+  /**
+   * Get current state (synchronous)
+   */
+  getState(): ConnectivityState {
+    return { ...this.state };
+  }
+
+  /**
+   * Check if we have connectivity issues
+   */
+  hasIssues(): boolean {
+    return this.state.diagnosis !== "healthy";
+  }
+
+  private async runConnectivityCheck(): Promise<ConnectivityState> {
+    let isOnline = false;
+    let isApiReachable = false;
+
+    // Step 1: Quick internet check (3 seconds max)
+    try {
+      console.log("🌐 [ConnectivityManager] Testing internet...");
+      const controller = new AbortController();
+      setTimeout(() => controller.abort(), 3000);
+
+      await fetch("https://www.google.com/favicon.ico", {
+        method: "HEAD",
+        mode: "no-cors",
+        signal: controller.signal,
+        cache: "no-cache",
+      });
+
+      isOnline = true;
+      console.log("✅ [ConnectivityManager] Internet: ONLINE");
+    } catch (error) {
+      isOnline = false;
+      console.log("❌ [ConnectivityManager] Internet: OFFLINE", error);
+    }
+
+    // Step 2: API check (only if internet works)
+    if (isOnline) {
+      try {
+        console.log("🔗 [ConnectivityManager] Testing VoiceGecko API...");
+        const controller = new AbortController();
+        setTimeout(() => controller.abort(), 5000);
+
+        const response = await fetch(
+          `${import.meta.env.VITE_PUBLIC_VOICEGECKO_URL}/api/health`,
+          {
+            method: "GET",
+            signal: controller.signal,
+            cache: "no-cache",
+            credentials: "omit",
+          },
+        );
+
+        isApiReachable = response.ok || response.status === 405;
+        console.log(
+          `✅ [ConnectivityManager] API: ${isApiReachable ? "REACHABLE" : "UNREACHABLE"} (${response.status})`,
+        );
+      } catch (error) {
+        isApiReachable = false;
+        console.log("❌ [ConnectivityManager] API: FAILED", error);
+      }
+    } else {
+      console.log("⏭️ [ConnectivityManager] Skipping API check (no internet)");
+    }
+
+    // Determine diagnosis
+    let diagnosis: ConnectivityState["diagnosis"];
+    if (isOnline && isApiReachable) {
+      diagnosis = "healthy";
+    } else if (!isOnline) {
+      diagnosis = "no_internet";
+    } else {
+      diagnosis = "api_down";
+    }
+
+    const now = new Date();
+    console.log(`🎯 [ConnectivityManager] Check complete: ${diagnosis}`);
+
+    return {
+      isOnline,
+      isApiReachable,
+      isChecking: false,
+      lastChecked: now,
+      error: null,
+      diagnosis,
+      lastSuccessfulCheck:
+        diagnosis === "healthy" ? now : this.state.lastSuccessfulCheck,
+    };
+  }
+
+  private updateState(newState: Partial<ConnectivityState>): void {
+    this.state = { ...this.state, ...newState };
+    // Notify all listeners
+    this.listeners.forEach((listener) => listener(this.state));
+  }
+
+  private handleOnline = (): void => {
+    console.log("🟢 [ConnectivityManager] Browser online event");
+    this.checkConnectivity();
+  };
+
+  private handleOffline = (): void => {
+    console.log("🔴 [ConnectivityManager] Browser offline event");
+    this.updateState({
+      isOnline: false,
+      isApiReachable: false,
+      diagnosis: "no_internet",
+      isChecking: false,
+      lastChecked: new Date(),
+    });
+  };
+
+  /**
+   * Get diagnosis message for UI display
+   */
+  getDiagnosisMessage(): string {
+    switch (this.state.diagnosis) {
+      case "healthy":
+        return "All systems operational";
+      case "no_internet":
+        return "No internet connection detected";
+      case "api_down":
+        return "VoiceGecko servers are unreachable (your internet is working)";
+      case "unknown":
+      default:
+        return "Connectivity issue detected";
+    }
+  }
+}
+
+// Global singleton instance
+export const connectivityManager = new ConnectivityManager();

@@ -146,6 +146,12 @@ export const useEventStore = create<EventState>()(
         await transcriptionService.playEndSoundIfEnabled();
 
         // Save transcription to database
+        console.log(
+          "[EventStore] 💾 Attempting to save transcription to database...",
+        );
+        console.log("[EventStore] 📝 Transcript content:", transcript);
+        console.log("[EventStore] 📊 Metadata:", metadata);
+
         try {
           const status =
             !transcript.trim() ||
@@ -157,7 +163,7 @@ export const useEventStore = create<EventState>()(
           // Generate a unique ID for the transcription
           const id = crypto.randomUUID();
 
-          await createTranscription({
+          const transcriptionData = {
             id,
             content,
             status,
@@ -170,9 +176,18 @@ export const useEventStore = create<EventState>()(
             sampleRate: metadata?.sample_rate,
             // TODO: Get app version
             // appVersion: undefined,
-          });
+          };
 
-          console.log("[EventStore] ✅ Transcription saved to database");
+          console.log(
+            "[EventStore] 🚀 Calling createTranscription with data:",
+            transcriptionData,
+          );
+
+          await createTranscription(transcriptionData);
+
+          console.log(
+            "[EventStore] ✅ Transcription saved to database successfully",
+          );
         } catch (error) {
           console.error("[EventStore] ❌ Failed to save transcription:", error);
 

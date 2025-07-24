@@ -38,7 +38,6 @@ export const useInfiniteTranscriptions = ({
         getNextPageParam: (lastPage) => {
           return lastPage.hasNextPage ? lastPage.nextCursor : undefined;
         },
-        staleTime: 1000 * 60 * 5, // 5 minutes
       },
     ),
   );

@@ -15,6 +15,7 @@ import {
   ConnectivityError,
   ConnectivityIndicator,
 } from "~/components/connectivity-error";
+import { useAuthWithConnectivity } from "~/hooks/use-auth-with-connectivity";
 
 export const Route = createFileRoute("/_authenticated")({
   beforeLoad: ({ context, location }) => {
@@ -48,28 +49,25 @@ export const Route = createFileRoute("/_authenticated")({
 });
 
 function AuthenticatedLayout() {
-  const authContext = Route.useRouteContext().auth;
-  const authIssueType = authContext.getAuthIssueType?.() || "authenticated";
+  // Use the new clean auth hook with connectivity integration
+  const auth = useAuthWithConnectivity();
+  const authIssueType = auth.getAuthIssueType();
 
-  console.log(
-    "[AuthenticatedLayout] Auth issue type:",
-    authIssueType,
-    authContext,
-  );
+  console.log("[AuthenticatedLayout] Auth issue type:", authIssueType, auth);
 
   // Show connectivity error when there are network issues
   if (authIssueType === "connectivity") {
     console.log("Showing connectivity error...");
     return (
       <ConnectivityError
-        isOnline={authContext.connectivity?.isOnline ?? false}
-        isApiReachable={authContext.connectivity?.isApiReachable ?? false}
-        isChecking={authContext.connectivity?.isChecking ?? false}
-        diagnosis={authContext.connectivity?.diagnosis ?? "unknown"}
-        lastSuccessfulCheck={authContext.connectivity?.lastSuccessfulCheck}
+        isOnline={auth.connectivity.isOnline}
+        isApiReachable={auth.connectivity.isApiReachable}
+        isChecking={auth.connectivity.isChecking}
+        diagnosis={auth.connectivity.diagnosis}
+        lastSuccessfulCheck={auth.connectivity.lastSuccessfulCheck}
         onRetry={() => {
           console.log("Retrying connectivity check...");
-          authContext.connectivity?.checkConnectivity?.();
+          void auth.connectivity.checkConnectivity();
         }}
       />
     );
@@ -89,10 +87,11 @@ function AuthenticatedLayout() {
           {/* Show connectivity indicator in header when there are issues */}
           <div className="ml-auto pr-4">
             <ConnectivityIndicator
-              isOnline={authContext.connectivity?.isOnline ?? true}
-              isApiReachable={authContext.connectivity?.isApiReachable ?? true}
-              isChecking={authContext.connectivity?.isChecking ?? false}
-              diagnosis={authContext.connectivity?.diagnosis ?? "healthy"}
+              isOnline={auth.connectivity.isOnline}
+              isApiReachable={auth.connectivity.isApiReachable}
+              isChecking={auth.connectivity.isChecking}
+              diagnosis={auth.connectivity.diagnosis}
+              lastChecked={auth.connectivity.lastSuccessfulCheck}
             />
           </div>
         </header>
