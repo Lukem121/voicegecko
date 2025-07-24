@@ -4,10 +4,8 @@ import { useQuery } from "@tanstack/react-query";
 import { Link, useLocation } from "@tanstack/react-router";
 import { open } from "@tauri-apps/plugin-shell";
 import {
-  Bell,
   ChartBar,
   ChevronUp,
-  Copy,
   CreditCard,
   ExternalLink,
   FileText,
@@ -15,16 +13,15 @@ import {
   LogOut,
   Mic,
   Settings2,
-  User2,
 } from "lucide-react";
 
+import { CopyButton } from "@acme/ui/components/copy";
 import LogoSquare from "@acme/ui/components/logos/logo-square";
 import {
   Avatar,
   AvatarFallback,
   AvatarImage,
 } from "@acme/ui/components/ui/avatar";
-import { Button } from "@acme/ui/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -177,14 +174,6 @@ export function AppSidebar() {
   const usagePercentage = isFreePlan
     ? (usageStatus.wordsUsed / usageStatus.wordsLimit) * 100
     : 0;
-
-  const copyToClipboard = async (text: string) => {
-    try {
-      await navigator.clipboard.writeText(text);
-    } catch (err) {
-      console.error("Failed to copy text: ", err);
-    }
-  };
 
   return (
     <Sidebar variant="inset" collapsible="icon">
@@ -461,13 +450,7 @@ export function AppSidebar() {
                 <div className="bg-muted flex-1 rounded p-2 font-mono text-sm">
                   support@voicegecko.io
                 </div>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => copyToClipboard("support@voicegecko.io")}
-                >
-                  <Copy className="h-4 w-4" />
-                </Button>
+                <CopyButton text="support@voicegecko.io" />
               </div>
             </div>
             {user?.id && (
@@ -477,13 +460,7 @@ export function AppSidebar() {
                   <div className="bg-muted flex-1 rounded p-2 font-mono text-sm">
                     {user.id}
                   </div>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => copyToClipboard(user.id)}
-                  >
-                    <Copy className="h-4 w-4" />
-                  </Button>
+                  <CopyButton text={user.id} />
                 </div>
                 <p className="text-muted-foreground text-xs">
                   Please include this User ID when contacting support to help us

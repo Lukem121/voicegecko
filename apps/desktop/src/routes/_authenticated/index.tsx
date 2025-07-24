@@ -156,7 +156,6 @@ function RecordingPage() {
                   placeholder="Start typing or click the microphone to record..."
                   className="min-h-[200px] resize-none border-0 text-base focus-visible:ring-0"
                   value={transcript ?? ""}
-                  readOnly
                 />
                 <Tooltip>
                   <TooltipTrigger asChild>
