@@ -18,7 +18,8 @@
         "minimizable": true,
         "maximizable": true,
         "resizable": true,
-        "center": true
+        "center": true,
+        "decorations": false
       },
       {
         "label": "gecko-bar",

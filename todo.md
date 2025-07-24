@@ -7,6 +7,8 @@ TODO
 - [ ] Darkmode & lightmode on desktop app
 - [ ] Onboarding system
 - [ ] Prod error tracking?
+- [ ] Stats visible in app, like gamification
+- [ ] Send feedback button on transcripon.tsx
 
 After MVP
 

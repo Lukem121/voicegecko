@@ -51,6 +51,7 @@ function TranscriptionsPage() {
   const { deleteTranscription, isDeleting } = useDeleteTranscription();
   const [isSearchExpanded, setIsSearchExpanded] = useState(false);
   const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [openDropdownId, setOpenDropdownId] = useState<number | null>(null);
 
   const { loadMoreRef } = useInfiniteScroll({
     hasNextPage,
@@ -67,6 +68,7 @@ function TranscriptionsPage() {
     try {
       console.log("Deleting transcription:", id);
       setDeletingId(id);
+      setOpenDropdownId(null); // Close dropdown when deletion starts
       await deleteTranscription({ id });
     } catch (error) {
       console.error("Failed to delete transcription:", error);
@@ -236,7 +238,7 @@ function TranscriptionsPage() {
                       </div>
                       <div
                         className={`flex items-center gap-1 transition-opacity ${
-                          isBeingDeleted
+                          isBeingDeleted || openDropdownId === item.id
                             ? "opacity-100"
                             : "opacity-0 group-hover:opacity-100"
                         }`}
@@ -281,7 +283,11 @@ function TranscriptionsPage() {
                                 <p>Send feedback</p>
                               </TooltipContent>
                             </Tooltip>
-                            <DropdownMenu>
+                            <DropdownMenu
+                              onOpenChange={(open) => {
+                                setOpenDropdownId(open ? item.id : null);
+                              }}
+                            >
                               <DropdownMenuTrigger asChild>
                                 <Button
                                   variant="ghost"
