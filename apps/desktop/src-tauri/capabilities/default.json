@@ -51,6 +51,10 @@
     "global-shortcut:allow-unregister-all",
     "global-shortcut:allow-register",
     "global-shortcut:allow-unregister",
-    "clipboard-manager:allow-write-text"
+    "clipboard-manager:allow-write-text",
+    "core:window:allow-start-dragging",
+    "core:window:allow-close",
+    "core:window:allow-minimize",
+    "core:window:allow-toggle-maximize"
   ]
 }

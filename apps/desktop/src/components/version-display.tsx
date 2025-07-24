@@ -23,9 +23,9 @@ export function VersionDisplay() {
   }
 
   return (
-    <div className="pointer-events-none fixed right-4 bottom-4 z-50 select-none">
+    <div className="pointer-events-none fixed right-2 bottom-1 z-50 select-none">
       <span className="text-muted-foreground font-mono text-xs opacity-50">
-        v{version}
+        beta-v{version}
       </span>
     </div>
   );

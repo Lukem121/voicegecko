@@ -2,19 +2,14 @@
 
 import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
 
-import { Separator } from "@acme/ui/components/ui/separator";
-import {
-  SidebarInset,
-  SidebarProvider,
-  SidebarTrigger,
-} from "@acme/ui/components/ui/sidebar";
+import { SidebarInset, SidebarProvider } from "@acme/ui/components/ui/sidebar";
 
-import { AppBreadcrumb } from "~/components/app-breadcrumb";
 import { AppSidebar } from "~/components/app-sidebar";
 import {
   ConnectivityError,
   ConnectivityIndicator,
 } from "~/components/connectivity-error";
+import { TitleBar } from "~/components/custom-title-bar";
 import { useAuthWithConnectivity } from "~/hooks/use-auth-with-connectivity";
 
 export const Route = createFileRoute("/_authenticated")({
@@ -75,17 +70,13 @@ function AuthenticatedLayout() {
 
   // User is authenticated, render the protected content with sidebar
   return (
-    <SidebarProvider>
-      <AppSidebar />
-      <SidebarInset className="!ml-0">
-        <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
-          <div className="flex items-center gap-2 px-4">
-            <SidebarTrigger className="-ml-1" />
-            <Separator orientation="vertical" className="mr-2 h-4" />
-            <AppBreadcrumb />
-          </div>
-          {/* Show connectivity indicator in header when there are issues */}
-          <div className="ml-auto pr-4">
+    <>
+      <SidebarProvider>
+        <TitleBar />
+        <AppSidebar />
+        <SidebarInset className="!ml-0 pt-8 !shadow-none">
+          {/* Show connectivity indicator when there are issues */}
+          <div className="absolute top-10 right-4 z-50">
             <ConnectivityIndicator
               isOnline={auth.connectivity.isOnline}
               isApiReachable={auth.connectivity.isApiReachable}
@@ -94,11 +85,11 @@ function AuthenticatedLayout() {
               lastChecked={auth.connectivity.lastSuccessfulCheck}
             />
           </div>
-        </header>
-        <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
-          <Outlet />
-        </div>
-      </SidebarInset>
-    </SidebarProvider>
+          <div className="flex flex-1 flex-col gap-4 p-4">
+            <Outlet />
+          </div>
+        </SidebarInset>
+      </SidebarProvider>
+    </>
   );
 }

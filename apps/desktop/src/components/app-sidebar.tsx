@@ -16,7 +16,6 @@ import {
 } from "lucide-react";
 
 import { CopyButton } from "@acme/ui/components/copy";
-import LogoSquare from "@acme/ui/components/logos/logo-square";
 import {
   Avatar,
   AvatarFallback,
@@ -45,7 +44,6 @@ import {
   SidebarGroup,
   SidebarGroupContent,
   SidebarGroupLabel,
-  SidebarHeader,
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
@@ -176,26 +174,11 @@ export function AppSidebar() {
     : 0;
 
   return (
-    <Sidebar variant="inset" collapsible="icon">
-      <SidebarHeader>
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton size="lg" asChild>
-              <Link to="/">
-                <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
-                  <LogoSquare />
-                </div>
-                <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-semibold">VoiceGecko</span>
-                  <span className="truncate text-xs">
-                    Desktop Transcription
-                  </span>
-                </div>
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
-      </SidebarHeader>
+    <Sidebar
+      variant="inset"
+      collapsible="icon"
+      className="border-border top-12 h-[calc(100svh-3rem)] border-r"
+    >
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupLabel>Main</SidebarGroupLabel>
