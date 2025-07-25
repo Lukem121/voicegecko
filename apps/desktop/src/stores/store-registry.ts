@@ -37,24 +37,27 @@ class StoreRegistry {
     console.log("[StoreRegistry] Initializing all stores...");
 
     // Run migrations first
-    console.log("[StoreRegistry] Running settings migrations...");
+    console.log("[StoreRegistry] Running settings migration...");
     try {
-      const migrationResults = await migrationManager.migrateAllStores();
+      const migrationResult = await migrationManager.migrateSettings();
 
-      // Log migration results
-      for (const [storeName, result] of migrationResults) {
-        if (result.success && result.fromVersion !== result.toVersion) {
+      if (migrationResult.success) {
+        if (migrationResult.fromVersion !== migrationResult.toVersion) {
           console.log(
-            `[StoreRegistry] ✅ Migrated ${storeName} from v${result.fromVersion} to v${result.toVersion}`,
+            `[StoreRegistry] ✅ Migrated settings from v${migrationResult.fromVersion} to v${migrationResult.toVersion}`,
           );
-        } else if (!result.success) {
-          console.error(
-            `[StoreRegistry] ❌ Failed to migrate ${storeName}:`,
-            result.error,
+        } else {
+          console.log(
+            `[StoreRegistry] ✅ Settings already up to date (v${migrationResult.fromVersion})`,
           );
-          // You might want to handle migration failures differently
-          // For now, we'll continue with initialization
         }
+      } else {
+        console.error(
+          "[StoreRegistry] ❌ Failed to migrate settings:",
+          migrationResult.error,
+        );
+        // You might want to handle migration failures differently
+        // For now, we'll continue with initialization
       }
     } catch (error) {
       console.error("[StoreRegistry] Migration failed:", error);
