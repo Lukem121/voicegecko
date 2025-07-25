@@ -6,6 +6,7 @@ TODO
 - [ ] Onboarding system
 - [ ] user stats visible in app, like gamification
 - [ ] Landing page.
+- [ ] Links in the Emails need removing or implementing.
 
 After MVP
 
