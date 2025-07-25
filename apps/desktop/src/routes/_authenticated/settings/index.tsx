@@ -151,7 +151,10 @@ function SettingsPage() {
                 <Select
                   value={settings.audio.selectedSound}
                   onValueChange={updateNotificationSound}
-                  disabled={settings.audio.notificationTiming === "disabled"}
+                  disabled={
+                    settings.audio.notificationTiming === "disabled" ||
+                    !settings.personalization.interactionSounds
+                  }
                 >
                   <SelectTrigger id="notification-sound">
                     <SelectValue />
@@ -171,6 +174,7 @@ function SettingsPage() {
                 <Select
                   value={settings.audio.notificationTiming}
                   onValueChange={updateNotificationTiming}
+                  disabled={!settings.personalization.interactionSounds}
                 >
                   <SelectTrigger id="notification-timing">
                     <SelectValue />
@@ -200,6 +204,7 @@ function SettingsPage() {
                   onValueChange={(v) => updateNotificationVolume(v[0] ?? 1)}
                   max={1}
                   step={0.1}
+                  disabled={!settings.personalization.interactionSounds}
                 />
                 <Button
                   variant="outline"
@@ -207,11 +212,20 @@ function SettingsPage() {
                   className="h-8 w-8"
                   onClick={playTestSound}
                   type="button"
+                  disabled={!settings.personalization.interactionSounds}
                 >
                   <Volume2 className="h-4 w-4" />
                 </Button>
               </div>
             </div>
+
+            {!settings.personalization.interactionSounds && (
+              <p className="text-muted-foreground text-xs">
+                Notification sound settings are{" "}
+                <span className="italic">disabled</span> because interaction
+                sounds are turned off in the Personalization section.
+              </p>
+            )}
 
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
