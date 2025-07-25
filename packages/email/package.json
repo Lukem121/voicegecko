@@ -9,6 +9,7 @@
     }
   },
   "scripts": {
+    "dev": "email dev --dir ./src/emails",
     "build": "tsc",
     "clean": "git clean -xdf .cache .turbo dist node_modules",
     "typecheck": "tsc --noEmit --emitDeclarationOnly false"
@@ -25,10 +26,12 @@
     "@acme/eslint-config": "workspace:*",
     "@acme/prettier-config": "workspace:*",
     "@acme/tsconfig": "workspace:*",
+    "@react-email/preview-server": "4.2.4",
     "@types/react": "catalog:react19",
     "@types/react-dom": "catalog:react19",
     "eslint": "catalog:",
     "prettier": "catalog:",
+    "react-email": "^4.2.4",
     "typescript": "catalog:"
   }
 }

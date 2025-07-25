@@ -1,7 +1,5 @@
-import * as React from "react";
 import {
   Body,
-  Column,
   Container,
   Head,
   Heading,
@@ -9,11 +7,12 @@ import {
   Img,
   Link,
   Preview,
-  Row,
   Section,
   Tailwind,
   Text,
 } from "@react-email/components";
+
+import { EmailFooter } from "../components/email-footer";
 
 interface LinkEmailProps {
   heading: string;
@@ -22,17 +21,17 @@ interface LinkEmailProps {
 }
 
 const logoUrl =
-  "https://utfs.io/f/SYU615OjI5Qzt9xtEZV4oz5ETXIacVLrg1DiwfSHdv7YmGtU";
+  "https://90yklj7887.ufs.sh/f/Wzb1OBsC8B6Zmsa6y8txHjw8FtJgoYun3QXP4fViazMpIhRc";
 
 export const LinkTemplate = ({ heading, description, url }: LinkEmailProps) => (
   <Tailwind>
     <Html>
       <Head />
       <Preview>{heading}</Preview>
-      <Body className="mx-auto bg-white font-sans">
+      <Body className="mx-auto bg-white px-4 font-sans">
         <Container className="mx-auto w-[580px] max-w-full py-5 pb-12">
           <Section className="mt-8">
-            <Img src={logoUrl} width="144" height="36" alt="SMMHubX Logo" />
+            <Img src={logoUrl} height="42" alt="VoiceGecko Logo" />
           </Section>
           <Heading className="my-7 text-3xl leading-tight font-bold text-[#1d1c1d]">
             {heading}
@@ -53,55 +52,7 @@ export const LinkTemplate = ({ heading, description, url }: LinkEmailProps) => (
             you can safely ignore it.
           </Text>
 
-          <Section>
-            <Row className="mb-8 w-full px-2">
-              <Column className="w-2/3">
-                <Img src={logoUrl} width="144" height="36" alt="SMMHubX Logo" />
-              </Column>
-            </Row>
-          </Section>
-
-          <Section>
-            <Link
-              className="text-[#b7b7b7] underline hover:text-gray-600"
-              href="https://docs.smmhubx.com"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Docs
-            </Link>
-            &nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;
-            <Link
-              className="text-[#b7b7b7] underline hover:text-gray-600"
-              href="https://www.smmhubx.com/legal"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Policies
-            </Link>
-            &nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;
-            <Link
-              className="text-[#b7b7b7] underline hover:text-gray-600"
-              href="https://www.smmhubx.com/help"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Help center
-            </Link>
-            &nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;
-            <Link
-              className="text-[#b7b7b7] underline hover:text-gray-600"
-              href="https://discord.gg/BFxNQCzZjB"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Discord Community
-            </Link>
-            <Text className="mb-12 text-left text-xs leading-4 text-[#b7b7b7]">
-              ©2025 SMMHUBX, SFN. <br />
-              All rights reserved.
-            </Text>
-          </Section>
+          <EmailFooter />
         </Container>
       </Body>
     </Html>

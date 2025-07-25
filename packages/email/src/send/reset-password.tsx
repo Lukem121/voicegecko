@@ -19,15 +19,15 @@ export const sendResetPasswordEmail = async ({
       name: user.name,
     },
     from: {
-      email: "no-reply@smmhubx.com",
-      name: "smmhubx",
+      email: "no-reply@voicegecko.io",
+      name: "VoiceGecko",
     },
     categories: ["reset_password"],
     subject: "Reset your password",
     react: (
       <LinkTemplate
         heading="Reset your password"
-        description="Your reset password link is below - click it to reset your password. This will redirect you back to smmhubx."
+        description="Your reset password link is below - click it to reset your password. This will redirect you back to VoiceGecko."
         url={url}
       />
     ),

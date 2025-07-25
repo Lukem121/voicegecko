@@ -2,5 +2,9 @@
 export { sendEmail } from "./lib/send-email";
 
 // Re-export email functions
-export { sendVerificationEmail } from "./emails/verification";
-export { sendResetPasswordEmail } from "./emails/reset-password";
+export { sendVerificationEmail } from "./send/verification";
+export { sendResetPasswordEmail } from "./send/reset-password";
+export { sendWelcomeEmail } from "./send/welcome";
+export { sendWelcomeProEmail } from "./send/welcome-pro";
+export { sendPaymentFailedEmail } from "./send/payment-failed";
+export { sendSubscriptionCancelledEmail } from "./send/subscription-cancelled";
