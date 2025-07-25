@@ -22,6 +22,7 @@ import {
 } from "@acme/ui/components/ui/card";
 import { cn } from "@acme/ui/lib/utils";
 
+import { StudentDiscountModal } from "~/components/student-discount-modal";
 import { authClient } from "~/lib/auth/client";
 import { useTRPC } from "~/trpc/react";
 import { useCreateBillingPortalSession } from "../../_hooks/use-create-billing-portal-session";
@@ -174,6 +175,7 @@ export default function Plans({ prices, subscription, error }: PlansProps) {
     title: "",
     message: "",
   });
+  const [isStudentModalOpen, setIsStudentModalOpen] = useState(false);
 
   const { data: session } = authClient.useSession();
   const trpc = useTRPC();
@@ -591,7 +593,7 @@ export default function Plans({ prices, subscription, error }: PlansProps) {
               Students get 50% off the Pro plan
             </p>
           </div>
-          <Button variant="outline" disabled>
+          <Button variant="outline" onClick={() => setIsStudentModalOpen(true)}>
             Get started
           </Button>
         </div>
@@ -619,6 +621,11 @@ export default function Plans({ prices, subscription, error }: PlansProps) {
           data={teamCollaborationData}
         />
       </div>
+
+      <StudentDiscountModal
+        isOpen={isStudentModalOpen}
+        onClose={() => setIsStudentModalOpen(false)}
+      />
     </div>
   );
 }

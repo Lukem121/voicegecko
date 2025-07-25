@@ -21,7 +21,7 @@
     "@acme/auth": "workspace:*",
     "@acme/ui": "workspace:*",
     "@daveyplate/better-auth-tauri": "^0.0.24",
-    "@hookform/resolvers": "^5.1.1",
+    "@hookform/resolvers": "^5.2.0",
     "@tailwindcss/vite": "^4.1.11",
     "@tanstack/react-query": "catalog:",
     "@tanstack/react-router": "^1.129.8",
