@@ -10,7 +10,7 @@ import type {
 } from "~/types/events";
 import { transcriptionService } from "~/services/transcription.service";
 import { useEventStore } from "~/stores/event.store";
-import { queryClient, trpc, trpcClient } from "~/trpc";
+import { queryClient, trpcClient } from "~/trpc";
 
 let initialized = false;
 let initializationId: string | null = null;
@@ -62,7 +62,7 @@ export async function initializeTauriEvents(
         console.log(
           "[TauriEvents] Handling transcription completion in main window",
         );
-        void store.handleTranscriptionComplete(payload.data, metadata);
+        void store.handleTranscriptionComplete(payload.data ?? "", metadata);
       }
     });
 
@@ -75,72 +75,81 @@ export async function initializeTauriEvents(
     });
 
     // Listen for cloud transcription requests
-    await listen("cloud-transcription-requested", async (event) => {
-      const audioData = event.payload as AudioData;
-      console.log("[TauriEvents] ☁️ Cloud transcription requested", {
-        samplesLength: audioData.samples.length,
-        sampleRate: audioData.sample_rate,
-      });
-
-      try {
-        // Update UI to show transcribing state
-        const store = useEventStore.getState();
-        store.setTranscriptionProgress("Transcribing");
-
-        // Call the cloud transcription API
-        const result = await trpcClient.transcription.cloudTranscribe.mutate({
-          audioData: Array.from(audioData.samples),
+    await listen("cloud-transcription-requested", (event) => {
+      void (async () => {
+        const audioData = event.payload as AudioData;
+        console.log("[TauriEvents] ☁️ Cloud transcription requested", {
+          samplesLength: audioData.samples.length,
           sampleRate: audioData.sample_rate,
         });
 
-        // Directly update the store instead of emitting an event that we'll catch ourselves
-        const metadata = {
-          duration_seconds: audioData.samples.length / audioData.sample_rate,
-          model_used: result.modelUsed,
-          sample_rate: audioData.sample_rate,
-        };
+        try {
+          // Update UI to show transcribing state
+          const store = useEventStore.getState();
+          store.setTranscriptionProgress("Transcribing");
 
-        // Update transcription progress to complete
-        store.setTranscriptionProgress("Complete", result.transcript, metadata);
+          // Call the cloud transcription API
+          const result = await trpcClient.transcription.cloudTranscribe.mutate({
+            audioData: Array.from(audioData.samples),
+            sampleRate: audioData.sample_rate,
+          });
 
-        // Handle completion business logic only if not in gecko bar
-        if (!options.isGeckoBar && result.transcript) {
-          // For cloud transcriptions, the backend already saved the transcription
-          // So we only need to handle clipboard and play notification sound
-          await transcriptionService.handleCompletedTranscription(
+          // Directly update the store instead of emitting an event that we'll catch ourselves
+          const metadata = {
+            duration_seconds: audioData.samples.length / audioData.sample_rate,
+            model_used: result.modelUsed,
+            sample_rate: audioData.sample_rate,
+          };
+
+          // Update transcription progress to complete
+          store.setTranscriptionProgress(
+            "Complete",
             result.transcript,
-          );
-          await transcriptionService.playEndSoundIfEnabled();
-
-          // Invalidate queries to update UI
-          console.log(
-            "[TauriEvents] 🔄 Invalidating queries after cloud transcription...",
+            metadata,
           );
 
-          await queryClient.invalidateQueries({
-            queryKey: ["transcription"],
-          });
+          // Handle completion business logic only if not in gecko bar
+          if (!options.isGeckoBar && result.transcript) {
+            // For cloud transcriptions, the backend already saved the transcription
+            // So we only need to handle clipboard and play notification sound
+            await transcriptionService.handleCompletedTranscription(
+              result.transcript,
+            );
+            await transcriptionService.playEndSoundIfEnabled();
 
-          await queryClient.invalidateQueries({
-            queryKey: ["usage"],
-          });
+            // Invalidate queries to update UI
+            console.log(
+              "[TauriEvents] 🔄 Invalidating queries after cloud transcription...",
+            );
 
-          console.log("[TauriEvents] ✅ Cache invalidation completed");
+            await queryClient.invalidateQueries({
+              queryKey: ["transcription"],
+            });
+
+            await queryClient.invalidateQueries({
+              queryKey: ["usage"],
+            });
+
+            console.log("[TauriEvents] ✅ Cache invalidation completed");
+          }
+        } catch (error) {
+          console.error("[TauriEvents] Cloud transcription error:", error);
+
+          // Update error state directly
+          const store = useEventStore.getState();
+          store.setTranscriptionProgress(
+            "Error",
+            error instanceof Error
+              ? error.message
+              : "Cloud transcription failed",
+          );
+
+          toast.error("Cloud transcription failed", {
+            description:
+              error instanceof Error ? error.message : "Unknown error",
+          });
         }
-      } catch (error) {
-        console.error("[TauriEvents] Cloud transcription error:", error);
-
-        // Update error state directly
-        const store = useEventStore.getState();
-        store.setTranscriptionProgress(
-          "Error",
-          error instanceof Error ? error.message : "Cloud transcription failed",
-        );
-
-        toast.error("Cloud transcription failed", {
-          description: error instanceof Error ? error.message : "Unknown error",
-        });
-      }
+      })();
     });
 
     // Listen for recording errors
