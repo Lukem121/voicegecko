@@ -83,6 +83,13 @@ export const serverAuth = betterAuth({
         onSubscriptionUpdate,
         onSubscriptionCancel,
         onSubscriptionDeleted,
+        getCheckoutSessionParams: () => {
+          return {
+            params: {
+              allow_promotion_codes: true,
+            },
+          };
+        },
       },
     }),
     oAuthProxy({

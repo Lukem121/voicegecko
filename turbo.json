@@ -52,7 +52,8 @@
     "AUTH_REDIRECT_PROXY_URL",
     "AUTH_SECRET",
     "PORT",
-    "OPENAI_API_KEY"
+    "OPENAI_API_KEY",
+    "NEXT_PUBLIC_VOICEGECKO_URL"
   ],
   "globalPassThroughEnv": [
     "NODE_ENV",
