@@ -688,6 +688,9 @@ importers:
       '@acme/db':
         specifier: workspace:*
         version: link:../db
+      '@acme/email':
+        specifier: workspace:*
+        version: link:../email
       '@acme/validators':
         specifier: workspace:*
         version: link:../validators

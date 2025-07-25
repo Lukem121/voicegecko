@@ -1,6 +1,11 @@
 import type { StripePlan, Subscription } from "@better-auth/stripe";
 import type { Stripe } from "stripe";
 
+import { sendWelcomeProEmail } from "@acme/email";
+
+import { paymentEnv } from "../../env";
+import { getUserForEmail } from "./user-lookup";
+
 interface SubscriptionCompleteParams {
   event: Stripe.Event;
   subscription: Subscription;
@@ -16,12 +21,32 @@ export const onSubscriptionComplete = async ({
 }: SubscriptionCompleteParams) => {
   console.log(`[Subscription] New subscription created:`, {
     subscriptionId: subscription.id,
-    userId: subscription.id, // This is the user ID in BetterAuth
+    userId: subscription.referenceId, // This is the user ID in BetterAuth
     plan: plan.name,
     status: subscription.status,
     periodStart: subscription.periodStart,
     periodEnd: subscription.periodEnd,
   });
+
+  // Send welcome pro email to the user
+  try {
+    const user = await getUserForEmail(subscription.referenceId);
+    if (user) {
+      await sendWelcomeProEmail({
+        user,
+        planName: plan.name,
+      });
+      console.log(
+        `[Subscription] Welcome email sent to user ${subscription.referenceId} for plan ${plan.name}`,
+      );
+    } else {
+      console.error(
+        `[Subscription] Could not find user ${subscription.referenceId} to send welcome email`,
+      );
+    }
+  } catch (error) {
+    console.error(`[Subscription] Error sending welcome email:`, error);
+  }
 
   // No special handling needed - our usage service already checks
   // subscription status and will automatically grant unlimited access
