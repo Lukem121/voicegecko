@@ -1,7 +1,6 @@
 import { queryClient, trpc, trpcClient } from "~/trpc";
 
 export interface CreateTranscriptionInput {
-  id: string;
   content: string;
   status: "normal" | "silent";
   durationSeconds?: number;

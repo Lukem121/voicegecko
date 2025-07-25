@@ -153,18 +153,14 @@ export const useEventStore = create<EventState>()(
         console.log("[EventStore] 📊 Metadata:", metadata);
 
         try {
-          const status =
+          const status: "silent" | "normal" =
             !transcript.trim() ||
             (metadata?.duration_seconds && metadata.duration_seconds < 1)
               ? "silent"
               : "normal";
           const content = status === "silent" ? "Audio is silent." : transcript;
 
-          // Generate a unique ID for the transcription
-          const id = crypto.randomUUID();
-
           const transcriptionData = {
-            id,
             content,
             status,
             durationSeconds:
