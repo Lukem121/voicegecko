@@ -25,6 +25,7 @@ import {
   TooltipTrigger,
 } from "@acme/ui/components/ui/tooltip";
 
+import { FeedbackModal } from "~/components/feedback-modal";
 import { TranscriptionSkeleton } from "~/components/transcription-skeleton";
 import { useDeleteTranscription } from "~/features/transcription/use-delete-transcription";
 import { useInfiniteTranscriptions } from "~/features/transcription/use-infinite-transcriptions";
@@ -52,6 +53,15 @@ function TranscriptionsPage() {
   const [isSearchExpanded, setIsSearchExpanded] = useState(false);
   const [deletingId, setDeletingId] = useState<number | null>(null);
   const [openDropdownId, setOpenDropdownId] = useState<number | null>(null);
+  const [feedbackModal, setFeedbackModal] = useState<{
+    isOpen: boolean;
+    transcriptionId: number;
+    content: string;
+  }>({
+    isOpen: false,
+    transcriptionId: 0,
+    content: "",
+  });
 
   const { loadMoreRef } = useInfiniteScroll({
     hasNextPage,
@@ -60,8 +70,12 @@ function TranscriptionsPage() {
     threshold: 800, // Start loading when 800px from bottom
   });
 
-  const handleSendFeedback = (id: number) => {
-    console.log("Send feedback for:", id);
+  const handleSendFeedback = (id: number, content: string) => {
+    setFeedbackModal({
+      isOpen: true,
+      transcriptionId: id,
+      content: content,
+    });
   };
 
   const handleDeleteTranscript = async (id: number) => {
@@ -272,7 +286,7 @@ function TranscriptionsPage() {
                                   size="sm"
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    handleSendFeedback(item.id);
+                                    handleSendFeedback(item.id, item.content);
                                   }}
                                   className="h-8 w-8 p-0"
                                 >
@@ -389,6 +403,16 @@ function TranscriptionsPage() {
           </p>
         </div>
       )}
+
+      {/* Feedback Modal */}
+      <FeedbackModal
+        isOpen={feedbackModal.isOpen}
+        onClose={() =>
+          setFeedbackModal({ isOpen: false, transcriptionId: 0, content: "" })
+        }
+        transcriptionId={feedbackModal.transcriptionId}
+        transcriptionContent={feedbackModal.content}
+      />
     </div>
   );
 }

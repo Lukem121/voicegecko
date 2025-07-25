@@ -3,11 +3,13 @@ import { TRPCError } from "@trpc/server";
 import { z } from "zod/v4";
 
 import { apiEnv } from "../../env";
+import { DiscordAdapter } from "../adapters/discord.adapter";
 import { dictionaryService } from "../services/dictionary/dictionary.service";
 import { CloudTranscriptionService } from "../services/transcription/cloud-transcription.service";
 import { transcriptionService } from "../services/transcription/transcription.service";
 import { usageService } from "../services/usage/usage.service";
 import { protectedProcedure } from "../trpc";
+import { feedbackError } from "../types/result";
 import { convertFloat32ToWav } from "../utils/audio-converter";
 import { countWords } from "../utils/word-counter";
 
@@ -15,6 +17,10 @@ const env = apiEnv();
 const cloudTranscriptionService = new CloudTranscriptionService(
   env.OPENAI_API_KEY,
 );
+const discordAdapter = new DiscordAdapter();
+
+// Feedback constraints
+const MAX_FEEDBACK_LENGTH = 1000; // Stay well under Discord's 1024 character limit
 
 export const transcriptionRouter = {
   create: protectedProcedure
@@ -144,5 +150,87 @@ export const transcriptionRouter = {
         transcriptionId: result?.id,
         modelUsed: "whisper-1",
       };
+    }),
+  sendFeedback: protectedProcedure
+    .input(
+      z.object({
+        transcriptionId: z.number(),
+        feedback: z.string().min(1).max(MAX_FEEDBACK_LENGTH),
+      }),
+    )
+    .mutation(async ({ ctx, input }) => {
+      const userId = ctx.session.user.id;
+      const feedback = input.feedback.trim();
+
+      // Validate feedback content
+      if (!feedback) {
+        return {
+          success: false as const,
+          error: feedbackError.feedbackEmpty(),
+        };
+      }
+
+      if (feedback.length > MAX_FEEDBACK_LENGTH) {
+        return {
+          success: false as const,
+          error: feedbackError.feedbackTooLong(
+            MAX_FEEDBACK_LENGTH,
+            feedback.length,
+          ),
+        };
+      }
+
+      try {
+        // Get the transcription details
+        const transcription = await transcriptionService.getTranscriptionById(
+          input.transcriptionId,
+          userId,
+        );
+
+        // Send feedback via Discord
+        await discordAdapter.sendFeedbackReport({
+          feedbackType: "general",
+          message: feedback,
+          userId: userId,
+          additionalContext: {
+            transcriptionId: input.transcriptionId,
+            transcriptionContent: transcription.content,
+            transcriptionStatus: transcription.status,
+            transcriptionDate: transcription.createdAt.toISOString(),
+          },
+          timestamp: new Date().toISOString(),
+        });
+
+        return {
+          success: true as const,
+          data: { message: "Feedback sent successfully" },
+        };
+      } catch (error) {
+        console.error("Failed to send feedback:", error);
+
+        // Handle specific error types
+        if (error instanceof TRPCError && error.code === "NOT_FOUND") {
+          return {
+            success: false as const,
+            error: feedbackError.transcriptionNotFound(input.transcriptionId),
+          };
+        }
+
+        // Handle Discord sending errors
+        if (error instanceof Error && error.message.includes("Discord")) {
+          return {
+            success: false as const,
+            error: feedbackError.discordSendFailed(error.message),
+          };
+        }
+
+        // Generic internal error
+        return {
+          success: false as const,
+          error: feedbackError.internalError(
+            error instanceof Error ? error.message : "Unknown error occurred",
+          ),
+        };
+      }
     }),
 } satisfies TRPCRouterRecord;

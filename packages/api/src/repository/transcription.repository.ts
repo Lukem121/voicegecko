@@ -134,6 +134,27 @@ class TranscriptionRepository {
     };
   }
 
+  async findById(id: number, userId: string) {
+    const [result] = await db
+      .select({
+        id: TranscriptionTable.id,
+        content: TranscriptionTable.content,
+        status: TranscriptionTable.status,
+        createdAt: TranscriptionTable.createdAt,
+        userId: TranscriptionTable.userId,
+      })
+      .from(TranscriptionTable)
+      .where(
+        and(
+          eq(TranscriptionTable.id, id),
+          eq(TranscriptionTable.userId, userId),
+        ),
+      )
+      .limit(1);
+
+    return result;
+  }
+
   async deleteById(id: number, userId: string) {
     const [result] = await db
       .delete(TranscriptionTable)
