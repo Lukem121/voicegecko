@@ -46,7 +46,6 @@ export const Route = createFileRoute("/_authenticated/")({
 });
 
 function RecordingPage() {
-  const user = useUser();
   const { transcriptions } = useGetTranscriptions();
   const { deleteTranscription } = useDeleteTranscription();
   const [isProcessing, setIsProcessing] = useState(false);
