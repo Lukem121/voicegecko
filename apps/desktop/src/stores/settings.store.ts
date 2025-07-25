@@ -113,8 +113,7 @@ interface SettingsState {
   playTestSound: () => Promise<void>;
 }
 
-const audioStore = new LazyStore("settings.json");
-const generalStore = new LazyStore("general-settings.json");
+const settingsStore = new LazyStore("settings.json");
 
 // Default settings
 const defaultSettings: AppSettings = {
@@ -260,7 +259,7 @@ export const useSettingsStore = create<SettingsState>()(
           audio: { ...settings.audio, selectedDevice: device },
         };
         set({ settings: newSettings });
-        await saveWithMeta(audioStore, "selectedDevice", device);
+        await saveWithMeta(settingsStore, "selectedDevice", device);
       },
 
       updateNotificationSound: async (sound) => {
@@ -270,7 +269,7 @@ export const useSettingsStore = create<SettingsState>()(
           audio: { ...settings.audio, selectedSound: sound },
         };
         set({ settings: newSettings });
-        await saveWithMeta(audioStore, "selectedSound", sound);
+        await saveWithMeta(settingsStore, "selectedSound", sound);
       },
 
       updateNotificationTiming: async (timing) => {
@@ -280,7 +279,7 @@ export const useSettingsStore = create<SettingsState>()(
           audio: { ...settings.audio, notificationTiming: timing },
         };
         set({ settings: newSettings });
-        await saveWithMeta(audioStore, "notificationTiming", timing);
+        await saveWithMeta(settingsStore, "notificationTiming", timing);
       },
 
       updateNotificationVolume: async (volume) => {
@@ -290,7 +289,7 @@ export const useSettingsStore = create<SettingsState>()(
           audio: { ...settings.audio, notificationVolume: volume },
         };
         set({ settings: newSettings });
-        await saveWithMeta(audioStore, "notificationVolume", volume);
+        await saveWithMeta(settingsStore, "notificationVolume", volume);
         await invoke("set_volume", { volume });
       },
 
@@ -301,7 +300,7 @@ export const useSettingsStore = create<SettingsState>()(
           audio: { ...settings.audio, muteSystemAudio: mute },
         };
         set({ settings: newSettings });
-        await saveWithMeta(audioStore, "muteSystemAudio", mute);
+        await saveWithMeta(settingsStore, "muteSystemAudio", mute);
       },
 
       updateLaunchOnStartup: async (enabled) => {
@@ -357,7 +356,7 @@ export const useSettingsStore = create<SettingsState>()(
           privacy: { ...settings.privacy, [key]: value },
         };
         set({ settings: newSettings });
-        await saveWithMeta(generalStore, `privacy.${key}`, value);
+        await saveWithMeta(settingsStore, `privacy.${key}`, value);
       },
 
       updatePersonalizationSetting: async (key, value) => {
@@ -367,7 +366,7 @@ export const useSettingsStore = create<SettingsState>()(
           personalization: { ...settings.personalization, [key]: value },
         };
         set({ settings: newSettings });
-        await saveWithMeta(generalStore, `personalization.${key}`, value);
+        await saveWithMeta(settingsStore, `personalization.${key}`, value);
       },
 
       refreshAudioDevices: async () => {
@@ -515,37 +514,38 @@ async function loadAudioSettings(): Promise<AudioSettings> {
   // Load settings without migration - that's handled by the migration manager
   return {
     selectedDevice:
-      (await audioStore.get<AudioDevice>("selectedDevice")) ?? null,
+      (await settingsStore.get<AudioDevice>("selectedDevice")) ?? null,
     selectedSound:
-      (await audioStore.get<NotificationSound>("selectedSound")) ?? "chime",
+      (await settingsStore.get<NotificationSound>("selectedSound")) ?? "chime",
     notificationTiming:
-      (await audioStore.get<NotificationTiming>("notificationTiming")) ??
+      (await settingsStore.get<NotificationTiming>("notificationTiming")) ??
       "start_completion",
     notificationVolume:
-      (await audioStore.get<number>("notificationVolume")) ?? 1.0,
-    muteSystemAudio: (await audioStore.get<boolean>("muteSystemAudio")) ?? true,
+      (await settingsStore.get<number>("notificationVolume")) ?? 1.0,
+    muteSystemAudio:
+      (await settingsStore.get<boolean>("muteSystemAudio")) ?? true,
   };
 }
 
 async function loadPrivacySettings(): Promise<PrivacySettings> {
   return {
     usageAnalytics:
-      (await generalStore.get<boolean>("privacy.usageAnalytics")) ?? false,
+      (await settingsStore.get<boolean>("privacy.usageAnalytics")) ?? false,
     crashReports:
-      (await generalStore.get<boolean>("privacy.crashReports")) ?? true,
+      (await settingsStore.get<boolean>("privacy.crashReports")) ?? true,
   };
 }
 
 async function loadPersonalizationSettings(): Promise<PersonalizationSettings> {
   return {
     interactionSounds:
-      (await generalStore.get<boolean>("personalization.interactionSounds")) ??
+      (await settingsStore.get<boolean>("personalization.interactionSounds")) ??
       true,
     smartFormatting:
-      (await generalStore.get<boolean>("personalization.smartFormatting")) ??
+      (await settingsStore.get<boolean>("personalization.smartFormatting")) ??
       true,
     autoAddToDictionary:
-      (await generalStore.get<boolean>(
+      (await settingsStore.get<boolean>(
         "personalization.autoAddToDictionary",
       )) ?? true,
   };
