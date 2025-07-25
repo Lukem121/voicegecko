@@ -5,8 +5,12 @@ TODO
 - [ ] Prod error tracking?
 - [ ] Onboarding system
 - [ ] user stats visible in app, like gamification
-- [ ] Landing page.
+- [ ] Landing page & subsequent pages
 - [ ] Links in the Emails need removing or implementing.
+
+Pre Launch Checks
+
+- [ ] Check added stripe student coupon code: RYGALTMSXJAA
 
 After MVP
 
