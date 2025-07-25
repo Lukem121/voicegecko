@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { Link, useLocation } from "@tanstack/react-router";
 import { open } from "@tauri-apps/plugin-shell";
 import {
+  BookOpen,
   ChartBar,
   ChevronUp,
   CreditCard,
@@ -112,6 +113,11 @@ const data: NavigationData = {
       title: "Transcriptions",
       url: "/transcriptions",
       icon: FileText,
+    },
+    {
+      title: "Dictionary",
+      url: "/dictionary",
+      icon: BookOpen,
     },
   ],
   navSecondary: [
