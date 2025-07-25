@@ -14,45 +14,41 @@ export class SettingsMigrationManager {
   }
 
   /**
-   * Create a backup of current settings in a separate store
+   * Ensure settings have proper versioning metadata
+   * Since we're at version 1 with no migrations, this just adds _meta if missing
    */
-  private async backupSettings(
-    storeName: string,
-    settings: any,
-  ): Promise<string> {
-    const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
-    const backupStoreName = `${storeName}-backup-${timestamp}.json`;
-    const backupStore = new LazyStore(backupStoreName);
+  async migrateSettings(): Promise<MigrationResult> {
+    const store = new LazyStore("settings.json");
 
-    // Write all settings to backup store
-    for (const [key, value] of Object.entries(settings)) {
-      await backupStore.set(key, value);
-    }
-    await backupStore.save();
-
-    console.log(`[Migration] Backed up settings to: ${backupStoreName}`);
-    return backupStoreName;
-  }
-
-  /**
-   * Migrate settings from a store
-   */
-  async migrateStore(
-    store: LazyStore,
-    storeName: string,
-  ): Promise<MigrationResult> {
     try {
-      // Load all settings
+      // Load settings
       const entries = await store.entries();
-      const settings: any = Object.fromEntries(entries);
+      const settings: VersionedSettings = Object.fromEntries(
+        entries,
+      ) as VersionedSettings;
 
-      // Determine current version
-      const currentVersion = settings._meta?.version || 1;
+      // Initialize _meta if it doesn't exist (new users)
+      if (!settings._meta) {
+        settings._meta = {
+          version: CURRENT_SETTINGS_VERSION,
+          timestamp: Date.now(),
+        };
+
+        // Save the updated settings with version info
+        await store.set("_meta", settings._meta);
+        await store.save();
+
+        console.log(
+          `[Migration] Added versioning metadata (v${CURRENT_SETTINGS_VERSION})`,
+        );
+      }
+
+      const currentVersion = settings._meta.version;
 
       // Check if migration is needed
       if (currentVersion >= CURRENT_SETTINGS_VERSION) {
         console.log(
-          `[Migration] ${storeName} is already at version ${currentVersion}`,
+          `[Migration] Settings already up to date (v${currentVersion})`,
         );
         return {
           success: true,
@@ -61,50 +57,56 @@ export class SettingsMigrationManager {
         };
       }
 
-      // Create backup before migration
-      await this.backupSettings(storeName, settings);
-
-      // Get migrations to run
+      // Get migrations to run (should be empty at version 1)
       const migrations = getMigrationsToRun(
         currentVersion,
         CURRENT_SETTINGS_VERSION,
       );
 
-      console.log(
-        `[Migration] Running ${migrations.length} migrations for ${storeName}`,
-      );
+      if (migrations.length > 0) {
+        console.log(`[Migration] Running ${migrations.length} migrations...`);
 
-      // Run migrations
-      let migratedSettings = settings;
-      for (const migration of migrations) {
+        // Run migrations
+        let migratedSettings = settings;
+        for (const migration of migrations) {
+          console.log(`[Migration] Applying: ${migration.description}`);
+          migratedSettings = migration.up(migratedSettings);
+        }
+
+        // Validate migration result
+        if (
+          !migratedSettings._meta ||
+          migratedSettings._meta.version !== CURRENT_SETTINGS_VERSION
+        ) {
+          throw new Error("Migration failed to update version correctly");
+        }
+
+        // Save migrated settings
+        await store.clear();
+        for (const [key, value] of Object.entries(migratedSettings)) {
+          await store.set(key, value);
+        }
+        await store.save();
+
         console.log(
-          `[Migration] Running migration ${migration.version}: ${migration.description}`,
+          `[Migration] Successfully migrated to v${CURRENT_SETTINGS_VERSION}`,
         );
-        migratedSettings = migration.up(migratedSettings);
+
+        return {
+          success: true,
+          fromVersion: currentVersion,
+          toVersion: CURRENT_SETTINGS_VERSION,
+        };
       }
 
-      // Clear the store and write migrated settings
-      await store.clear();
-
-      // Write each key-value pair
-      for (const [key, value] of Object.entries(migratedSettings)) {
-        await store.set(key, value);
-      }
-
-      await store.save();
-
-      console.log(
-        `[Migration] Successfully migrated ${storeName} from v${currentVersion} to v${CURRENT_SETTINGS_VERSION}`,
-      );
-
+      // No migrations needed
       return {
         success: true,
         fromVersion: currentVersion,
         toVersion: CURRENT_SETTINGS_VERSION,
-        backedUp: true,
       };
     } catch (error) {
-      console.error(`[Migration] Failed to migrate ${storeName}:`, error);
+      console.error("[Migration] Migration failed:", error);
       return {
         success: false,
         fromVersion: 0,
@@ -115,85 +117,16 @@ export class SettingsMigrationManager {
   }
 
   /**
-   * Check if a store needs migration
+   * Check if settings need migration
    */
-  async needsMigration(store: LazyStore): Promise<boolean> {
+  async needsMigration(): Promise<boolean> {
     try {
+      const store = new LazyStore("settings.json");
       const meta = await store.get<{ version: number }>("_meta");
-      const version = meta?.version || 1;
+      const version = meta?.version ?? 1;
       return version < CURRENT_SETTINGS_VERSION;
     } catch {
-      // If we can't read the version, assume migration is needed
-      return true;
-    }
-  }
-
-  /**
-   * Migrate all stores
-   */
-  async migrateAllStores(): Promise<Map<string, MigrationResult>> {
-    const results = new Map<string, MigrationResult>();
-
-    // List of stores to migrate
-    const stores = [
-      { store: new LazyStore("settings.json"), name: "settings" },
-      {
-        store: new LazyStore("general-settings.json"),
-        name: "general-settings",
-      },
-      { store: new LazyStore("shortcuts.json"), name: "shortcuts" },
-    ];
-
-    for (const { store, name } of stores) {
-      if (await this.needsMigration(store)) {
-        const result = await this.migrateStore(store, name);
-        results.set(name, result);
-      }
-    }
-
-    return results;
-  }
-
-  /**
-   * Get backup store names (Note: This is limited by what Tauri provides)
-   */
-  async getBackupStoreNames(): Promise<string[]> {
-    // Tauri doesn't provide a way to list stores, so we'd need to track them
-    // separately or use a naming convention with timestamps
-    console.warn(
-      "[Migration] Listing backups not implemented - would need separate tracking",
-    );
-    return [];
-  }
-
-  /**
-   * Restore settings from a backup store
-   */
-  async restoreFromBackup(
-    backupStoreName: string,
-    targetStoreName: string,
-  ): Promise<void> {
-    try {
-      const backupStore = new LazyStore(backupStoreName);
-      const targetStore = new LazyStore(`${targetStoreName}.json`);
-
-      // Load all entries from backup
-      const entries = await backupStore.entries();
-
-      // Clear target and restore
-      await targetStore.clear();
-
-      for (const [key, value] of entries) {
-        await targetStore.set(key, value);
-      }
-
-      await targetStore.save();
-      console.log(
-        `[Migration] Restored ${targetStoreName} from backup: ${backupStoreName}`,
-      );
-    } catch (error) {
-      console.error(`[Migration] Failed to restore from backup:`, error);
-      throw error;
+      return true; // If we can't read version, assume migration needed
     }
   }
 }
