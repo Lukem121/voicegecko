@@ -19,15 +19,15 @@ export const sendVerificationEmail = async ({
       name: user.name,
     },
     from: {
-      email: "no-reply@smmhubx.com",
-      name: "smmhubx",
+      email: "no-reply@voicegecko.io",
+      name: "VoiceGecko",
     },
     categories: ["verification"],
     subject: "Verify your email address",
     react: (
       <LinkTemplate
         heading="Verify your email address"
-        description="Your verification link is below - click it to verify your email address. This will redirect you back to smmhubx."
+        description="Your verification link is below - click it to verify your email address. This will redirect you back to VoiceGecko."
         url={url}
       />
     ),
