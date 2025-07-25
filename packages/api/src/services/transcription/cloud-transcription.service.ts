@@ -13,6 +13,7 @@ export class CloudTranscriptionService {
   async transcribeAudio(
     audioBuffer: Buffer,
     filename: string,
+    prompt?: string,
   ): Promise<string> {
     try {
       // Create a File object from the buffer
@@ -23,6 +24,7 @@ export class CloudTranscriptionService {
         model: "whisper-1",
         language: "en",
         response_format: "text",
+        ...(prompt && { prompt }),
       });
 
       return response;

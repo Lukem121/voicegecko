@@ -17,12 +17,12 @@ export class RecordingService {
   private isToggling = false;
   private isPushToTalkActive = false;
 
-  private constructor() {}
+  private constructor() {
+    // Private constructor to prevent instantiation
+  }
 
   static getInstance(): RecordingService {
-    if (!RecordingService.instance) {
-      RecordingService.instance = new RecordingService();
-    }
+    RecordingService.instance ??= new RecordingService();
     return RecordingService.instance;
   }
 

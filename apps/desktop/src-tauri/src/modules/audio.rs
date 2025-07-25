@@ -864,10 +864,10 @@ fn apply_adaptive_denoising(samples: Vec<f32>, snr_estimate: f32) -> Vec<f32> {
             0.5 // Clean but still processing - very conservative
         };
 
-        println!(
-            "[Audio Processing] Using adaptive blend factor: {:.2} (SNR: {:.1}dB)",
-            blend_factor, snr_estimate
-        );
+        // println!(
+        //     "[Audio Processing] Using adaptive blend factor: {:.2} (SNR: {:.1}dB)",
+        //     blend_factor, snr_estimate
+        // );
 
         for i in 0..FRAME_SIZE {
             let blended = output[i] * blend_factor + frame[i] * (1.0 - blend_factor);

@@ -9,7 +9,9 @@ export class TranscriptionService {
   private lastTranscription = "";
   private lastTranscriptionId: string | null = null;
 
-  private constructor() {}
+  private constructor() {
+    // Private constructor to prevent instantiation
+  }
 
   public static getInstance(): TranscriptionService {
     TranscriptionService.instance ??= new TranscriptionService();

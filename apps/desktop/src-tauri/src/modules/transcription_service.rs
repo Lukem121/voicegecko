@@ -29,6 +29,7 @@ pub trait TranscriptionProvider: Send + Sync {
 
 pub struct LocalWhisperProvider {
     pub model_id: String,
+    pub dictionary_prompt: Option<String>,
 }
 
 impl LocalWhisperProvider {
@@ -115,6 +116,15 @@ impl LocalWhisperProvider {
         params.set_print_realtime(false);
         params.set_print_timestamps(false);
         params.set_suppress_blank(true);
+
+        // Add dictionary to params
+        // Because it wasn't trained with instruction-following techniques, Whisper operates more like a base GPT model. Keep in mind that Whisper only considers the first 224 tokens of the prompt.
+        if let Some(ref prompt) = self.dictionary_prompt {
+            if !prompt.is_empty() {
+                println!("[Rust] 📖 Setting dictionary prompt: {}", prompt);
+                params.set_initial_prompt(prompt);
+            }
+        }
 
         app.emit(
             "transcription-progress",

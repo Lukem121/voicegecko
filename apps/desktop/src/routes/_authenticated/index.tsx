@@ -147,7 +147,9 @@ function RecordingPage() {
   return (
     <TooltipProvider>
       <div className="flex flex-1 flex-col gap-6">
-        <h1 className="text-2xl font-bold tracking-tight">Record</h1>
+        <div className="flex h-10 items-center justify-between">
+          <h1 className="text-2xl font-bold tracking-tight">Record</h1>
+        </div>
         <Card>
           <CardContent>
             <div className="space-y-4">
