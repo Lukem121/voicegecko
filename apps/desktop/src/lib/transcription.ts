@@ -2,6 +2,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { toast } from "sonner";
 
 import type { AudioData } from "~/types/events";
+import { dictionaryService } from "~/services/dictionary.service";
 
 /**
  * Invokes the transcription process on the backend using audio buffer data.
@@ -17,7 +18,17 @@ export async function invokeTranscriptionFromBuffer(audioData: AudioData) {
   });
 
   try {
-    await invoke("transcribe_audio_buffer", { audioData });
+    // Fetch dictionary prompt before transcription
+    const dictionaryPrompt = await dictionaryService.getDictionaryPrompt();
+    console.log(
+      "[invokeTranscriptionFromBuffer] Dictionary prompt:",
+      dictionaryPrompt,
+    );
+
+    await invoke("transcribe_audio_buffer", {
+      audioData,
+      dictionaryPrompt,
+    });
     console.log("[invokeTranscriptionFromBuffer] Command invoked successfully");
   } catch (error) {
     console.error("Failed to invoke transcription from buffer:", error);

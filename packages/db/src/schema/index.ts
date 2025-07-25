@@ -3,3 +3,4 @@
 export * from "./tables/auth.db";
 export * from "./tables/transcription.db";
 export * from "./tables/usage.db";
+export * from "./tables/dictionary.db";

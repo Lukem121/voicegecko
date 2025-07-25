@@ -79,7 +79,7 @@ function TranscriptionsPage() {
 
   return (
     <div className="flex flex-1 flex-col gap-4">
-      <div className="flex items-center justify-between">
+      <div className="flex h-10 items-center justify-between">
         <h1 className="text-2xl font-bold tracking-tight">Recent activity</h1>
         <div className="flex items-center gap-1">
           {isSearchExpanded ? (

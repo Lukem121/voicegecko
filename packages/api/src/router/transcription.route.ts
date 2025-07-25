@@ -3,6 +3,7 @@ import { TRPCError } from "@trpc/server";
 import { z } from "zod/v4";
 
 import { apiEnv } from "../../env";
+import { dictionaryService } from "../services/dictionary/dictionary.service";
 import { CloudTranscriptionService } from "../services/transcription/cloud-transcription.service";
 import { transcriptionService } from "../services/transcription/transcription.service";
 import { usageService } from "../services/usage/usage.service";
@@ -91,8 +92,13 @@ export const transcriptionRouter = {
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.session.user.id;
 
+      // Execute independent operations in parallel for better performance
+      const [canTranscribe, dictionaryPrompt] = await Promise.all([
+        usageService.canUserTranscribe(userId),
+        dictionaryService.getUserDictionaryPrompt(userId),
+      ]);
+
       // Check if user can transcribe (under usage limit)
-      const canTranscribe = await usageService.canUserTranscribe(userId);
       if (!canTranscribe) {
         // TODO: Implement proper error handling and user-friendly messaging
         throw new TRPCError({
@@ -107,10 +113,11 @@ export const transcriptionRouter = {
         input.sampleRate,
       );
 
-      // Transcribe using OpenAI
+      // Transcribe using OpenAI with dictionary prompt
       const transcript = await cloudTranscriptionService.transcribeAudio(
         audioBuffer,
         `audio_${Date.now()}.wav`,
+        dictionaryPrompt,
       );
 
       // Calculate duration

@@ -1,14 +1,14 @@
 TODO
 
+- [ ] Send feedback button on transcripon.tsx
 - [ ] Implement student discount.
-- [ ] Landing page.
+- [ ] Personilisation in settings, we have some that we are not using.
 - [ ] Whats going on what the backup settings in come.vociegecko.io
-- [ ] Personlissations in settings, we have some that we are not using.
 - [ ] Darkmode & lightmode on desktop app
 - [ ] Onboarding system
 - [ ] Prod error tracking?
 - [ ] Stats visible in app, like gamification
-- [ ] Send feedback button on transcripon.tsx
+- [ ] Landing page.
 
 After MVP
 

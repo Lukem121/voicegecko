@@ -15,6 +15,7 @@ import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
 import { Route as AuthenticatedUsageRouteImport } from './routes/_authenticated/usage'
 import { Route as AuthenticatedTranscriptionsRouteImport } from './routes/_authenticated/transcriptions'
+import { Route as AuthenticatedDictionaryRouteImport } from './routes/_authenticated/dictionary'
 import { Route as unauthenticatedAuthRouteImport } from './routes/(unauthenticated)/_auth'
 import { Route as AuthenticatedSettingsIndexRouteImport } from './routes/_authenticated/settings/index'
 import { Route as AuthenticatedSettingsShortcutsRouteImport } from './routes/_authenticated/settings/shortcuts'
@@ -53,6 +54,11 @@ const AuthenticatedTranscriptionsRoute =
     path: '/transcriptions',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedDictionaryRoute = AuthenticatedDictionaryRouteImport.update({
+  id: '/dictionary',
+  path: '/dictionary',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
 const unauthenticatedAuthRoute = unauthenticatedAuthRouteImport.update({
   id: '/_auth',
   getParentRoute: () => unauthenticatedRoute,
@@ -120,6 +126,7 @@ const unauthenticatedAuthAuthenticationErrorRoute =
 
 export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedIndexRoute
+  '/dictionary': typeof AuthenticatedDictionaryRoute
   '/transcriptions': typeof AuthenticatedTranscriptionsRoute
   '/usage': typeof AuthenticatedUsageRoute
   '/authentication-error': typeof unauthenticatedAuthAuthenticationErrorRoute
@@ -135,6 +142,7 @@ export interface FileRoutesByFullPath {
 }
 export interface FileRoutesByTo {
   '/': typeof AuthenticatedIndexRoute
+  '/dictionary': typeof AuthenticatedDictionaryRoute
   '/transcriptions': typeof AuthenticatedTranscriptionsRoute
   '/usage': typeof AuthenticatedUsageRoute
   '/authentication-error': typeof unauthenticatedAuthAuthenticationErrorRoute
@@ -153,6 +161,7 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/(unauthenticated)': typeof unauthenticatedRouteWithChildren
   '/(unauthenticated)/_auth': typeof unauthenticatedAuthRouteWithChildren
+  '/_authenticated/dictionary': typeof AuthenticatedDictionaryRoute
   '/_authenticated/transcriptions': typeof AuthenticatedTranscriptionsRoute
   '/_authenticated/usage': typeof AuthenticatedUsageRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
@@ -171,6 +180,7 @@ export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
+    | '/dictionary'
     | '/transcriptions'
     | '/usage'
     | '/authentication-error'
@@ -186,6 +196,7 @@ export interface FileRouteTypes {
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
+    | '/dictionary'
     | '/transcriptions'
     | '/usage'
     | '/authentication-error'
@@ -203,6 +214,7 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/(unauthenticated)'
     | '/(unauthenticated)/_auth'
+    | '/_authenticated/dictionary'
     | '/_authenticated/transcriptions'
     | '/_authenticated/usage'
     | '/_authenticated/'
@@ -258,6 +270,13 @@ declare module '@tanstack/react-router' {
       path: '/transcriptions'
       fullPath: '/transcriptions'
       preLoaderRoute: typeof AuthenticatedTranscriptionsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/dictionary': {
+      id: '/_authenticated/dictionary'
+      path: '/dictionary'
+      fullPath: '/dictionary'
+      preLoaderRoute: typeof AuthenticatedDictionaryRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
     '/(unauthenticated)/_auth': {
@@ -341,6 +360,7 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedRouteChildren {
+  AuthenticatedDictionaryRoute: typeof AuthenticatedDictionaryRoute
   AuthenticatedTranscriptionsRoute: typeof AuthenticatedTranscriptionsRoute
   AuthenticatedUsageRoute: typeof AuthenticatedUsageRoute
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
@@ -350,6 +370,7 @@ interface AuthenticatedRouteChildren {
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
+  AuthenticatedDictionaryRoute: AuthenticatedDictionaryRoute,
   AuthenticatedTranscriptionsRoute: AuthenticatedTranscriptionsRoute,
   AuthenticatedUsageRoute: AuthenticatedUsageRoute,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,

@@ -4,6 +4,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { relaunch } from "@tauri-apps/plugin-process";
 import { check } from "@tauri-apps/plugin-updater";
 
+import { dictionaryService } from "~/services/dictionary.service";
 import { storeRegistry } from "~/stores/store-registry";
 import { initializeTauriEvents } from "./tauri-events";
 
@@ -22,7 +23,7 @@ async function checkAndInstallUpdates(options?: InitializeOptions) {
 
   try {
     const update = await check();
-    if (!update?.available) {
+    if (!update) {
       console.log("[Updater] No updates available");
       return;
     }
@@ -98,6 +99,11 @@ export async function initializeApp(
 
     // Initialize Tauri event listeners
     await initializeTauriEvents();
+
+    // Prefetch dictionary prompt for faster transcriptions
+    dictionaryService.prefetchDictionaryPrompt().catch((error) => {
+      console.warn("[App] Failed to prefetch dictionary prompt:", error);
+    });
 
     // Trigger automatic download of recommended model (non-blocking)
     // Add a small delay to ensure model synchronization is complete
