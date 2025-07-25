@@ -1,6 +1,11 @@
 import type { Subscription } from "@better-auth/stripe";
 import type { Stripe } from "stripe";
 
+import { sendPaymentFailedEmail } from "@acme/email";
+
+import { paymentEnv } from "../../env";
+import { getUserForEmail } from "./user-lookup";
+
 interface SubscriptionUpdateParams {
   event: Stripe.Event;
   subscription: Subscription;
@@ -12,12 +17,51 @@ export const onSubscriptionUpdate = async ({
 }: SubscriptionUpdateParams) => {
   console.log(`[Subscription] Subscription updated:`, {
     subscriptionId: subscription.id,
-    userId: subscription.id,
+    userId: subscription.referenceId,
     plan: subscription.plan,
     status: subscription.status,
     cancelAtPeriodEnd: subscription.cancelAtPeriodEnd,
     periodEnd: subscription.periodEnd,
   });
+
+  // Check if this update indicates a payment failure
+  const isPaymentFailure =
+    subscription.status === "past_due" || subscription.status === "unpaid";
+
+  if (isPaymentFailure) {
+    console.log(
+      `[Subscription] Payment failure detected for subscription ${subscription.id} with status: ${subscription.status}`,
+    );
+
+    // Send payment failed email to the user
+    try {
+      const user = await getUserForEmail(subscription.referenceId);
+      if (user) {
+        // Create retry payment URL - user can manage subscription through billing portal
+        const retryPaymentUrl = `${paymentEnv().NEXT_PUBLIC_VOICEGECKO_URL || "https://voicegecko.io"}/app/billing`;
+        const accountUrl = retryPaymentUrl; // Same URL for account management
+
+        await sendPaymentFailedEmail({
+          user,
+          planName: subscription.plan || "VoiceGecko Pro",
+          retryPaymentUrl,
+          accountUrl,
+        });
+        console.log(
+          `[Subscription] Payment failed email sent to user ${subscription.referenceId} for plan ${subscription.plan}`,
+        );
+      } else {
+        console.error(
+          `[Subscription] Could not find user ${subscription.referenceId} to send payment failed email`,
+        );
+      }
+    } catch (error) {
+      console.error(
+        `[Subscription] Error sending payment failed email:`,
+        error,
+      );
+    }
+  }
 
   // No special handling needed - our usage service already checks
   // subscription status and will automatically handle plan changes
