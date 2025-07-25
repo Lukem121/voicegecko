@@ -84,6 +84,20 @@ export class TranscriptionService {
     };
   }
 
+  async getTranscriptionById(id: number, userId: string) {
+    const transcription = await transcriptionRepository.findById(id, userId);
+
+    if (!transcription) {
+      throw new TRPCError({
+        code: "NOT_FOUND",
+        message:
+          "Transcription not found or you don't have permission to access it",
+      });
+    }
+
+    return transcription;
+  }
+
   async deleteTranscription(id: number, userId: string) {
     const result = await transcriptionRepository.deleteById(id, userId);
 
