@@ -19,6 +19,15 @@ export const DictionaryErrorCodes = {
   DATABASE_ERROR: "DATABASE_ERROR",
 } as const;
 
+// Feedback-specific error codes
+export const FeedbackErrorCodes = {
+  FEEDBACK_TOO_LONG: "FEEDBACK_TOO_LONG",
+  FEEDBACK_EMPTY: "FEEDBACK_EMPTY",
+  TRANSCRIPTION_NOT_FOUND: "TRANSCRIPTION_NOT_FOUND",
+  DISCORD_SEND_FAILED: "DISCORD_SEND_FAILED",
+  INTERNAL_ERROR: "INTERNAL_ERROR",
+} as const;
+
 // Helper functions for creating results
 export const success = <T>(data: T): Result<T> => ({ success: true, data });
 
@@ -56,6 +65,39 @@ export const dictionaryError = {
   databaseError: (message: string): AppError => ({
     code: DictionaryErrorCodes.DATABASE_ERROR,
     message: `Database error: ${message}`,
+    details: { originalMessage: message },
+  }),
+};
+
+// Helper functions for creating specific feedback errors
+export const feedbackError = {
+  feedbackTooLong: (maxLength: number, actualLength: number): AppError => ({
+    code: FeedbackErrorCodes.FEEDBACK_TOO_LONG,
+    message: `Feedback is too long. Maximum ${maxLength} characters allowed, but got ${actualLength}.`,
+    details: { maxLength, actualLength },
+  }),
+
+  feedbackEmpty: (): AppError => ({
+    code: FeedbackErrorCodes.FEEDBACK_EMPTY,
+    message: "Feedback cannot be empty. Please provide some text.",
+    details: {},
+  }),
+
+  transcriptionNotFound: (transcriptionId: number): AppError => ({
+    code: FeedbackErrorCodes.TRANSCRIPTION_NOT_FOUND,
+    message: "The transcription you're trying to provide feedback for was not found.",
+    details: { transcriptionId },
+  }),
+
+  discordSendFailed: (originalError: string): AppError => ({
+    code: FeedbackErrorCodes.DISCORD_SEND_FAILED,
+    message: "Failed to send feedback to our team. Please try again later.",
+    details: { originalError },
+  }),
+
+  internalError: (message: string): AppError => ({
+    code: FeedbackErrorCodes.INTERNAL_ERROR,
+    message: `An internal error occurred: ${message}`,
     details: { originalMessage: message },
   }),
 };
