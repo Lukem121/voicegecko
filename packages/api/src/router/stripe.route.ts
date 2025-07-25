@@ -1,10 +1,13 @@
 import type { TRPCRouterRecord } from "@trpc/server";
-import { z } from "zod";
+import { z } from "zod/v4";
 
+import { sendStudentDiscountEmail } from "@acme/email";
 import { stripeClient } from "@acme/payment/stripe";
+import { createRateLimiter, slidingWindow } from "@acme/rate-limit";
 
 import { apiEnv } from "../../env";
-import { protectedProcedure } from "../trpc";
+import { EDUCATIONAL_DOMAINS } from "../consts/educational-domains";
+import { protectedProcedure, publicProcedure } from "../trpc";
 
 type PriceId = string;
 
@@ -135,6 +138,77 @@ export const stripeRouter = {
       } catch (error) {
         console.error("Error restoring subscription:", error);
         throw new Error("Failed to restore subscription");
+      }
+    }),
+
+  requestStudentDiscount: publicProcedure
+    .input(
+      z.object({
+        email: z.email("Please enter a valid email address"),
+      }),
+    )
+    .mutation(async ({ input }) => {
+      const limiter = createRateLimiter({
+        limiter: slidingWindow(1, "30s"),
+        prefix: "request-student-discount",
+      });
+
+      const { success } = await limiter.limit(input.email);
+
+      console.log("success", success);
+
+      if (!success) {
+        return {
+          success: false,
+          error: {
+            message: "Too many requests. Please try again later.",
+            code: "TOO_MANY_REQUESTS",
+          },
+        };
+      }
+
+      try {
+        const emailDomain = input.email.toLowerCase();
+        const isEducationalEmail = EDUCATIONAL_DOMAINS.some((domain) =>
+          emailDomain.endsWith(domain),
+        );
+
+        if (!isEducationalEmail) {
+          return {
+            success: false,
+            error: {
+              message:
+                "Please use your educational email address (.edu, .ac.uk, etc.)",
+              code: "INVALID_EDUCATIONAL_EMAIL",
+            },
+          };
+        }
+
+        // Send the student discount email
+        await sendStudentDiscountEmail({
+          user: {
+            email: input.email,
+          },
+          couponCode: "RYGALTMSXJAA",
+          discountPercentage: "50",
+          redemptionUrl: "https://www.voicegecko.io/pricing?student=true",
+        });
+
+        return {
+          success: true,
+          data: {
+            message: "Student discount code sent to your email!",
+          },
+        };
+      } catch (error) {
+        console.error("Error sending student discount email:", error);
+        return {
+          success: false,
+          error: {
+            message: "Failed to send discount code. Please try again later.",
+            code: "EMAIL_SEND_FAILED",
+          },
+        };
       }
     }),
 } satisfies TRPCRouterRecord;
