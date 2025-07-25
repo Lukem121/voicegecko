@@ -492,6 +492,15 @@ export const useSettingsStore = create<SettingsState>()(
 
       playTestSound: async () => {
         const { settings } = get();
+
+        // Check if interaction sounds are enabled
+        if (!settings.personalization.interactionSounds) {
+          console.log(
+            "[Settings] Test sound disabled - interaction sounds are off",
+          );
+          return;
+        }
+
         if (settings.audio.notificationTiming !== "disabled") {
           await recordingService.playNotificationSound("Start");
           await new Promise((resolve) => setTimeout(resolve, 700));

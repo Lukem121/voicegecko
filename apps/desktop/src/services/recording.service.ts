@@ -125,8 +125,12 @@ export class RecordingService {
       const { settings } = useSettingsStore.getState();
       const deviceName = options.device ?? settings.audio.selectedDevice?.name;
 
+      // Play start sound first if enabled
       if (options.playStartSound ?? this.shouldPlayStartSound()) {
         await this.playNotificationSound("Start");
+        // Add a small delay to ensure the start sound has time to play
+        // before system audio is muted, preventing audio conflicts
+        await new Promise((resolve) => setTimeout(resolve, 100));
       }
 
       // Mute system audio if enabled
@@ -242,6 +246,13 @@ export class RecordingService {
    */
   private shouldPlayStartSound(): boolean {
     const { settings } = useSettingsStore.getState();
+
+    // First check if interaction sounds are enabled
+    if (!settings.personalization.interactionSounds) {
+      return false;
+    }
+
+    // Then check notification timing settings
     return (
       settings.audio.notificationTiming === "start_stop" ||
       settings.audio.notificationTiming === "start_completion"
@@ -253,6 +264,12 @@ export class RecordingService {
    */
   private shouldPlayEndSound(): boolean {
     const { settings } = useSettingsStore.getState();
+
+    // First check if interaction sounds are enabled
+    if (!settings.personalization.interactionSounds) {
+      return false;
+    }
+
     // Only play end sound on recording stop if timing is "start_stop"
     // "completion_only" and "start_completion" timings are handled by transcription service
     return settings.audio.notificationTiming === "start_stop";

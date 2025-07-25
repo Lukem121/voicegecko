@@ -96,6 +96,12 @@ export class TranscriptionService {
       const { settings } = useSettingsStore.getState();
       const notificationTiming = settings.audio.notificationTiming;
 
+      // First check if interaction sounds are enabled
+      if (!settings.personalization.interactionSounds) {
+        console.log("[TranscriptionService] Interaction sounds disabled");
+        return;
+      }
+
       // Play end sound on transcription completion for "completion_only" and "start_completion" timings
       // "start_stop" timing plays sounds when recording starts/stops, not on transcription
       if (
