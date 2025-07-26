@@ -38,21 +38,21 @@ export const WelcomeTemplate = ({
       <Preview>
         Welcome to VoiceGecko - Your voice-to-text journey begins now!
       </Preview>
-      <Body className="mx-auto bg-white px-4 font-sans">
-        <Container className="mx-auto w-[580px] max-w-full py-5 pb-12">
-          <Heading className="mt-8 mb-7 text-center text-3xl leading-tight font-bold text-[#1d1c1d]">
-            Welcome to{" "}
+      <Body className="mx-auto bg-white px-2 font-sans sm:px-4">
+        <Container className="mx-auto w-[580px] max-w-full py-3 pb-8 sm:py-5 sm:pb-12">
+          <Heading className="mt-4 mb-4 px-2 text-center text-2xl leading-tight font-bold text-[#1d1c1d] sm:mt-8 sm:mb-7 sm:px-0 sm:text-3xl">
+            Thanks for joining!
+            <br className="sm:hidden" />
             <Img
               src={logoTextUrl}
               height="32"
               alt="VoiceGecko"
-              className="inline-block align-middle"
+              className="inline-block align-middle sm:ml-2"
             />
-            ! 🎉
           </Heading>
 
           {/* Welcome Gecko Mascot */}
-          <Section className="mb-6 text-center">
+          <Section className="mb-4 text-center sm:mb-6">
             <Img
               src={welcomeGeckoUrl}
               height="120"
@@ -61,37 +61,35 @@ export const WelcomeTemplate = ({
             />
           </Section>
 
-          <Text className="mb-4 text-lg leading-7">
+          <Text className="mb-3 px-2 text-lg leading-6 sm:mb-4 sm:px-0 sm:leading-7">
             Thanks for joining{name ? `, ${name}` : ""}! You're now part of a
             community that's transforming how we interact with technology
             through voice.
           </Text>
 
-          <Text className="mb-7 text-base leading-6 text-gray-700">
+          <Text className="mb-5 px-2 text-base leading-6 text-gray-700 sm:mb-7 sm:px-0">
             VoiceGecko provides instant, accurate voice-to-text transcription
             that works everywhere. Whether you're writing emails, taking notes,
             or coding, just speak and watch your words appear.
           </Text>
 
           {/* Tips Section */}
-          <Section className="mb-7 rounded-md bg-gray-50 p-6">
-            <Heading className="mb-3 text-lg font-semibold text-[#1d1c1d]">
+          <Section className="mx-2 mb-5 rounded-md bg-gray-50 p-3 sm:mx-0 sm:mb-7 sm:p-6">
+            <Heading className="mb-3 text-base font-semibold text-[#1d1c1d] sm:mb-3 sm:text-lg">
               💡 Pro Tips for Best Results
             </Heading>
-            <ul className="text-sm leading-6 text-gray-700">
-              <li className="mb-2">Speak clearly and at a natural pace</li>
-              <li className="mb-2">
+            <ul className="space-y-2 pl-4 text-sm leading-5 text-gray-700 sm:space-y-2 sm:pl-5 sm:leading-6">
+              <li>Speak clearly and at a natural pace</li>
+              <li>
                 Start recording with push-to-dictate, toggle recording, or click
                 the Gecko bar
               </li>
-              <li className="mb-2">
+              <li>
                 Try it in different apps - email, documents, chat, even code
                 editors!
               </li>
-              <li className="mb-2">
-                Don't like the Gecko bar? You can disable it in settings
-              </li>
-              <li className="mb-2">
+              <li>Don't like the Gecko bar? You can disable it in settings</li>
+              <li>
                 Add words to your dictionary in the desktop app to fix recurring
                 transcription errors
               </li>
@@ -99,8 +97,8 @@ export const WelcomeTemplate = ({
           </Section>
 
           {/* Resources Section */}
-          <Section className="mb-7">
-            <Text className="mb-4 text-base leading-6">
+          <Section className="mb-5 px-2 sm:mb-7 sm:px-0">
+            <Text className="mb-3 text-base leading-6 sm:mb-4">
               Need help getting started? We've got you covered:
             </Text>
             <Text className="text-sm leading-6">
@@ -108,19 +106,19 @@ export const WelcomeTemplate = ({
                 className="text-blue-600 underline hover:text-blue-800"
                 href="mailto:support@voicegecko.io?subject=Need Help"
               >
-                💬 Contact Support
+                Contact Support
               </Link>
               {" • "}
               <Link
                 className="text-blue-600 underline hover:text-blue-800"
                 href="https://discord.gg/BFxNQCzZjB"
               >
-                💬 Discord Community
+                Discord Community
               </Link>
             </Text>
           </Section>
 
-          <Text className="text-base leading-6 text-black">
+          <Text className="px-2 text-base leading-6 text-black sm:px-0">
             Ready to experience the future of voice-to-text? Let's get started!
           </Text>
 

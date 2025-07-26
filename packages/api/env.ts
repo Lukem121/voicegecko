@@ -12,8 +12,6 @@ export function apiEnv() {
       STRIPE_PRICE_ID_TEAM_MONTHLY: z.string().min(1),
       STRIPE_PRICE_ID_TEAM_YEARLY: z.string().min(1),
       VOICEGECKO_APP_URL: z.url().optional().default("http://localhost:3000"),
-      DISCORD_ERROR_REPORT_WEBHOOK_URL: z.url(),
-      DISCORD_FEEDBACK_WEBHOOK_URL: z.url(),
     },
     experimental__runtimeEnv: {},
     skipValidation:

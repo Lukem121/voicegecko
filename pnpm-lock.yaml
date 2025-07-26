@@ -486,6 +486,9 @@ importers:
       '@acme/email':
         specifier: workspace:*
         version: link:../email
+      '@acme/notifications':
+        specifier: workspace:*
+        version: link:../notifications
       '@acme/payment':
         specifier: workspace:*
         version: link:../payment
@@ -541,6 +544,9 @@ importers:
       '@acme/email':
         specifier: workspace:*
         version: link:../email
+      '@acme/notifications':
+        specifier: workspace:*
+        version: link:../notifications
       '@acme/payment':
         specifier: workspace:*
         version: link:../payment
@@ -679,6 +685,34 @@ importers:
       react-email:
         specifier: ^4.2.4
         version: 4.2.4(bufferutil@4.0.8)(utf-8-validate@6.0.4)
+      typescript:
+        specifier: 'catalog:'
+        version: 5.8.3
+
+  packages/notifications:
+    dependencies:
+      '@t3-oss/env-nextjs':
+        specifier: ^0.13.8
+        version: 0.13.8(arktype@2.1.20)(typescript@5.8.3)(valibot@1.0.0-beta.15(typescript@5.8.3))(zod@3.25.67)
+      zod:
+        specifier: 'catalog:'
+        version: 3.25.67
+    devDependencies:
+      '@acme/eslint-config':
+        specifier: workspace:*
+        version: link:../../tooling/eslint
+      '@acme/prettier-config':
+        specifier: workspace:*
+        version: link:../../tooling/prettier
+      '@acme/tsconfig':
+        specifier: workspace:*
+        version: link:../../tooling/typescript
+      eslint:
+        specifier: 'catalog:'
+        version: 9.28.0(jiti@2.5.1)
+      prettier:
+        specifier: 'catalog:'
+        version: 3.6.2
       typescript:
         specifier: 'catalog:'
         version: 5.8.3

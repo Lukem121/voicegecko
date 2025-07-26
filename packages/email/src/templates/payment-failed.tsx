@@ -37,35 +37,35 @@ export const PaymentFailedTemplate = ({
     <Html>
       <Head />
       <Preview>Payment issue with your {planName} subscription</Preview>
-      <Body className="mx-auto bg-white px-4 font-sans">
-        <Container className="mx-auto w-[580px] max-w-full py-5 pb-12">
-          <Section className="mt-8">
+      <Body className="mx-auto bg-white px-2 font-sans sm:px-4">
+        <Container className="mx-auto w-[580px] max-w-full py-3 pb-8 sm:py-5 sm:pb-12">
+          <Section className="mt-4 px-2 sm:mt-8 sm:px-0">
             <Img src={fullLogoUrl} height="42" alt="VoiceGecko Logo" />
           </Section>
 
-          <Heading className="my-7 text-3xl leading-tight font-bold text-[#1d1c1d]">
+          <Heading className="my-4 px-2 text-2xl leading-tight font-bold text-[#1d1c1d] sm:my-7 sm:px-0 sm:text-3xl">
             Payment Issue with Your Subscription
           </Heading>
 
-          <Text className="mb-4 text-lg leading-7">
+          <Text className="mb-3 px-2 text-lg leading-6 sm:mb-4 sm:px-0 sm:leading-7">
             We had trouble processing the payment for your{" "}
             <strong>{planName}</strong> subscription.
           </Text>
 
-          <Text className="mb-7 text-base leading-6 text-gray-700">
+          <Text className="mb-5 px-2 text-base leading-6 text-gray-700 sm:mb-7 sm:px-0">
             Don't worry – your subscription is still active for now, and we'll
             retry the payment automatically. However, to avoid any interruption
             to your service, we recommend updating your payment method.
           </Text>
 
           {/* Action Section */}
-          <Section className="mb-7 rounded-md bg-blue-50 p-6 text-center">
-            <Text className="mb-6 text-base leading-6 text-gray-700">
+          <Section className="mx-2 mb-5 rounded-md bg-blue-50 p-4 text-center sm:mx-0 sm:mb-7 sm:p-6">
+            <Text className="mb-4 px-2 text-base leading-6 text-gray-700 sm:mb-6 sm:px-0">
               To continue enjoying your VoiceGecko subscription without
               interruption, please update your payment information.
             </Text>
             <Link
-              className="mb-4 inline-block rounded-md bg-green-600 px-8 py-4 text-center font-medium text-white no-underline hover:bg-green-700"
+              className="mb-4 inline-block rounded-md bg-green-600 px-6 py-3 text-center font-medium text-white no-underline hover:bg-green-700 sm:px-8 sm:py-4"
               href={retryPaymentUrl}
             >
               Resolve Payment Issue
@@ -81,11 +81,11 @@ export const PaymentFailedTemplate = ({
           </Section>
 
           {/* Account Status */}
-          <Section className="mb-7">
-            <Heading className="mb-3 text-lg font-semibold text-[#1d1c1d]">
+          <Section className="mb-5 px-2 sm:mb-7 sm:px-0">
+            <Heading className="mb-3 text-base font-semibold text-[#1d1c1d] sm:text-lg">
               📋 Your Account Status
             </Heading>
-            <ul className="space-y-2 text-sm leading-6 text-gray-700">
+            <ul className="space-y-2 pl-4 text-sm leading-6 text-gray-700 sm:pl-5">
               <li className="flex items-start">
                 <span className="mr-3 text-green-600">✓</span>
                 <span>
@@ -107,8 +107,8 @@ export const PaymentFailedTemplate = ({
           </Section>
 
           {/* Help Section */}
-          <Section className="mb-7">
-            <Text className="mb-4 text-base leading-6">
+          <Section className="mb-5 px-2 sm:mb-7 sm:px-0">
+            <Text className="mb-3 text-base leading-6 sm:mb-4">
               Need help? We're here for you:
             </Text>
             <Text className="text-sm leading-6">
@@ -116,19 +116,19 @@ export const PaymentFailedTemplate = ({
                 className="text-blue-600 underline hover:text-blue-800"
                 href="mailto:support@voicegecko.io?subject=Need Help"
               >
-                💬 Contact Support
+                Contact Support
               </Link>
               {" • "}
               <Link
                 className="text-blue-600 underline hover:text-blue-800"
                 href="https://discord.gg/BFxNQCzZjB"
               >
-                💬 Discord Community
+                Discord Community
               </Link>
             </Text>
           </Section>
 
-          <Text className="text-base leading-6 text-black">
+          <Text className="px-2 text-base leading-6 text-black sm:px-0">
             Thank you for being a VoiceGecko user. We appreciate your business
             and want to keep you transcribing!
           </Text>

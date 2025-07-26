@@ -2,8 +2,9 @@ import type { TRPCRouterRecord } from "@trpc/server";
 import { TRPCError } from "@trpc/server";
 import { z } from "zod/v4";
 
+import { DiscordAdapter } from "@acme/notifications";
+
 import { apiEnv } from "../../env";
-import { DiscordAdapter } from "../adapters/discord.adapter";
 import { dictionaryService } from "../services/dictionary/dictionary.service";
 import { CloudTranscriptionService } from "../services/transcription/cloud-transcription.service";
 import { transcriptionService } from "../services/transcription/transcription.service";
