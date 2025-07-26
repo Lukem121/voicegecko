@@ -113,87 +113,91 @@ export function GeckoBarApp() {
   );
 
   return (
-    <div
-      className="fixed bottom-2.5 left-1/2 z-50 -translate-x-1/2"
-      style={{
-        width: DIMENSIONS.HITBOX.WIDTH,
-        height: DIMENSIONS.HITBOX.HEIGHT,
-        display: "flex",
-        alignItems: "flex-end",
-        justifyContent: "center",
-      }}
-      onMouseEnter={handlers.onMouseEnter}
-      onMouseLeave={handlers.onMouseLeave}
-    >
-      {/* Tooltip */}
-      <GeckoBarTooltip
-        show={state.showTooltip}
-        isRecording={isRecording}
-        message={state.tooltipMessage}
-      />
-
-      {/* Main bar */}
-      <motion.div
-        className={cn(
-          "!border-primary/70 relative flex items-center justify-center overflow-hidden rounded-full border",
-          state.isLoading ? "bg-muted/70 cursor-wait shadow-lg" : "bg-muted/70",
-        )}
-        animate={animationDimensions}
-        transition={{
-          type: "spring",
-          stiffness: ANIMATIONS.SPRING.STIFFNESS,
-          damping: ANIMATIONS.SPRING.DAMPING,
-          mass: ANIMATIONS.SPRING.MASS,
+    <div className="dark">
+      <div
+        className="fixed bottom-2.5 left-1/2 z-50 -translate-x-1/2"
+        style={{
+          width: DIMENSIONS.HITBOX.WIDTH,
+          height: DIMENSIONS.HITBOX.HEIGHT,
+          display: "flex",
+          alignItems: "flex-end",
+          justifyContent: "center",
         }}
-        onMouseDown={handlers.onClick} // Faster than onClick - fires immediately on press
-        onClick={handlers.onClick} // Keep as fallback
+        onMouseEnter={handlers.onMouseEnter}
+        onMouseLeave={handlers.onMouseLeave}
       >
-        {/* Gecko scales background pattern */}
-        <div
-          className="pointer-events-none absolute inset-0 overflow-hidden rounded-full"
-          style={{
-            ...patternStyle,
-            opacity: STYLES.PATTERN_OPACITY,
-          }}
+        {/* Tooltip */}
+        <GeckoBarTooltip
+          show={state.showTooltip}
+          isRecording={isRecording}
+          message={state.tooltipMessage}
         />
 
-        {/* Expanded state content */}
-        <div
+        {/* Main bar */}
+        <motion.div
           className={cn(
-            "relative flex h-full w-full items-center justify-center",
-            state.isExpanded || showActiveState
-              ? "opacity-100"
-              : "pointer-events-none opacity-0",
+            "!border-primary/70 relative flex items-center justify-center overflow-hidden rounded-full border",
+            state.isLoading
+              ? "bg-muted/70 cursor-wait shadow-lg"
+              : "bg-muted/70",
           )}
-          style={{
-            pointerEvents:
-              state.isExpanded || showActiveState ? "auto" : "none",
+          animate={animationDimensions}
+          transition={{
+            type: "spring",
+            stiffness: ANIMATIONS.SPRING.STIFFNESS,
+            damping: ANIMATIONS.SPRING.DAMPING,
+            mass: ANIMATIONS.SPRING.MASS,
           }}
+          onMouseDown={handlers.onClick} // Faster than onClick - fires immediately on press
+          onClick={handlers.onClick} // Keep as fallback
         >
-          {/* Cancel button */}
-          <GeckoBarButton
-            type="cancel"
-            state={cancelButtonState}
-            onClick={handlers.onCancel}
+          {/* Gecko scales background pattern */}
+          <div
+            className="pointer-events-none absolute inset-0 overflow-hidden rounded-full"
+            style={{
+              ...patternStyle,
+              opacity: STYLES.PATTERN_OPACITY,
+            }}
           />
 
-          {/* Audio visualizer */}
-          <AudioVisualizer
-            audioLevel={state.audioLevel}
-            isRecording={state.visualizerActive}
-            mode="voice-reactive"
-            size="small"
-            className="flex-1"
-          />
+          {/* Expanded state content */}
+          <div
+            className={cn(
+              "relative flex h-full w-full items-center justify-center",
+              state.isExpanded || showActiveState
+                ? "opacity-100"
+                : "pointer-events-none opacity-0",
+            )}
+            style={{
+              pointerEvents:
+                state.isExpanded || showActiveState ? "auto" : "none",
+            }}
+          >
+            {/* Cancel button */}
+            <GeckoBarButton
+              type="cancel"
+              state={cancelButtonState}
+              onClick={handlers.onCancel}
+            />
 
-          {/* Finish button */}
-          <GeckoBarButton
-            type="finish"
-            state={finishButtonState}
-            onClick={handlers.onFinish}
-          />
-        </div>
-      </motion.div>
+            {/* Audio visualizer */}
+            <AudioVisualizer
+              audioLevel={state.audioLevel}
+              isRecording={state.visualizerActive}
+              mode="voice-reactive"
+              size="small"
+              className="flex-1"
+            />
+
+            {/* Finish button */}
+            <GeckoBarButton
+              type="finish"
+              state={finishButtonState}
+              onClick={handlers.onFinish}
+            />
+          </div>
+        </motion.div>
+      </div>
     </div>
   );
 }
