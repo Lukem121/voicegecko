@@ -27,7 +27,7 @@ export const sendSubscriptionCancelledEmail = async ({
       name: "VoiceGecko",
     },
     categories: ["subscription_cancelled"],
-    subject: `Your ${planName} subscription has been cancelled`,
+    subject: `${planName} subscription has been cancelled`,
     react: (
       <SubscriptionCancelledTemplate
         name={user.name}
