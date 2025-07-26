@@ -50,6 +50,7 @@ pub fn run() {
             modules::gecko_bar::reposition_gecko_bar,
             modules::gecko_bar::is_fullscreen_app_active,
             modules::gecko_bar::set_gecko_bar_fullscreen_mode,
+            modules::gecko_bar::send_gecko_bar_notification,
             modules::hardware_info::get_hardware_info,
             modules::hardware_info::get_recommended_tier,
             modules::model_manager::list_models,
