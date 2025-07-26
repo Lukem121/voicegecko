@@ -11,6 +11,7 @@ TODO
 Pre Launch Checks
 
 - [ ] Check added stripe student coupon code: RYGALTMSXJAA
+- [ ] Inside BetterAuth we are only allowing my emails to sign up. We need to remove that.
 
 After MVP
 

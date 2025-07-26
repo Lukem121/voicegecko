@@ -24,7 +24,7 @@ import {
 } from "@acme/payment/subscription-handlers";
 
 import { authEnv } from "../env";
-import { checkBannedMiddleware } from "./middleware/check-banned-middleware";
+import { handleAfterHook } from "./middleware/handle-after-hook";
 import { usernameValidator } from "./schemas/username.schema";
 
 export const serverAuth = betterAuth({
@@ -113,7 +113,7 @@ export const serverAuth = betterAuth({
     nextCookies(),
   ],
   hooks: {
-    after: checkBannedMiddleware,
+    after: handleAfterHook,
     before: createAuthMiddleware(async (ctx) => {
       const allowedEmails = [
         "lukeask@hotmail.co.uk",

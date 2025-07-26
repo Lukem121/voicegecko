@@ -1,7 +1,5 @@
 // Re-export core functionality
 export { sendEmail } from "./lib/send-email";
-
-// Re-export email functions
 export { sendVerificationEmail } from "./send/verification";
 export { sendResetPasswordEmail } from "./send/reset-password";
 export { sendWelcomeEmail } from "./send/welcome";

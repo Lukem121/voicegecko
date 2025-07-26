@@ -1,6 +1,11 @@
 import { createAuthMiddleware } from "better-auth/plugins";
 
+import { sendWelcomeEmail } from "@acme/email";
+import { DiscordAdapter } from "@acme/notifications";
+
 import { isObjectWithBody } from "../utils/is-object-with-body";
+
+const discordAdapter = new DiscordAdapter();
 
 interface BannedUserError {
   code: "BANNED_USER";
@@ -17,8 +22,11 @@ function isBannedUserError(value: unknown): value is BannedUserError {
   );
 }
 
-// biome-ignore lint/suspicious/useAwait: middleware needs to be async
-export const checkBannedMiddleware = createAuthMiddleware(async (ctx) => {
+export const handleAfterHook = createAuthMiddleware(async (ctx) => {
+  console.log("🫳 handleAfterHook", ctx.path);
+  console.log("🫳 ctx.context.newSession", ctx.context.newSession);
+  const newSession = ctx.context.newSession;
+
   if (ctx.path.startsWith("/callback")) {
     const returned = ctx.context.returned;
     if (
@@ -28,5 +36,21 @@ export const checkBannedMiddleware = createAuthMiddleware(async (ctx) => {
     ) {
       throw ctx.redirect("/authentication-error?error=USER_BANNED");
     }
+  }
+
+  if (newSession) {
+    await discordAdapter.sendUserSignup({
+      userId: newSession.user.id,
+      email: newSession.user.email,
+      username: newSession.user.name,
+      timestamp: new Date().toISOString(),
+    });
+
+    await sendWelcomeEmail({
+      user: {
+        email: newSession.user.email,
+        name: newSession.user.name,
+      },
+    });
   }
 });
