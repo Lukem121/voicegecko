@@ -2,10 +2,8 @@ TODO
 
 - [ ] Prod error tracking?
 - [ ] Onboarding system
-- [ ] user stats visible in app, like gamification
 - [ ] Landing page & subsequent pages
 - [ ] Links in the Emails need removing or implementing.
-- [ ] reset weekly usage
 
 Pre Launch Checks
 
