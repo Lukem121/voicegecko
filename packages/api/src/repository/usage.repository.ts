@@ -170,6 +170,31 @@ class UsageRepository {
     };
   }
 
+  async getUserWordsPerMinute(userId: string) {
+    const [result] = await db
+      .select({
+        totalWords: sql<number>`COALESCE(SUM(${TranscriptionTable.wordCount}), 0)`,
+        totalDurationSeconds: sql<number>`COALESCE(SUM(${TranscriptionTable.durationSeconds}), 0)`,
+      })
+      .from(TranscriptionTable)
+      .where(
+        and(
+          eq(TranscriptionTable.userId, userId),
+          sql`${TranscriptionTable.durationSeconds} IS NOT NULL AND ${TranscriptionTable.durationSeconds} > 0`,
+        ),
+      );
+
+    const totalWords = Number(result?.totalWords || 0);
+    const totalDurationSeconds = Number(result?.totalDurationSeconds || 0);
+
+    if (totalDurationSeconds === 0 || totalWords === 0) {
+      return 0; // No data available
+    }
+
+    // Calculate words per minute: (words / seconds) * 60
+    return Math.round((totalWords / totalDurationSeconds) * 60);
+  }
+
   private getWeekStartDate(): Date {
     const now = new Date();
     const dayOfWeek = now.getUTCDay();

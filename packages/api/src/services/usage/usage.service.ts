@@ -117,9 +117,10 @@ export class UsageService {
     const currentStatus = await this.getUserUsageStatus(userId);
 
     // Get usage stats from repository
-    const [totalStats, monthlyStats] = await Promise.all([
+    const [totalStats, monthlyStats, wordsPerMinute] = await Promise.all([
       usageRepository.getTotalUsageStats(userId),
       usageRepository.getMonthlyUsageStats(userId),
+      usageRepository.getUserWordsPerMinute(userId),
     ]);
 
     return {
@@ -127,13 +128,14 @@ export class UsageService {
       total: {
         words: totalStats.totalWords,
         transcriptions: totalStats.totalTranscriptions,
-        timeSaved: totalStats.totalWords / 40 / 60, // hours (assume 40 words per minute typing speed)
+        timeSaved: totalStats.totalWords / 40, // minutes (assume 40 words per minute typing speed)
       },
       monthly: {
         words: monthlyStats.monthlyWords,
         transcriptions: monthlyStats.monthlyTranscriptions,
-        timeSaved: monthlyStats.monthlyWords / 40 / 60, // hours
+        timeSaved: monthlyStats.monthlyWords / 40, // minutes
       },
+      wordsPerMinute: wordsPerMinute,
     };
   }
 

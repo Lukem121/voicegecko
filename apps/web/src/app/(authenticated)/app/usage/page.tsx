@@ -1,14 +1,5 @@
-import {
-  BarChart,
-  Calendar,
-  Clock,
-  Download,
-  FileText,
-  TrendingUp,
-} from "lucide-react";
+import { BarChart, Clock, FileText, TrendingUp } from "lucide-react";
 
-import { Badge } from "@acme/ui/components/ui/badge";
-import { Button } from "@acme/ui/components/ui/button";
 import {
   Card,
   CardContent,
@@ -17,6 +8,26 @@ import {
 } from "@acme/ui/components/ui/card";
 
 import { caller } from "~/trpc/server";
+
+// Format numbers to compact notation (12k, 1.2M, etc.)
+const formatCompactNumber = (num: number): string => {
+  if (num >= 1000000) {
+    return (num / 1000000).toFixed(1).replace(/\.0$/, "") + "M";
+  }
+  if (num >= 1000) {
+    return (num / 1000).toFixed(1).replace(/\.0$/, "") + "k";
+  }
+  return num.toString();
+};
+
+// Format time intelligently (minutes for < 60min, hours for 60min+)
+const formatTime = (minutes: number): string => {
+  if (minutes < 60) {
+    return `${Math.round(minutes)}min`;
+  }
+  const hours = minutes / 60;
+  return `${hours.toFixed(1).replace(/\.0$/, "")}h`;
+};
 
 export default async function UsagePage() {
   const stats = await caller.usage.getStats();
@@ -38,12 +49,12 @@ export default async function UsagePage() {
   const usageStats = [
     {
       label: "Total Words",
-      value: stats.total.words.toLocaleString(),
+      value: formatCompactNumber(stats.total.words),
       trend: "",
     },
     {
       label: "Total Time Saved",
-      value: `${stats.total.timeSaved.toFixed(1)}h`,
+      value: formatTime(stats.total.timeSaved),
       trend: "",
     },
     {
@@ -97,7 +108,7 @@ export default async function UsagePage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {currentPeriod.wordsProcessed.toLocaleString()}
+              {formatCompactNumber(currentPeriod.wordsProcessed)}
             </div>
             <p className="text-muted-foreground mt-1 text-xs">this month</p>
           </CardContent>
@@ -112,7 +123,7 @@ export default async function UsagePage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {currentPeriod.timeSaved.toFixed(1)}h
+              {formatTime(currentPeriod.timeSaved)}
             </div>
             <p className="text-muted-foreground mt-1 text-xs">estimated</p>
           </CardContent>
@@ -127,7 +138,7 @@ export default async function UsagePage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {stats.total.transcriptions.toLocaleString()}
+              {formatCompactNumber(stats.total.transcriptions)}
             </div>
             <p className="text-muted-foreground mt-1 text-xs">all time</p>
           </CardContent>
