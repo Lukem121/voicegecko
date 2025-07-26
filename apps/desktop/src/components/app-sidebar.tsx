@@ -51,6 +51,7 @@ import {
   SidebarMenuSub,
   SidebarMenuSubButton,
   SidebarMenuSubItem,
+  useSidebar,
 } from "@acme/ui/components/ui/sidebar";
 
 import { useSignOut } from "~/hooks/auth";
@@ -159,12 +160,66 @@ if (isDev) {
   });
 }
 
+// Circular Progress Component
+interface CircularProgressProps {
+  percentage: number;
+  size?: number;
+  strokeWidth?: number;
+}
+
+function CircularProgress({
+  percentage,
+  size = 32,
+  strokeWidth = 4,
+}: CircularProgressProps) {
+  const radius = (size - strokeWidth) / 2;
+  const circumference = radius * 2 * Math.PI;
+  const strokeDashoffset = circumference - (percentage / 100) * circumference;
+
+  return (
+    <div className="relative flex items-center justify-center">
+      <svg width={size} height={size} className="-rotate-90 transform">
+        {/* Background circle */}
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          stroke="currentColor"
+          strokeWidth={strokeWidth}
+          fill="none"
+          className="text-muted-foreground/20"
+        />
+        {/* Progress circle */}
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          stroke="currentColor"
+          strokeWidth={strokeWidth}
+          fill="none"
+          strokeDasharray={circumference}
+          strokeDashoffset={strokeDashoffset}
+          strokeLinecap="round"
+          className="text-primary transition-all duration-300 ease-in-out"
+        />
+      </svg>
+      {/* Percentage text in center */}
+      <div className="absolute inset-0 flex items-center justify-center">
+        <span className="text-[10px] font-medium">
+          {Math.round(percentage)}%
+        </span>
+      </div>
+    </div>
+  );
+}
+
 export function AppSidebar() {
   const auth = useAuthWithConnectivity();
   const user = auth.user;
   const signOut = useSignOut();
   const location = useLocation();
   const [showSupportDialog, setShowSupportDialog] = useState(false);
+  const { state: sidebarState } = useSidebar();
 
   // Fetch usage status
   const { data: usageStatus } = useQuery({
@@ -292,41 +347,47 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
       <SidebarFooter>
-        {/* Usage Progress Bar for Free Users */}
+        {/* Usage Progress for Free Users */}
         {isFreePlan && (
           <div className="mb-4 px-2">
-            <div className="space-y-2">
-              <div className="flex items-center justify-between text-xs">
-                <span className="text-muted-foreground">Weekly Usage</span>
-                <span className="font-medium">
-                  {usageStatus.wordsUsed.toLocaleString()} /{" "}
-                  {usageStatus.wordsLimit.toLocaleString()}
-                </span>
+            {sidebarState === "expanded" ? (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-muted-foreground">Weekly Usage</span>
+                  <span className="font-medium">
+                    {usageStatus.wordsUsed.toLocaleString()} /{" "}
+                    {usageStatus.wordsLimit.toLocaleString()}
+                  </span>
+                </div>
+                <Progress value={usagePercentage} className="h-2" />
+                {usagePercentage >= 90 && (
+                  <p className="text-xs text-amber-600">
+                    {usagePercentage >= 100 ? (
+                      <>
+                        Limit reached.{" "}
+                        <button
+                          onClick={async () => {
+                            const websiteUrl =
+                              import.meta.env.VITE_PUBLIC_VOICEGECKO_URL ||
+                              "https://www.voicegecko.io";
+                            await open(`${websiteUrl}/app/plans`);
+                          }}
+                          className="cursor-pointer underline"
+                        >
+                          Upgrade to Pro.
+                        </button>
+                      </>
+                    ) : (
+                      "Approaching usage limit."
+                    )}
+                  </p>
+                )}
               </div>
-              <Progress value={usagePercentage} className="h-2" />
-              {usagePercentage >= 90 && (
-                <p className="text-xs text-amber-600">
-                  {usagePercentage >= 100 ? (
-                    <>
-                      Limit reached.{" "}
-                      <button
-                        onClick={async () => {
-                          const websiteUrl =
-                            import.meta.env.VITE_PUBLIC_VOICEGECKO_URL ||
-                            "https://www.voicegecko.io";
-                          await open(`${websiteUrl}/app/plans`);
-                        }}
-                        className="cursor-pointer underline"
-                      >
-                        Upgrade to Pro.
-                      </button>
-                    </>
-                  ) : (
-                    "Approaching usage limit."
-                  )}
-                </p>
-              )}
-            </div>
+            ) : (
+              <div className="flex justify-center">
+                <CircularProgress percentage={usagePercentage} />
+              </div>
+            )}
           </div>
         )}
 

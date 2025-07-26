@@ -1,6 +1,5 @@
 TODO
 
-- [ ] Darkmode & lightmode on desktop app
 - [ ] Prod error tracking?
 - [ ] Onboarding system
 - [ ] user stats visible in app, like gamification
