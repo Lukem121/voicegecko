@@ -32,7 +32,6 @@ export async function initializeGeckoBarEvents(): Promise<void> {
     // Listen for gecko bar notifications
     await listen("gecko-bar-notification", (event) => {
       const payload = event.payload as GeckoBarNotificationEvent;
-      console.log("[GeckoBarEvents] 📢 Received notification:", payload);
 
       // Update the notification store
       useGeckoBarNotificationStore.getState().showNotification(payload);

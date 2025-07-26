@@ -83,6 +83,14 @@ export async function createTranscription(input: CreateTranscriptionInput) {
   console.log(
     "[TranscriptionMutations] ✅ Strategy 4 complete: invalidate ALL queries",
   );
+  
+  // Specifically invalidate usage queries to ensure UI updates
+  await queryClient.invalidateQueries({
+    queryKey: ["usage"],
+  });
+  console.log(
+    "[TranscriptionMutations] ✅ Usage queries invalidated",
+  );
 
   // Check what happened to the queries after invalidation
   const queriesAfter = queryClient.getQueryCache().getAll();

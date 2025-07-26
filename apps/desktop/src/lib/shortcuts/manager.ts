@@ -116,7 +116,7 @@ class ShortcutManager {
 
   private async handlePushToTalkDown() {
     try {
-      await recordingService.startPushToTalk();
+      await recordingService.startPushToTalk({ isKeyboardShortcut: true });
     } catch (error) {
       console.error("Failed to start push-to-talk recording:", error);
     }
