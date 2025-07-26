@@ -23,12 +23,12 @@ interface StudentDiscountEmailProps {
 }
 
 const studentGeckoUrl =
-  "https://90yklj7887.ufs.sh/f/Wzb1OBsC8B6ZVoDCkuyBN8axuchVvfPCJEzF0UmSTXdir9Ot";
+  "https://90yklj7887.ufs.sh/f/Wzb1OBsC8B6ZcQyRTazBT5UxRZaDh7eC29OQc6zNA04G8qLw";
 
 export const StudentDiscountTemplate = ({
   couponCode,
   discountPercentage,
-  redemptionUrl = "https://voicegecko.io/pricing",
+  redemptionUrl = "https://www.voicegecko.io/pricing",
 }: StudentDiscountEmailProps) => (
   <Tailwind>
     <Html>
