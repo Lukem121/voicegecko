@@ -21,7 +21,7 @@ interface WelcomeEmailProps {
 }
 
 const welcomeGeckoUrl =
-  "https://90yklj7887.ufs.sh/f/Wzb1OBsC8B6ZIZUGNcEATV6Nv5s4hzMj9rdBkWbRKc7JtqLC";
+  "https://90yklj7887.ufs.sh/f/Wzb1OBsC8B6ZZxxQQcfpboVIp95n82XArwQPSJcUjFZED3Ru";
 
 export const WelcomeTemplate = ({
   name,
