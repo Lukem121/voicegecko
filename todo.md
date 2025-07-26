@@ -1,6 +1,5 @@
 TODO
 
-- [ ] Implement student discount.
 - [ ] Darkmode & lightmode on desktop app
 - [ ] Prod error tracking?
 - [ ] Onboarding system
@@ -12,6 +11,7 @@ Pre Launch Checks
 
 - [ ] Check added stripe student coupon code: RYGALTMSXJAA
 - [ ] Inside BetterAuth we are only allowing my emails to sign up. We need to remove that.
+- [ ] Check all links are working including in emails.
 
 After MVP
 
