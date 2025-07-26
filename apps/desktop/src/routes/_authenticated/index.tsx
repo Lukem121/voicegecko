@@ -168,7 +168,7 @@ function RecordingPage() {
                         isRecording && "animate-pulse",
                       )}
                       onClick={handleMicClick}
-                      disabled={isTranscribing || isProcessing}
+                      disabled={isTranscribing || isProcessing || isAtLimit}
                     >
                       {isTranscribing ? (
                         <Loader2 className="h-5 w-5 animate-spin" />
@@ -181,10 +181,7 @@ function RecordingPage() {
                   </TooltipTrigger>
                   <TooltipContent>
                     {isAtLimit ? (
-                      <p>
-                        Usage limit reached. Recording allowed but transcription
-                        may be blocked.
-                      </p>
+                      <p>Usage limit reached.</p>
                     ) : usageStatus && !usageStatus.isUnlimited ? (
                       <p>
                         {usageStatus.wordsUsed.toLocaleString()} /{" "}

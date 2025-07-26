@@ -1,8 +1,10 @@
 import { invoke } from "@tauri-apps/api/core";
 import { toast } from "sonner";
 
+import { showUsageLimitNotification } from "~/lib/gecko-bar-notifications";
 import { useEventStore } from "~/stores/event.store";
 import { useSettingsStore } from "~/stores/settings.store";
+import { queryClient, trpc, trpcClient } from "~/trpc";
 import { invokeTranscriptionFromBuffer } from "../lib/transcription";
 
 export interface RecordingOptions {
@@ -37,25 +39,14 @@ export class RecordingService {
     try {
       const { recordingStatus } = useEventStore.getState();
 
-      console.log(
-        "[RecordingService] Toggle recording called, current status:",
-        recordingStatus,
-      );
-
       if (recordingStatus === "idle") {
-        console.log("[RecordingService] Starting recording...");
         await this.startRecording(options);
       } else if (recordingStatus === "recording") {
-        console.log("[RecordingService] Stopping recording...");
         await this.stopRecording(options);
       } else if (recordingStatus === "processing") {
-        console.log(
-          "[RecordingService] Recording is processing, ignoring toggle",
-        );
+        // Recording is processing, ignoring toggle
       } else {
-        console.log(
-          "[RecordingService] Recording in error state, attempting to start...",
-        );
+        // Recording in error state, attempting to start...
         await this.startRecording(options);
       }
     } finally {
@@ -122,15 +113,42 @@ export class RecordingService {
    */
   private async startRecording(options: RecordingOptions): Promise<void> {
     try {
+      // Quick check of cached usage status - only block if we have definitive cached evidence user is over limit
+      const usageQueryKey = trpc.usage.getStatus.queryKey();
+      const cachedUsageStatus = queryClient.getQueryData(usageQueryKey);
+
+      // Only block recording if we have cached data showing user is definitively over limit
+      if (
+        cachedUsageStatus &&
+        !cachedUsageStatus.isUnlimited &&
+        !cachedUsageStatus.canTranscribe
+      ) {
+        console.log(
+          "[RecordingService] User has exceeded usage limit (cached) - blocking recording",
+        );
+
+        // Show notification immediately if this is from a keyboard shortcut
+        if (options.isKeyboardShortcut) {
+          await showUsageLimitNotification();
+        }
+
+        // Show toast for all cases
+        toast.error("Usage limit reached", {
+          description: "Upgrade to Pro for unlimited transcriptions",
+        });
+
+        return; // Don't start recording
+      }
+
+      // Start async usage check in background (don't await - let it run in parallel)
+      this.performAsyncUsageCheck();
+
       const { settings } = useSettingsStore.getState();
       const deviceName = options.device ?? settings.audio.selectedDevice?.name;
 
       // Play start sound first if enabled
       if (options.playStartSound ?? this.shouldPlayStartSound()) {
         await this.playNotificationSound("Start");
-        // Add a small delay to ensure the start sound has time to play
-        // before system audio is muted, preventing audio conflicts
-        await new Promise((resolve) => setTimeout(resolve, 100));
       }
 
       // Mute system audio if enabled
@@ -273,6 +291,23 @@ export class RecordingService {
     // Only play end sound on recording stop if timing is "start_stop"
     // "completion_only" and "start_completion" timings are handled by transcription service
     return settings.audio.notificationTiming === "start_stop";
+  }
+
+  /**
+   * Perform async usage check in background (non-blocking)
+   * This runs in parallel with recording startup to check usage limits
+   */
+  private async performAsyncUsageCheck(): Promise<void> {
+    try {
+      const usageStatus = await trpcClient.usage.getStatus.query();
+
+      // Update the query cache with fresh data
+      const usageQueryKey = trpc.usage.getStatus.queryKey();
+      queryClient.setQueryData(usageQueryKey, usageStatus);
+    } catch (error) {
+      console.warn("[RecordingService] Async usage check failed:", error);
+      // Don't throw - this is a background operation
+    }
   }
 
   /**
