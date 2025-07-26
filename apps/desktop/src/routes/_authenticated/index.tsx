@@ -39,7 +39,7 @@ import { useUser } from "~/hooks/auth";
 import { useDebouncedSearch } from "~/hooks/use-debounced-search";
 import { recordingService } from "~/services/recording.service";
 import { useEventStore } from "~/stores/event.store";
-import { trpc } from "~/trpc";
+import { queryClient, trpc } from "~/trpc";
 
 export const Route = createFileRoute("/_authenticated/")({
   component: RecordingPage,
