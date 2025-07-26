@@ -37,9 +37,9 @@ export const StudentDiscountTemplate = ({
       <Preview>
         Your {discountPercentage}% student discount code for VoiceGecko is here!
       </Preview>
-      <Body className="mx-auto bg-white px-4 font-sans">
-        <Container className="mx-auto w-[580px] max-w-full py-5 pb-12">
-          <Heading className="mt-8 mb-6 text-center text-3xl leading-tight font-bold text-[#1d1c1d]">
+      <Body className="mx-auto bg-white px-2 font-sans sm:px-4">
+        <Container className="mx-auto w-[580px] max-w-full py-3 pb-8 sm:py-5 sm:pb-12">
+          <Heading className="mt-4 mb-4 px-2 text-center text-2xl leading-tight font-bold text-[#1d1c1d] sm:mt-8 sm:mb-6 sm:px-0 sm:text-3xl">
             Student Discount for{" "}
             <Img
               src={logoTextUrl}
@@ -50,12 +50,12 @@ export const StudentDiscountTemplate = ({
             !
           </Heading>
 
-          <Text className="mb-4 text-lg leading-7">
+          <Text className="mb-3 px-2 text-lg leading-6 sm:mb-4 sm:px-0 sm:leading-7">
             Great news! Your student status has been verified and you're
             eligible for our exclusive student discount.
           </Text>
 
-          <Text className="text-base leading-6 text-gray-700">
+          <Text className="mb-5 px-2 text-base leading-6 text-gray-700 sm:mb-6 sm:px-0">
             As a student, we know every dollar counts. That's why we're excited
             to offer you <strong>{discountPercentage}% off</strong> VoiceGecko
             Pro to help power your studies with accurate voice-to-text
@@ -63,18 +63,18 @@ export const StudentDiscountTemplate = ({
           </Text>
 
           {/* Coupon Code Section */}
-          <Section className="mb-6 overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm">
-            <div className="px-6 py-5 text-center">
+          <Section className="mx-2 mb-5 overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm sm:mx-0 sm:mb-6">
+            <div className="px-4 py-4 text-center sm:px-6 sm:py-5">
               <Text className="mb-2 text-xs font-semibold tracking-widest text-gray-500 uppercase">
                 Your Coupon Code
               </Text>
-              <div className="mb-4 rounded-md border-2 border-dashed border-gray-300 bg-gray-50 px-4 py-3">
-                <Text className="font-mono text-2xl font-bold tracking-wider text-gray-900">
+              <div className="mb-3 rounded-md border-2 border-dashed border-gray-300 bg-gray-50 px-3 py-2 sm:mb-4 sm:px-4 sm:py-3">
+                <Text className="font-mono text-xl font-bold tracking-wider text-gray-900 sm:text-2xl">
                   {couponCode}
                 </Text>
               </div>
               <Link
-                className="inline-block rounded-md bg-green-600 px-8 py-3 text-center font-semibold text-white no-underline transition-colors hover:bg-green-700"
+                className="inline-block rounded-md bg-green-600 px-6 py-3 text-center font-semibold text-white no-underline transition-colors hover:bg-green-700 sm:px-8"
                 href={redemptionUrl}
               >
                 Claim Discount
@@ -83,7 +83,7 @@ export const StudentDiscountTemplate = ({
           </Section>
 
           {/* How to Use Section */}
-          <Section className="mb-7 rounded-md bg-blue-50 p-6">
+          <Section className="mx-2 mb-5 rounded-md bg-blue-50 p-3 sm:mx-0 sm:mb-7 sm:p-6">
             <table
               width="100%"
               cellPadding="0"
@@ -92,10 +92,10 @@ export const StudentDiscountTemplate = ({
             >
               <tr>
                 <td valign="top" style={{ paddingRight: "16px" }}>
-                  <Heading className="mb-4 text-lg font-semibold text-[#1d1c1d]">
+                  <Heading className="mb-3 text-base font-semibold text-[#1d1c1d] sm:mb-4 sm:text-lg">
                     📝 How to Use Your Discount
                   </Heading>
-                  <ol className="space-y-2 text-sm leading-6 text-gray-700">
+                  <ol className="space-y-2 pl-4 text-sm leading-5 text-gray-700 sm:pl-5 sm:leading-6">
                     <li className="flex items-start">
                       <span className="mr-3 font-semibold text-blue-600">
                         1.
@@ -127,7 +127,12 @@ export const StudentDiscountTemplate = ({
                     </li>
                   </ol>
                 </td>
-                <td width="80" valign="bottom" align="right">
+                <td
+                  width="80"
+                  valign="bottom"
+                  align="right"
+                  className="hidden sm:table-cell"
+                >
                   <Img
                     src={studentGeckoUrl}
                     height="70"
@@ -138,7 +143,7 @@ export const StudentDiscountTemplate = ({
             </table>
           </Section>
 
-          <Text className="text-base leading-6 text-black">
+          <Text className="px-2 text-base leading-6 text-black sm:px-0">
             Questions about your student discount? We're here to help! Just
             reply to this email or reach out through our support channels.
           </Text>

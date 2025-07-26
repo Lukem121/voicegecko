@@ -35,9 +35,9 @@ export const WelcomeProTemplate = ({
       <Preview>
         Welcome to {planName} - Unlock the full power of voice-to-text!
       </Preview>
-      <Body className="mx-auto bg-white px-4 font-sans">
-        <Container className="mx-auto w-[580px] max-w-full py-5 pb-12">
-          <Heading className="mt-8 mb-7 text-center text-3xl leading-tight font-bold text-[#1d1c1d]">
+      <Body className="mx-auto bg-white px-2 font-sans sm:px-4">
+        <Container className="mx-auto w-[580px] max-w-full py-3 pb-8 sm:py-5 sm:pb-12">
+          <Heading className="mt-4 mb-4 px-2 text-center text-2xl leading-tight font-bold text-[#1d1c1d] sm:mt-8 sm:mb-7 sm:px-0 sm:text-3xl">
             Thank you for upgrading
             <br />
             to{" "}
@@ -51,7 +51,7 @@ export const WelcomeProTemplate = ({
           </Heading>
 
           {/* Thank You Gecko Mascot */}
-          <Section className="mb-6 text-center">
+          <Section className="mb-4 text-center sm:mb-6">
             <Img
               src={thankYouGeckoUrl}
               height="120"
@@ -60,23 +60,23 @@ export const WelcomeProTemplate = ({
             />
           </Section>
 
-          <Text className="mb-4 text-lg leading-7">
+          <Text className="mb-3 px-2 text-lg leading-6 sm:mb-4 sm:px-0 sm:leading-7">
             Congratulations{name ? `, ${name}` : ""}! You've just unlocked the
             full power of voice-to-text transcription.
           </Text>
 
-          <Text className="mb-7 text-base leading-6 text-gray-700">
+          <Text className="mb-5 px-2 text-base leading-6 text-gray-700 sm:mb-7 sm:px-0">
             Your <strong>{planName}</strong> subscription is now active. Get
             ready to experience unlimited transcriptions, priority processing,
             and premium features designed for power users.
           </Text>
 
           {/* Pro Features Section */}
-          <Section className="mb-7 rounded-md bg-blue-50 p-6">
-            <Heading className="mb-4 text-center text-xl font-semibold text-[#1d1c1d]">
+          <Section className="mx-2 mb-5 rounded-md bg-blue-50 p-3 sm:mx-0 sm:mb-7 sm:p-6">
+            <Heading className="mb-3 text-center text-lg font-semibold text-[#1d1c1d] sm:mb-4 sm:text-xl">
               🎉 What's New in Your Pro Account
             </Heading>
-            <ul className="space-y-3 text-sm leading-6 text-gray-700">
+            <ul className="space-y-2 pl-4 text-sm leading-5 text-gray-700 sm:space-y-3 sm:pl-5 sm:leading-6">
               <li className="flex items-start">
                 <span className="mr-3 text-green-600">✓</span>
                 <span>
@@ -109,7 +109,7 @@ export const WelcomeProTemplate = ({
             </ul>
           </Section>
 
-          <Text className="text-base leading-6 text-black">
+          <Text className="px-2 text-base leading-6 text-black sm:px-0">
             Thank you for choosing VoiceGecko Pro. We're excited to see what
             you'll accomplish with unlimited voice-to-text power!
           </Text>

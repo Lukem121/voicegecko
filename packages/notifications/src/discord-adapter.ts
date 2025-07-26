@@ -1,9 +1,10 @@
-import { apiEnv } from "../../env";
+import { notificationsEnv } from "./env";
 
 // Notification types enum for extensibility
 export enum DiscordNotificationType {
   ERROR_REPORT = "ERROR_REPORT",
   FEEDBACK = "FEEDBACK",
+  USER_SIGNUP = "USER_SIGNUP",
 }
 
 // Base interface for all notifications
@@ -25,6 +26,11 @@ export interface FeedbackReport extends BaseNotification {
   rating?: number;
 }
 
+export interface UserSignup extends BaseNotification {
+  email: string;
+  username?: string;
+}
+
 // Discord embed interface
 interface DiscordEmbed {
   title: string;
@@ -41,7 +47,7 @@ export class DiscordAdapter {
   private webhookUrls: Map<DiscordNotificationType, string>;
 
   constructor() {
-    const env = apiEnv();
+    const env = notificationsEnv();
 
     this.webhookUrls = new Map([
       [
@@ -49,6 +55,10 @@ export class DiscordAdapter {
         env.DISCORD_ERROR_REPORT_WEBHOOK_URL,
       ],
       [DiscordNotificationType.FEEDBACK, env.DISCORD_FEEDBACK_WEBHOOK_URL],
+      [
+        DiscordNotificationType.USER_SIGNUP,
+        env.DISCORD_USER_SIGNUP_WEBHOOK_URL,
+      ],
     ]);
   }
 
@@ -142,6 +152,41 @@ export class DiscordAdapter {
     }
 
     await this.sendWebhook(DiscordNotificationType.FEEDBACK, embed);
+  }
+
+  async sendUserSignup(report: UserSignup) {
+    const embed: DiscordEmbed = {
+      title: "🎉 New User Signup",
+      color: 0x7289da, // Discord blue
+      timestamp: report.timestamp ?? new Date().toISOString(),
+      fields: [
+        {
+          name: "Email",
+          value: report.email,
+          inline: true,
+        },
+        {
+          name: "Username",
+          value: report.username ?? "Not available",
+          inline: true,
+        },
+        {
+          name: "User ID",
+          value: report.userId ?? "Not available",
+          inline: true,
+        },
+      ],
+    };
+
+    if (report.additionalContext) {
+      embed.fields.push({
+        name: "Additional Context",
+        value: `\`\`\`json\n${JSON.stringify(report.additionalContext, null, 2).slice(0, 1000)}\n\`\`\``,
+        inline: false,
+      });
+    }
+
+    await this.sendWebhook(DiscordNotificationType.USER_SIGNUP, embed);
   }
 
   private async sendWebhook(
