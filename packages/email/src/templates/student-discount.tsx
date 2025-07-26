@@ -1,7 +1,6 @@
 import {
   Body,
   Container,
-  Head,
   Heading,
   Html,
   Img,
@@ -12,6 +11,9 @@ import {
   Text,
 } from "@react-email/components";
 
+import { DarkModeAwareLogo } from "../components/dark-mode-aware-logo";
+import { DarkModeAwareLogoFull } from "../components/dark-mode-aware-logo-full";
+import { DarkModeEmailHead } from "../components/dark-mode-email-head";
 import { EmailFooter } from "../components/email-footer";
 
 interface StudentDiscountEmailProps {
@@ -19,9 +21,6 @@ interface StudentDiscountEmailProps {
   discountPercentage: string;
   redemptionUrl?: string;
 }
-
-const logoTextUrl =
-  "https://90yklj7887.ufs.sh/f/Wzb1OBsC8B6ZyL7b0tqZywrYS8IcuheEG0Tm1fBLgUx9z56J";
 
 const studentGeckoUrl =
   "https://90yklj7887.ufs.sh/f/Wzb1OBsC8B6ZVoDCkuyBN8axuchVvfPCJEzF0UmSTXdir9Ot";
@@ -33,21 +32,18 @@ export const StudentDiscountTemplate = ({
 }: StudentDiscountEmailProps) => (
   <Tailwind>
     <Html>
-      <Head />
+      <DarkModeEmailHead />
       <Preview>
         Your {discountPercentage}% student discount code for VoiceGecko is here!
       </Preview>
       <Body className="mx-auto bg-white px-2 font-sans sm:px-4">
         <Container className="mx-auto w-[580px] max-w-full py-3 pb-8 sm:py-5 sm:pb-12">
-          <Heading className="mt-4 mb-4 px-2 text-center text-2xl leading-tight font-bold text-[#1d1c1d] sm:mt-8 sm:mb-6 sm:px-0 sm:text-3xl">
-            Student Discount for{" "}
-            <Img
-              src={logoTextUrl}
-              height="32"
-              alt="VoiceGecko"
-              className="inline-block align-middle"
-            />
-            !
+          <Section className="mt-4 px-2 sm:mt-8 sm:px-0">
+            <DarkModeAwareLogoFull />
+          </Section>
+
+          <Heading className="my-4 px-2 text-2xl leading-tight font-bold text-[#1d1c1d] sm:my-7 sm:px-0 sm:text-3xl">
+            Student Discount for VoiceGecko
           </Heading>
 
           <Text className="mb-3 px-2 text-lg leading-6 sm:mb-4 sm:px-0 sm:leading-7">

@@ -1,7 +1,6 @@
-import { Column, Img, Link, Row, Section, Text } from "@react-email/components";
+import { Column, Link, Row, Section, Text } from "@react-email/components";
 
-const logoTextUrl =
-  "https://90yklj7887.ufs.sh/f/Wzb1OBsC8B6ZyL7b0tqZywrYS8IcuheEG0Tm1fBLgUx9z56J";
+import { DarkModeAwareLogo } from "./dark-mode-aware-logo";
 
 export const EmailFooter = () => (
   <>
@@ -9,7 +8,7 @@ export const EmailFooter = () => (
       <Row className="mb-8 w-full">
         <Column className="w-2/3">
           <Link href="https://voicegecko.io">
-            <Img src={logoTextUrl} height="36" alt="VoiceGecko Logo Text" />
+            <DarkModeAwareLogo height="36" alt="VoiceGecko Logo Text" />
           </Link>
         </Column>
       </Row>

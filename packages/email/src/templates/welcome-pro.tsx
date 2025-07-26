@@ -1,7 +1,6 @@
 import {
   Body,
   Container,
-  Head,
   Heading,
   Html,
   Img,
@@ -12,15 +11,14 @@ import {
   Text,
 } from "@react-email/components";
 
+import { DarkModeAwareLogo } from "../components/dark-mode-aware-logo";
+import { DarkModeEmailHead } from "../components/dark-mode-email-head";
 import { EmailFooter } from "../components/email-footer";
 
 interface WelcomeProEmailProps {
   name?: string;
   planName: string;
 }
-
-const logoTextUrl =
-  "https://90yklj7887.ufs.sh/f/Wzb1OBsC8B6ZyL7b0tqZywrYS8IcuheEG0Tm1fBLgUx9z56J";
 
 const thankYouGeckoUrl =
   "https://90yklj7887.ufs.sh/f/Wzb1OBsC8B6Z3nnGQtFXVJa1EhulKH9YL0eUvGTmb7C4PRFr";
@@ -31,7 +29,7 @@ export const WelcomeProTemplate = ({
 }: WelcomeProEmailProps) => (
   <Tailwind>
     <Html>
-      <Head />
+      <DarkModeEmailHead />
       <Preview>
         Welcome to {planName} - Unlock the full power of voice-to-text!
       </Preview>
@@ -41,8 +39,7 @@ export const WelcomeProTemplate = ({
             Thank you for upgrading
             <br />
             to{" "}
-            <Img
-              src={logoTextUrl}
+            <DarkModeAwareLogo
               height="32"
               alt="VoiceGecko"
               className="inline-block align-middle"
