@@ -1,11 +1,9 @@
 TODO
 
-- [ ] Prod error tracking?
 - [ ] Onboarding system
 - [ ] Posthog
 - [ ] Landing page & subsequent pages
 - [ ] Links in the Emails need removing or implementing.
-- [ ] Sign out on desktop not working
 
 Pre Launch Checks
 
