@@ -14,7 +14,7 @@ import { useAuthWithConnectivity } from "~/hooks/use-auth-with-connectivity";
 
 export const Route = createFileRoute("/_authenticated")({
   beforeLoad: ({ context, location }) => {
-    const authIssueType = context.auth.getAuthIssueType?.() || "loading";
+    const authIssueType = context.auth.getAuthIssueType?.() ?? "loading";
 
     console.log("[_authenticated beforeLoad] Auth issue type:", authIssueType);
 

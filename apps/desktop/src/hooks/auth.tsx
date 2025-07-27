@@ -5,7 +5,7 @@ import { isRegistered, register } from "@tauri-apps/plugin-deep-link";
 import { openUrl } from "@tauri-apps/plugin-opener";
 
 import { authClient } from "~/lib/client";
-import { trpc } from "~/trpc";
+import { queryClient, trpc } from "~/trpc";
 
 /**
  * Utility function to check if an error is likely network-related
@@ -92,10 +92,11 @@ export const useSignIn = () => {
 
 export const useSignOut = () => {
   const router = useRouter();
-
+  const options = trpc.auth.getSession.queryKey();
   return async () => {
     console.log("🚪 Signing out...");
     await authClient.signOut();
+    await queryClient.invalidateQueries({ queryKey: options });
     return router.navigate({ to: "/sign-in", search: { redirect: null } });
   };
 };

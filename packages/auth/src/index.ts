@@ -25,6 +25,7 @@ import {
 
 import { authEnv } from "../env";
 import { handleAfterHook } from "./middleware/handle-after-hook";
+import { handleCreateAfterHook } from "./middleware/handle-create-after-hook";
 import { usernameValidator } from "./schemas/username.schema";
 
 export const serverAuth = betterAuth({
@@ -139,6 +140,13 @@ export const serverAuth = betterAuth({
       }
     }),
   },
+  databaseHooks: {
+    user: {
+      create: {
+        after: handleCreateAfterHook,
+      },
+    },
+  },
   emailVerification: {
     autoSignInAfterVerification: true,
     sendVerificationEmail: sendVerificationEmail,
@@ -149,6 +157,7 @@ export const serverAuth = betterAuth({
     requireEmailVerification: true,
     sendResetPassword: sendResetPasswordEmail,
   },
+
   socialProviders: {
     discord: {
       clientId: authEnv().AUTH_DISCORD_ID,
