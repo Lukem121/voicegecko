@@ -1,10 +1,27 @@
 use tauri::Manager;
-
+use tauri_plugin_sentry::{minidump, sentry};
 mod modules;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+
+    let client = sentry::init((
+        "https://5131669e441c266a66c873d2c97d3571@o4504837577768960.ingest.us.sentry.io/4509740408897546",
+        sentry::ClientOptions {
+            release: sentry::release_name!(),
+            auto_session_tracking: true,
+            send_default_pii: true,
+            ..Default::default()
+        },
+    ));
+
+    // Caution! Everything before here runs in both app and crash reporter processes
+    #[cfg(not(target_os = "ios"))]
+    let _guard = minidump::init(&client);
+    // Everything after here runs in only the app process
+
     tauri::Builder::default()
+        .plugin(tauri_plugin_sentry::init(&client))
         .plugin(tauri_plugin_positioner::init())
         .plugin(tauri_plugin_clipboard_manager::init())
         .plugin(tauri_plugin_global_shortcut::Builder::new().build())

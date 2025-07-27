@@ -50,6 +50,7 @@
     "react-dom": "catalog:react19",
     "superjson": "2.2.2",
     "tailwindcss": "catalog:",
+    "tauri-plugin-sentry-api": "^0.4.1",
     "ts-pattern": "^5.7.1",
     "zustand": "^5.0.6"
   },
