@@ -23,8 +23,6 @@ function isBannedUserError(value: unknown): value is BannedUserError {
 }
 
 export const handleAfterHook = createAuthMiddleware(async (ctx) => {
-  const newSession = ctx.context.newSession;
-
   if (ctx.path.startsWith("/callback")) {
     const returned = ctx.context.returned;
     if (
@@ -34,22 +32,5 @@ export const handleAfterHook = createAuthMiddleware(async (ctx) => {
     ) {
       throw ctx.redirect("/authentication-error?error=USER_BANNED");
     }
-  }
-
-  if (newSession) {
-    await Promise.all([
-      discordAdapter.sendUserSignup({
-        userId: newSession.user.id,
-        email: newSession.user.email,
-        username: newSession.user.name,
-        timestamp: new Date().toISOString(),
-      }),
-      sendWelcomeEmail({
-        user: {
-          email: newSession.user.email,
-          name: newSession.user.name,
-        },
-      }),
-    ]);
   }
 });

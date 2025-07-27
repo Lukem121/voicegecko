@@ -29,6 +29,7 @@ tauri-plugin-os = "2"
 tauri-plugin-shell = "2.3.0"
 tauri-plugin-store = "2.3.0"
 tauri-plugin-process = "2"
+tauri-plugin-sentry = "0.4"
 url = "2.4"
 cpal = "0.15.3"
 rodio = { version = "0.18.1", features = ["mp3"] }

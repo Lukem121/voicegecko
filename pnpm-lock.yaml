@@ -168,6 +168,9 @@ importers:
       tailwindcss:
         specifier: 'catalog:'
         version: 4.1.11
+      tauri-plugin-sentry-api:
+        specifier: ^0.4.1
+        version: 0.4.1
       ts-pattern:
         specifier: ^5.7.1
         version: 5.7.1
@@ -4648,6 +4651,10 @@ packages:
   '@tanstack/virtual-file-routes@1.129.7':
     resolution: {integrity: sha512-a+MxoAXG+Sq94Jp67OtveKOp2vQq75AWdVI8DRt6w19B0NEqpfm784FTLbVp/qdR1wmxCOmKAvElGSIiBOx5OQ==}
     engines: {node: '>=12'}
+
+  '@tauri-apps/api@2.0.0-beta.8':
+    resolution: {integrity: sha512-fN5u+9HsSfhRaXGOdD2kPGbqDgyX+nkm1XF/4d/LNuM4WiNfvHjjRAqWQYBhQsg1aF9nsTPmSW+tmy+Yn5T5+A==}
+    engines: {node: '>= 18', npm: '>= 6.6.0', yarn: '>= 1.19.1'}
 
   '@tauri-apps/api@2.7.0':
     resolution: {integrity: sha512-v7fVE8jqBl8xJFOcBafDzXFc8FnicoH3j8o8DNNs0tHuEBmXUDqrCOAzMRX0UkfpwqZLqvrvK0GNQ45DfnoVDg==}
@@ -9385,6 +9392,9 @@ packages:
     resolution: {integrity: sha512-5S7Va8hKfV7W5U6g3aYxXmlPoZVAwUMy9AOKyF2fVuZa2UD3qZjg578OrLRt8PcNN1PleVaL/5/yYATNL0ICUw==}
     engines: {node: '>=18'}
 
+  tauri-plugin-sentry-api@0.4.1:
+    resolution: {integrity: sha512-KgfL7JhN51TOA3e0UYDu6UkdwgH+wC1/RC3qIHJOZIAsvyTfde4uifUFB11GfgXfHgY33xUkIGgqWKkaK5lg6Q==}
+
   temp-dir@2.0.0:
     resolution: {integrity: sha512-aoBAniQmmwtcKp/7BzsH8Cxzv8OL736p7v1ihGb5e9DJ9kTwGWHrQrVB5+lfVDzfGrdRzXch+ig7LHaY1JTOrg==}
     engines: {node: '>=8'}
@@ -14091,6 +14101,8 @@ snapshots:
   '@tanstack/store@0.7.1': {}
 
   '@tanstack/virtual-file-routes@1.129.7': {}
+
+  '@tauri-apps/api@2.0.0-beta.8': {}
 
   '@tauri-apps/api@2.7.0': {}
 
@@ -19633,6 +19645,11 @@ snapshots:
       minizlib: 3.0.2
       mkdirp: 3.0.1
       yallist: 5.0.0
+
+  tauri-plugin-sentry-api@0.4.1:
+    dependencies:
+      '@tauri-apps/api': 2.0.0-beta.8
+      tslib: 2.8.1
 
   temp-dir@2.0.0: {}
 
