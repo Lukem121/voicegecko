@@ -40,7 +40,13 @@ export function useAuthWithConnectivity() {
 
   const getAuthIssueType = () => {
     if (auth.isLoading) return "loading";
-    if (isConnectivityError) return "connectivity";
+
+    // Only show connectivity error for actual internet issues, not just API down
+    // API down should not block the entire UI when user is already authenticated
+    if (isConnectivityError && connectivity.diagnosis === "no_internet") {
+      return "connectivity";
+    }
+
     if (auth.error) return "auth";
     if (!auth.user) return "unauthenticated";
     return "authenticated";

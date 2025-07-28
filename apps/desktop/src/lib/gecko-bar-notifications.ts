@@ -36,3 +36,14 @@ export function showUsageLimitNotification(): Promise<void> {
     priority: "high",
   });
 }
+
+/**
+ * Show a no internet connection notification in the gecko bar
+ */
+export function showNoInternetNotification(): Promise<void> {
+  return sendGeckoBarNotification({
+    message: "No internet connection",
+    duration: 3000, // 3 seconds
+    priority: "high",
+  });
+}

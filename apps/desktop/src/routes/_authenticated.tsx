@@ -51,7 +51,7 @@ function AuthenticatedLayout() {
   console.log("[AuthenticatedLayout] Auth issue type:", authIssueType, auth);
 
   // Show connectivity error when there are network issues
-  if (authIssueType === "connectivity") {
+  if (authIssueType === "connectivity" || authIssueType === "loading") {
     console.log("Showing connectivity error...");
     return (
       <ConnectivityError
@@ -75,7 +75,7 @@ function AuthenticatedLayout() {
         <TitleBar />
         <AppSidebar />
         <SidebarInset className="!ml-0 pt-8 !shadow-none">
-          {/* Show connectivity indicator when there are issues */}
+          {/* Show connectivity indicator only for serious internet issues */}
           <div className="absolute top-10 right-4 z-50">
             <ConnectivityIndicator
               isOnline={auth.connectivity.isOnline}
