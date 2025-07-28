@@ -1,7 +1,11 @@
 import { invoke } from "@tauri-apps/api/core";
 import { toast } from "sonner";
 
-import { showUsageLimitNotification } from "~/lib/gecko-bar-notifications";
+import {
+  showNoInternetNotification,
+  showUsageLimitNotification,
+} from "~/lib/gecko-bar-notifications";
+import { useConnectivityStore } from "~/stores/connectivity.store";
 import { useEventStore } from "~/stores/event.store";
 import { useSettingsStore } from "~/stores/settings.store";
 import { queryClient, trpc, trpcClient } from "~/trpc";
@@ -113,6 +117,22 @@ export class RecordingService {
    */
   private async startRecording(options: RecordingOptions): Promise<void> {
     try {
+      // Check connectivity first - block recording if API is unavailable
+      const connectivityState = useConnectivityStore.getState();
+
+      if (!connectivityState.canSaveTranscriptions) {
+        // Show gecko bar notification for all blocked attempts
+        // (both keyboard shortcuts and manual clicks should get feedback)
+        await showNoInternetNotification();
+
+        // Show toast for all cases
+        toast.error("No internet connection", {
+          description: "Internet connection required for transcriptions",
+        });
+
+        return; // Don't start recording
+      }
+
       // Quick check of cached usage status - only block if we have definitive cached evidence user is over limit
       const usageQueryKey = trpc.usage.getStatus.queryKey();
       const cachedUsageStatus = queryClient.getQueryData(usageQueryKey);

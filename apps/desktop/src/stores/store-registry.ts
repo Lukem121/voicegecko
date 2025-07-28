@@ -2,6 +2,7 @@ import type { ShortcutCategory } from "~/lib/shortcuts/types";
 import { migrationManager } from "~/lib/settings/migrations/manager";
 import { shortcutManager } from "~/lib/shortcuts/manager";
 import { useShortcutStore } from "~/lib/stores/shortcut-store";
+import { useConnectivityStore } from "./connectivity.store";
 import { useSettingsStore } from "./settings.store";
 
 export interface StoreInitializer {
@@ -101,8 +102,18 @@ storeRegistry.register({
 });
 
 storeRegistry.register({
+  name: "Connectivity Store",
+  priority: 2, // Initialize after settings, before shortcuts
+  initialize: async () => {
+    // Activate connectivity monitoring for transcription blocking
+    console.log("[ConnectivityStore] Activating connectivity monitoring...");
+    useConnectivityStore.getState().activateMonitoring();
+  },
+});
+
+storeRegistry.register({
   name: "Shortcuts",
-  priority: 2, // Initialize after settings
+  priority: 3, // Initialize after connectivity
   initialize: async () => {
     // Load shortcuts from disk into the store
     const store = shortcutManager.getStore();

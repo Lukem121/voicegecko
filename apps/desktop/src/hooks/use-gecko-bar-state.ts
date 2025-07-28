@@ -99,6 +99,13 @@ export function useGeckoBarState(): UseGeckoBarStateReturn {
     initializeGeckoBarEvents().catch((error) => {
       console.error("Failed to initialize Gecko Bar events:", error);
     });
+
+    // Initialize stores for gecko bar window
+    import("~/stores/store-registry").then(({ storeRegistry }) => {
+      storeRegistry.initializeAll().catch((error) => {
+        console.error("[GeckoBar] Failed to initialize stores:", error);
+      });
+    });
   }, []);
 
   // Event handlers - simplified since display state is managed centrally
@@ -121,7 +128,7 @@ export function useGeckoBarState(): UseGeckoBarStateReturn {
 
     if (eventState.recordingStatus === "idle" && !eventState.isRecording()) {
       recordingService
-        .toggleRecording({ isKeyboardShortcut: true })
+        .toggleRecording({ isKeyboardShortcut: false })
         .catch(console.error);
     }
   }, []);

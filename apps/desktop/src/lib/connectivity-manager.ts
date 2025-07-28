@@ -54,7 +54,7 @@ class ConnectivityManager {
   }
 
   /**
-   * Activate connectivity monitoring (only when there's an issue)
+   * Activate connectivity monitoring (force immediate check)
    */
   activate(): void {
     if (this.isActive) return;
@@ -62,7 +62,10 @@ class ConnectivityManager {
     console.log("🔄 [ConnectivityManager] Activating connectivity monitoring");
     this.isActive = true;
 
-    // Start immediate check
+    // Force immediate check to get initial status
+    console.log(
+      "🚀 [ConnectivityManager] Running immediate connectivity check...",
+    );
     this.checkConnectivity();
 
     // Set up retry interval (30 seconds)
