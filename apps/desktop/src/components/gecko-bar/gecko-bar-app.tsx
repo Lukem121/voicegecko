@@ -18,7 +18,6 @@ import { GeckoBarTooltip } from "./gecko-bar-tooltip";
 
 export function GeckoBarApp() {
   const { state, handlers } = useGeckoBarState();
-
   // External state for button logic from main event store
   const recordingStatus = useEventStore((state) => state.recordingStatus);
   const isRecording = useEventStore((state) => state.isRecording());
@@ -113,7 +112,7 @@ export function GeckoBarApp() {
   );
 
   return (
-    <div className="dark">
+    <div className="dark pointer-events-none">
       <div
         className="fixed bottom-2.5 left-1/2 z-50 -translate-x-1/2"
         style={{

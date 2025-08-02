@@ -82,23 +82,7 @@ function InnerApp() {
 
 function App() {
   const [isAppReady, setIsAppReady] = useState(false);
-  const [isGeckoBar, setIsGeckoBar] = useState<boolean | null>(null);
-
-  useEffect(() => {
-    // Detect which window we're in
-    async function detectWindow() {
-      const geckoBarWindow = await isGeckoBarWindow();
-      setIsGeckoBar(geckoBarWindow);
-      console.log("Window detected:", geckoBarWindow ? "gecko-bar" : "main");
-    }
-
-    void detectWindow();
-  }, []);
-
-  // Don't render anything until we know which window we're in
-  if (isGeckoBar === null) {
-    return null;
-  }
+  const isGeckoBar = isGeckoBarWindow();
 
   // If this is the gecko bar window, render the gecko bar app directly
   if (isGeckoBar) {
