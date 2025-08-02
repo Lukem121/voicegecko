@@ -11,6 +11,10 @@ export interface TauriEventMap {
   "model-download-complete": ModelDownloadCompleteEvent;
   "model-delete-complete": ModelDeleteCompleteEvent;
   "audio-level": AudioLevelEvent;
+  "microphone-test-level": AudioLevelEvent;
+  "microphone-test-started": void;
+  "microphone-test-stopped": void;
+  "microphone-test-error": string;
   "gecko-bar-notification": GeckoBarNotificationEvent;
 }
 

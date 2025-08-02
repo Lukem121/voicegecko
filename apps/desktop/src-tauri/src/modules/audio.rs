@@ -853,6 +853,147 @@ pub fn cancel_recording(
 }
 
 #[tauri::command]
+pub fn start_microphone_test(
+    state: tauri::State<AudioState>,
+    app: tauri::AppHandle,
+    device: Option<String>,
+) -> Result<(), String> {
+    // Validate device exists before spawning thread
+    let host = cpal::default_host();
+    if let Some(ref device_name) = device {
+        let devices = host.input_devices().map_err(|e| e.to_string())?;
+        let device_exists = devices
+            .filter_map(|d| d.name().ok())
+            .any(|name| name == *device_name);
+        if !device_exists {
+            return Err(format!("Audio device '{}' not found", device_name));
+        }
+    } else {
+        // Check if default device exists
+        if host.default_input_device().is_none() {
+            return Err("No default audio input device found".to_string());
+        }
+    }
+
+    let (tx, rx) = unbounded();
+    let app_handle = app.clone();
+
+    let thread_handle = thread::spawn(move || {
+        let host = cpal::default_host();
+        let input_device = if let Some(name) = device {
+            host.input_devices()
+                .unwrap()
+                .find(|d| d.name().map(|n| n == name).unwrap_or(false))
+                .unwrap()
+        } else {
+            host.default_input_device().unwrap()
+        };
+
+        let config = input_device.default_input_config().unwrap();
+        let last_level_emit = Arc::new(Mutex::new(Instant::now()));
+
+        let last_level_emit_clone = last_level_emit.clone();
+        let app_clone = app.clone();
+        let app_clone_for_err = app.clone();
+        let err_fn = move |err: cpal::StreamError| {
+            eprintln!("microphone test error: {}", err);
+            app_clone_for_err
+                .emit("microphone-test-error", err.to_string())
+                .unwrap();
+        };
+
+        let stream = match config.sample_format() {
+            cpal::SampleFormat::I16 => {
+                let last_level_emit_i16 = last_level_emit_clone.clone();
+                let app_i16 = app_clone.clone();
+
+                input_device
+                    .build_input_stream(
+                        &config.into(),
+                        move |data: &[i16], _: &cpal::InputCallbackInfo| {
+                            let f32_samples: Vec<f32> =
+                                data.iter().map(|s| *s as f32 / 32768.0).collect();
+
+                            // Emit audio level events for microphone testing (30 FPS)
+                            let now = Instant::now();
+                            let mut last_emit = last_level_emit_i16.lock().unwrap();
+                            if now.duration_since(*last_emit) >= Duration::from_millis(33) {
+                                let level = calculate_audio_level(&f32_samples);
+                                if let Err(e) = app_i16.emit("microphone-test-level", level) {
+                                    eprintln!("Failed to emit microphone test level: {}", e);
+                                }
+                                *last_emit = now;
+                            }
+                        },
+                        err_fn,
+                        None,
+                    )
+                    .unwrap()
+            }
+            cpal::SampleFormat::F32 => {
+                let last_level_emit_f32 = last_level_emit_clone.clone();
+                let app_f32 = app_clone.clone();
+
+                input_device
+                    .build_input_stream(
+                        &config.into(),
+                        move |data: &[f32], _: &cpal::InputCallbackInfo| {
+                            // Emit audio level events for microphone testing (30 FPS)
+                            let now = Instant::now();
+                            let mut last_emit = last_level_emit_f32.lock().unwrap();
+                            if now.duration_since(*last_emit) >= Duration::from_millis(33) {
+                                let level = calculate_audio_level(data);
+                                if let Err(e) = app_f32.emit("microphone-test-level", level) {
+                                    eprintln!("Failed to emit microphone test level: {}", e);
+                                }
+                                *last_emit = now;
+                            }
+                        },
+                        err_fn,
+                        None,
+                    )
+                    .unwrap()
+            }
+            sample_format => panic!("Unsupported sample format '{sample_format}'"),
+        };
+
+        stream.play().unwrap();
+
+        // Block until a stop message is received
+        match rx.recv() {
+            Ok(AudioCommand::Stop) => {
+                // Stream is dropped here, which stops the microphone test
+                drop(stream);
+                app.emit("microphone-test-stopped", ()).unwrap();
+            }
+            Err(_) => {
+                // Channel disconnected
+            }
+        }
+    });
+
+    *state.recording_thread.lock().unwrap() = Some((thread_handle, tx));
+
+    app_handle
+        .emit("microphone-test-started", ())
+        .map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+pub fn stop_microphone_test(
+    state: tauri::State<AudioState>,
+    app: tauri::AppHandle,
+) -> Result<(), String> {
+    if let Some((thread_handle, sender)) = state.recording_thread.lock().unwrap().take() {
+        sender.send(AudioCommand::Stop).unwrap();
+        thread_handle.join().unwrap();
+    }
+
+    app.emit("microphone-test-stopped", ())
+        .map_err(|e| e.to_string())
+}
+
+#[tauri::command]
 pub fn play_notification_sound(
     state: tauri::State<AudioState>,
     app: tauri::AppHandle,
