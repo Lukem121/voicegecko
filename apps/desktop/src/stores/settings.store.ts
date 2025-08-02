@@ -134,7 +134,7 @@ const defaultSettings: AppSettings = {
     muteSystemAudio: true,
   },
   general: {
-    launchOnStartup: false,
+    launchOnStartup: true,
     showGeckoBar: true,
     hideGeckoOnFullscreen: true,
   },
