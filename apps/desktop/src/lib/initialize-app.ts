@@ -100,6 +100,9 @@ export async function initializeApp(
     // Initialize Tauri event listeners
     await initializeTauriEvents();
 
+    // Initialize system tray (only in main window)
+    await import("~/lib/tray");
+
     // Prefetch dictionary prompt for faster transcriptions
     dictionaryService.prefetchDictionaryPrompt().catch((error) => {
       console.warn("[App] Failed to prefetch dictionary prompt:", error);
