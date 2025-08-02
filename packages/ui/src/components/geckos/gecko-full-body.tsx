@@ -1,9 +1,11 @@
 export default function GeckoFullBody({
   className,
   style,
+  transform,
 }: {
   className?: string;
   style?: React.CSSProperties;
+  transform?: string;
 }) {
   return (
     <svg
@@ -12,7 +14,8 @@ export default function GeckoFullBody({
       xmlns="http://www.w3.org/2000/svg"
       className={className}
       style={style}
-    > 
+      transform={transform}
+    >
       <path
         d="M859.767 730.195L896.05 739.265L942.537 757.407L979.954 775.548L1008.3 777.816L1027.58 765.344L1029.84 749.47V733.596L1037.78 722.258L1046.85 708.652V691.644L1037.78 671.235L1017.37 665.566L990.159 656.495H958.411L931.199 651.96L896.05 640.621L867.704 625.881L834.822 616.811L779.264 632.684L795.138 704.116L859.767 730.195Z"
         fill="#6E9C4A"

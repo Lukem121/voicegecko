@@ -1,0 +1,648 @@
+import React, { useEffect, useState } from "react";
+import { createFileRoute } from "@tanstack/react-router";
+import { listen } from "@tauri-apps/api/event";
+import {
+  AudioLines,
+  CheckCircle,
+  Clipboard,
+  KeyRound,
+  Mic,
+} from "lucide-react";
+import { motion } from "motion/react";
+
+import {
+  Stepper,
+  StepperDescription,
+  StepperIndicator,
+  StepperItem,
+  StepperSeparator,
+  StepperTitle,
+  StepperTrigger,
+} from "@acme/ui/components/stepper-vertical";
+import { Badge } from "@acme/ui/components/ui/badge";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@acme/ui/components/ui/card";
+import { Textarea } from "@acme/ui/components/ui/textarea";
+
+import type { AudioLevelEvent } from "~/types/events";
+import { useOnboarding } from "~/components/onboarding/onboarding-provider";
+import { useShortcuts } from "~/hooks/use-shortcuts";
+import { formatKeysForDisplay, getOS } from "~/lib/shortcuts/utils";
+import { useEventStore } from "~/stores/event.store";
+
+export const Route = createFileRoute("/onboarding/push-to-talk-tutorial")({
+  component: RecordingTutorialStep,
+});
+
+// Type for tutorial steps
+interface TutorialStep {
+  title: string;
+  description: React.ReactNode;
+  icon: React.ComponentType<{ className?: string }>;
+  instruction: string;
+}
+
+// Hook to track recording tutorial steps using the app's event store
+function useRecordingTutorialSteps() {
+  const [completedSteps, setCompletedSteps] = useState<Set<number>>(new Set());
+  const [currentStep, setCurrentStep] = useState(0);
+  const [hasSpoken, setHasSpoken] = useState(false);
+
+  // Use the same store pattern as other components
+  const recordingStatus = useEventStore((state) => state.recordingStatus);
+  const isRecording = useEventStore((state) => state.isRecording());
+  const transcriptionStatus = useEventStore(
+    (state) => state.transcriptionStatus,
+  );
+  const transcript = useEventStore((state) => state.transcript);
+
+  const completeStep = React.useCallback((stepIndex: number) => {
+    setCompletedSteps((prev) => new Set(prev).add(stepIndex));
+    setCurrentStep((prev) => Math.max(prev, stepIndex + 1));
+    console.log(`[Tutorial] Completed step ${stepIndex + 1}`);
+  }, []);
+
+  const resetSteps = React.useCallback(() => {
+    console.log("[Tutorial] Resetting all steps for retry");
+    setCompletedSteps(new Set());
+    setCurrentStep(0);
+    setHasSpoken(false);
+  }, []);
+
+  // Track recording state changes from the store
+  useEffect(() => {
+    console.log("[Tutorial] Recording status changed:", recordingStatus);
+
+    if (recordingStatus === "recording") {
+      completeStep(0); // Step 1: Started recording
+    } else if (recordingStatus === "processing") {
+      completeStep(2); // Step 3: Released and processing
+    }
+  }, [recordingStatus, completeStep]);
+
+  // Listen for audio levels to detect speech (only when recording)
+  useEffect(() => {
+    if (!isRecording || hasSpoken) return;
+
+    let unlistenAudioLevel: (() => void) | undefined;
+
+    const setupAudioLevelListener = async () => {
+      unlistenAudioLevel = await listen<AudioLevelEvent>(
+        "audio-level",
+        (event) => {
+          const audioData = event.payload;
+
+          // Detect speech when recording and audio level is above threshold
+          if (audioData.level > 0.05) {
+            console.log("[Tutorial] Speech detected, level:", audioData.level);
+            setHasSpoken(true);
+            completeStep(1); // Step 2: Speaking detected
+          }
+        },
+      );
+    };
+
+    setupAudioLevelListener().catch(console.error);
+
+    return () => {
+      unlistenAudioLevel?.();
+    };
+  }, [isRecording, hasSpoken, completeStep]);
+
+  // Track transcription completion from the store
+  useEffect(() => {
+    console.log(
+      "[Tutorial] Transcription status:",
+      transcriptionStatus,
+      "transcript:",
+      transcript,
+    );
+
+    if (transcriptionStatus === "complete" && transcript) {
+      console.log("[Tutorial] Transcription completed:", transcript);
+      completeStep(3); // Step 4: Transcription completed
+    }
+  }, [transcriptionStatus, transcript, completeStep]);
+
+  const isStepCompleted = React.useCallback(
+    (stepIndex: number) => completedSteps.has(stepIndex),
+    [completedSteps],
+  );
+  const isStepActive = React.useCallback(
+    (stepIndex: number) => currentStep === stepIndex,
+    [currentStep],
+  );
+
+  return {
+    currentStep,
+    isStepCompleted,
+    isStepActive,
+    isRecording,
+    hasSpoken,
+    transcriptionText: transcript ?? "",
+    recordingStatus,
+    transcriptionStatus,
+    isAllStepsCompleted: completedSteps.size === 4, // Now 4 steps total
+    resetSteps,
+  };
+}
+
+function RecordingTutorialStep() {
+  const { markStepCompleted, sendMascotMessage, triggerMascotAnimation } =
+    useOnboarding();
+
+  // Track which messages have been sent to prevent duplicates
+  const sentMessages = React.useRef(new Set<string>());
+  const tutorialActionsPerformed = React.useRef(false);
+
+  // Track previous transcription to detect empty results
+  const previousTranscriptionText = React.useRef<string | null>(null);
+  const lastProcessedTranscriptionStatus = React.useRef<string | null>(null);
+
+  const {
+    currentStep,
+    isStepCompleted,
+    transcriptionText,
+    recordingStatus: _recordingStatus,
+    transcriptionStatus,
+    isAllStepsCompleted,
+    resetSteps,
+  } = useRecordingTutorialSteps();
+
+  // Get both recording shortcuts from the shortcuts system
+  const { shortcutCategories } = useShortcuts();
+  const os = getOS();
+
+  // Find both recording shortcuts
+  const pushToTalkShortcut = shortcutCategories
+    .flatMap((category) => category.shortcuts)
+    .find((shortcut) => shortcut.id === "push-to-talk");
+
+  const toggleShortcut = shortcutCategories
+    .flatMap((category) => category.shortcuts)
+    .find((shortcut) => shortcut.id === "toggle-recording");
+
+  // Format the shortcut keys for display
+  const pushToTalkKeys = pushToTalkShortcut
+    ? formatKeysForDisplay(pushToTalkShortcut.keys, os)
+    : ["Ctrl", "Shift", "X"]; // Fallback to default
+
+  const toggleKeys = toggleShortcut
+    ? formatKeysForDisplay(toggleShortcut.keys, os)
+    : ["Ctrl", "Shift", "R"]; // Fallback to default
+
+  // Helper to send message only once with persistence
+  const sendMessageOnce = React.useCallback(
+    (messageId: string, message: Parameters<typeof sendMascotMessage>[0]) => {
+      if (sentMessages.current.has(messageId)) {
+        console.log(
+          `[Tutorial Messages] Skipping duplicate message: ${messageId}`,
+        );
+        return;
+      }
+
+      console.log(`[Tutorial Messages] Sending message: ${messageId}`, message);
+      sentMessages.current.add(messageId);
+      sendMascotMessage({ ...message, persist: true });
+    },
+    [sendMascotMessage],
+  );
+
+  // Helper to reset tutorial steps for retry
+  const resetForRetry = React.useCallback(() => {
+    console.log("[Tutorial Messages] 🔄 Starting tutorial reset...");
+
+    // Reset the actual step completion state
+    resetSteps();
+
+    // Clear step completion messages so they can be sent again
+    const clearedMessages: string[] = [];
+    ["step0", "step1", "step2", "step3"].forEach((msg) => {
+      if (sentMessages.current.has(msg)) {
+        sentMessages.current.delete(msg);
+        clearedMessages.push(msg);
+      }
+    });
+
+    // Reset previous transcription tracking for fresh detection
+    previousTranscriptionText.current = null;
+
+    // Reset the event store transcription state to break the useEffect loop
+    useEventStore.getState().resetTranscriptionState();
+
+    console.log("[Tutorial Messages] ✅ Tutorial reset complete:", {
+      clearedMessages,
+      remainingMessages: Array.from(sentMessages.current),
+    });
+  }, [resetSteps]);
+
+  // Send initial tutorial message
+  useEffect(() => {
+    if (tutorialActionsPerformed.current) return;
+    tutorialActionsPerformed.current = true;
+
+    sendMessageOnce("initial", {
+      content:
+        "Perfect! Your microphone is all set up and ready to go. Now let's learn how to record! You can use either method: Push-to-talk (hold to record) or Toggle (press once to start/stop). Try whichever feels more comfortable!",
+      type: "celebration",
+      duration: 8000,
+      priority: "high",
+    });
+  }, [sendMessageOnce]);
+
+  // Check for empty transcription separately to handle retries
+  useEffect(() => {
+    // Only process when status changes TO "complete", not while it remains "complete"
+    if (
+      transcriptionStatus === "complete" &&
+      lastProcessedTranscriptionStatus.current !== "complete"
+    ) {
+      // Update the status tracker immediately
+      lastProcessedTranscriptionStatus.current = transcriptionStatus;
+
+      const isEmptyTranscription =
+        !transcriptionText ||
+        transcriptionText.trim() === "" ||
+        transcriptionText.toLowerCase() === "audio is silent.";
+
+      console.log("[Tutorial Messages] Transcription completed:", {
+        isEmptyTranscription,
+        transcriptionText: `"${transcriptionText}"`,
+        previousText: `"${previousTranscriptionText.current}"`,
+      });
+
+      if (isEmptyTranscription) {
+        // Only process if this is a NEW empty transcription (different from what we've seen)
+        if (previousTranscriptionText.current !== transcriptionText) {
+          console.log(
+            "[Tutorial Messages] 🚨 Empty transcription detected! Sending retry message",
+          );
+
+          // Update tracking BEFORE sending message to prevent loops
+          previousTranscriptionText.current = transcriptionText;
+
+          // Send retry message immediately without the sendMessageOnce deduplication
+          sendMascotMessage({
+            content:
+              "Hmm, I didn't catch that. Remember to hold the key down and speak clearly. Let's try again!",
+            type: "warning",
+            duration: 5000,
+            priority: "high",
+            persist: true,
+          });
+
+          // Reset tutorial state after sending the message
+          setTimeout(() => {
+            console.log(
+              "[Tutorial Messages] 🔄 Resetting tutorial state for retry",
+            );
+            resetForRetry();
+          }, 1500);
+        } else {
+          console.log(
+            "[Tutorial Messages] ⏭️ Skipping duplicate empty transcription processing",
+          );
+        }
+      } else if (transcriptionText) {
+        // Update previous transcription reference for successful transcriptions
+        previousTranscriptionText.current = transcriptionText;
+      }
+    } else if (transcriptionStatus !== "complete") {
+      // Reset the status tracker when not complete
+      lastProcessedTranscriptionStatus.current = transcriptionStatus;
+    }
+  }, [
+    transcriptionStatus,
+    transcriptionText,
+    sendMascotMessage,
+    resetForRetry,
+  ]);
+
+  // Use primitive values to avoid function recreation issues
+  const step0Completed = isStepCompleted(0);
+  const step1Completed = isStepCompleted(1);
+  const step2Completed = isStepCompleted(2);
+  const step3Completed = isStepCompleted(3);
+
+  // Track the last processed transcription to prevent infinite loops
+  const lastProcessedTranscription = React.useRef<string>("");
+
+  // Handle step completion messages with stable dependencies
+  useEffect(() => {
+    // Skip if we've already processed this exact transcription state
+    if (
+      transcriptionText === lastProcessedTranscription.current &&
+      isAllStepsCompleted
+    ) {
+      return;
+    }
+
+    console.log("[Tutorial Messages] Step progression check:", {
+      isStepCompleted0: step0Completed,
+      isStepCompleted1: step1Completed,
+      isStepCompleted2: step2Completed,
+      isStepCompleted3: step3Completed,
+      isAllStepsCompleted,
+      transcriptionText: `"${transcriptionText}"`,
+    });
+
+    // Only proceed with step messages if we have a valid (non-empty) transcription or haven't completed step 3 yet
+    const hasValidTranscription =
+      transcriptionText && transcriptionText.trim() !== "";
+    const shouldProcessSteps = !step3Completed || hasValidTranscription;
+
+    if (!shouldProcessSteps) {
+      console.log(
+        "[Tutorial Messages] ⏭️ Skipping step processing due to empty transcription",
+      );
+      return;
+    }
+
+    // Step 0: Started recording
+    if (step0Completed && !sentMessages.current.has("step0")) {
+      sendMessageOnce("step0", {
+        content: `Great! You started recording! Now say "I love Voice Gecko"`,
+        type: "info",
+        duration: 2000,
+        priority: "high",
+      });
+    }
+
+    // Step 1: Speaking detected
+    if (step1Completed && !sentMessages.current.has("step1")) {
+      sendMessageOnce("step1", {
+        content: "Perfect! I hear you! 👂",
+        type: "info",
+        duration: 2000,
+        priority: "high",
+      });
+    }
+
+    // All steps completed (only for successful transcriptions)
+    if (
+      isAllStepsCompleted &&
+      hasValidTranscription &&
+      !sentMessages.current.has("complete")
+    ) {
+      sendMessageOnce("complete", {
+        content:
+          "🎉 Congratulations! You've mastered recording with VoiceGecko!",
+        type: "success",
+        duration: 4000,
+        priority: "high",
+      });
+
+      // Immediately trigger dancing animation
+      if (!sentMessages.current.has("immediate-celebration")) {
+        sentMessages.current.add("immediate-celebration");
+        triggerMascotAnimation("dancing");
+      }
+
+      // Mark tutorial as completed after a delay
+      if (!sentMessages.current.has("tutorial-completed")) {
+        sentMessages.current.add("tutorial-completed");
+        markStepCompleted("tutorial", 100);
+      }
+
+      // Update the last processed transcription
+      lastProcessedTranscription.current = transcriptionText;
+    }
+  }, [
+    step0Completed,
+    step1Completed,
+    step2Completed,
+    step3Completed,
+    transcriptionText,
+    isAllStepsCompleted,
+    sendMessageOnce,
+    markStepCompleted,
+    triggerMascotAnimation,
+  ]);
+
+  // Component to render keyboard shortcuts with proper styling
+  const ShortcutBadge = ({ keys }: { keys: string[] }) => (
+    <span className="mx-1 inline-flex items-center gap-1">
+      {keys.map((key, index) => (
+        <React.Fragment key={index}>
+          <Badge
+            variant="outline"
+            className="inline-flex px-1.5 py-0.5 font-mono text-xs"
+          >
+            {key}
+          </Badge>
+          {index < keys.length - 1 && (
+            <span className="text-muted-foreground text-xs">+</span>
+          )}
+        </React.Fragment>
+      ))}
+    </span>
+  );
+
+  // Component to show OR separator
+  const OrSeparator = () => (
+    <div className="relative flex items-center justify-center">
+      <div className="absolute inset-0 flex items-center">
+        <div className="border-muted-foreground/30 w-full border-t border-dashed" />
+      </div>
+      <span className="bg-background text-muted-foreground relative px-2 text-xs font-medium">
+        OR
+      </span>
+    </div>
+  );
+
+  // Component to show recording method option
+  const MethodOption = ({
+    label,
+    action,
+    shortcut,
+    description,
+  }: {
+    label: string;
+    action: React.ReactNode;
+    shortcut?: React.ReactNode;
+    description: string;
+  }) => (
+    <div className="flex items-center gap-2">
+      <div className="bg-primary/10 flex h-5 w-5 items-center justify-center rounded-full">
+        <span className="text-primary text-xs font-semibold">{label}</span>
+      </div>
+      <div className="flex items-center gap-1 text-xs">
+        {action}
+        {shortcut}
+        <span className="text-muted-foreground">{description}</span>
+      </div>
+    </div>
+  );
+
+  // Component to show recording method options
+  const RecordingMethodOptions = () => (
+    <div className="mt-2 space-y-2">
+      <MethodOption
+        label="A"
+        action={<strong>Hold</strong>}
+        shortcut={<ShortcutBadge keys={pushToTalkKeys} />}
+        description="for push-to-talk"
+      />
+      <OrSeparator />
+      <MethodOption
+        label="B"
+        action={<strong>Press</strong>}
+        shortcut={<ShortcutBadge keys={toggleKeys} />}
+        description="to toggle on/off"
+      />
+    </div>
+  );
+
+  const steps: TutorialStep[] = [
+    {
+      title: "Start recording",
+      description: (
+        <>
+          <span>Choose your recording method:</span>
+          <RecordingMethodOptions />
+        </>
+      ),
+      icon: KeyRound,
+      instruction:
+        "Use either push-to-talk (hold) or toggle (press once) to start recording",
+    },
+    {
+      title: "Speak your message",
+      description: (
+        <>
+          Say something like <strong>I love VoiceGecko</strong>
+        </>
+      ),
+      icon: Mic,
+      instruction: "Try saying: I love VoiceGecko",
+    },
+    {
+      title: "Stop recording",
+      description: (
+        <div className="mt-2 space-y-2">
+          <MethodOption
+            label="A"
+            action={<strong>Release</strong>}
+            description="the key (push-to-talk)"
+          />
+          <OrSeparator />
+          <MethodOption
+            label="B"
+            action={<strong>Press</strong>}
+            shortcut={<ShortcutBadge keys={toggleKeys} />}
+            description="again (toggle)"
+          />
+        </div>
+      ),
+      icon: CheckCircle,
+      instruction: "Stop recording using your chosen method",
+    },
+    {
+      title: "Transcription complete",
+      description: "Your text is ready and copied to clipboard!",
+      icon: Clipboard,
+      instruction: "Your transcribed text appears below and in the mascot chat",
+    },
+  ];
+
+  return (
+    <div className="flex min-h-full flex-col">
+      <div className="flex flex-1 px-6 py-8">
+        <div className="mx-auto grid w-full max-w-7xl grid-cols-1 gap-8 lg:grid-cols-[3fr_2fr]">
+          {/* Left Column - Tutorial Steps */}
+          <motion.div
+            initial={{ opacity: 0, x: -30 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.6, delay: 0.1 }}
+          >
+            <Card className="h-fit shadow-lg">
+              <CardHeader>
+                <CardTitle>Transcription Tutorial</CardTitle>
+                <CardDescription>
+                  Learn how to record and transcribe with VoiceGecko. Your
+                  transcription will appear on the right when ready!
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <Stepper
+                  value={currentStep}
+                  orientation="vertical"
+                  className="w-full"
+                >
+                  {steps.map((step, index) => (
+                    <StepperItem
+                      key={index}
+                      step={index + 1}
+                      completed={isStepCompleted(index)}
+                      className="relative items-start not-last:flex-1"
+                    >
+                      <StepperTrigger className="items-start rounded pb-8 last:pb-0">
+                        <StepperIndicator>
+                          <step.icon className="h-3 w-3" />
+                        </StepperIndicator>
+                        <div className="mt-0.5 space-y-0.5 px-2 text-left">
+                          <StepperTitle className="text-sm font-semibold">
+                            {step.title}
+                          </StepperTitle>
+                          <StepperDescription className="text-muted-foreground text-xs">
+                            {step.description}
+                          </StepperDescription>
+                        </div>
+                      </StepperTrigger>
+                      {index < steps.length - 1 && (
+                        <StepperSeparator className="absolute inset-y-0 top-[calc(1.5rem+0.125rem)] left-3 -order-1 m-0 -translate-x-1/2 group-data-[orientation=horizontal]/stepper:w-[calc(100%-1.5rem-0.25rem)] group-data-[orientation=horizontal]/stepper:flex-none group-data-[orientation=vertical]/stepper:h-[calc(100%-1.5rem-0.25rem)]" />
+                      )}
+                    </StepperItem>
+                  ))}
+                </Stepper>
+              </CardContent>
+            </Card>
+          </motion.div>
+
+          {/* Right Column - Transcription Result */}
+          <motion.div
+            initial={{ opacity: 0, x: 30 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+          >
+            <Card className="h-fit">
+              <CardHeader>
+                <div className="flex items-center gap-2">
+                  <div className="bg-primary/10 flex h-8 w-8 items-center justify-center rounded-full">
+                    <AudioLines className="text-primary h-4 w-4" />
+                  </div>
+                  <div>
+                    <CardTitle>Transcription Result</CardTitle>
+                    <CardDescription>
+                      {transcriptionText
+                        ? "Your voice has been converted to text"
+                        : "Your transcription will appear here"}
+                    </CardDescription>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <Textarea
+                  value={transcriptionText || ""}
+                  readOnly
+                  className="min-h-[120px] resize-none focus-visible:ring-0"
+                  placeholder="Start the tutorial and your transcription will appear here..."
+                />
+                {transcriptionText && (
+                  <div className="text-muted-foreground mt-2 text-xs">
+                    <span>✓ Automatically copied to clipboard</span>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </motion.div>
+        </div>
+      </div>
+    </div>
+  );
+}

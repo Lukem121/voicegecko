@@ -57,6 +57,8 @@ pub fn run() {
             modules::audio::start_recording,
             modules::audio::stop_recording,
             modules::audio::cancel_recording,
+            modules::audio::start_microphone_test,
+            modules::audio::stop_microphone_test,
             modules::audio::play_notification_sound,
             modules::audio::set_volume,
             modules::audio::mute_system_audio,

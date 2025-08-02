@@ -11,17 +11,11 @@ import {
 } from "~/components/connectivity-error";
 import { TitleBar } from "~/components/custom-title-bar";
 import { useAuthWithConnectivity } from "~/hooks/use-auth-with-connectivity";
+import { useSettingsStore } from "~/stores/settings.store";
 
 export const Route = createFileRoute("/_authenticated")({
-  beforeLoad: ({ context, location }) => {
+  beforeLoad: async ({ context, location }) => {
     const authIssueType = context.auth.getAuthIssueType?.() ?? "loading";
-
-    console.log("[_authenticated beforeLoad] Auth issue type:", authIssueType);
-
-    // Since AppLauncher waits for auth to be resolved, we should only see:
-    // - "connectivity" - show connectivity error component
-    // - "auth" or "unauthenticated" - redirect to sign-in
-    // - "authenticated" - proceed normally
 
     // If it's a connectivity issue, let the component handle it (don't redirect)
     if (authIssueType === "connectivity") {
@@ -38,21 +32,43 @@ export const Route = createFileRoute("/_authenticated")({
       });
     }
 
-    // At this point, user should be authenticated since AppLauncher waited for auth
+    // Check onboarding completion and redirect if needed
+    let settingsInitialized = false;
+    try {
+      const settingsStore = useSettingsStore.getState();
+
+      // Initialize settings if not already done
+      if (!settingsStore.isInitialized) {
+        await settingsStore.initialize();
+      }
+
+      settingsInitialized = true;
+    } catch (error) {
+      // If settings initialization fails, continue to main app
+      return;
+    }
+
+    // Redirect to onboarding if not completed
+    if (settingsInitialized) {
+      const currentState = useSettingsStore.getState();
+
+      if (!currentState.settings.onboarding.completed) {
+        throw redirect({
+          to: "/onboarding",
+        });
+      }
+    }
   },
   component: AuthenticatedLayout,
 });
 
 function AuthenticatedLayout() {
-  // Use the new clean auth hook with connectivity integration
   const auth = useAuthWithConnectivity();
   const authIssueType = auth.getAuthIssueType();
-
-  console.log("[AuthenticatedLayout] Auth issue type:", authIssueType, auth);
+  const { isInitialized } = useSettingsStore();
 
   // Show connectivity error when there are network issues
   if (authIssueType === "connectivity" || authIssueType === "loading") {
-    console.log("Showing connectivity error...");
     return (
       <ConnectivityError
         isOnline={auth.connectivity.isOnline}
@@ -61,14 +77,25 @@ function AuthenticatedLayout() {
         diagnosis={auth.connectivity.diagnosis}
         lastSuccessfulCheck={auth.connectivity.lastSuccessfulCheck}
         onRetry={() => {
-          console.log("Retrying connectivity check...");
           void auth.connectivity.checkConnectivity();
         }}
       />
     );
   }
 
-  // User is authenticated, render the protected content with sidebar
+  // Show loading screen only if settings are not initialized yet
+  if (!isInitialized) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="text-center">
+          <div className="border-primary mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-b-2"></div>
+          <p className="text-muted-foreground">Initializing application...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Render the authenticated content with sidebar
   return (
     <>
       <SidebarProvider>

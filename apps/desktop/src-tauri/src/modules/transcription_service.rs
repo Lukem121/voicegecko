@@ -11,7 +11,6 @@ use whisper_rs::{
 use crate::modules::transcription::{
     TranscriptionError, TranscriptionEvent, TranscriptionProgress,
 };
-use crate::modules::{self};
 
 pub struct TranscriptionService {
     model_cache: Arc<Mutex<HashMap<String, Arc<WhisperContext>>>>,
@@ -119,11 +118,32 @@ impl LocalWhisperProvider {
 
         // Add dictionary to params
         // Because it wasn't trained with instruction-following techniques, Whisper operates more like a base GPT model. Keep in mind that Whisper only considers the first 224 tokens of the prompt.
-        if let Some(ref prompt) = self.dictionary_prompt {
-            if !prompt.is_empty() {
-                println!("[Rust] 📖 Setting dictionary prompt: {}", prompt);
-                params.set_initial_prompt(prompt);
+
+        // Default dictionary items that should always be included
+        let default_dictionary_items = vec!["VoiceGecko", "VoiceGecko", "VoiceGecko"];
+
+        // Build the complete dictionary prompt
+        let mut complete_prompt = String::new();
+
+        // Always include default dictionary items first
+        if !default_dictionary_items.is_empty() {
+            complete_prompt.push_str(&default_dictionary_items.join(", "));
+        }
+
+        // Append user-provided dictionary items if they exist
+        if let Some(ref user_prompt) = self.dictionary_prompt {
+            if !user_prompt.is_empty() {
+                if !complete_prompt.is_empty() {
+                    complete_prompt.push_str(", ");
+                }
+                complete_prompt.push_str(user_prompt);
             }
+        }
+
+        // Set the complete prompt if we have any dictionary items
+        if !complete_prompt.is_empty() {
+            println!("[Rust] 📖 Setting dictionary prompt: {}", complete_prompt);
+            params.set_initial_prompt(&complete_prompt);
         }
 
         app.emit(
@@ -161,7 +181,18 @@ impl LocalWhisperProvider {
         // Return state to cache for reuse
         service.return_state(&self.model_id, state);
 
-        Ok(result)
+        // Trim the result and remove quotes if present
+        let mut cleaned_result = result.trim().to_string();
+
+        // Remove surrounding quotes if present
+        if cleaned_result.len() >= 2
+            && cleaned_result.starts_with('"')
+            && cleaned_result.ends_with('"')
+        {
+            cleaned_result = cleaned_result[1..cleaned_result.len() - 1].to_string();
+        }
+
+        Ok(cleaned_result)
     }
 
     /// Analyze audio to determine if it's effectively silent or contains no meaningful speech

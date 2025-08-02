@@ -11,8 +11,12 @@
 import { createFileRoute } from '@tanstack/react-router'
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
+import { Route as OnboardingPushToTalkTutorialRouteImport } from './routes/onboarding/push-to-talk-tutorial'
+import { Route as OnboardingMicrophoneSetupRouteImport } from './routes/onboarding/microphone-setup'
+import { Route as OnboardingCompletionRouteImport } from './routes/onboarding/completion'
 import { Route as AuthenticatedUsageRouteImport } from './routes/_authenticated/usage'
 import { Route as AuthenticatedTranscriptionsRouteImport } from './routes/_authenticated/transcriptions'
 import { Route as AuthenticatedDictionaryRouteImport } from './routes/_authenticated/dictionary'
@@ -34,6 +38,11 @@ const unauthenticatedRoute = unauthenticatedRouteImport.update({
   id: '/(unauthenticated)',
   getParentRoute: () => rootRouteImport,
 } as any)
+const OnboardingRoute = OnboardingRouteImport.update({
+  id: '/onboarding',
+  path: '/onboarding',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const AuthenticatedRoute = AuthenticatedRouteImport.update({
   id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
@@ -42,6 +51,23 @@ const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AuthenticatedRoute,
+} as any)
+const OnboardingPushToTalkTutorialRoute =
+  OnboardingPushToTalkTutorialRouteImport.update({
+    id: '/push-to-talk-tutorial',
+    path: '/push-to-talk-tutorial',
+    getParentRoute: () => OnboardingRoute,
+  } as any)
+const OnboardingMicrophoneSetupRoute =
+  OnboardingMicrophoneSetupRouteImport.update({
+    id: '/microphone-setup',
+    path: '/microphone-setup',
+    getParentRoute: () => OnboardingRoute,
+  } as any)
+const OnboardingCompletionRoute = OnboardingCompletionRouteImport.update({
+  id: '/completion',
+  path: '/completion',
+  getParentRoute: () => OnboardingRoute,
 } as any)
 const AuthenticatedUsageRoute = AuthenticatedUsageRouteImport.update({
   id: '/usage',
@@ -125,10 +151,14 @@ const unauthenticatedAuthAuthenticationErrorRoute =
   } as any)
 
 export interface FileRoutesByFullPath {
+  '/onboarding': typeof OnboardingRouteWithChildren
   '/': typeof AuthenticatedIndexRoute
   '/dictionary': typeof AuthenticatedDictionaryRoute
   '/transcriptions': typeof AuthenticatedTranscriptionsRoute
   '/usage': typeof AuthenticatedUsageRoute
+  '/onboarding/completion': typeof OnboardingCompletionRoute
+  '/onboarding/microphone-setup': typeof OnboardingMicrophoneSetupRoute
+  '/onboarding/push-to-talk-tutorial': typeof OnboardingPushToTalkTutorialRoute
   '/authentication-error': typeof unauthenticatedAuthAuthenticationErrorRoute
   '/sign-in': typeof unauthenticatedAuthSignInRoute
   '/sign-up': typeof unauthenticatedAuthSignUpRoute
@@ -141,10 +171,14 @@ export interface FileRoutesByFullPath {
   '/settings': typeof AuthenticatedSettingsIndexRoute
 }
 export interface FileRoutesByTo {
+  '/onboarding': typeof OnboardingRouteWithChildren
   '/': typeof AuthenticatedIndexRoute
   '/dictionary': typeof AuthenticatedDictionaryRoute
   '/transcriptions': typeof AuthenticatedTranscriptionsRoute
   '/usage': typeof AuthenticatedUsageRoute
+  '/onboarding/completion': typeof OnboardingCompletionRoute
+  '/onboarding/microphone-setup': typeof OnboardingMicrophoneSetupRoute
+  '/onboarding/push-to-talk-tutorial': typeof OnboardingPushToTalkTutorialRoute
   '/authentication-error': typeof unauthenticatedAuthAuthenticationErrorRoute
   '/sign-in': typeof unauthenticatedAuthSignInRoute
   '/sign-up': typeof unauthenticatedAuthSignUpRoute
@@ -159,11 +193,15 @@ export interface FileRoutesByTo {
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_authenticated': typeof AuthenticatedRouteWithChildren
+  '/onboarding': typeof OnboardingRouteWithChildren
   '/(unauthenticated)': typeof unauthenticatedRouteWithChildren
   '/(unauthenticated)/_auth': typeof unauthenticatedAuthRouteWithChildren
   '/_authenticated/dictionary': typeof AuthenticatedDictionaryRoute
   '/_authenticated/transcriptions': typeof AuthenticatedTranscriptionsRoute
   '/_authenticated/usage': typeof AuthenticatedUsageRoute
+  '/onboarding/completion': typeof OnboardingCompletionRoute
+  '/onboarding/microphone-setup': typeof OnboardingMicrophoneSetupRoute
+  '/onboarding/push-to-talk-tutorial': typeof OnboardingPushToTalkTutorialRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
   '/(unauthenticated)/_auth/authentication-error': typeof unauthenticatedAuthAuthenticationErrorRoute
   '/(unauthenticated)/_auth/sign-in': typeof unauthenticatedAuthSignInRoute
@@ -179,10 +217,14 @@ export interface FileRoutesById {
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
+    | '/onboarding'
     | '/'
     | '/dictionary'
     | '/transcriptions'
     | '/usage'
+    | '/onboarding/completion'
+    | '/onboarding/microphone-setup'
+    | '/onboarding/push-to-talk-tutorial'
     | '/authentication-error'
     | '/sign-in'
     | '/sign-up'
@@ -195,10 +237,14 @@ export interface FileRouteTypes {
     | '/settings'
   fileRoutesByTo: FileRoutesByTo
   to:
+    | '/onboarding'
     | '/'
     | '/dictionary'
     | '/transcriptions'
     | '/usage'
+    | '/onboarding/completion'
+    | '/onboarding/microphone-setup'
+    | '/onboarding/push-to-talk-tutorial'
     | '/authentication-error'
     | '/sign-in'
     | '/sign-up'
@@ -212,11 +258,15 @@ export interface FileRouteTypes {
   id:
     | '__root__'
     | '/_authenticated'
+    | '/onboarding'
     | '/(unauthenticated)'
     | '/(unauthenticated)/_auth'
     | '/_authenticated/dictionary'
     | '/_authenticated/transcriptions'
     | '/_authenticated/usage'
+    | '/onboarding/completion'
+    | '/onboarding/microphone-setup'
+    | '/onboarding/push-to-talk-tutorial'
     | '/_authenticated/'
     | '/(unauthenticated)/_auth/authentication-error'
     | '/(unauthenticated)/_auth/sign-in'
@@ -232,6 +282,7 @@ export interface FileRouteTypes {
 }
 export interface RootRouteChildren {
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
+  OnboardingRoute: typeof OnboardingRouteWithChildren
   unauthenticatedRoute: typeof unauthenticatedRouteWithChildren
 }
 
@@ -242,6 +293,13 @@ declare module '@tanstack/react-router' {
       path: '/'
       fullPath: '/'
       preLoaderRoute: typeof unauthenticatedRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/onboarding': {
+      id: '/onboarding'
+      path: '/onboarding'
+      fullPath: '/onboarding'
+      preLoaderRoute: typeof OnboardingRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated': {
@@ -257,6 +315,27 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof AuthenticatedIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
+    }
+    '/onboarding/push-to-talk-tutorial': {
+      id: '/onboarding/push-to-talk-tutorial'
+      path: '/push-to-talk-tutorial'
+      fullPath: '/onboarding/push-to-talk-tutorial'
+      preLoaderRoute: typeof OnboardingPushToTalkTutorialRouteImport
+      parentRoute: typeof OnboardingRoute
+    }
+    '/onboarding/microphone-setup': {
+      id: '/onboarding/microphone-setup'
+      path: '/microphone-setup'
+      fullPath: '/onboarding/microphone-setup'
+      preLoaderRoute: typeof OnboardingMicrophoneSetupRouteImport
+      parentRoute: typeof OnboardingRoute
+    }
+    '/onboarding/completion': {
+      id: '/onboarding/completion'
+      path: '/completion'
+      fullPath: '/onboarding/completion'
+      preLoaderRoute: typeof OnboardingCompletionRouteImport
+      parentRoute: typeof OnboardingRoute
     }
     '/_authenticated/usage': {
       id: '/_authenticated/usage'
@@ -383,6 +462,22 @@ const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
   AuthenticatedRouteChildren,
 )
 
+interface OnboardingRouteChildren {
+  OnboardingCompletionRoute: typeof OnboardingCompletionRoute
+  OnboardingMicrophoneSetupRoute: typeof OnboardingMicrophoneSetupRoute
+  OnboardingPushToTalkTutorialRoute: typeof OnboardingPushToTalkTutorialRoute
+}
+
+const OnboardingRouteChildren: OnboardingRouteChildren = {
+  OnboardingCompletionRoute: OnboardingCompletionRoute,
+  OnboardingMicrophoneSetupRoute: OnboardingMicrophoneSetupRoute,
+  OnboardingPushToTalkTutorialRoute: OnboardingPushToTalkTutorialRoute,
+}
+
+const OnboardingRouteWithChildren = OnboardingRoute._addFileChildren(
+  OnboardingRouteChildren,
+)
+
 interface unauthenticatedAuthRouteChildren {
   unauthenticatedAuthAuthenticationErrorRoute: typeof unauthenticatedAuthAuthenticationErrorRoute
   unauthenticatedAuthSignInRoute: typeof unauthenticatedAuthSignInRoute
@@ -421,6 +516,7 @@ const unauthenticatedRouteWithChildren = unauthenticatedRoute._addFileChildren(
 
 const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
+  OnboardingRoute: OnboardingRouteWithChildren,
   unauthenticatedRoute: unauthenticatedRouteWithChildren,
 }
 export const routeTree = rootRouteImport
