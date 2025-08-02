@@ -314,7 +314,8 @@ function SettingsPage() {
               />
             </div>
 
-            <div className="flex items-center justify-between">
+            {/* TODO: Add back in when we have a model that supports this, these settings are implementing into setting system only  */}
+            {/* <div className="flex items-center justify-between">
               <div className="space-y-0.5">
                 <Label>Smart formatting</Label>
                 <p className="text-muted-foreground text-sm">
@@ -341,6 +342,22 @@ function SettingsPage() {
                 checked={settings.personalization.autoAddToDictionary}
                 onCheckedChange={(checked) =>
                   updatePersonalizationSetting("autoAddToDictionary", checked)
+                }
+              />
+            </div> */}
+
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label>Auto-paste on completion</Label>
+                <p className="text-muted-foreground text-sm">
+                  Automatically paste transcriptions into the active text field
+                  when transcription completes
+                </p>
+              </div>
+              <Switch
+                checked={settings.personalization.autoPasteOnCompletion}
+                onCheckedChange={(checked) =>
+                  updatePersonalizationSetting("autoPasteOnCompletion", checked)
                 }
               />
             </div>

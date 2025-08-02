@@ -47,6 +47,7 @@ rustfft = "6.1"
 num-complex = "0.4"
 nnnoiseless = "0.5"
 sysinfo = "0.32"
+enigo = "0.2"
 
 # Conditional whisper-rs features based on target OS
 [target.'cfg(target_os = "macos")'.dependencies]
