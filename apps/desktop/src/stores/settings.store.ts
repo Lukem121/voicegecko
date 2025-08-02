@@ -39,6 +39,7 @@ interface PersonalizationSettings {
   interactionSounds: boolean;
   smartFormatting: boolean;
   autoAddToDictionary: boolean;
+  autoPasteOnCompletion: boolean;
 }
 
 export interface OnboardingSettings {
@@ -145,6 +146,7 @@ const defaultSettings: AppSettings = {
     interactionSounds: true,
     smartFormatting: true,
     autoAddToDictionary: true,
+    autoPasteOnCompletion: true,
   },
   models: {
     selectedTier: "cloud",
@@ -233,7 +235,7 @@ export const useSettingsStore = create<SettingsState>()(
           });
 
           // Set initial volume
-          if (audioSettings.notificationVolume !== undefined) {
+          if (audioSettings.notificationVolume) {
             await invoke("set_volume", {
               volume: audioSettings.notificationVolume,
             });
@@ -255,13 +257,13 @@ export const useSettingsStore = create<SettingsState>()(
 
           // Set up listeners for model download events
           // This ensures the store is updated even when downloads happen in the background
-          listen<[string, number]>("model-download-progress", (event) => {
+          void listen<[string, number]>("model-download-progress", (event) => {
             const [modelId, progress] = event.payload;
             get().updateModelStatus(modelId, { Downloading: progress });
           });
 
-          listen<string>("model-download-complete", async (event) => {
-            await get().refreshModels();
+          void listen<string>("model-download-complete", () => {
+            void get().refreshModels();
           });
         } catch (error) {
           console.error("[Settings] Failed to initialize:", error);
@@ -422,7 +424,7 @@ export const useSettingsStore = create<SettingsState>()(
                 ...state.settings.models,
                 availableModels: models,
                 selectedTier:
-                  selectedTier || state.settings.models.selectedTier,
+                  selectedTier ?? state.settings.models.selectedTier,
               },
             },
           }));
@@ -586,6 +588,10 @@ async function loadPersonalizationSettings(): Promise<PersonalizationSettings> {
       (await settingsStore.get<boolean>(
         "personalization.autoAddToDictionary",
       )) ?? true,
+    autoPasteOnCompletion:
+      (await settingsStore.get<boolean>(
+        "personalization.autoPasteOnCompletion",
+      )) ?? true,
   };
 }
 
@@ -595,12 +601,12 @@ async function loadPersonalizationSettings(): Promise<PersonalizationSettings> {
 async function saveWithMeta(
   store: LazyStore,
   key: string,
-  value: any,
+  value: unknown,
 ): Promise<void> {
   await store.set(key, value);
 
   // Update metadata timestamp whenever we save
-  const currentMeta = (await store.get<any>("_meta")) ?? {};
+  const currentMeta = (await store.get<unknown>("_meta")) ?? {};
   await store.set("_meta", {
     ...currentMeta,
     version: CURRENT_SETTINGS_VERSION,

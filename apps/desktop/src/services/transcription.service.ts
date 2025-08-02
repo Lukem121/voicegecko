@@ -1,3 +1,4 @@
+import { invoke } from "@tauri-apps/api/core";
 import { writeText } from "@tauri-apps/plugin-clipboard-manager";
 import { toast } from "sonner";
 
@@ -71,8 +72,29 @@ export class TranscriptionService {
         // Copy to clipboard
         await writeText(transcript);
 
-        // Show success toast
-        toast.success("Transcription complete and copied to clipboard!");
+        // Check if auto-paste is enabled and simulate paste if so
+        const { settings } = useSettingsStore.getState();
+        if (settings.personalization.autoPasteOnCompletion) {
+          try {
+            console.log("[TranscriptionService] Auto-pasting transcription...");
+            await invoke("simulate_paste");
+            console.log("[TranscriptionService] ✅ Auto-paste successful");
+            toast.success("Transcription complete and pasted!");
+          } catch (pasteError) {
+            console.error(
+              "[TranscriptionService] Failed to auto-paste:",
+              pasteError,
+            );
+            // Still show success for clipboard copy even if paste fails
+            toast.success("Transcription complete and copied to clipboard!");
+            toast.warning(
+              "Auto-paste failed - text copied to clipboard instead",
+            );
+          }
+        } else {
+          // Show success toast for clipboard copy only
+          toast.success("Transcription complete and copied to clipboard!");
+        }
       } catch (error) {
         console.error(
           "[TranscriptionService] Failed to copy to clipboard:",
