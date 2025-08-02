@@ -2,8 +2,6 @@ Todo
 
 - [ ] Completion page for the onboarding system
 - [ ] Posthog
-- [ ] System tray
-- [ ] I notice whisper when it can mute the audio without having to just mute the whole It can like mute everything else. It can just like isolate its own audio.
 - [ ] Landing page & subsequent pages
 - [ ] Links in the Emails need removing or implementing.
 
@@ -16,6 +14,7 @@ Pre Launch Checks
 After MVP
 
 - [ ] Post processing, fix grammer, change style.
+- [ ] I notice whisper when it can mute the audio without having to just mute the whole It can like mute everything else. It can just like isolate its own audio.
 
 🪳 Bugs
 
