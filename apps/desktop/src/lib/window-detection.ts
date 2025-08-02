@@ -1,6 +1,6 @@
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
 
-export async function getCurrentWindowLabel(): Promise<string> {
+export function getCurrentWindowLabel() {
   try {
     const window = getCurrentWebviewWindow();
     return window.label;
@@ -10,12 +10,12 @@ export async function getCurrentWindowLabel(): Promise<string> {
   }
 }
 
-export async function isGeckoBarWindow(): Promise<boolean> {
-  const label = await getCurrentWindowLabel();
+export function isGeckoBarWindow() {
+  const label = getCurrentWindowLabel();
   return label === "gecko-bar";
 }
 
-export async function isMainWindow(): Promise<boolean> {
-  const label = await getCurrentWindowLabel();
+export function isMainWindow() {
+  const label = getCurrentWindowLabel();
   return label === "main";
 }
