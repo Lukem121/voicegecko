@@ -52,6 +52,9 @@ export interface EventState {
     },
   ) => Promise<void>;
 
+  // Reset functions
+  resetTranscriptionState: () => void;
+
   // Selectors (computed values)
   isRecording: () => boolean;
   isTranscribing: () => boolean;
@@ -82,6 +85,16 @@ export const useEventStore = create<EventState>()(
         // Clear error when status changes successfully
         if (status !== "error") {
           set({ recordingError: null });
+        }
+
+        // Reset transcription state when starting a new recording
+        if (status === "recording") {
+          set({
+            transcriptionStatus: "idle",
+            transcript: null,
+            transcriptionError: null,
+            transcriptionMetadata: null,
+          });
         }
       },
 
@@ -212,6 +225,17 @@ export const useEventStore = create<EventState>()(
           });
 
         // Recording status is now set to idle in setTranscriptionProgress when Complete status is received
+      },
+
+      // Reset functions
+      resetTranscriptionState: () => {
+        console.log("[EventStore] 🔄 Resetting transcription state");
+        set({
+          transcriptionStatus: "idle",
+          transcript: null,
+          transcriptionError: null,
+          transcriptionMetadata: null,
+        });
       },
 
       // Selectors

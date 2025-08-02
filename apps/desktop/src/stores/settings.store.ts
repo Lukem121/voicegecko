@@ -41,6 +41,10 @@ interface PersonalizationSettings {
   autoAddToDictionary: boolean;
 }
 
+export interface OnboardingSettings {
+  completed: boolean;
+}
+
 // Model types
 export type ModelStatus =
   | "NotDownloaded"
@@ -70,6 +74,7 @@ export interface AppSettings {
   privacy: PrivacySettings;
   personalization: PersonalizationSettings;
   models: ModelSettings;
+  onboarding: OnboardingSettings;
 }
 
 interface SettingsState {
@@ -111,6 +116,9 @@ interface SettingsState {
 
   // Test sound
   playTestSound: () => Promise<void>;
+
+  // Onboarding actions
+  updateOnboardingCompleted: (completed: boolean) => Promise<void>;
 }
 
 const settingsStore = new LazyStore("settings.json");
@@ -141,6 +149,9 @@ const defaultSettings: AppSettings = {
   models: {
     selectedTier: "cloud",
     availableModels: {},
+  },
+  onboarding: {
+    completed: false,
   },
 };
 
@@ -190,6 +201,10 @@ export const useSettingsStore = create<SettingsState>()(
               (d) => d.name === audioSettings.selectedDevice?.name,
             ) ?? null;
 
+          // Load onboarding settings
+          const onboardingCompleted =
+            (await settingsStore.get<boolean>("onboarding.completed")) ?? false;
+
           set({
             settings: {
               audio: {
@@ -206,6 +221,9 @@ export const useSettingsStore = create<SettingsState>()(
               models: {
                 selectedTier: selectedTier ?? "cloud",
                 availableModels: models,
+              },
+              onboarding: {
+                completed: onboardingCompleted,
               },
             },
             audioDevices,
@@ -506,6 +524,17 @@ export const useSettingsStore = create<SettingsState>()(
           await new Promise((resolve) => setTimeout(resolve, 700));
           await transcriptionService.playEndSoundIfEnabled();
         }
+      },
+
+      // Onboarding actions
+      updateOnboardingCompleted: async (completed) => {
+        const { settings } = get();
+        const newSettings = {
+          ...settings,
+          onboarding: { ...settings.onboarding, completed },
+        };
+        set({ settings: newSettings });
+        await saveWithMeta(settingsStore, "onboarding.completed", completed);
       },
     }),
     {
