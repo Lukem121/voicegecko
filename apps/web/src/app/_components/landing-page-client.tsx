@@ -126,7 +126,7 @@ function RiveGeckoPlaceholder({
   return (
     <div
       className={cn(
-        "relative grid place-items-center rounded-xl border border-dashed border-green-300/70 bg-green-50/50 text-green-800",
+        "relative grid place-items-center rounded-xl border border-dashed border-green-300/70 bg-green-50/50 text-green-800 dark:border-green-600/50 dark:bg-green-900/20 dark:text-green-200",
         className,
       )}
       aria-label={label ?? `Gecko pose: ${pose}`}
@@ -136,7 +136,7 @@ function RiveGeckoPlaceholder({
         <div className="text-[10px] font-bold tracking-wider uppercase opacity-70">
           Gecko Placeholder
         </div>
-        <div className="mt-1 rounded-full bg-white/70 px-2 py-0.5 text-[10px] font-semibold">
+        <div className="mt-1 rounded-full bg-white/70 px-2 py-0.5 text-[10px] font-semibold dark:bg-gray-800/70 dark:text-gray-200">
           Pose: {pose}
         </div>
         <div className="mt-2 text-[11px] opacity-70">
@@ -172,7 +172,7 @@ export default function LandingPageClient({
                 <NavigationMenu>
                   <NavigationMenuList>
                     <NavigationMenuItem>
-                      <NavigationMenuTrigger className="bg-transparent font-medium tracking-tight text-neutral-700 hover:text-green-700">
+                      <NavigationMenuTrigger className="bg-transparent font-medium tracking-tight text-neutral-700 hover:text-green-700 dark:text-neutral-300 dark:hover:text-green-400">
                         Product
                       </NavigationMenuTrigger>
                       <NavigationMenuContent>
@@ -180,7 +180,7 @@ export default function LandingPageClient({
                       </NavigationMenuContent>
                     </NavigationMenuItem>
                     <NavigationMenuItem>
-                      <NavigationMenuTrigger className="bg-transparent font-medium tracking-tight text-neutral-700">
+                      <NavigationMenuTrigger className="bg-transparent font-medium tracking-tight text-neutral-700 hover:text-green-700 dark:text-neutral-300 dark:hover:text-green-400">
                         Solutions
                       </NavigationMenuTrigger>
                       <NavigationMenuContent>
@@ -189,7 +189,7 @@ export default function LandingPageClient({
                     </NavigationMenuItem>
 
                     <NavigationMenuItem>
-                      <NavigationMenuTrigger className="bg-transparent font-medium tracking-tight text-neutral-700">
+                      <NavigationMenuTrigger className="bg-transparent font-medium tracking-tight text-neutral-700 hover:text-green-700 dark:text-neutral-300 dark:hover:text-green-400">
                         About
                       </NavigationMenuTrigger>
                       <NavigationMenuContent>
@@ -199,7 +199,7 @@ export default function LandingPageClient({
                     <NavigationMenuItem>
                       <NavigationMenuLink
                         href="/pricing"
-                        className="h-9 px-4 py-2 font-medium tracking-tight text-neutral-700"
+                        className="h-9 px-4 py-2 font-medium tracking-tight text-neutral-700 hover:text-green-700 dark:text-neutral-300 dark:hover:text-green-400"
                       >
                         Pricing
                       </NavigationMenuLink>
@@ -233,7 +233,7 @@ export default function LandingPageClient({
               animate={{ x: 0 }}
               exit={{ x: "100vw" }}
               transition={{ duration: 0.15, ease: "easeOut" }}
-              className="fixed top-0 left-0 z-50 flex h-screen w-full flex-col bg-white"
+              className="fixed top-0 left-0 z-50 flex h-screen w-full flex-col bg-white dark:bg-gray-900"
             >
               <div className="flex items-center justify-between p-6">
                 <Link href="/" className="flex items-center">
@@ -294,15 +294,15 @@ export default function LandingPageClient({
             <div className="flex items-center justify-start">
               {/* Hero content */}
               <div className="max-w-4xl text-left">
-                <div className="inline-flex items-center gap-2 rounded-full border border-neutral-200 bg-white/70 px-3 py-1.5 text-xs font-medium text-neutral-700 backdrop-blur">
+                <div className="inline-flex items-center gap-2 rounded-full border border-neutral-200 bg-white/70 px-3 py-1.5 text-xs font-medium text-neutral-700 backdrop-blur dark:border-neutral-700 dark:bg-gray-800/70 dark:text-neutral-300">
                   <span className="inline-block h-1.5 w-1.5 rounded-full bg-green-600" />
                   Meet Voice Gecko
                 </div>
 
-                <h1 className="mt-6 text-5xl font-black tracking-tight text-balance md:text-6xl">
+                <h1 className="mt-6 text-5xl font-black tracking-tight text-balance text-gray-900 md:text-6xl dark:text-white">
                   Talk, don't type.
                 </h1>
-                <p className="mt-4 max-w-2xl text-lg leading-tight font-medium text-pretty text-neutral-700 md:text-xl">
+                <p className="mt-4 max-w-2xl text-lg leading-tight font-medium text-pretty text-neutral-700 md:text-xl dark:text-neutral-300">
                   Stop wrestling with your keyboard. Speak naturally and get
                   perfect text on your clipboard instantly. 4x faster than
                   typing, 100x less frustrating.
@@ -335,10 +335,10 @@ export default function LandingPageClient({
 
         {/* ===== WHY VOICE GECKO (Differentiation) ===== */}
         <section className="mx-auto max-w-6xl px-6 py-16">
-          <h2 className="text-center text-2xl font-bold tracking-tight md:text-3xl">
+          <h2 className="text-center text-2xl font-bold tracking-tight text-gray-900 md:text-3xl dark:text-white">
             Why Voice Gecko?
           </h2>
-          <p className="mx-auto mt-2 max-w-2xl text-center text-sm text-neutral-600">
+          <p className="mx-auto mt-2 max-w-2xl text-center text-sm text-neutral-600 dark:text-neutral-400">
             Built for speed and flow: English-only MVP that gets out of your way
             and onto your clipboard.
           </p>
@@ -363,12 +363,12 @@ export default function LandingPageClient({
         </section>
 
         {/* ===== USE CASES BY OUTCOME ===== */}
-        <section className="bg-neutral-50 py-20">
+        <section className="bg-neutral-50 py-20 dark:bg-gray-800">
           <div className="mx-auto max-w-6xl px-6">
-            <h2 className="text-center text-2xl font-bold tracking-tight md:text-3xl">
+            <h2 className="text-center text-2xl font-bold tracking-tight text-gray-900 md:text-3xl dark:text-white">
               Get more done by talking first
             </h2>
-            <p className="mx-auto mt-2 max-w-2xl text-center text-sm text-neutral-600">
+            <p className="mx-auto mt-2 max-w-2xl text-center text-sm text-neutral-600 dark:text-neutral-400">
               Outcomes across roles—draft faster, document decisions, never lose
               ideas, and respond quickly.
             </p>
@@ -414,7 +414,7 @@ export default function LandingPageClient({
         </section>
 
         {/* ===== HOW IT WORKS + SHORTCUT PLAYGROUND ===== */}
-        <section className="bg-white py-20">
+        <section className="bg-white py-20 dark:bg-gray-900">
           <div className="mx-auto max-w-6xl px-6">
             <div className="grid items-start gap-10 md:grid-cols-3">
               <HowItWorksItem
@@ -436,54 +436,54 @@ export default function LandingPageClient({
 
             <div className="mt-10 grid gap-6 md:grid-cols-[1.2fr_.8fr]">
               <motion.div
-                className="rounded-2xl border border-neutral-200 bg-white p-6"
+                className="rounded-2xl border border-neutral-200 bg-white p-6 dark:border-neutral-700 dark:bg-gray-800"
                 initial={{ opacity: 0, y: 8 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.35 }}
               >
-                <h3 className="text-lg font-semibold tracking-tight">
+                <h3 className="text-lg font-semibold tracking-tight text-gray-900 dark:text-white">
                   Three steps to your first transcription
                 </h3>
-                <ol className="mt-3 space-y-3 text-sm text-neutral-700">
+                <ol className="mt-3 space-y-3 text-sm text-neutral-700 dark:text-neutral-300">
                   <li className="flex items-start gap-2">
-                    <span className="mt-0.5 inline-grid h-5 w-5 place-items-center rounded-full bg-green-100 text-xs font-bold text-green-800">
+                    <span className="mt-0.5 inline-grid h-5 w-5 place-items-center rounded-full bg-green-100 text-xs font-bold text-green-800 dark:bg-green-800 dark:text-green-200">
                       1
                     </span>
                     Download and install for Windows.
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="mt-0.5 inline-grid h-5 w-5 place-items-center rounded-full bg-green-100 text-xs font-bold text-green-800">
+                    <span className="mt-0.5 inline-grid h-5 w-5 place-items-center rounded-full bg-green-100 text-xs font-bold text-green-800 dark:bg-green-800 dark:text-green-200">
                       2
                     </span>
                     Grant microphone permission.
                   </li>
                   <li className="flex items-start gap-2">
-                    <span className="mt-0.5 inline-grid h-5 w-5 place-items-center rounded-full bg-green-100 text-xs font-bold text-green-800">
+                    <span className="mt-0.5 inline-grid h-5 w-5 place-items-center rounded-full bg-green-100 text-xs font-bold text-green-800 dark:bg-green-800 dark:text-green-200">
                       3
                     </span>
                     Press the shortcut and speak—your text is clipboard‑ready.
                   </li>
                 </ol>
-                <div className="mt-4 rounded-lg border border-neutral-200 bg-neutral-50 p-3 text-xs text-neutral-600">
+                <div className="mt-4 rounded-lg border border-neutral-200 bg-neutral-50 p-3 text-xs text-neutral-600 dark:border-neutral-600 dark:bg-gray-700 dark:text-neutral-400">
                   Note: MVP focuses on fast, reliable English transcription.
                 </div>
 
                 <div className="mt-6 grid gap-3 md:grid-cols-2">
-                  <div className="rounded-lg border border-neutral-200 bg-neutral-50 p-3">
-                    <p className="text-[12px] font-semibold text-neutral-700">
+                  <div className="rounded-lg border border-neutral-200 bg-neutral-50 p-3 dark:border-neutral-600 dark:bg-gray-700">
+                    <p className="text-[12px] font-semibold text-neutral-700 dark:text-neutral-300">
                       Your Voice
                     </p>
-                    <p className="mt-1 text-[12px] text-neutral-700">
+                    <p className="mt-1 text-[12px] text-neutral-700 dark:text-neutral-300">
                       "Draft a recap for our sprint review, note blockers, and
                       assign owners."
                     </p>
                   </div>
-                  <div className="rounded-lg border border-green-200 bg-green-50 p-3">
-                    <p className="text-[12px] font-semibold text-green-900">
+                  <div className="rounded-lg border border-green-200 bg-green-50 p-3 dark:border-green-600 dark:bg-green-900/20">
+                    <p className="text-[12px] font-semibold text-green-900 dark:text-green-200">
                       Clipboard Output
                     </p>
-                    <ul className="mt-1 list-disc pl-4 text-[12px] text-green-900">
+                    <ul className="mt-1 list-disc pl-4 text-[12px] text-green-900 dark:text-green-200">
                       <li>Summary of sprint</li>
                       <li>Blockers highlighted</li>
                       <li>Owners assigned with next steps</li>
@@ -498,12 +498,12 @@ export default function LandingPageClient({
         </section>
 
         {/* ===== WORKS EVERYWHERE ===== */}
-        <section className="bg-white py-16">
+        <section className="bg-white py-16 dark:bg-gray-900">
           <div className="mx-auto max-w-6xl px-6">
-            <h2 className="text-center text-2xl font-bold tracking-tight md:text-3xl">
+            <h2 className="text-center text-2xl font-bold tracking-tight text-gray-900 md:text-3xl dark:text-white">
               Works everywhere you work
             </h2>
-            <p className="mx-auto mt-3 max-w-2xl text-center text-sm text-neutral-600">
+            <p className="mx-auto mt-3 max-w-2xl text-center text-sm text-neutral-600 dark:text-neutral-400">
               Paste into any app—or let Voice Gecko type for you.
             </p>
 
@@ -574,12 +574,12 @@ export default function LandingPageClient({
         </section>
 
         {/* ===== SYSTEM UI SNAPSHOT: Tray + States ===== */}
-        <section className="bg-neutral-50 py-20">
+        <section className="bg-neutral-50 py-20 dark:bg-gray-800">
           <div className="mx-auto max-w-6xl px-6">
-            <h2 className="text-center text-2xl font-bold tracking-tight md:text-3xl">
+            <h2 className="text-center text-2xl font-bold tracking-tight text-gray-900 md:text-3xl dark:text-white">
               Lightweight desktop UI
             </h2>
-            <p className="mx-auto mt-2 max-w-2xl text-center text-sm text-neutral-600">
+            <p className="mx-auto mt-2 max-w-2xl text-center text-sm text-neutral-600 dark:text-neutral-400">
               Stays out of your way. Access from the system tray, speak, paste,
               and carry on.
             </p>
@@ -604,12 +604,12 @@ export default function LandingPageClient({
         </section>
 
         {/* ===== TRUST / STATS + TESTIMONIALS ===== */}
-        <section className="bg-white py-20">
+        <section className="bg-white py-20 dark:bg-gray-900">
           <div className="mx-auto max-w-6xl px-6">
             <div className="grid gap-8 md:grid-cols-[.9fr_1.1fr] md:items-center">
               {/* Stats block */}
-              <div className="rounded-2xl border border-neutral-200 bg-white p-6">
-                <h3 className="text-lg font-semibold tracking-tight">
+              <div className="rounded-2xl border border-neutral-200 bg-white p-6 dark:border-neutral-700 dark:bg-gray-800">
+                <h3 className="text-lg font-semibold tracking-tight text-gray-900 dark:text-white">
                   Trusted by people who move fast
                 </h3>
                 <div className="mt-4 grid grid-cols-3 gap-4">
@@ -617,13 +617,13 @@ export default function LandingPageClient({
                   <StatBlock value="2k/wk" label="Free words" />
                   <StatBlock value="4.9/5" label="Average rating" />
                 </div>
-                <div className="mt-4 flex flex-wrap gap-2 text-xs text-neutral-600">
+                <div className="mt-4 flex flex-wrap gap-2 text-xs text-neutral-600 dark:text-neutral-400">
                   <Avatar initial="SC" />
                   <Avatar initial="MR" />
                   <Avatar initial="EW" />
                   <Avatar initial="DL" />
                   <Avatar initial="AK" />
-                  <span className="rounded-full border border-neutral-200 bg-neutral-50 px-2 py-1">
+                  <span className="rounded-full border border-neutral-200 bg-neutral-50 px-2 py-1 text-neutral-700 dark:border-neutral-600 dark:bg-gray-700 dark:text-neutral-300">
                     2,000+ users
                   </span>
                 </div>
@@ -664,12 +664,12 @@ export default function LandingPageClient({
         </section>
 
         {/* ===== PRICING ===== */}
-        <section className="bg-neutral-50 py-20" id="pricing">
+        <section className="bg-neutral-50 py-20 dark:bg-gray-800" id="pricing">
           <div className="mx-auto max-w-6xl px-6">
-            <h2 className="text-center text-2xl font-bold tracking-tight md:text-3xl">
+            <h2 className="text-center text-2xl font-bold tracking-tight text-gray-900 md:text-3xl dark:text-white">
               Simple, fair pricing
             </h2>
-            <p className="mx-auto mt-2 max-w-2xl text-center text-sm text-neutral-600">
+            <p className="mx-auto mt-2 max-w-2xl text-center text-sm text-neutral-600 dark:text-neutral-400">
               Start free. Upgrade for unlimited transcription whenever you're
               ready. English‑only for now.
             </p>
@@ -699,10 +699,10 @@ export default function LandingPageClient({
                 ]}
               />
             </div>
-            <p className="mt-4 text-center text-xs text-neutral-600">
+            <p className="mt-4 text-center text-xs text-neutral-600 dark:text-neutral-400">
               "Most clips finish in 1–2 seconds." Prices are placeholders. See
               the{" "}
-              <Link href="/pricing" className="underline">
+              <Link href="/pricing" className="underline dark:text-neutral-300">
                 pricing page
               </Link>{" "}
               for live updates.
@@ -711,12 +711,12 @@ export default function LandingPageClient({
         </section>
 
         {/* ===== FAQ ===== */}
-        <section className="bg-white py-20">
+        <section className="bg-white py-20 dark:bg-gray-900">
           <div className="mx-auto max-w-4xl px-6">
-            <h2 className="text-center text-2xl font-bold tracking-tight md:text-3xl">
+            <h2 className="text-center text-2xl font-bold tracking-tight text-gray-900 md:text-3xl dark:text-white">
               FAQs
             </h2>
-            <div className="mt-6 divide-y divide-neutral-200 rounded-2xl border border-neutral-200 bg-white">
+            <div className="mt-6 divide-y divide-neutral-200 rounded-2xl border border-neutral-200 bg-white dark:divide-neutral-700 dark:border-neutral-700 dark:bg-gray-800">
               {[
                 {
                   q: "Which platforms are supported?",
@@ -754,12 +754,12 @@ export default function LandingPageClient({
         </section>
 
         {/* ===== FINAL CTA ===== */}
-        <section className="bg-gradient-to-b from-white to-[#e6f9ef] py-16">
+        <section className="bg-gradient-to-b from-white to-[#e6f9ef] py-16 dark:from-gray-900 dark:to-gray-800">
           <div className="mx-auto max-w-5xl px-6 text-center">
-            <h3 className="text-3xl font-black tracking-tight text-balance md:text-4xl">
+            <h3 className="text-3xl font-black tracking-tight text-balance text-gray-900 md:text-4xl dark:text-white">
               Say it. See it. Send it.
             </h3>
-            <p className="mx-auto mt-3 max-w-2xl text-neutral-700">
+            <p className="mx-auto mt-3 max-w-2xl text-neutral-700 dark:text-neutral-300">
               Download Voice Gecko and speak your work into existence.
             </p>
             <div className="mt-6 flex flex-col items-center justify-center gap-4 sm:flex-row">
@@ -789,13 +789,13 @@ export default function LandingPageClient({
         </section>
 
         {/* ===== FOOTER ===== */}
-        <footer className="border-t border-neutral-200 bg-white">
+        <footer className="border-t border-neutral-200 bg-white dark:border-neutral-700 dark:bg-gray-900">
           <div className="mx-auto grid max-w-6xl grid-cols-2 gap-8 px-6 py-12 md:grid-cols-4">
             <div>
-              <h4 className="text-sm font-semibold text-neutral-900">
+              <h4 className="text-sm font-semibold text-neutral-900 dark:text-white">
                 Product
               </h4>
-              <ul className="mt-3 space-y-2 text-sm text-neutral-600">
+              <ul className="mt-3 space-y-2 text-sm text-neutral-600 dark:text-neutral-400">
                 <li>
                   <Link href="/pricing" className="hover:underline">
                     Pricing
@@ -819,10 +819,10 @@ export default function LandingPageClient({
               </ul>
             </div>
             <div>
-              <h4 className="text-sm font-semibold text-neutral-900">
+              <h4 className="text-sm font-semibold text-neutral-900 dark:text-white">
                 Company
               </h4>
-              <ul className="mt-3 space-y-2 text-sm text-neutral-600">
+              <ul className="mt-3 space-y-2 text-sm text-neutral-600 dark:text-neutral-400">
                 <li>
                   <Link href="/company" className="hover:underline">
                     Company
@@ -846,10 +846,10 @@ export default function LandingPageClient({
               </ul>
             </div>
             <div>
-              <h4 className="text-sm font-semibold text-neutral-900">
+              <h4 className="text-sm font-semibold text-neutral-900 dark:text-white">
                 Resources
               </h4>
-              <ul className="mt-3 space-y-2 text-sm text-neutral-600">
+              <ul className="mt-3 space-y-2 text-sm text-neutral-600 dark:text-neutral-400">
                 <li>
                   <Link href="/support" className="hover:underline">
                     Support
@@ -873,8 +873,10 @@ export default function LandingPageClient({
               </ul>
             </div>
             <div>
-              <h4 className="text-sm font-semibold text-neutral-900">Legal</h4>
-              <ul className="mt-3 space-y-2 text-sm text-neutral-600">
+              <h4 className="text-sm font-semibold text-neutral-900 dark:text-white">
+                Legal
+              </h4>
+              <ul className="mt-3 space-y-2 text-sm text-neutral-600 dark:text-neutral-400">
                 <li>
                   <Link href="/privacy" className="hover:underline">
                     Privacy
@@ -898,8 +900,8 @@ export default function LandingPageClient({
               </ul>
             </div>
           </div>
-          <div className="border-t border-neutral-200">
-            <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-6 text-xs text-neutral-600">
+          <div className="border-t border-neutral-200 dark:border-neutral-700">
+            <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-6 text-xs text-neutral-600 dark:text-neutral-400">
               <div className="flex items-center gap-2">
                 <VoiceGeckoLogoText className="w-24 opacity-80" />
                 <span>© {new Date().getFullYear()} Voice Gecko</span>
@@ -1374,12 +1376,16 @@ const WhyCard = ({
   body: string;
   tag: string;
 }) => (
-  <div className="rounded-2xl border border-neutral-200 bg-white p-6">
-    <div className="inline-flex items-center gap-2 rounded-full border border-green-200 bg-green-50 px-2.5 py-0.5 text-[10px] font-semibold text-green-900">
+  <div className="rounded-2xl border border-neutral-200 bg-white p-6 dark:border-neutral-700 dark:bg-gray-800">
+    <div className="inline-flex items-center gap-2 rounded-full border border-green-200 bg-green-50 px-2.5 py-0.5 text-[10px] font-semibold text-green-900 dark:border-green-600 dark:bg-green-900/20 dark:text-green-200">
       {tag}
     </div>
-    <h3 className="mt-3 text-base font-semibold tracking-tight">{title}</h3>
-    <p className="mt-1 text-sm text-neutral-600">{body}</p>
+    <h3 className="mt-3 text-base font-semibold tracking-tight text-gray-900 dark:text-white">
+      {title}
+    </h3>
+    <p className="mt-1 text-sm text-neutral-600 dark:text-neutral-400">
+      {body}
+    </p>
   </div>
 );
 
@@ -1392,12 +1398,14 @@ const OutcomeCard = ({
   bullets: string[];
   pose: "point" | "peek" | "float" | "run";
 }) => (
-  <div className="group rounded-2xl border border-neutral-200 bg-white p-6 transition-all hover:-translate-y-0.5 hover:shadow-xl">
+  <div className="group rounded-2xl border border-neutral-200 bg-white p-6 transition-all hover:-translate-y-0.5 hover:shadow-xl dark:border-neutral-700 dark:bg-gray-800">
     <div className="flex items-center justify-between">
-      <h3 className="text-base font-semibold tracking-tight">{title}</h3>
+      <h3 className="text-base font-semibold tracking-tight text-gray-900 dark:text-white">
+        {title}
+      </h3>
       <RiveGeckoPlaceholder className="h-10 w-auto" pose={pose} />
     </div>
-    <ul className="mt-3 list-disc space-y-1 pl-5 text-sm text-neutral-700">
+    <ul className="mt-3 list-disc space-y-1 pl-5 text-sm text-neutral-700 dark:text-neutral-300">
       {bullets.map((b, i) => (
         <li key={i}>{b}</li>
       ))}
@@ -1414,14 +1422,18 @@ const HowItWorksItem = ({
   title: string;
   body: string;
 }) => (
-  <div className="rounded-2xl border border-neutral-200 bg-white p-6">
+  <div className="rounded-2xl border border-neutral-200 bg-white p-6 dark:border-neutral-700 dark:bg-gray-800">
     <div className="flex items-center gap-3">
-      <div className="grid h-9 w-9 place-items-center rounded-full border border-neutral-200 bg-neutral-50 text-green-700">
+      <div className="grid h-9 w-9 place-items-center rounded-full border border-neutral-200 bg-neutral-50 text-green-700 dark:border-neutral-600 dark:bg-gray-700 dark:text-green-400">
         {icon}
       </div>
-      <h3 className="text-base font-semibold tracking-tight">{title}</h3>
+      <h3 className="text-base font-semibold tracking-tight text-gray-900 dark:text-white">
+        {title}
+      </h3>
     </div>
-    <p className="mt-3 text-sm text-neutral-600">{body}</p>
+    <p className="mt-3 text-sm text-neutral-600 dark:text-neutral-400">
+      {body}
+    </p>
   </div>
 );
 
@@ -1432,8 +1444,11 @@ const LogoPill = ({
   children: React.ReactNode;
   icon?: React.ReactNode;
 }) => (
-  <div className="flex items-center justify-center gap-2 rounded-lg border border-neutral-200 bg-white px-3 py-2 text-xs font-medium text-neutral-700">
-    {icon && <div className="text-neutral-500">{icon}</div>} {children}
+  <div className="flex items-center justify-center gap-2 rounded-lg border border-neutral-200 bg-white px-3 py-2 text-xs font-medium text-neutral-700 dark:border-neutral-600 dark:bg-gray-800 dark:text-neutral-300">
+    {icon && (
+      <div className="text-neutral-500 dark:text-neutral-400">{icon}</div>
+    )}{" "}
+    {children}
   </div>
 );
 
@@ -1446,13 +1461,17 @@ const UiTile = ({
   body: string;
   pose: "peek" | "run" | "float";
 }) => (
-  <div className="rounded-2xl border border-neutral-200 bg-white p-6">
+  <div className="rounded-2xl border border-neutral-200 bg-white p-6 dark:border-neutral-700 dark:bg-gray-800">
     <div className="flex items-center justify-between">
-      <h3 className="text-base font-semibold tracking-tight">{title}</h3>
+      <h3 className="text-base font-semibold tracking-tight text-gray-900 dark:text-white">
+        {title}
+      </h3>
       <RiveGeckoPlaceholder className="h-10" pose={pose} />
     </div>
-    <p className="mt-2 text-sm text-neutral-700">{body}</p>
-    <div className="mt-4 h-24 rounded-lg border border-neutral-200 bg-neutral-50 text-center text-xs text-neutral-500">
+    <p className="mt-2 text-sm text-neutral-700 dark:text-neutral-300">
+      {body}
+    </p>
+    <div className="mt-4 h-24 rounded-lg border border-neutral-200 bg-neutral-50 text-center text-xs text-neutral-500 dark:border-neutral-600 dark:bg-gray-700 dark:text-neutral-400">
       <div className="grid h-full place-items-center">
         Placeholder: UI state visual
       </div>
@@ -1461,14 +1480,18 @@ const UiTile = ({
 );
 
 const StatBlock = ({ value, label }: { value: string; label: string }) => (
-  <div className="rounded-lg border border-neutral-200 bg-neutral-50 p-4 text-center">
-    <div className="text-xl font-black text-green-700">{value}</div>
-    <div className="mt-1 text-xs text-neutral-600">{label}</div>
+  <div className="rounded-lg border border-neutral-200 bg-neutral-50 p-4 text-center dark:border-neutral-600 dark:bg-gray-700">
+    <div className="text-xl font-black text-green-700 dark:text-green-400">
+      {value}
+    </div>
+    <div className="mt-1 text-xs text-neutral-600 dark:text-neutral-400">
+      {label}
+    </div>
   </div>
 );
 
 const Avatar = ({ initial }: { initial: string }) => (
-  <div className="flex h-7 w-7 items-center justify-center rounded-full bg-green-100 text-[11px] font-bold text-green-800">
+  <div className="flex h-7 w-7 items-center justify-center rounded-full bg-green-100 text-[11px] font-bold text-green-800 dark:bg-green-800 dark:text-green-200">
     {initial}
   </div>
 );
@@ -1490,13 +1513,17 @@ const PriceCard = ({
     className={cn(
       "rounded-2xl border p-6",
       highlight
-        ? "border-green-300 bg-green-50"
-        : "border-neutral-200 bg-white",
+        ? "border-green-300 bg-green-50 dark:border-green-600 dark:bg-green-900/20"
+        : "border-neutral-200 bg-white dark:border-neutral-700 dark:bg-gray-800",
     )}
   >
-    <p className="text-sm font-semibold text-neutral-900">{name}</p>
-    <p className="mt-1 text-2xl font-black">{price}</p>
-    <ul className="mt-3 space-y-1 text-sm text-neutral-700">
+    <p className="text-sm font-semibold text-neutral-900 dark:text-white">
+      {name}
+    </p>
+    <p className="mt-1 text-2xl font-black text-gray-900 dark:text-white">
+      {price}
+    </p>
+    <ul className="mt-3 space-y-1 text-sm text-neutral-700 dark:text-neutral-300">
       {features.map((f, i) => (
         <li key={i}>• {f}</li>
       ))}
@@ -1535,10 +1562,12 @@ const FaqItem = ({
         onClick={() => setOpen((o) => !o)}
         className="flex w-full items-center justify-between gap-4 text-left"
       >
-        <span className="text-sm font-semibold text-neutral-900">
+        <span className="text-sm font-semibold text-neutral-900 dark:text-white">
           {question}
         </span>
-        <span className="text-xl leading-none">{open ? "−" : "+"}</span>
+        <span className="text-xl leading-none text-neutral-900 dark:text-white">
+          {open ? "−" : "+"}
+        </span>
       </button>
       <AnimatePresence initial={false}>
         {open && (
@@ -1546,7 +1575,7 @@ const FaqItem = ({
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: "auto", opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
-            className="overflow-hidden pt-2 text-sm text-neutral-700"
+            className="overflow-hidden pt-2 text-sm text-neutral-700 dark:text-neutral-300"
           >
             {answer}
           </motion.p>
@@ -1569,15 +1598,19 @@ const TestimonialCard = ({
   company: string;
   avatar: string;
 }) => (
-  <div className="rounded-2xl border border-neutral-200 bg-white p-6">
-    <blockquote className="text-sm text-neutral-700">"{quote}"</blockquote>
+  <div className="rounded-2xl border border-neutral-200 bg-white p-6 dark:border-neutral-700 dark:bg-gray-800">
+    <blockquote className="text-sm text-neutral-700 dark:text-neutral-300">
+      "{quote}"
+    </blockquote>
     <div className="mt-4 flex items-center gap-3">
-      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-100 text-sm font-semibold text-green-800">
+      <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-100 text-sm font-semibold text-green-800 dark:bg-green-800 dark:text-green-200">
         {avatar}
       </div>
       <div>
-        <p className="text-sm font-semibold text-neutral-900">{author}</p>
-        <p className="text-xs text-neutral-600">
+        <p className="text-sm font-semibold text-neutral-900 dark:text-white">
+          {author}
+        </p>
+        <p className="text-xs text-neutral-600 dark:text-neutral-400">
           {role} at {company}
         </p>
       </div>
@@ -1612,12 +1645,12 @@ const StickyCta = ({
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: 80, opacity: 0 }}
           transition={{ duration: 0.25 }}
-          className="fixed inset-x-0 bottom-4 z-40 mx-auto w-[min(96%,56rem)] rounded-2xl border border-neutral-200 bg-white/90 p-3 shadow-[0_20px_40px_-24px_rgba(0,0,0,0.45)] backdrop-blur"
+          className="fixed inset-x-0 bottom-4 z-40 mx-auto w-[min(96%,56rem)] rounded-2xl border border-neutral-200 bg-white/90 p-3 shadow-[0_20px_40px_-24px_rgba(0,0,0,0.45)] backdrop-blur dark:border-neutral-700 dark:bg-gray-800/90"
         >
           <div className="flex flex-col items-center justify-between gap-3 sm:flex-row">
             <div className="flex items-center gap-3">
               <RiveGeckoPlaceholder pose="peek" className="h-10 w-auto" />
-              <p className="text-sm text-neutral-700">
+              <p className="text-sm text-neutral-700 dark:text-neutral-300">
                 Turn speech into text in seconds, not minutes.
               </p>
             </div>
@@ -1685,36 +1718,47 @@ const ShortcutPlayground = () => {
 
   return (
     <motion.div
-      className="rounded-2xl border border-neutral-200 bg-white p-6"
+      className="rounded-2xl border border-neutral-200 bg-white p-6 dark:border-neutral-700 dark:bg-gray-800"
       initial={{ opacity: 0, y: 8 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       transition={{ duration: 0.35, delay: 0.05 }}
     >
-      <h3 className="text-lg font-semibold tracking-tight">Try the shortcut</h3>
-      <p className="mt-1 text-sm text-neutral-700">
-        Press <kbd className="rounded border bg-neutral-50 px-1">⊞</kbd>{" "}
+      <h3 className="text-lg font-semibold tracking-tight text-gray-900 dark:text-white">
+        Try the shortcut
+      </h3>
+      <p className="mt-1 text-sm text-neutral-700 dark:text-neutral-300">
+        Press{" "}
+        <kbd className="rounded border border-neutral-300 bg-neutral-50 px-1 text-gray-900 dark:border-neutral-600 dark:bg-gray-700 dark:text-white">
+          ⊞
+        </kbd>{" "}
         <span className="mx-1">+</span>
-        <kbd className="rounded border bg-neutral-50 px-1">Shift</kbd>{" "}
+        <kbd className="rounded border border-neutral-300 bg-neutral-50 px-1 text-gray-900 dark:border-neutral-600 dark:bg-gray-700 dark:text-white">
+          Shift
+        </kbd>{" "}
         <span className="mx-1">+</span>
-        <kbd className="rounded border bg-neutral-50 px-1">G</kbd>
+        <kbd className="rounded border border-neutral-300 bg-neutral-50 px-1 text-gray-900 dark:border-neutral-600 dark:bg-gray-700 dark:text-white">
+          G
+        </kbd>
       </p>
 
       <div className="mt-4 grid gap-3 md:grid-cols-2">
-        <div className="rounded-lg border border-neutral-200 bg-neutral-50 p-3">
-          <p className="text-[12px] font-semibold text-neutral-700">Status</p>
+        <div className="rounded-lg border border-neutral-200 bg-neutral-50 p-3 dark:border-neutral-600 dark:bg-gray-700">
+          <p className="text-[12px] font-semibold text-neutral-700 dark:text-neutral-300">
+            Status
+          </p>
           <div className="mt-2 flex items-center gap-2 text-[12px]">
             <span
               className={cn(
                 "inline-block h-2 w-2 rounded-full",
                 phase === "idle"
-                  ? "bg-neutral-300"
+                  ? "bg-neutral-300 dark:bg-neutral-600"
                   : phase === "listening"
                     ? "bg-green-500"
-                    : "bg-green-700",
+                    : "bg-green-700 dark:bg-green-600",
               )}
             />
-            <span className="font-medium">
+            <span className="font-medium text-gray-900 dark:text-white">
               {phase === "idle"
                 ? "Idle"
                 : phase === "listening"
@@ -1722,15 +1766,15 @@ const ShortcutPlayground = () => {
                   : "Transcribed"}
             </span>
           </div>
-          <div className="mt-3 rounded-md border border-dashed border-neutral-300 bg-white p-2 text-[12px] text-neutral-600">
+          <div className="mt-3 rounded-md border border-dashed border-neutral-300 bg-white p-2 text-[12px] text-neutral-600 dark:border-neutral-600 dark:bg-gray-800 dark:text-neutral-400">
             {hint}
           </div>
         </div>
-        <div className="rounded-lg border border-green-200 bg-green-50 p-3">
-          <p className="text-[12px] font-semibold text-green-900">
+        <div className="rounded-lg border border-green-200 bg-green-50 p-3 dark:border-green-600 dark:bg-green-900/20">
+          <p className="text-[12px] font-semibold text-green-900 dark:text-green-200">
             Clipboard Output (demo)
           </p>
-          <div className="mt-1 min-h-14 text-[12px] text-green-900">
+          <div className="mt-1 min-h-14 text-[12px] text-green-900 dark:text-green-200">
             {phase === "idle" && (
               <span className="opacity-60">Your text will appear here…</span>
             )}
@@ -1763,14 +1807,14 @@ const ShortcutPlayground = () => {
 const PasteAutoTypeToggle = () => {
   const [mode, setMode] = useState<"paste" | "type">("paste");
   return (
-    <div className="mx-auto mt-5 max-w-lg rounded-xl border border-neutral-200 bg-white p-2">
-      <div className="grid grid-cols-2 rounded-lg border border-neutral-200 bg-neutral-50 p-1 text-sm">
+    <div className="mx-auto mt-5 max-w-lg rounded-xl border border-neutral-200 bg-white p-2 dark:border-neutral-700 dark:bg-gray-800">
+      <div className="grid grid-cols-2 rounded-lg border border-neutral-200 bg-neutral-50 p-1 text-sm dark:border-neutral-600 dark:bg-gray-700">
         <button
           className={cn(
             "rounded-md px-3 py-1.5 font-medium transition",
             mode === "paste"
-              ? "bg-white text-neutral-900 shadow-sm"
-              : "text-neutral-600",
+              ? "bg-white text-neutral-900 shadow-sm dark:bg-gray-800 dark:text-white"
+              : "text-neutral-600 dark:text-neutral-400",
           )}
           onClick={() => setMode("paste")}
         >
@@ -1780,15 +1824,15 @@ const PasteAutoTypeToggle = () => {
           className={cn(
             "rounded-md px-3 py-1.5 font-medium transition",
             mode === "type"
-              ? "bg-white text-neutral-900 shadow-sm"
-              : "text-neutral-600",
+              ? "bg-white text-neutral-900 shadow-sm dark:bg-gray-800 dark:text-white"
+              : "text-neutral-600 dark:text-neutral-400",
           )}
           onClick={() => setMode("type")}
         >
           Auto‑type
         </button>
       </div>
-      <div className="mt-3 rounded-md border border-neutral-200 bg-neutral-50 p-3 text-center text-xs text-neutral-700">
+      <div className="mt-3 rounded-md border border-neutral-200 bg-neutral-50 p-3 text-center text-xs text-neutral-700 dark:border-neutral-600 dark:bg-gray-700 dark:text-neutral-300">
         {mode === "paste"
           ? "Voice Gecko copies your text—press paste anywhere."
           : "Voice Gecko can type the text into your focused app."}
@@ -1810,8 +1854,8 @@ const BillingToggle = () => {
         className={cn(
           "rounded-lg border px-3 py-1 text-sm",
           period === "monthly"
-            ? "border-green-300 bg-green-50 text-green-900"
-            : "border-neutral-200 bg-white text-neutral-700",
+            ? "border-green-300 bg-green-50 text-green-900 dark:border-green-600 dark:bg-green-900/20 dark:text-green-200"
+            : "border-neutral-200 bg-white text-neutral-700 dark:border-neutral-700 dark:bg-gray-800 dark:text-neutral-300",
         )}
       >
         Monthly
@@ -1821,8 +1865,8 @@ const BillingToggle = () => {
         className={cn(
           "rounded-lg border px-3 py-1 text-sm",
           period === "yearly"
-            ? "border-green-300 bg-green-50 text-green-900"
-            : "border-neutral-200 bg-white text-neutral-700",
+            ? "border-green-300 bg-green-50 text-green-900 dark:border-green-600 dark:bg-green-900/20 dark:text-green-200"
+            : "border-neutral-200 bg-white text-neutral-700 dark:border-neutral-700 dark:bg-gray-800 dark:text-neutral-300",
         )}
       >
         Yearly
