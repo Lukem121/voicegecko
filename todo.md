@@ -1,6 +1,5 @@
 Todo
 
-- [ ] Completion page for the onboarding system
 - [ ] Posthog
 - [ ] Landing page & subsequent pages
 - [ ] Links in the Emails need removing or implementing.
