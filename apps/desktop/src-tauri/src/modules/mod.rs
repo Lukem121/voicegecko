@@ -6,4 +6,5 @@ pub mod settings;
 pub mod system;
 pub mod transcription;
 pub mod transcription_service;
+pub mod tray;
 pub mod updater;

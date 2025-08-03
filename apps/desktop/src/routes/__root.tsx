@@ -3,6 +3,7 @@ import { createRootRouteWithContext, Outlet } from "@tanstack/react-router";
 import type { Session } from "@acme/auth";
 
 import { PageTracker } from "~/components/analytics/page-tracker";
+import { TrayProvider } from "~/components/tray-provider";
 import { VersionDisplay } from "~/components/version-display";
 
 // Define the router context interface
@@ -41,10 +42,10 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
 
 function RouteLayout() {
   return (
-    <>
+    <TrayProvider>
       <PageTracker />
       <Outlet />
       <VersionDisplay />
-    </>
+    </TrayProvider>
   );
 }
