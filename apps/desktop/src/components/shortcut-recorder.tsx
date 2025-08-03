@@ -12,6 +12,7 @@ import {
   DialogTitle,
 } from "@acme/ui/components/ui/dialog";
 
+import { analytics } from "~/lib/analytics/posthog-analytics";
 import { isValidShortcut, normalizeKeys } from "~/lib/shortcuts/utils";
 
 interface ShortcutRecorderProps {
@@ -81,6 +82,16 @@ export function ShortcutRecorder({
 
   const handleSave = () => {
     if (isValidShortcut(recordedKeys)) {
+      // Track shortcut configuration
+      analytics.track("settings_changed", {
+        category: "shortcuts",
+        setting_key: actionName,
+        old_value: "previous", // Could be enhanced to track actual old value
+        new_value: recordedKeys.join("+"),
+      });
+
+      analytics.trackFeatureFirstUse("custom_shortcut");
+
       onSave(recordedKeys);
       onClose();
     }

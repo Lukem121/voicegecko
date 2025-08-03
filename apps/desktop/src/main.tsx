@@ -18,6 +18,7 @@ import { routeTree } from "~/routeTree.gen";
 import { useSettingsStore } from "~/stores/settings.store";
 import { TRPCReactProvider } from "~/trpc";
 import { useSession } from "./hooks/auth";
+import { analytics, useAnalyticsInit } from "./lib/analytics/posthog-analytics";
 import PostHogProvider from "./lib/posthog/posthog-provider";
 import { ThemeProvider } from "./providers/theme";
 
@@ -44,6 +45,34 @@ function InnerApp() {
   const auth = useAuth();
   const { session, query } = useSession();
   const settings = useSettingsStore((state) => state.settings);
+
+  // Initialize PostHog analytics
+  useAnalyticsInit();
+
+  // Track user identification and authentication state changes
+  useEffect(() => {
+    if (session?.user && auth.isAuthenticated) {
+      // Identify user with PostHog
+      analytics.identify(session.user.id, {
+        email: session.user.email,
+        name: session.user.name,
+        username: session.user.username,
+        email_verified: session.user.emailVerified,
+        created_at: session.user.createdAt,
+        role: session.user.role,
+      });
+
+      // Track sign in event
+      analytics.track("user_signed_in", {
+        method: "email", // Could be enhanced to detect actual method
+        returning_user: true, // Could be enhanced with proper detection
+      });
+    } else if (!auth.isLoading && !auth.isAuthenticated) {
+      // Reset analytics on sign out
+      analytics.reset();
+      analytics.track("user_signed_out", {});
+    }
+  }, [session?.user, auth.isAuthenticated, auth.isLoading]);
 
   useBetterAuthTauri({
     authClient,
@@ -83,6 +112,13 @@ function InnerApp() {
 function App() {
   const [isAppReady, setIsAppReady] = useState(false);
   const isGeckoBar = isGeckoBarWindow();
+
+  // Track app startup time
+  useEffect(() => {
+    if (!isGeckoBar) {
+      sessionStorage.setItem("appStartTime", Date.now().toString());
+    }
+  }, [isGeckoBar]);
 
   // If this is the gecko bar window, render the gecko bar app directly
   if (isGeckoBar) {

@@ -6,6 +6,7 @@ import { check } from "@tauri-apps/plugin-updater";
 
 import { dictionaryService } from "~/services/dictionary.service";
 import { storeRegistry } from "~/stores/store-registry";
+import { analytics } from "./analytics/posthog-analytics";
 import { initializeTauriEvents } from "./tauri-events";
 
 interface InitializeOptions {
@@ -72,17 +73,23 @@ async function checkAndInstallUpdates(options?: InitializeOptions) {
 export async function initializeApp(
   options?: InitializeOptions,
 ): Promise<void> {
+  const startTime = Date.now();
   console.log("[App] 🚀 Initializing application...");
+
+  const initializationSteps: string[] = [];
 
   try {
     // Check for updates first during launch
+    initializationSteps.push("update_check");
     await checkAndInstallUpdates(options);
 
     // Synchronize models to detect bundled models
+    initializationSteps.push("model_sync");
     options?.onUpdateStatus?.("Initializing models...");
     await invoke("synchronize_models"); // Synchronize models first
 
     // Check and clean up any partial downloads from previous sessions
+    initializationSteps.push("cleanup_check");
     try {
       const partialFiles = await invoke<string[]>(
         "check_and_fix_partial_downloads",
@@ -94,16 +101,20 @@ export async function initializeApp(
       console.warn("[App] Failed to check partial downloads:", error);
     }
 
+    initializationSteps.push("store_init");
     options?.onUpdateStatus?.("Initializing application...");
     await storeRegistry.initializeAll();
 
     // Initialize Tauri event listeners
+    initializationSteps.push("event_listeners");
     await initializeTauriEvents();
 
     // Initialize system tray (only in main window)
+    initializationSteps.push("system_tray");
     await import("~/lib/tray");
 
     // Prefetch dictionary prompt for faster transcriptions
+    initializationSteps.push("dictionary_prefetch");
     dictionaryService.prefetchDictionaryPrompt().catch((error) => {
       console.warn("[App] Failed to prefetch dictionary prompt:", error);
     });
@@ -130,9 +141,29 @@ export async function initializeApp(
 
     console.log("[App] ✅ Application initialized successfully");
     options?.onUpdateStatus?.("Application ready");
+
+    // Track successful app startup
+    const startupTime = (Date.now() - startTime) / 1000;
+    analytics.track("app_startup", {
+      startup_time_seconds: startupTime,
+      initialization_steps: initializationSteps,
+      models_synchronized: true,
+      auto_update_available: false, // Could be enhanced to detect this
+    });
   } catch (error) {
     console.error("[App] ❌ Failed to initialize application:", error);
     options?.onUpdateStatus?.("Initialization failed");
+
+    // Track initialization failure
+    const failedTime = (Date.now() - startTime) / 1000;
+    analytics.track("error_occurred", {
+      error_type: "app_initialization",
+      error_message:
+        error instanceof Error ? error.message : "Unknown initialization error",
+      component: "initializeApp",
+      user_action: "app_startup",
+    });
+
     throw error;
   }
 }

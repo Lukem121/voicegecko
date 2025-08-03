@@ -6,6 +6,7 @@ import LogoFull from "@acme/ui/components/logos/logo-full";
 import { Progress } from "@acme/ui/components/ui/progress";
 
 import { useAuth } from "~/hooks/use-auth";
+import { analytics } from "~/lib/analytics/posthog-analytics";
 import { initializeApp } from "~/lib/initialize-app";
 
 export function AppLauncher({ onReady }: { onReady: () => void }) {

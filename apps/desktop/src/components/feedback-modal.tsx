@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { Loader2, MessageSquare } from "lucide-react";
 import { toast } from "sonner";
 
@@ -14,6 +14,7 @@ import {
 import { Textarea } from "@acme/ui/components/ui/textarea";
 
 import { useSendFeedback } from "~/features/transcription/use-send-feedback";
+import { analytics } from "~/lib/analytics/posthog-analytics";
 
 interface FeedbackModalProps {
   isOpen: boolean;
@@ -34,6 +35,13 @@ export function FeedbackModal({
   const [feedback, setFeedback] = useState("");
   const { sendFeedback, isSending } = useSendFeedback();
 
+  // Track feedback modal open
+  React.useEffect(() => {
+    if (isOpen) {
+      analytics.trackFeatureFirstUse("feedback_modal");
+    }
+  }, [isOpen]);
+
   const handleSubmit = async () => {
     const trimmedFeedback = feedback.trim();
 
@@ -53,6 +61,13 @@ export function FeedbackModal({
       await sendFeedback({
         transcriptionId,
         feedback: trimmedFeedback,
+      });
+
+      // Track successful feedback submission
+      analytics.track("feedback_submitted", {
+        type: "transcription_quality",
+        rating: undefined,
+        has_text: trimmedFeedback.length > 0,
       });
 
       toast.success(

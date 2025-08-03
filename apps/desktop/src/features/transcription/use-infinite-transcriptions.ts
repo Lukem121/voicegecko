@@ -1,8 +1,9 @@
-import { useMemo } from "react";
+import React, { useMemo } from "react";
 import { useInfiniteQuery } from "@tanstack/react-query";
 import Fuse from "fuse.js";
 
 import { useDebouncedSearch } from "~/hooks/use-debounced-search";
+import { analytics } from "~/lib/analytics/posthog-analytics";
 import { trpc } from "~/trpc";
 import { useGetTranscriptions } from "./use-get-transcriptions";
 
@@ -26,6 +27,18 @@ export const useInfiniteTranscriptions = ({
   searchDelay = 300,
 }: UseInfiniteTranscriptionsParams = {}) => {
   const search = useDebouncedSearch({ delay: searchDelay });
+
+  // Track search usage
+  React.useEffect(() => {
+    if (search.debouncedSearchTerm) {
+      analytics.track("transcription_searched", {
+        search_term_length: search.debouncedSearchTerm.length,
+        search_type: "server_search",
+      });
+
+      analytics.trackFeatureFirstUse("transcription_search");
+    }
+  }, [search.debouncedSearchTerm]);
 
   // Main infinite query for transcriptions
   const infiniteQuery = useInfiniteQuery(

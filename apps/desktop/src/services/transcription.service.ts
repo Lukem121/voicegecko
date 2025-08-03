@@ -2,6 +2,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { writeText } from "@tauri-apps/plugin-clipboard-manager";
 import { toast } from "sonner";
 
+import { analytics } from "~/lib/analytics/posthog-analytics";
 import { useSettingsStore } from "~/stores/settings.store";
 import { recordingService } from "./recording.service";
 

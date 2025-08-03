@@ -78,6 +78,14 @@ export async function initializeTauriEvents(
     await listen("cloud-transcription-requested", (event) => {
       void (async () => {
         const audioData = event.payload as AudioData;
+
+        // Initialize transcription tracker for cloud transcription
+        const audioDuration = audioData.samples.length / audioData.sample_rate;
+        const transcriptionTracker = new TranscriptionTracker(
+          "cloud",
+          audioDuration,
+          "whisper-1",
+        );
         console.log("[TauriEvents] ☁️ Cloud transcription requested", {
           samplesLength: audioData.samples.length,
           sampleRate: audioData.sample_rate,
@@ -134,6 +142,12 @@ export async function initializeTauriEvents(
           }
         } catch (error) {
           console.error("[TauriEvents] Cloud transcription error:", error);
+
+          // Track transcription failure
+          transcriptionTracker.trackFailed(
+            "cloud_api_error",
+            error instanceof Error ? error.message : "Unknown error",
+          );
 
           // Update error state directly
           const store = useEventStore.getState();

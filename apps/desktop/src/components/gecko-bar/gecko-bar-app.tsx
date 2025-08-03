@@ -4,6 +4,7 @@ import { motion } from "motion/react";
 import { cn } from "@acme/ui/lib/utils";
 
 import { useGeckoBarState } from "~/hooks/use-gecko-bar-state";
+import { analytics } from "~/lib/analytics/posthog-analytics";
 import { useEventStore } from "~/stores/event.store";
 import { AudioVisualizer } from "../audio-visualizer";
 import {
@@ -122,7 +123,18 @@ export function GeckoBarApp() {
           alignItems: "flex-end",
           justifyContent: "center",
         }}
-        onMouseEnter={handlers.onMouseEnter}
+        onMouseEnter={() => {
+          handlers.onMouseEnter();
+          // Track hover interaction
+          analytics.track("gecko_bar_interaction", {
+            action: "hover",
+            state: showActiveState
+              ? "recording"
+              : state.isExpanded
+                ? "expanded"
+                : "collapsed",
+          });
+        }}
         onMouseLeave={handlers.onMouseLeave}
       >
         {/* Tooltip */}
@@ -147,7 +159,18 @@ export function GeckoBarApp() {
             damping: ANIMATIONS.SPRING.DAMPING,
             mass: ANIMATIONS.SPRING.MASS,
           }}
-          onMouseDown={handlers.onClick} // Faster than onClick - fires immediately on press
+          onMouseDown={() => {
+            handlers.onClick();
+            // Track click interaction
+            analytics.track("gecko_bar_interaction", {
+              action: "click",
+              state: showActiveState
+                ? "recording"
+                : state.isExpanded
+                  ? "expanded"
+                  : "collapsed",
+            });
+          }}
           onClick={handlers.onClick} // Keep as fallback
         >
           {/* Gecko scales background pattern */}

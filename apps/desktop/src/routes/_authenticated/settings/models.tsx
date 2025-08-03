@@ -24,6 +24,7 @@ import { Progress } from "@acme/ui/components/ui/progress";
 import { RadioGroup, RadioGroupItem } from "@acme/ui/components/ui/radio-group";
 
 import type { HardwareInfo, ModelTier } from "~/types/models";
+import { analytics } from "~/lib/analytics/posthog-analytics";
 import { useHardwareInfo, useSettingsStore } from "~/stores/settings.store";
 import { tierDisplayInfo } from "~/types/models";
 
