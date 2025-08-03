@@ -3,6 +3,7 @@ import { create } from "zustand";
 import { devtools } from "zustand/middleware";
 
 import { isNetworkError } from "~/hooks/auth";
+import analytics from "~/lib/analytics/posthog-analytics";
 import { showNoInternetNotification } from "~/lib/gecko-bar-notifications";
 import { createTranscription } from "~/lib/transcription-mutations";
 import { transcriptionService } from "~/services/transcription.service";
