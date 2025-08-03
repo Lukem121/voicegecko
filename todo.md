@@ -1,8 +1,8 @@
 Todo
 
-- [ ] Posthog
 - [ ] Landing page & subsequent pages
 - [ ] Links in the Emails need removing or implementing.
+- [ ] Change light/dark mode
 
 Pre Launch Checks
 
