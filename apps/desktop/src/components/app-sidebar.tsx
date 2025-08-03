@@ -120,11 +120,6 @@ const data: NavigationData = {
       url: "/dictionary",
       icon: BookOpen,
     },
-    {
-      title: "Onboarding",
-      url: "/onboarding",
-      icon: BookOpen,
-    },
   ],
   navSecondary: [
     {

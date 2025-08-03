@@ -1,7 +1,14 @@
 import React, { useEffect } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { openUrl } from "@tauri-apps/plugin-opener";
-import { Check, ExternalLink, MessageCircle } from "lucide-react";
+import {
+  BookOpen,
+  Check,
+  Clipboard,
+  ExternalLink,
+  Globe,
+  MessageCircle,
+} from "lucide-react";
 import { motion } from "motion/react";
 
 import { Button } from "@acme/ui/components/ui/button";
@@ -10,6 +17,7 @@ import {
   CardContent,
   CardFooter,
   CardHeader,
+  CardTitle,
 } from "@acme/ui/components/ui/card";
 
 import { useOnboarding } from "~/components/onboarding/onboarding-provider";
@@ -52,115 +60,149 @@ function CompletionStep() {
   return (
     <div className="mx-auto flex min-h-full max-w-4xl flex-col">
       <div className="flex-1 px-6 py-8">
-        <div className="mx-auto max-w-5xl">
+        <div className="mx-auto max-w-3xl space-y-8">
+          {/* Simple Hero */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
-            className="mb-8 text-center"
+            className="text-center"
           >
             <h1 className="mb-2 text-3xl font-medium">🎉 You're All Set!</h1>
             <p className="text-muted-foreground">
-              Start transcribing anywhere with your push-to-talk shortcut
+              VoiceGecko is ready to transcribe your voice anywhere
             </p>
           </motion.div>
 
-          <div className="grid gap-6 md:grid-cols-2">
-            {/* Pro Plan Info Card */}
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.5, delay: 0.2 }}
-            >
-              <Card className="border-0 shadow-sm">
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="font-medium">Upgrade to Pro</p>
-                      <p className="text-muted-foreground text-sm">
-                        Unlock unlimited transcriptions and advanced features
-                      </p>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <ul className="grid grid-cols-1 gap-x-3 gap-y-2">
-                    <li className="flex items-start gap-2">
-                      <Check className="text-muted-foreground mt-0.5 h-3 w-3 flex-shrink-0" />
-                      <span className="text-xs">Unlimited transcriptions</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <Check className="text-muted-foreground mt-0.5 h-3 w-3 flex-shrink-0" />
-                      <span className="text-xs">Advanced AI processing</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <Check className="text-muted-foreground mt-0.5 h-3 w-3 flex-shrink-0" />
-                      <span className="text-xs">Priority support</span>
-                    </li>
-                  </ul>
-                </CardContent>
-                <CardFooter>
-                  <Button
-                    onClick={handleUpgradeToPro}
-                    className="mt-4 w-full"
-                    variant="outline"
-                  >
-                    Learn more
-                  </Button>
-                </CardFooter>
-              </Card>
-            </motion.div>
+          {/* Main Actions - Two Columns */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+            className="grid gap-6 md:grid-cols-2"
+          >
+            {/* Community */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  Join Our Community
+                </CardTitle>
+                <p className="text-muted-foreground text-sm">
+                  Connect with other VoiceGecko users and get support
+                </p>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <ul className="space-y-2 text-sm">
+                  <li className="flex items-center gap-2">
+                    <Check className="h-3 w-3 text-green-600" />
+                    Get help and share tips
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <Check className="h-3 w-3 text-green-600" />
+                    Early access to new features
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <Check className="h-3 w-3 text-green-600" />
+                    Direct feedback to our team
+                  </li>
+                </ul>
+              </CardContent>
+              <CardFooter>
+                <Button
+                  onClick={handleJoinDiscord}
+                  className="w-full bg-[#5865F2] text-white hover:bg-[#4752C4]"
+                >
+                  <MessageCircle className="mr-2 h-4 w-4" />
+                  Join Discord
+                  <ExternalLink className="ml-2 h-4 w-4" />
+                </Button>
+              </CardFooter>
+            </Card>
 
-            {/* Discord Community Card */}
-            <motion.div
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.5, delay: 0.4 }}
-            >
-              <Card className="border-0 shadow-sm">
-                <CardHeader>
-                  <div className="flex items-center justify-between">
+            {/* Pro Features */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Unlock More Features</CardTitle>
+                <p className="text-muted-foreground text-sm">
+                  Upgrade to Pro for unlimited transcriptions and advanced
+                  features
+                </p>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <ul className="space-y-2 text-sm">
+                  <li className="flex items-center gap-2">
+                    <Check className="h-3 w-3 text-green-600" />
+                    Unlimited transcriptions
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <Check className="h-3 w-3 text-green-600" />
+                    Priority transcription queue
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <Check className="h-3 w-3 text-green-600" />
+                    Priority support
+                  </li>
+                </ul>
+              </CardContent>
+              <CardFooter>
+                <Button
+                  onClick={handleUpgradeToPro}
+                  variant="outline"
+                  className="w-full"
+                >
+                  Learn About Pro
+                </Button>
+              </CardFooter>
+            </Card>
+          </motion.div>
+
+          {/* Quick Tips */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+          >
+            <Card className="gap-4">
+              <CardHeader>
+                <CardTitle>Quick Tips</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid gap-3 md:grid-cols-3">
+                  <div className="flex items-start gap-2">
+                    <Globe className="text-muted-foreground mt-0.5 h-4 w-4 flex-shrink-0" />
                     <div>
-                      <p className="font-medium">Join Our Community</p>
-                      <p className="text-muted-foreground text-sm">
-                        Connect with other VoiceGecko users and get support
+                      <h4 className="mb-1 text-sm font-medium">
+                        Global Access
+                      </h4>
+                      <p className="text-muted-foreground text-xs">
+                        Use your shortcut from any app to transcribe instantly
                       </p>
                     </div>
                   </div>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <ul className="grid grid-cols-1 gap-x-3 gap-y-2">
-                    <li className="flex items-start gap-2">
-                      <Check className="text-muted-foreground mt-0.5 h-3 w-3 flex-shrink-0" />
-                      <span className="text-xs">Get help and share tips</span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <Check className="text-muted-foreground mt-0.5 h-3 w-3 flex-shrink-0" />
-                      <span className="text-xs">
-                        Early access to new features
-                      </span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <Check className="text-muted-foreground mt-0.5 h-3 w-3 flex-shrink-0" />
-                      <span className="text-xs">
-                        Direct feedback to our team
-                      </span>
-                    </li>
-                  </ul>
-                </CardContent>
-                <CardFooter>
-                  <Button
-                    onClick={handleJoinDiscord}
-                    className="mt-4 w-full bg-[#5865F2] text-white hover:bg-[#4752C4]"
-                  >
-                    <MessageCircle className="mr-2 h-4 w-4" />
-                    Join our Discord
-                    <ExternalLink className="ml-2 h-4 w-4" />
-                  </Button>
-                </CardFooter>
-              </Card>
-            </motion.div>
-          </div>
+                  <div className="flex items-start gap-2">
+                    <Clipboard className="text-muted-foreground mt-0.5 h-4 w-4 flex-shrink-0" />
+                    <div>
+                      <h4 className="mb-1 text-sm font-medium">Auto-Paste</h4>
+                      <p className="text-muted-foreground text-xs">
+                        Transcribed text automatically appears where you need it
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <BookOpen className="text-muted-foreground mt-0.5 h-4 w-4 flex-shrink-0" />
+                    <div>
+                      <h4 className="mb-1 text-sm font-medium">
+                        Custom Dictionary
+                      </h4>
+                      <p className="text-muted-foreground text-xs">
+                        Add business names or tricky words for better accuracy
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </motion.div>
         </div>
       </div>
     </div>
