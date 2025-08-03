@@ -6,6 +6,7 @@ import { getSessionCookie } from "@acme/auth/utils";
 import { APP_ROUTES } from "~/utils/app-routes";
 
 const unprotectedRoutes: string[] = [
+  APP_ROUTES.HOME,
   // Auth
   APP_ROUTES.AUTH.SIGN_IN,
   APP_ROUTES.AUTH.SIGN_UP,

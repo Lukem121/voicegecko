@@ -1,10 +1,6 @@
 // URL configuration constants
 export const APP_ROUTES = {
   HOME: "/",
-  ORDERS: {
-    ROOT: "/orders",
-    ORDER_ID: "/orders/[orderId]",
-  },
   AUTH: {
     SIGN_IN: "/sign-in",
     SIGN_UP: "/sign-up",
