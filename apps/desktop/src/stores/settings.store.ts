@@ -11,6 +11,7 @@ import type {
   NotificationSound,
   NotificationTiming,
 } from "~/types/settings";
+import { analytics } from "~/lib/analytics/posthog-analytics";
 import { CURRENT_SETTINGS_VERSION } from "~/lib/settings/migrations/registry";
 import { recordingService } from "~/services/recording.service";
 import { transcriptionService } from "~/services/transcription.service";
@@ -139,7 +140,7 @@ const defaultSettings: AppSettings = {
     hideGeckoOnFullscreen: true,
   },
   privacy: {
-    usageAnalytics: false,
+    usageAnalytics: true,
     crashReports: true,
   },
   personalization: {
@@ -274,20 +275,47 @@ export const useSettingsStore = create<SettingsState>()(
 
       updateAudioDevice: async (device) => {
         const { settings } = get();
+        const oldDevice = settings.audio.selectedDevice;
         const newSettings = {
           ...settings,
           audio: { ...settings.audio, selectedDevice: device },
         };
+
+        // Track audio device change
+        analytics.track("settings_changed", {
+          category: "audio",
+          setting_key: "selectedDevice",
+          old_value: oldDevice?.name ?? null,
+          new_value: device?.name ?? null,
+        });
+
+        if (device) {
+          analytics.track("audio_device_changed", {
+            device_name: device.name,
+            device_type: device.name ? "custom" : "default",
+          });
+        }
+
         set({ settings: newSettings });
         await saveWithMeta(settingsStore, "selectedDevice", device);
       },
 
       updateNotificationSound: async (sound) => {
         const { settings } = get();
+        const oldSound = settings.audio.selectedSound;
         const newSettings = {
           ...settings,
           audio: { ...settings.audio, selectedSound: sound },
         };
+
+        // Track notification sound change
+        analytics.track("settings_changed", {
+          category: "audio",
+          setting_key: "selectedSound",
+          old_value: oldSound,
+          new_value: sound,
+        });
+
         set({ settings: newSettings });
         await saveWithMeta(settingsStore, "selectedSound", sound);
       },
@@ -371,20 +399,40 @@ export const useSettingsStore = create<SettingsState>()(
 
       updatePrivacySetting: async (key, value) => {
         const { settings } = get();
+        const oldValue = settings.privacy[key];
         const newSettings = {
           ...settings,
           privacy: { ...settings.privacy, [key]: value },
         };
+
+        // Track privacy setting change
+        analytics.track("settings_changed", {
+          category: "privacy",
+          setting_key: key,
+          old_value: oldValue,
+          new_value: value,
+        });
+
         set({ settings: newSettings });
         await saveWithMeta(settingsStore, `privacy.${key}`, value);
       },
 
       updatePersonalizationSetting: async (key, value) => {
         const { settings } = get();
+        const oldValue = settings.personalization[key];
         const newSettings = {
           ...settings,
           personalization: { ...settings.personalization, [key]: value },
         };
+
+        // Track personalization setting change
+        analytics.track("settings_changed", {
+          category: "personalization",
+          setting_key: key,
+          old_value: oldValue,
+          new_value: value,
+        });
+
         set({ settings: newSettings });
         await saveWithMeta(settingsStore, `personalization.${key}`, value);
       },
@@ -402,10 +450,25 @@ export const useSettingsStore = create<SettingsState>()(
       // Model actions
       updateSelectedTier: async (tier) => {
         const { settings } = get();
+        const oldTier = settings.models.selectedTier;
         const newSettings = {
           ...settings,
           models: { ...settings.models, selectedTier: tier },
         };
+
+        // Track model tier change
+        analytics.track("settings_changed", {
+          category: "models",
+          setting_key: "selectedTier",
+          old_value: oldTier,
+          new_value: tier,
+        });
+
+        analytics.track("model_tier_changed", {
+          old_tier: oldTier,
+          new_tier: tier,
+        });
+
         set({ settings: newSettings });
         await invoke("set_selected_tier", { tier });
       },
@@ -513,6 +576,12 @@ export const useSettingsStore = create<SettingsState>()(
       playTestSound: async () => {
         const { settings } = get();
 
+        // Track notification sound test
+        analytics.track("notification_sound_tested", {
+          sound_name: settings.audio.selectedSound,
+          volume: settings.audio.notificationVolume,
+        });
+
         // Check if interaction sounds are enabled
         if (!settings.personalization.interactionSounds) {
           console.log(
@@ -570,7 +639,7 @@ async function loadAudioSettings(): Promise<AudioSettings> {
 async function loadPrivacySettings(): Promise<PrivacySettings> {
   return {
     usageAnalytics:
-      (await settingsStore.get<boolean>("privacy.usageAnalytics")) ?? false,
+      (await settingsStore.get<boolean>("privacy.usageAnalytics")) ?? true,
     crashReports:
       (await settingsStore.get<boolean>("privacy.crashReports")) ?? true,
   };

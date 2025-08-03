@@ -30,7 +30,16 @@ export const useGetDictionary = () => {
     });
 
     const results = fuse.search(search.debouncedSearchTerm);
-    return results.map((result) => result.item);
+    const filteredResults = results.map((result) => result.item);
+
+    // Track search usage
+    analytics.track("dictionary_searched", {
+      search_term_length: search.debouncedSearchTerm.length,
+      results_count: filteredResults.length,
+      search_type: "fuzzy",
+    });
+
+    return filteredResults;
   }, [query.data?.entries, search.debouncedSearchTerm]);
 
   return {

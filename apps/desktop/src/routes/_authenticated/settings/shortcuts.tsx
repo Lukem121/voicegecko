@@ -26,6 +26,7 @@ import {
 
 import { ShortcutRecorder } from "~/components/shortcut-recorder";
 import { useShortcuts } from "~/hooks/use-shortcuts";
+import { analytics } from "~/lib/analytics/posthog-analytics";
 import { formatKeysForDisplay, getOS } from "~/lib/shortcuts/utils";
 
 export const Route = createFileRoute("/_authenticated/settings/shortcuts")({
@@ -47,6 +48,14 @@ function ShortcutsPage() {
   const os = getOS();
 
   const handleResetShortcuts = () => {
+    analytics.track("settings_changed", {
+      category: "shortcuts",
+      setting_key: "reset_all",
+      old_value: "custom",
+      new_value: "default",
+    });
+
+    analytics.trackFeatureFirstUse("reset_shortcuts");
     void resetShortcuts();
   };
 

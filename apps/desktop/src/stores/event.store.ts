@@ -210,6 +210,12 @@ export const useEventStore = create<EventState>()(
               error instanceof Error &&
               error.message.includes("limit exceeded")
             ) {
+              // Track usage limit exceeded
+              analytics.track("usage_limit_exceeded", {
+                limit_type: "transcription",
+                attempted_action: "save_transcription",
+              });
+
               // Usage limit error - show notification but don't disrupt user
               toast.error("Weekly usage limit reached", {
                 description:

@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 
+import { analytics } from "~/lib/analytics/posthog-analytics";
+
 interface AutostartConfig {
   enabled: boolean;
 }
@@ -30,8 +32,17 @@ export function useAutostartSettings() {
 
   const setEnabled = useCallback(
     async (enabled: boolean) => {
+      const oldEnabled = config.enabled;
       const newConfig = { ...config, enabled };
       setConfig(newConfig);
+
+      // Track autostart setting change
+      analytics.track("settings_changed", {
+        category: "general",
+        setting_key: "launchOnStartup",
+        old_value: oldEnabled,
+        new_value: enabled,
+      });
 
       try {
         await invoke("set_autostart_config", { config: newConfig });

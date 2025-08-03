@@ -30,6 +30,7 @@ import { TranscriptionSkeleton } from "~/components/transcription-skeleton";
 import { useDeleteTranscription } from "~/features/transcription/use-delete-transcription";
 import { useInfiniteTranscriptions } from "~/features/transcription/use-infinite-transcriptions";
 import { useInfiniteScroll } from "~/hooks/use-infinite-scroll";
+import { analytics } from "~/lib/analytics/posthog-analytics";
 
 export const Route = createFileRoute("/_authenticated/transcriptions")({
   component: TranscriptionsPage,
@@ -75,6 +76,13 @@ function TranscriptionsPage() {
       isOpen: true,
       transcriptionId: id,
       content: content,
+    });
+
+    // Track feedback initiation
+    analytics.track("feedback_submitted", {
+      type: "transcription_quality",
+      rating: undefined,
+      has_text: content.length > 0,
     });
   };
 
@@ -141,7 +149,10 @@ function TranscriptionsPage() {
               variant="ghost"
               size="sm"
               className="h-8 w-8 p-0"
-              onClick={() => setIsSearchExpanded(true)}
+              onClick={() => {
+                setIsSearchExpanded(true);
+                analytics.trackFeatureFirstUse("transcription_search");
+              }}
             >
               <Search className="h-4 w-4" />
             </Button>
@@ -272,6 +283,16 @@ function TranscriptionsPage() {
                                     text={item.content}
                                     variant="ghost"
                                     className="h-8 w-8 p-0"
+                                    onClick={() => {
+                                      // Track copy button usage
+                                      analytics.track("transcription_copied", {
+                                        transcript_length: item.content.length,
+                                        method: "button",
+                                      });
+                                      analytics.trackFeatureFirstUse(
+                                        "copy_transcription",
+                                      );
+                                    }}
                                   />
                                 </TooltipTrigger>
                                 <TooltipContent>
@@ -287,6 +308,10 @@ function TranscriptionsPage() {
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     handleSendFeedback(item.id, item.content);
+                                    // Track feature usage
+                                    analytics.trackFeatureFirstUse(
+                                      "feedback_modal",
+                                    );
                                   }}
                                   className="h-8 w-8 p-0"
                                 >

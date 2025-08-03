@@ -4,6 +4,8 @@ import { TrayIcon } from "@tauri-apps/api/tray";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { exit } from "@tauri-apps/plugin-process";
 
+import { analytics } from "./analytics/posthog-analytics";
+
 // Get the main window
 const mainWindow = getCurrentWindow();
 
@@ -21,6 +23,10 @@ const menu = await Menu.new({
       text: "Show Voice Gecko",
       action: async () => {
         console.log("🔄 Showing application from system tray");
+        analytics.track("app_window_action", {
+          action: "show_from_tray",
+          trigger: "tray_menu",
+        });
         await showAndFocusWindow();
       },
     },
@@ -29,6 +35,10 @@ const menu = await Menu.new({
       text: "Hide to Tray",
       action: async () => {
         console.log("🔄 Hiding application to system tray");
+        analytics.track("app_window_action", {
+          action: "hide_to_tray",
+          trigger: "tray_menu",
+        });
         await mainWindow.hide();
       },
     },
@@ -37,6 +47,11 @@ const menu = await Menu.new({
       text: "Quit Voice Gecko",
       action: () => {
         console.log("🔄 Closing application via system tray");
+        analytics.track("app_shutdown", {
+          session_duration_seconds: 0, // Could be enhanced with actual session tracking
+          recordings_count: 0,
+          transcriptions_count: 0,
+        });
         void exit(0);
       },
     },
@@ -59,6 +74,10 @@ export const tray = await TrayIcon.new({
       case "DoubleClick":
         if (event.button === "Left") {
           console.log("🔄 Double-clicked tray icon - showing window");
+          analytics.track("app_window_action", {
+            action: "show_from_tray",
+            trigger: "tray_double_click",
+          });
           await showAndFocusWindow();
         }
         break;
