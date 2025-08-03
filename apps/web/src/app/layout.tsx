@@ -61,9 +61,6 @@ export default function RootLayout(props: { children: React.ReactNode }) {
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <NuqsAdapter>
             <TRPCReactProvider>{props.children}</TRPCReactProvider>
-            <div className="absolute right-4 bottom-4">
-              <ThemeToggle />
-            </div>
             <Toaster />
           </NuqsAdapter>
         </ThemeProvider>
