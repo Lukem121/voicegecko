@@ -23,11 +23,11 @@ interface BaseEventProperties {
 // User Lifecycle Events
 interface UserLifecycleEvents {
   user_signed_up: {
-    method: "email" | "discord";
+    method: "email" | "discord" | "google";
     source?: string;
   };
   user_signed_in: {
-    method: "email" | "discord";
+    method: "email" | "discord" | "google";
     returning_user: boolean;
   };
   user_signed_out: Record<string, never>;
@@ -169,7 +169,13 @@ interface NavigationEvents {
 // Settings Events
 interface SettingsEvents {
   settings_changed: {
-    category: "audio" | "general" | "privacy" | "personalization" | "models";
+    category:
+      | "audio"
+      | "general"
+      | "privacy"
+      | "personalization"
+      | "models"
+      | "shortcuts";
     setting_key: string;
     old_value: unknown;
     new_value: unknown;
@@ -256,7 +262,7 @@ interface BusinessEvents {
     attempted_action: string;
   };
   upgrade_prompt_shown: {
-    trigger: "usage_limit" | "feature_gate" | "manual";
+    trigger: "usage_limit" | "feature_gate" | "manual" | "usage_page";
     plan_suggested: string;
   };
   feedback_submitted: {
@@ -280,7 +286,6 @@ type AllEvents = UserLifecycleEvents &
   NavigationEvents &
   SettingsEvents &
   GeckoBarEvents &
-  WindowSystemEvents &
   PerformanceEvents &
   BusinessEvents;
 
@@ -294,7 +299,7 @@ type EventProperties<T extends EventName> = AllEvents[T] & BaseEventProperties;
 class PostHogAnalyticsService {
   private posthog: ReturnType<typeof usePostHog> | null = null;
   private isInitialized = false;
-  private queuedEvents: Array<{ event: EventName; properties: any }> = [];
+  private queuedEvents: { event: EventName; properties: any }[] = [];
 
   /**
    * Initialize the analytics service with PostHog instance
