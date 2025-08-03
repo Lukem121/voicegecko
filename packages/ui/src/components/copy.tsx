@@ -16,15 +16,18 @@ export const CopyButton = ({
   text,
   className,
   variant = "outline",
+  onClick,
 }: {
   text: string;
   className?: string;
   variant?: "default" | "outline" | "ghost";
+  onClick?: () => void;
 }) => {
   const [copied, setCopied] = useState<boolean>(false);
 
   const handleCopy = async (e: React.MouseEvent<HTMLButtonElement>) => {
     e.stopPropagation();
+    onClick?.();
     try {
       await navigator.clipboard.writeText(text);
       setCopied(true);

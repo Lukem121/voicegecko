@@ -11,6 +11,7 @@ import type {
 import { transcriptionService } from "~/services/transcription.service";
 import { useEventStore } from "~/stores/event.store";
 import { queryClient, trpcClient } from "~/trpc";
+import { TranscriptionTracker } from "./analytics/posthog-analytics";
 
 let initialized = false;
 let initializationId: string | null = null;

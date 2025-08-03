@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import Fuse from "fuse.js";
 
 import { useDebouncedSearch } from "~/hooks/use-debounced-search";
+import analytics from "~/lib/analytics/posthog-analytics";
 import { trpc } from "~/trpc";
 
 export type SortBy = "alphabetical" | "newest" | "oldest";
