@@ -1,6 +1,7 @@
 import { invoke } from "@tauri-apps/api/core";
 import { toast } from "sonner";
 
+import { RecordingSessionTracker } from "~/lib/analytics/posthog-analytics";
 import {
   showNoInternetNotification,
   showUsageLimitNotification,
@@ -20,6 +21,7 @@ export interface RecordingOptions {
 
 export class RecordingService {
   private static instance: RecordingService | undefined;
+  private currentRecordingTracker: RecordingSessionTracker | null = null;
   private isToggling = false;
   private isPushToTalkActive = false;
 
@@ -219,8 +221,20 @@ export class RecordingService {
       }
 
       await invokeTranscriptionFromBuffer(audioData);
+
+      // Clear the recording tracker after successful stop
+      this.currentRecordingTracker = null;
     } catch (error) {
       console.error("Failed to stop recording:", error);
+
+      // Track recording error
+      if (this.currentRecordingTracker) {
+        this.currentRecordingTracker.trackError(
+          "stop_recording_failed",
+          error instanceof Error ? error.message : "Unknown error",
+        );
+      }
+
       toast.error("Failed to stop recording");
       throw error;
     }

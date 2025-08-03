@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { signInSocial } from "@daveyplate/better-auth-tauri";
 
+import { analytics } from "~/lib/analytics/posthog-analytics";
 import { authClient } from "~/lib/client";
 
 export type SocialProvider = "discord" | "google";
@@ -29,6 +30,12 @@ export function useSocialAuth(): UseSocialAuthReturn {
   const signIn = async (provider: SocialProvider) => {
     setIsLoading((prev) => ({ ...prev, [provider]: true }));
     setError(null);
+
+    // Track social sign-in attempt
+    analytics.track("user_signed_in", {
+      method: provider,
+      returning_user: true, // Could be enhanced with proper detection
+    });
 
     const { error } = await signInSocial({
       authClient,

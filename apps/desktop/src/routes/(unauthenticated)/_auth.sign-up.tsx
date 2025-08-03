@@ -23,6 +23,7 @@ import {
 } from "@acme/ui/components/ui/form";
 import { Input } from "@acme/ui/components/ui/input";
 
+import { analytics } from "~/lib/analytics/posthog-analytics";
 import { SocialSignInButton } from "./-components/social-sign-in-button";
 import TermsAndPrivacyNotice from "./-components/terms-and-privacy-notice";
 import { useEmailSignup } from "./-hooks/use-email-signup";

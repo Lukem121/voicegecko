@@ -9,6 +9,8 @@
  * - No continuous background polling
  */
 
+import { analytics } from "./analytics/posthog-analytics";
+
 export interface ConnectivityState {
   isOnline: boolean;
   isApiReachable: boolean;
@@ -118,9 +120,26 @@ class ConnectivityManager {
       // If we're healthy, deactivate monitoring
       if (result.diagnosis === "healthy") {
         this.deactivate();
+      } else {
+        // Track connectivity issues
+        analytics.track("error_occurred", {
+          error_type: "connectivity_issue",
+          error_message: `Connectivity diagnosis: ${result.diagnosis}`,
+          component: "ConnectivityManager",
+          user_action: "connectivity_check",
+        });
       }
     } catch (error) {
       console.error("💥 [ConnectivityManager] Check failed:", error);
+
+      // Track connectivity check failure
+      analytics.track("error_occurred", {
+        error_type: "connectivity_check_failed",
+        error_message: error instanceof Error ? error.message : "Check failed",
+        component: "ConnectivityManager",
+        user_action: "connectivity_check",
+      });
+
       this.updateState({
         ...this.state,
         isChecking: false,

@@ -25,6 +25,7 @@ import {
 import type { AudioLevelEvent } from "~/types/events";
 import type { AudioDevice } from "~/types/settings";
 import { useOnboarding } from "~/components/onboarding/onboarding-provider";
+import { analytics } from "~/lib/analytics/posthog-analytics";
 import { useSettingsStore } from "~/stores/settings.store";
 
 export const Route = createFileRoute("/onboarding/microphone-setup")({

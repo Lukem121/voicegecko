@@ -120,7 +120,8 @@ impl LocalWhisperProvider {
         // Because it wasn't trained with instruction-following techniques, Whisper operates more like a base GPT model. Keep in mind that Whisper only considers the first 224 tokens of the prompt.
 
         // Default dictionary items that should always be included
-        let default_dictionary_items = vec!["VoiceGecko", "VoiceGecko", "VoiceGecko"];
+        let default_dictionary_items =
+            vec!["VoiceGecko", "VoiceGecko", "Hello, welcome to my lecture."];
 
         // Build the complete dictionary prompt
         let mut complete_prompt = String::new();

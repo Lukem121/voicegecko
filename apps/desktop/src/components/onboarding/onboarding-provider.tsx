@@ -11,6 +11,7 @@ import { useNavigate } from "@tanstack/react-router";
 
 import type { MascotMessage } from "~/components/mascot";
 import { useMascotChat } from "~/components/mascot";
+import { analytics } from "~/lib/analytics/posthog-analytics";
 import { useSettingsStore } from "~/stores/settings.store";
 
 // Simplified types - removed complex lifecycle callbacks
@@ -206,15 +207,21 @@ export function OnboardingProvider({
 
   // Initialize only once
   const isInitializedRef = React.useRef(false);
+  const onboardingStartTimeRef = React.useRef<number>(Date.now());
+
   useEffect(() => {
     if (isInitializedRef.current) return;
     isInitializedRef.current = true;
+    onboardingStartTimeRef.current = Date.now();
 
     dispatch({ type: "INITIALIZE", payload: { steps } });
 
     if (initialStepId && steps.find((s) => s.id === initialStepId)) {
       dispatch({ type: "SET_CURRENT_STEP", payload: initialStepId });
     }
+
+    // Track onboarding start
+    analytics.track("onboarding_started", {});
   }, [steps, initialStepId]);
 
   // Get current step configuration
@@ -334,12 +341,40 @@ export function OnboardingProvider({
   }, [getPreviousStepId, goToStep]);
 
   const skipOnboarding = useCallback(async () => {
+    const totalTime = (Date.now() - onboardingStartTimeRef.current) / 1000;
+    const completedSteps = state.completedSteps.size;
+
+    // Track onboarding abandonment
+    analytics.track("onboarding_abandoned", {
+      last_step_id: state.currentStepId || "unknown",
+      steps_completed: completedSteps,
+      time_spent_seconds: totalTime,
+    });
+
     await updateOnboardingCompleted(true);
     emitEvent("onboarding_skipped");
     await navigate({ to: "/" });
-  }, [updateOnboardingCompleted, emitEvent, navigate]);
+  }, [
+    updateOnboardingCompleted,
+    emitEvent,
+    navigate,
+    state.completedSteps.size,
+    state.currentStepId,
+  ]);
 
   const completeOnboarding = useCallback(async () => {
+    const totalTime = (Date.now() - onboardingStartTimeRef.current) / 1000;
+    const completedSteps = state.completedSteps.size;
+    const totalSteps = steps.length;
+    const skippedSteps = totalSteps - completedSteps;
+
+    // Track onboarding completion
+    analytics.track("onboarding_completed", {
+      total_time_seconds: totalTime,
+      steps_completed: completedSteps,
+      steps_skipped: skippedSteps,
+    });
+
     await updateOnboardingCompleted(true);
     emitEvent("onboarding_completed");
 
@@ -350,17 +385,47 @@ export function OnboardingProvider({
     setTimeout(async () => {
       await navigate({ to: "/" });
     }, 2000);
-  }, [updateOnboardingCompleted, emitEvent, mascotChat, navigate]);
+  }, [
+    updateOnboardingCompleted,
+    emitEvent,
+    mascotChat,
+    navigate,
+    state.completedSteps.size,
+    steps.length,
+  ]);
 
-  // Step management
+  // Step management with timing tracking
+  const stepStartTimesRef = React.useRef<Record<string, number>>({});
+
+  // Track step start times
+  useEffect(() => {
+    if (
+      state.currentStepId &&
+      !stepStartTimesRef.current[state.currentStepId]
+    ) {
+      stepStartTimesRef.current[state.currentStepId] = Date.now();
+    }
+  }, [state.currentStepId]);
+
   const markStepCompleted = useCallback(
     (stepId: string, progress = 100) => {
+      const step = steps.find((s) => s.id === stepId);
+      const stepIndex = steps.findIndex((s) => s.id === stepId);
+      const startTime = stepStartTimesRef.current[stepId];
+      const timeSpent = startTime ? (Date.now() - startTime) / 1000 : 0;
+
+      // Track step completion
+      analytics.track("onboarding_step_completed", {
+        step_id: stepId,
+        step_title: step?.title || "Unknown Step",
+        step_index: stepIndex,
+        time_spent_seconds: timeSpent,
+      });
+
       dispatch({ type: "MARK_STEP_COMPLETED", payload: { stepId, progress } });
       emitEvent("step_completed", { stepId, progress });
 
       // Auto-advance if enabled
-      const step = steps.find((s) => s.id === stepId);
-
       if (step?.autoAdvance && stepId === state.currentStepId) {
         setTimeout(() => {
           nextStep(stepId); // Pass the completed stepId as assumeCompleted

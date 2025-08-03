@@ -1,3 +1,4 @@
+import React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { open } from "@tauri-apps/plugin-shell";
@@ -22,6 +23,7 @@ import {
 import { Progress } from "@acme/ui/components/ui/progress";
 import { Skeleton } from "@acme/ui/components/ui/skeleton";
 
+import { analytics } from "~/lib/analytics/posthog-analytics";
 import { trpc } from "~/trpc";
 
 export const Route = createFileRoute("/_authenticated/usage")({
@@ -32,6 +34,27 @@ function UsagePage() {
   const { data: stats, isLoading } = useQuery(
     trpc.usage.getStats.queryOptions(),
   );
+
+  // Track usage page view and potential business intelligence
+  React.useEffect(() => {
+    if (stats && !isLoading) {
+      analytics.trackFeatureFirstUse("usage_page");
+
+      // Track usage patterns for business intelligence
+      const usagePercentage = !stats.current.isUnlimited
+        ? (stats.current.wordsUsed / stats.current.wordsLimit) * 100
+        : 0;
+
+      if (!stats.current.isUnlimited && usagePercentage >= 80) {
+        analytics.track("usage_limit_approached", {
+          limit_type: "transcription",
+          current_usage: stats.current.wordsUsed,
+          limit_value: stats.current.wordsLimit,
+          percentage_used: usagePercentage,
+        });
+      }
+    }
+  }, [stats, isLoading]);
 
   if (isLoading || !stats) {
     return <UsagePageSkeleton />;
@@ -220,6 +243,14 @@ function UsagePage() {
               variant="outline"
               className="w-full justify-start"
               onClick={async () => {
+                // Track upgrade prompt interaction
+                analytics.track("upgrade_prompt_shown", {
+                  trigger: "usage_page",
+                  plan_suggested: "pro",
+                });
+
+                analytics.trackFeatureFirstUse("upgrade_button");
+
                 const websiteUrl =
                   import.meta.env.VITE_PUBLIC_VOICEGECKO_URL ||
                   "https://www.voicegecko.io";

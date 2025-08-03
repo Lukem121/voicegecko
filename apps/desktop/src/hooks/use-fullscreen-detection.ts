@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 
+import { analytics } from "~/lib/analytics/posthog-analytics";
+
 export function useFullscreenDetection(enabled = true) {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isMonitoring, setIsMonitoring] = useState(false);
@@ -22,6 +24,12 @@ export function useFullscreenDetection(enabled = true) {
 
       if (fullscreenActive !== isFullscreen) {
         setIsFullscreen(fullscreenActive);
+
+        // Track fullscreen state changes
+        analytics.track("gecko_bar_visibility_changed", {
+          visible: !fullscreenActive,
+          trigger: "fullscreen",
+        });
 
         // Update gecko bar visibility based on fullscreen state
         if (fullscreenActive) {

@@ -25,6 +25,7 @@ import {
 } from "@acme/ui/components/ui/form";
 import { Input } from "@acme/ui/components/ui/input";
 
+import { analytics } from "~/lib/analytics/posthog-analytics";
 import { authClient } from "~/lib/client";
 import { trpc } from "~/trpc";
 import { getClientAuthErrorMessage } from "~/utils/client-error-messages";

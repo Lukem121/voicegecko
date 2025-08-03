@@ -1,5 +1,7 @@
+import React from "react";
 import { useQuery } from "@tanstack/react-query";
 
+import { analytics } from "~/lib/analytics/posthog-analytics";
 import { trpc } from "~/trpc";
 
 // Format numbers to compact notation (12k, 1.2M, etc.)
@@ -38,6 +40,20 @@ interface FormattedUsageStats {
 export function useUsageStats(): FormattedUsageStats {
   const options = trpc.usage.getStats.queryOptions();
   const query = useQuery(options);
+
+  // Track usage stats viewing
+  React.useEffect(() => {
+    if (query.data && !query.isLoading) {
+      analytics.trackFeatureFirstUse("usage_stats_view");
+
+      // Track stats pattern
+      analytics.track("usage_stats_viewed", {
+        total_words: query.data.total.words,
+        total_time_saved: query.data.total.timeSaved,
+        current_plan: query.data.current.isUnlimited ? "unlimited" : "limited",
+      });
+    }
+  }, [query.data, query.isLoading]);
 
   // Map backend response to frontend interface
   const rawStats: UsageStatsData = query.data
