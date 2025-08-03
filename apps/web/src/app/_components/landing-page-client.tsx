@@ -2,8 +2,13 @@
 
 import type { Dispatch, SetStateAction } from "react";
 import React, { useEffect, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { AnimatePresence, motion } from "motion/react";
+import GeckoInvisibleWall from "public/assets/images/geckos/gecko-invisible-wall.png";
+import GeckoPointingWithStick from "public/assets/images/geckos/gecko-pointing-with-stick.png";
+import GeckoWelcomeSign from "public/assets/images/geckos/gecko-welcome-sign.png";
+import GeckoWorker from "public/assets/images/geckos/gecko-worker.png";
 import Marquee from "react-fast-marquee";
 import { FaWindows } from "react-icons/fa";
 import {
@@ -77,6 +82,47 @@ function RiveGeckoPlaceholder({
   label?: string;
   className?: string;
 }) {
+  // Use static images for some poses to reduce animation workload
+  if (pose === "peek") {
+    return (
+      <Image
+        src={GeckoInvisibleWall}
+        alt="Gecko peeking"
+        className={cn("size-auto", className)}
+      />
+    );
+  }
+
+  if (pose === "wave") {
+    return (
+      <Image
+        src={GeckoWelcomeSign}
+        alt="Gecko waving"
+        className={cn("size-auto", className)}
+      />
+    );
+  }
+
+  if (pose === "point") {
+    return (
+      <Image
+        src={GeckoPointingWithStick}
+        alt="Gecko pointing"
+        className={cn("size-auto", className)}
+      />
+    );
+  }
+
+  if (pose === "float") {
+    return (
+      <Image
+        src={GeckoWorker}
+        alt="Gecko running"
+        className={cn("size-auto", className)}
+      />
+    );
+  }
+
   return (
     <div
       className={cn(
@@ -245,21 +291,21 @@ export default function LandingPageClient({
           </div>
 
           <div className="relative z-10 mx-auto max-w-6xl px-6 pt-8 md:pt-12">
-            <div className="grid items-center gap-10 md:grid-cols-[1.05fr_1fr]">
-              {/* Left copy */}
-              <div className="text-left">
+            <div className="flex items-center justify-start">
+              {/* Hero content */}
+              <div className="max-w-4xl text-left">
                 <div className="inline-flex items-center gap-2 rounded-full border border-neutral-200 bg-white/70 px-3 py-1.5 text-xs font-medium text-neutral-700 backdrop-blur">
                   <span className="inline-block h-1.5 w-1.5 rounded-full bg-green-600" />
                   Meet Voice Gecko
                 </div>
 
                 <h1 className="mt-6 text-5xl font-black tracking-tight text-balance md:text-6xl">
-                  Speak. Paste. Get back to work.
+                  Talk, don't type.
                 </h1>
-                <p className="mt-4 max-w-xl text-lg leading-tight font-medium text-pretty text-neutral-700 md:text-xl">
-                  Record your voice on desktop and get clean text on your
-                  clipboard in 1–2 seconds. Spend less time typing and more time
-                  doing.
+                <p className="mt-4 max-w-2xl text-lg leading-tight font-medium text-pretty text-neutral-700 md:text-xl">
+                  Stop wrestling with your keyboard. Speak naturally and get
+                  perfect text on your clipboard instantly. 4x faster than
+                  typing, 100x less frustrating.
                 </p>
 
                 <div className="mt-6">
@@ -269,12 +315,12 @@ export default function LandingPageClient({
                   />
                 </div>
 
-                <div className="mt-5 flex flex-wrap items-center gap-4 text-xs text-neutral-600">
-                  <span>Avg latency: 1–2s</span>
+                <div className="mt-5 flex flex-wrap items-center justify-start gap-4 text-xs text-neutral-600">
+                  <span>Loved by 5,000+ users</span>
                   <span className="hidden h-1 w-1 rounded-full bg-neutral-300 sm:block" />
                   <span>10,000+ hours transcribed</span>
                 </div>
-                <div className="mt-5 flex flex-wrap items-center gap-4 text-xs text-neutral-600">
+                <div className="mt-5 flex flex-wrap items-center justify-start gap-4 text-xs text-neutral-600">
                   <span className="inline-flex items-center gap-1">
                     <FaWindows className="h-3.5 w-3.5" /> Windows available now
                   </span>
@@ -313,41 +359,6 @@ export default function LandingPageClient({
               body="One shortcut, clean output, minimal UI. Get in, get out."
               tag="Simplicity"
             />
-          </div>
-
-          {/* Tiny transparent compare */}
-          <div className="mt-8 overflow-hidden rounded-2xl border border-neutral-200 bg-white">
-            <div className="grid grid-cols-4 text-sm font-semibold text-neutral-900">
-              <div className="px-4 py-3">Feature</div>
-              <div className="px-4 py-3">Voice Gecko</div>
-              <div className="px-4 py-3">Built‑in Dictation</div>
-              <div className="px-4 py-3">Generic Tools</div>
-            </div>
-            {[
-              ["1–2s turnaround", true, "varies", "varies"],
-              ["Clipboard‑ready", true, "manual copy", "export first"],
-              ["One global shortcut", true, "limited", "app‑only"],
-              ["English focus", "Yes", "Yes", "Multi (slower)"],
-            ].map((row, i) => (
-              <div
-                key={i}
-                className={cn(
-                  "grid grid-cols-4 text-sm",
-                  i % 2 === 0 ? "bg-neutral-50/60" : "bg-white",
-                )}
-              >
-                <div className="px-4 py-3 text-neutral-700">{row[0]}</div>
-                <div className="px-4 py-3">
-                  {row[1] === true ? (
-                    <Check />
-                  ) : (
-                    <span className="text-neutral-700">{row[1] as string}</span>
-                  )}
-                </div>
-                <div className="px-4 py-3 text-neutral-700">{row[2]}</div>
-                <div className="px-4 py-3 text-neutral-700">{row[3]}</div>
-              </div>
-            ))}
           </div>
         </section>
 
@@ -1329,7 +1340,7 @@ const WindowsDownloadStrip = ({
   downloadError?: string;
 }) => {
   return (
-    <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+    <div className="flex flex-col justify-start gap-3 sm:flex-row sm:items-center">
       <WindowsDownloadButton
         downloadsData={downloadsData}
         downloadError={downloadError}
@@ -1384,7 +1395,7 @@ const OutcomeCard = ({
   <div className="group rounded-2xl border border-neutral-200 bg-white p-6 transition-all hover:-translate-y-0.5 hover:shadow-xl">
     <div className="flex items-center justify-between">
       <h3 className="text-base font-semibold tracking-tight">{title}</h3>
-      <RiveGeckoPlaceholder className="h-10 w-16" pose={pose} />
+      <RiveGeckoPlaceholder className="h-10 w-auto" pose={pose} />
     </div>
     <ul className="mt-3 list-disc space-y-1 pl-5 text-sm text-neutral-700">
       {bullets.map((b, i) => (
@@ -1438,7 +1449,7 @@ const UiTile = ({
   <div className="rounded-2xl border border-neutral-200 bg-white p-6">
     <div className="flex items-center justify-between">
       <h3 className="text-base font-semibold tracking-tight">{title}</h3>
-      <RiveGeckoPlaceholder className="h-10 w-16" pose={pose} />
+      <RiveGeckoPlaceholder className="h-10" pose={pose} />
     </div>
     <p className="mt-2 text-sm text-neutral-700">{body}</p>
     <div className="mt-4 h-24 rounded-lg border border-neutral-200 bg-neutral-50 text-center text-xs text-neutral-500">
@@ -1490,21 +1501,23 @@ const PriceCard = ({
         <li key={i}>• {f}</li>
       ))}
     </ul>
-    <Link
-      href={
-        name === "Free"
-          ? "/pricing"
-          : name === "Unlimited"
+    <div className="mt-4 text-center">
+      <Link
+        href={
+          name === "Free"
             ? "/pricing"
-            : "/pricing"
-      }
-      className={cn(
-        buttonVariants({ variant: "default", size: "lg" }),
-        "bg-primary/80 mt-4 inline-flex rounded-lg border-2 !border-black text-xs font-semibold tracking-tight hover:scale-[1.01]",
-      )}
-    >
-      {cta}
-    </Link>
+            : name === "Unlimited"
+              ? "/pricing"
+              : "/pricing"
+        }
+        className={cn(
+          buttonVariants({ variant: "default", size: "lg" }),
+          "bg-primary/80 inline-flex rounded-lg border-2 !border-black text-xs font-semibold tracking-tight hover:scale-[1.01]",
+        )}
+      >
+        {cta}
+      </Link>
+    </div>
   </div>
 );
 
@@ -1603,9 +1616,9 @@ const StickyCta = ({
         >
           <div className="flex flex-col items-center justify-between gap-3 sm:flex-row">
             <div className="flex items-center gap-3">
-              <RiveGeckoPlaceholder pose="peek" className="h-10 w-16" />
+              <RiveGeckoPlaceholder pose="peek" className="h-10 w-auto" />
               <p className="text-sm text-neutral-700">
-                Speak. Paste. Get back to work.
+                Turn speech into text in seconds, not minutes.
               </p>
             </div>
             <div className="flex items-center gap-2">
