@@ -27,6 +27,7 @@ import {
 } from "@acme/ui/components/ui/select";
 import { Slider } from "@acme/ui/components/ui/slider";
 import { Switch } from "@acme/ui/components/ui/switch";
+import { ThemeToggle } from "@acme/ui/components/ui/theme";
 
 import { useSettingsStore } from "~/stores/settings.store";
 
@@ -299,6 +300,16 @@ function SettingsPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label>Theme</Label>
+                <p className="text-muted-foreground text-sm">
+                  Choose your preferred theme for the application
+                </p>
+              </div>
+              <ThemeToggle />
+            </div>
+
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
                 <Label>Interaction sounds</Label>
