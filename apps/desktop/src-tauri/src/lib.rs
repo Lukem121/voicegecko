@@ -90,7 +90,8 @@ pub fn run() {
             modules::settings::set_gecko_bar_config,
             modules::settings::get_autostart_config,
             modules::settings::set_autostart_config,
-            modules::system::simulate_paste
+            modules::system::simulate_paste,
+            modules::tray::update_tray_stats
         ])
         .setup(|app| {
             let (_stream, stream_handle) = rodio::OutputStream::try_default().unwrap();
@@ -109,6 +110,11 @@ pub fn run() {
             }
             
             app.manage(transcription_service);
+
+            // Setup system tray
+            let tray_manager = modules::tray::TrayManager::new();
+            tray_manager.setup_tray(&app.handle()).expect("Failed to setup system tray");
+            app.manage(tray_manager);
 
             // Keep the stream alive for the duration of the app
             std::mem::forget(_stream);

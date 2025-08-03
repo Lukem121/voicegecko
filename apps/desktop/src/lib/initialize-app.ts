@@ -109,10 +109,6 @@ export async function initializeApp(
     initializationSteps.push("event_listeners");
     await initializeTauriEvents();
 
-    // Initialize system tray (only in main window)
-    initializationSteps.push("system_tray");
-    await import("~/lib/tray");
-
     // Prefetch dictionary prompt for faster transcriptions
     initializationSteps.push("dictionary_prefetch");
     dictionaryService.prefetchDictionaryPrompt().catch((error) => {
