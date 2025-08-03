@@ -2,12 +2,11 @@ Todo
 
 - [ ] Landing page & subsequent pages
 - [ ] Links in the Emails need removing or implementing.
-- [ ] Change light/dark mode
 
 Pre Launch Checks
 
 - [ ] Check added stripe student coupon code: RYGALTMSXJAA
-- [ ] Inside BetterAuth we are only allowing my emails to sign up. We need to remove that.
+- [ ] Inside BetterAuth we are only allowing MY emails to sign up. We need to remove that.
 - [ ] Check all links are working including in emails.
 
 After MVP
