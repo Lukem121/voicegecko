@@ -1,10 +1,6 @@
 import { Octokit } from "@octokit/rest";
 
-import type {
-  DownloadAsset,
-  DownloadsData,
-  PlatformDownloads,
-} from "./downloads-utils";
+import type { DownloadsData, PlatformDownloads } from "./downloads-utils";
 import type { GitHubRelease, TauriTarget } from "~/types/updater";
 import { env } from "~/env";
 import { PLATFORM_FILE_EXTENSIONS } from "~/types/updater";
