@@ -14,6 +14,7 @@ import {
   LogOut,
   Mic,
   Settings2,
+  Wand2,
 } from "lucide-react";
 
 import { CopyButton } from "@acme/ui/components/copy";
@@ -72,6 +73,7 @@ interface NavigationItem {
 
 interface NavigationData {
   navMain: NavigationItem[];
+  navSmartFeatures: NavigationItem[];
   navSecondary: NavigationItem[];
 }
 
@@ -119,6 +121,13 @@ const data: NavigationData = {
       title: "Dictionary",
       url: "/dictionary",
       icon: BookOpen,
+    },
+  ],
+  navSmartFeatures: [
+    {
+      title: "Smart Edit",
+      url: "#coming-soon",
+      icon: Wand2,
     },
   ],
   navSecondary: [
@@ -278,6 +287,49 @@ export function AppSidebar() {
                   ) : null}
                 </SidebarMenuItem>
               ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+        <SidebarGroup>
+          <SidebarGroupLabel>Post-Processing</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {data.navSmartFeatures.map((item) => {
+                return (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton
+                      asChild={false}
+                      isActive={false}
+                      onClick={() => {
+                        // Do nothing for coming soon items
+                      }}
+                      className="cursor-not-allowed opacity-60"
+                    >
+                      <item.icon />
+                      <span>{item.title}</span>
+                      <span className="text-muted-foreground ml-auto text-[11px]">
+                        Coming Soon
+                      </span>
+                    </SidebarMenuButton>
+                    {item.items?.length ? (
+                      <SidebarMenuSub>
+                        {item.items.map((subItem) => (
+                          <SidebarMenuSubItem key={subItem.title}>
+                            <SidebarMenuSubButton
+                              asChild={false}
+                              isActive={false}
+                            >
+                              <div>
+                                <span>{subItem.title}</span>
+                              </div>
+                            </SidebarMenuSubButton>
+                          </SidebarMenuSubItem>
+                        ))}
+                      </SidebarMenuSub>
+                    ) : null}
+                  </SidebarMenuItem>
+                );
+              })}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>
