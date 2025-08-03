@@ -22,6 +22,7 @@
     "@acme/eslint-config": "workspace:*",
     "@acme/prettier-config": "workspace:*",
     "@acme/tsconfig": "workspace:*",
+    "@types/minimatch": "^5.1.2",
     "eslint": "catalog:",
     "prettier": "catalog:",
     "typescript": "catalog:"
