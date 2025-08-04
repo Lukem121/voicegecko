@@ -90,7 +90,7 @@ class TranscriptionRepository {
     }
 
     // Add search filter if provided
-    if (search && search.trim()) {
+    if (search?.trim()) {
       const searchTerm = `%${search.trim()}%`;
       query = query.where(
         and(
@@ -114,7 +114,7 @@ class TranscriptionRepository {
 
     // Get total count for search results (optional, only when searching)
     let totalResults: number | undefined;
-    if (search && search.trim()) {
+    if (search?.trim()) {
       const countResult = await db
         .select({ count: count() })
         .from(TranscriptionTable)
