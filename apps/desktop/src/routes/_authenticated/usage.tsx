@@ -214,8 +214,11 @@ function UsagePage() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            {usageStats.map((stat, index) => (
-              <div className="flex items-center justify-between" key={index}>
+            {usageStats.map((stat) => (
+              <div
+                className="flex items-center justify-between"
+                key={stat.label}
+              >
                 <span className="font-medium text-sm">{stat.label}</span>
                 <div className="flex items-center gap-2">
                   <span className="font-bold text-sm">{stat.value}</span>
@@ -278,8 +281,8 @@ function UsagePageSkeleton() {
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {[...new Array(4)].map((_, i) => (
-          <Card key={i}>
+        {['transcriptions', 'words', 'time', 'total'].map((type) => (
+          <Card key={`overview-${type}`}>
             <CardHeader className="pb-3">
               <Skeleton className="h-4 w-24" />
             </CardHeader>
@@ -292,14 +295,17 @@ function UsagePageSkeleton() {
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">
-        {[...new Array(2)].map((_, i) => (
-          <Card key={i}>
+        {['performance', 'actions'].map((section) => (
+          <Card key={`section-${section}`}>
             <CardHeader>
               <Skeleton className="h-5 w-32" />
             </CardHeader>
             <CardContent className="space-y-4">
-              {[...new Array(3)].map((_, j) => (
-                <div className="flex items-center justify-between" key={j}>
+              {['item-1', 'item-2', 'item-3'].map((item) => (
+                <div
+                  className="flex items-center justify-between"
+                  key={`section-${section}-item-${item}`}
+                >
                   <Skeleton className="h-4 w-24" />
                   <Skeleton className="h-4 w-16" />
                 </div>
