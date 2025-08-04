@@ -23,7 +23,7 @@ export const useConnectivityStore = create<ConnectivityStore>((set, _get) => {
   const initialState = connectivityManager.getState();
 
   // Subscribe to connectivity manager updates
-  const unsubscribe = connectivityManager.subscribe((newState) => {
+  connectivityManager.subscribe((newState) => {
     set({
       ...newState,
       hasConnectivityIssue: newState.diagnosis !== 'healthy',
@@ -32,9 +32,6 @@ export const useConnectivityStore = create<ConnectivityStore>((set, _get) => {
       canSaveTranscriptions: newState.diagnosis === 'healthy',
     });
   });
-
-  // Store the unsubscribe function for cleanup if needed
-  (globalThis as any).__connectivityStoreCleanup = unsubscribe;
 
   return {
     // Initial state from connectivity manager
