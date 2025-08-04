@@ -76,7 +76,7 @@ async function main() {
     console.log("❌ Version bump failed");
     process.exit(1);
   }
-  
+
   // Get the new version after bump
   const newVersion = getCurrentVersion();
 
