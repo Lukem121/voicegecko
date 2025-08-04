@@ -1,27 +1,26 @@
-"use client";
+'use client';
 
-import React from "react";
-import { AnimatePresence, motion } from "motion/react";
+import { cn } from '@acme/ui/lib/utils';
+import { AnimatePresence, motion } from 'motion/react';
+import React from 'react';
 
-import { cn } from "@acme/ui/lib/utils";
-
-import type { MascotVariant } from "./mascot-character";
-import { MascotCharacter } from "./mascot-character";
-import { MascotChatBubble } from "./mascot-chat-bubble";
-import { useMascotChat } from "./mascot-chat-provider";
+import type { MascotVariant } from './mascot-character';
+import { MascotCharacter } from './mascot-character';
+import { MascotChatBubble } from './mascot-chat-bubble';
+import { useMascotChat } from './mascot-chat-provider';
 
 // Layout configurations
 type MascotChatLayout =
-  | "bubble-top" // Chat bubble appears above mascot
-  | "bubble-bottom" // Chat bubble appears below mascot
-  | "bubble-left" // Chat bubble appears to the left of mascot
-  | "bubble-right" // Chat bubble appears to the right of mascot
-  | "bubble-floating"; // Chat bubble floats above mascot with absolute positioning
+  | 'bubble-top' // Chat bubble appears above mascot
+  | 'bubble-bottom' // Chat bubble appears below mascot
+  | 'bubble-left' // Chat bubble appears to the left of mascot
+  | 'bubble-right' // Chat bubble appears to the right of mascot
+  | 'bubble-floating'; // Chat bubble floats above mascot with absolute positioning
 
 interface MascotChatProps {
   variant: MascotVariant;
   layout?: MascotChatLayout;
-  size?: "sm" | "md" | "lg" | "xl";
+  size?: 'sm' | 'md' | 'lg' | 'xl';
   className?: string;
   chatBubbleClassName?: string;
   mascotClassName?: string;
@@ -29,72 +28,72 @@ interface MascotChatProps {
   enableMascotFloating?: boolean;
   onMascotClick?: () => void;
   // Layout-specific spacing
-  spacing?: "sm" | "md" | "lg";
+  spacing?: 'sm' | 'md' | 'lg';
 }
 
 // Spacing configurations
 const spacingClasses = {
-  sm: "gap-2",
-  md: "gap-4",
-  lg: "gap-6",
+  sm: 'gap-2',
+  md: 'gap-4',
+  lg: 'gap-6',
 };
 
 // Layout component configurations
 const getLayoutClasses = (layout: MascotChatLayout, spacing: string) => {
   switch (layout) {
-    case "bubble-top":
+    case 'bubble-top':
       return {
-        container: cn("flex flex-col items-center", spacing),
-        bubbleOrder: "order-first",
-        mascotOrder: "order-last",
-        bubblePosition: "bottom" as const,
+        container: cn('flex flex-col items-center', spacing),
+        bubbleOrder: 'order-first',
+        mascotOrder: 'order-last',
+        bubblePosition: 'bottom' as const,
       };
 
-    case "bubble-bottom":
+    case 'bubble-bottom':
       return {
-        container: cn("flex flex-col items-center", spacing),
-        bubbleOrder: "order-last",
-        mascotOrder: "order-first",
-        bubblePosition: "top" as const,
+        container: cn('flex flex-col items-center', spacing),
+        bubbleOrder: 'order-last',
+        mascotOrder: 'order-first',
+        bubblePosition: 'top' as const,
       };
 
-    case "bubble-left":
+    case 'bubble-left':
       return {
-        container: cn("flex flex-row items-center", spacing),
-        bubbleOrder: "order-first",
-        mascotOrder: "order-last",
-        bubblePosition: "right" as const,
+        container: cn('flex flex-row items-center', spacing),
+        bubbleOrder: 'order-first',
+        mascotOrder: 'order-last',
+        bubblePosition: 'right' as const,
       };
 
-    case "bubble-right":
+    case 'bubble-right':
       return {
-        container: cn("flex flex-row items-center", spacing),
-        bubbleOrder: "order-last",
-        mascotOrder: "order-first",
-        bubblePosition: "left" as const,
+        container: cn('flex flex-row items-center', spacing),
+        bubbleOrder: 'order-last',
+        mascotOrder: 'order-first',
+        bubblePosition: 'left' as const,
       };
 
-    case "bubble-floating":
+    case 'bubble-floating':
       return {
-        container: "relative flex items-center justify-center",
-        bubbleOrder: "",
-        mascotOrder: "",
-        bubblePosition: "top" as const,
+        container: 'relative flex items-center justify-center',
+        bubbleOrder: '',
+        mascotOrder: '',
+        bubblePosition: 'top' as const,
       };
   }
 };
 
 export function MascotChat({
   variant,
-  layout = "bubble-top",
-  size = "lg",
+  layout = 'bubble-top',
+  size = 'lg',
   className,
   chatBubbleClassName,
   mascotClassName,
   enableMascotHover = true,
   enableMascotFloating = true,
   onMascotClick,
-  spacing = "md",
+  spacing = 'md',
 }: MascotChatProps) {
   const { state } = useMascotChat();
   const { currentMessage, isTyping, currentAnimation, isVisible } = state;
@@ -106,33 +105,33 @@ export function MascotChat({
   }
 
   // For floating layout, we need absolute positioning
-  if (layout === "bubble-floating") {
+  if (layout === 'bubble-floating') {
     return (
-      <div className={cn("relative", className)}>
+      <div className={cn('relative', className)}>
         {/* Mascot */}
         <MascotCharacter
-          variant={variant}
           animation={currentAnimation}
-          size={size}
+          className={mascotClassName}
           enableFloating={enableMascotFloating}
           onClick={onMascotClick}
-          className={mascotClassName}
+          size={size}
+          variant={variant}
         />
 
         {/* Floating chat bubble */}
         {(currentMessage || isTyping) && (
           <motion.div
-            initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 10 }}
             className={cn(
-              "absolute bottom-full left-1/2 mb-4 -translate-x-1/2",
-              chatBubbleClassName,
+              '-translate-x-1/2 absolute bottom-full left-1/2 mb-4',
+              chatBubbleClassName
             )}
+            exit={{ opacity: 0, y: 10 }}
+            initial={{ opacity: 0, y: 10 }}
           >
             <MascotChatBubble
-              message={currentMessage}
               isTyping={isTyping}
+              message={currentMessage}
               position={layoutConfig.bubblePosition}
             />
           </motion.div>
@@ -147,8 +146,8 @@ export function MascotChat({
       {/* Chat Bubble */}
       <div className={cn(layoutConfig.bubbleOrder, chatBubbleClassName)}>
         <MascotChatBubble
-          message={currentMessage}
           isTyping={isTyping}
+          message={currentMessage}
           position={layoutConfig.bubblePosition}
         />
       </div>
@@ -156,11 +155,11 @@ export function MascotChat({
       {/* Mascot Character */}
       <div className={cn(layoutConfig.mascotOrder, mascotClassName)}>
         <MascotCharacter
-          variant={variant}
           animation={currentAnimation}
-          size={size}
           enableFloating={enableMascotFloating}
           onClick={onMascotClick}
+          size={size}
+          variant={variant}
         />
       </div>
     </div>
@@ -187,27 +186,27 @@ export function OnboardingMascotChat({
   }
 
   return (
-    <div className={cn("flex h-full flex-col justify-between p-8", className)}>
+    <div className={cn('flex h-full flex-col justify-between p-8', className)}>
       {/* Top section - Speech bubble area */}
       <div className="flex flex-1 items-center justify-center">
         <AnimatePresence mode="wait">
           {(currentMessage || isTyping) && (
             <motion.div
-              initial={{ opacity: 0, y: -10, scale: 0.9 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
+              className="flex w-full max-w-lg justify-center"
               exit={{ opacity: 0, y: -10, scale: 0.9 }}
+              initial={{ opacity: 0, y: -10, scale: 0.9 }}
               transition={{
-                type: "spring",
+                type: 'spring',
                 stiffness: 300,
                 damping: 25,
               }}
-              className="flex w-full max-w-lg justify-center"
             >
               <MascotChatBubble
-                message={currentMessage}
-                isTyping={isTyping}
-                position="bottom"
                 className="w-full"
+                isTyping={isTyping}
+                message={currentMessage}
+                position="bottom"
               />
             </motion.div>
           )}
@@ -217,12 +216,12 @@ export function OnboardingMascotChat({
       {/* Bottom section - Mascot (fixed position) */}
       <div className="flex flex-shrink-0 justify-center">
         <MascotCharacter
-          variant={variant}
           animation={currentAnimation}
-          size={variant.name === "Dancing Gecko with Confetti" ? "2xl" : "xl"}
+          className="flex-shrink-0"
           enableFloating={true}
           onClick={onMascotClick}
-          className="flex-shrink-0"
+          size={variant.name === 'Dancing Gecko with Confetti' ? '2xl' : 'xl'}
+          variant={variant}
         />
       </div>
     </div>
@@ -243,14 +242,14 @@ export function SidebarMascotChat({
 }: SidebarMascotChatProps) {
   return (
     <MascotChat
-      variant={variant}
-      layout="bubble-floating"
-      size="md"
-      enableMascotHover={true}
-      enableMascotFloating={false}
-      onMascotClick={onMascotClick}
-      className={cn("w-fit", className)}
       chatBubbleClassName="max-w-xs"
+      className={cn('w-fit', className)}
+      enableMascotFloating={false}
+      enableMascotHover={true}
+      layout="bubble-floating"
+      onMascotClick={onMascotClick}
+      size="md"
+      variant={variant}
     />
   );
 }
@@ -269,15 +268,15 @@ export function HelpMascotChat({
 }: HelpMascotChatProps) {
   return (
     <MascotChat
-      variant={variant}
+      chatBubbleClassName="max-w-xs"
+      className={cn('inline-flex', className)}
+      enableMascotFloating={false}
+      enableMascotHover={true}
       layout="bubble-left"
+      onMascotClick={onMascotClick}
       size="sm"
       spacing="sm"
-      enableMascotHover={true}
-      enableMascotFloating={false}
-      onMascotClick={onMascotClick}
-      className={cn("inline-flex", className)}
-      chatBubbleClassName="max-w-xs"
+      variant={variant}
     />
   );
 }

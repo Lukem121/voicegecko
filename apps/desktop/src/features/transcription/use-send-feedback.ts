@@ -1,14 +1,17 @@
-import { useMutation } from "@tanstack/react-query";
+import { useMutation } from '@tanstack/react-query';
 
-import { trpc } from "~/trpc";
+import { trpc } from '~/trpc';
 
 export const useSendFeedback = () => {
   const mutation = useMutation(
-    trpc.transcription.sendFeedback.mutationOptions(),
+    trpc.transcription.sendFeedback.mutationOptions()
   );
 
   return {
-    sendFeedback: async (input: { transcriptionId: number; feedback: string }) => {
+    sendFeedback: async (input: {
+      transcriptionId: number;
+      feedback: string;
+    }) => {
       const result = await mutation.mutateAsync(input);
 
       if (!result.success) {
@@ -20,4 +23,4 @@ export const useSendFeedback = () => {
     isSending: mutation.isPending,
     error: mutation.error,
   };
-}; 
+};

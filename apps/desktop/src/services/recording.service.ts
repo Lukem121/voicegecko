@@ -1,16 +1,17 @@
-import { invoke } from "@tauri-apps/api/core";
-import { toast } from "sonner";
+import { log } from '@acme/observability';
+import { invoke } from '@tauri-apps/api/core';
+import { toast } from 'sonner';
 
-import type { RecordingSessionTracker } from "~/lib/analytics/posthog-analytics";
+import type { RecordingSessionTracker } from '~/lib/analytics/posthog-analytics';
 import {
   showNoInternetNotification,
   showUsageLimitNotification,
-} from "~/lib/gecko-bar-notifications";
-import { useConnectivityStore } from "~/stores/connectivity.store";
-import { useEventStore } from "~/stores/event.store";
-import { useSettingsStore } from "~/stores/settings.store";
-import { queryClient, trpc, trpcClient } from "~/trpc";
-import { invokeTranscriptionFromBuffer } from "../lib/transcription";
+} from '~/lib/gecko-bar-notifications';
+import { useConnectivityStore } from '~/stores/connectivity.store';
+import { useEventStore } from '~/stores/event.store';
+import { useSettingsStore } from '~/stores/settings.store';
+import { queryClient, trpc, trpcClient } from '~/trpc';
+import { invokeTranscriptionFromBuffer } from '../lib/transcription';
 
 export interface RecordingOptions {
   device?: string;
@@ -45,11 +46,11 @@ export class RecordingService {
     try {
       const { recordingStatus } = useEventStore.getState();
 
-      if (recordingStatus === "idle") {
+      if (recordingStatus === 'idle') {
         await this.startRecording(options);
-      } else if (recordingStatus === "recording") {
+      } else if (recordingStatus === 'recording') {
         await this.stopRecording(options);
-      } else if (recordingStatus === "processing") {
+      } else if (recordingStatus === 'processing') {
         // Recording is processing, ignoring toggle
       } else {
         // Recording in error state, attempting to start...
@@ -71,7 +72,7 @@ export class RecordingService {
     this.isPushToTalkActive = true;
     const { recordingStatus } = useEventStore.getState();
 
-    if (recordingStatus === "idle") {
+    if (recordingStatus === 'idle') {
       await this.startRecording(options);
     }
   }
@@ -85,7 +86,7 @@ export class RecordingService {
     this.isPushToTalkActive = false;
     const { recordingStatus } = useEventStore.getState();
 
-    if (recordingStatus === "recording") {
+    if (recordingStatus === 'recording') {
       await this.stopRecording(options);
     }
   }
@@ -99,16 +100,16 @@ export class RecordingService {
     this.isPushToTalkActive = false;
     const { recordingStatus } = useEventStore.getState();
 
-    if (recordingStatus === "recording") {
+    if (recordingStatus === 'recording') {
       await this.stopRecording(options);
     } else {
       // If recording was somehow stopped already, still unmute system audio
       const { settings } = useSettingsStore.getState();
       if (settings.audio.muteSystemAudio) {
         try {
-          await invoke("unmute_system_audio");
+          await invoke('unmute_system_audio');
         } catch (error) {
-          console.warn("Failed to unmute system audio:", error);
+          log.warn('Failed to unmute system audio:', error);
         }
       }
     }
@@ -128,8 +129,8 @@ export class RecordingService {
         await showNoInternetNotification();
 
         // Show toast for all cases
-        toast.error("No internet connection", {
-          description: "Internet connection required for transcriptions",
+        toast.error('No internet connection', {
+          description: 'Internet connection required for transcriptions',
         });
 
         return; // Don't start recording
@@ -145,8 +146,8 @@ export class RecordingService {
         !cachedUsageStatus.isUnlimited &&
         !cachedUsageStatus.canTranscribe
       ) {
-        console.log(
-          "[RecordingService] User has exceeded usage limit (cached) - blocking recording",
+        log.info(
+          '[RecordingService] User has exceeded usage limit (cached) - blocking recording'
         );
 
         // Show notification immediately if this is from a keyboard shortcut
@@ -155,8 +156,8 @@ export class RecordingService {
         }
 
         // Show toast for all cases
-        toast.error("Usage limit reached", {
-          description: "Upgrade to Pro for unlimited transcriptions",
+        toast.error('Usage limit reached', {
+          description: 'Upgrade to Pro for unlimited transcriptions',
         });
 
         return; // Don't start recording
@@ -170,23 +171,23 @@ export class RecordingService {
 
       // Play start sound first if enabled
       if (options.playStartSound ?? this.shouldPlayStartSound()) {
-        await this.playNotificationSound("Start");
+        await this.playNotificationSound('Start');
       }
 
       // Mute system audio if enabled
       if (settings.audio.muteSystemAudio) {
         try {
-          await invoke("mute_system_audio");
+          await invoke('mute_system_audio');
         } catch (error) {
-          console.warn("Failed to mute system audio:", error);
+          log.warn('Failed to mute system audio:', error);
           // Don't fail recording if muting fails
         }
       }
 
-      await invoke("start_recording", { device: deviceName });
+      await invoke('start_recording', { device: deviceName });
     } catch (error) {
-      console.error("Failed to start recording:", error);
-      toast.error("Failed to start recording");
+      log.error('Failed to start recording:', error);
+      toast.error('Failed to start recording');
       throw error;
     }
   }
@@ -197,25 +198,25 @@ export class RecordingService {
   private async stopRecording(options: RecordingOptions): Promise<void> {
     try {
       // Set processing state immediately to avoid UI gap
-      useEventStore.getState().setRecordingStatus("processing");
+      useEventStore.getState().setRecordingStatus('processing');
 
       const audioData = await invoke<{
         samples: number[];
         sample_rate: number;
         channels: number;
-      }>("stop_recording");
+      }>('stop_recording');
 
       if (options.playEndSound ?? this.shouldPlayEndSound()) {
-        await this.playNotificationSound("End");
+        await this.playNotificationSound('End');
       }
 
       // Unmute system audio if it was muted
       const { settings } = useSettingsStore.getState();
       if (settings.audio.muteSystemAudio) {
         try {
-          await invoke("unmute_system_audio");
+          await invoke('unmute_system_audio');
         } catch (error) {
-          console.warn("Failed to unmute system audio:", error);
+          log.warn('Failed to unmute system audio:', error);
           // Don't fail transcription if unmuting fails
         }
       }
@@ -225,17 +226,17 @@ export class RecordingService {
       // Clear the recording tracker after successful stop
       this.currentRecordingTracker = null;
     } catch (error) {
-      console.error("Failed to stop recording:", error);
+      log.error('Failed to stop recording:', error);
 
       // Track recording error
       if (this.currentRecordingTracker) {
         this.currentRecordingTracker.trackError(
-          "stop_recording_failed",
-          error instanceof Error ? error.message : "Unknown error",
+          'stop_recording_failed',
+          error instanceof Error ? error.message : 'Unknown error'
         );
       }
 
-      toast.error("Failed to stop recording");
+      toast.error('Failed to stop recording');
       throw error;
     }
   }
@@ -245,25 +246,25 @@ export class RecordingService {
    */
   async cancelRecording(options: RecordingOptions = {}): Promise<void> {
     try {
-      console.log("[RecordingService] Canceling recording...");
+      log.info('[RecordingService] Canceling recording...');
 
       // Stop recording and discard audio data
-      await invoke("cancel_recording");
+      await invoke('cancel_recording');
 
       // Unmute system audio if it was muted
       const { settings } = useSettingsStore.getState();
       if (settings.audio.muteSystemAudio) {
         try {
-          await invoke("unmute_system_audio");
+          await invoke('unmute_system_audio');
         } catch (error) {
-          console.warn("Failed to unmute system audio:", error);
+          log.warn('Failed to unmute system audio:', error);
         }
       }
 
-      console.log("[RecordingService] Recording canceled successfully");
+      log.info('[RecordingService] Recording canceled successfully');
     } catch (error) {
-      console.error("Failed to cancel recording:", error);
-      toast.error("Failed to cancel recording");
+      log.error('Failed to cancel recording:', error);
+      toast.error('Failed to cancel recording');
       throw error;
     }
   }
@@ -271,23 +272,23 @@ export class RecordingService {
   /**
    * Play notification sound with proper error handling
    */
-  public async playNotificationSound(variant: "Start" | "End"): Promise<void> {
+  public async playNotificationSound(variant: 'Start' | 'End'): Promise<void> {
     try {
       const { settings } = useSettingsStore.getState();
-      console.log(
-        `[RecordingService] Playing ${variant} sound: ${settings.audio.selectedSound}.mp3`,
+      log.info(
+        `[RecordingService] Playing ${variant} sound: ${settings.audio.selectedSound}.mp3`
       );
 
-      await invoke("play_notification_sound", {
+      await invoke('play_notification_sound', {
         soundName: `${settings.audio.selectedSound}.mp3`,
         variant,
       });
 
-      console.log(`[RecordingService] ✅ ${variant} sound played successfully`);
+      log.info(`[RecordingService] ✅ ${variant} sound played successfully`);
     } catch (error) {
-      console.error(
+      log.error(
         `[RecordingService] ❌ Failed to play ${variant} sound:`,
-        error,
+        error
       );
       // Don't throw - notification sound failure shouldn't stop recording
     }
@@ -306,8 +307,8 @@ export class RecordingService {
 
     // Then check notification timing settings
     return (
-      settings.audio.notificationTiming === "start_stop" ||
-      settings.audio.notificationTiming === "start_completion"
+      settings.audio.notificationTiming === 'start_stop' ||
+      settings.audio.notificationTiming === 'start_completion'
     );
   }
 
@@ -324,7 +325,7 @@ export class RecordingService {
 
     // Only play end sound on recording stop if timing is "start_stop"
     // "completion_only" and "start_completion" timings are handled by transcription service
-    return settings.audio.notificationTiming === "start_stop";
+    return settings.audio.notificationTiming === 'start_stop';
   }
 
   /**
@@ -339,7 +340,7 @@ export class RecordingService {
       const usageQueryKey = trpc.usage.getStatus.queryKey();
       queryClient.setQueryData(usageQueryKey, usageStatus);
     } catch (error) {
-      console.warn("[RecordingService] Async usage check failed:", error);
+      log.warn('[RecordingService] Async usage check failed:', error);
       // Don't throw - this is a background operation
     }
   }

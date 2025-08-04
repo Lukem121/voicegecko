@@ -1,5 +1,6 @@
-import { TRPCError } from "@trpc/server";
-import OpenAI from "openai";
+import { log } from '@acme/observability';
+import { TRPCError } from '@trpc/server';
+import OpenAI from 'openai';
 
 export class CloudTranscriptionService {
   private openai: OpenAI;
@@ -13,26 +14,26 @@ export class CloudTranscriptionService {
   async transcribeAudio(
     audioBuffer: Buffer,
     filename: string,
-    prompt?: string,
+    prompt?: string
   ): Promise<string> {
     try {
       // Create a File object from the buffer
-      const file = new File([audioBuffer], filename, { type: "audio/wav" });
+      const file = new File([audioBuffer], filename, { type: 'audio/wav' });
 
       const response = await this.openai.audio.transcriptions.create({
         file,
-        model: "whisper-1",
-        language: "en",
-        response_format: "text",
+        model: 'whisper-1',
+        language: 'en',
+        response_format: 'text',
         ...(prompt && { prompt }),
       });
 
       return response;
     } catch (error) {
-      console.error("OpenAI transcription error:", error);
+      log.error('OpenAI transcription error:', error);
       throw new TRPCError({
-        code: "INTERNAL_SERVER_ERROR",
-        message: "Failed to transcribe audio",
+        code: 'INTERNAL_SERVER_ERROR',
+        message: 'Failed to transcribe audio',
         cause: error,
       });
     }

@@ -1,6 +1,7 @@
-import { NextResponse } from "next/server";
+import { log } from '@acme/observability';
+import { NextResponse } from 'next/server';
 
-import { getDownloadsData } from "~/lib/downloads";
+import { getDownloadsData } from '~/lib/downloads';
 
 /**
  * GET /api/downloads/latest
@@ -16,45 +17,45 @@ export async function GET() {
       data: downloadsData,
     });
   } catch (error) {
-    console.error("Error fetching downloads data:", error);
+    log.error('Error fetching downloads data:', error);
 
-    if (error instanceof Error && error.message.includes("rate limit")) {
+    if (error instanceof Error && error.message.includes('rate limit')) {
       return NextResponse.json(
         {
           success: false,
           error: {
-            code: "GITHUB_API_ERROR",
-            message: "GitHub API rate limit exceeded. Please try again later.",
+            code: 'GITHUB_API_ERROR',
+            message: 'GitHub API rate limit exceeded. Please try again later.',
             details: { retryAfter: 3600 },
           },
         },
-        { status: 429 },
+        { status: 429 }
       );
     }
 
-    if (error instanceof Error && error.message.includes("GITHUB_TOKEN")) {
+    if (error instanceof Error && error.message.includes('GITHUB_TOKEN')) {
       return NextResponse.json(
         {
           success: false,
           error: {
-            code: "CONFIG_ERROR",
-            message: "Missing required environment variable: GITHUB_TOKEN",
+            code: 'CONFIG_ERROR',
+            message: 'Missing required environment variable: GITHUB_TOKEN',
           },
         },
-        { status: 500 },
+        { status: 500 }
       );
     }
 
-    if (error instanceof Error && error.message.includes("No releases found")) {
+    if (error instanceof Error && error.message.includes('No releases found')) {
       return NextResponse.json(
         {
           success: false,
           error: {
-            code: "NO_RELEASE_FOUND",
-            message: "No releases found in the releases repository",
+            code: 'NO_RELEASE_FOUND',
+            message: 'No releases found in the releases repository',
           },
         },
-        { status: 404 },
+        { status: 404 }
       );
     }
 
@@ -62,12 +63,12 @@ export async function GET() {
       {
         success: false,
         error: {
-          code: "GITHUB_API_ERROR",
+          code: 'GITHUB_API_ERROR',
           message:
-            error instanceof Error ? error.message : "Unknown error occurred",
+            error instanceof Error ? error.message : 'Unknown error occurred',
         },
       },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }

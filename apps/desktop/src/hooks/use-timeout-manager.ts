@@ -1,9 +1,9 @@
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef } from 'react';
 
 import type {
   TimeoutState,
   UseTimeoutManagerReturn,
-} from "~/components/gecko-bar/gecko-bar-app.types";
+} from '~/components/gecko-bar/gecko-bar-app.types';
 
 export function useTimeoutManager(): UseTimeoutManagerReturn {
   const timeoutsRef = useRef<TimeoutState>({
@@ -36,7 +36,7 @@ export function useTimeoutManager(): UseTimeoutManagerReturn {
       const timeoutId = window.setTimeout(callback, delay);
       timeoutsRef.current[type] = timeoutId;
     },
-    [clearTimeout],
+    [clearTimeout]
   );
 
   // Cleanup all timeouts on unmount

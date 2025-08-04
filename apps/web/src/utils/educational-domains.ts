@@ -1,4 +1,4 @@
-import { EDUCATIONAL_DOMAINS } from "@acme/api/src/consts/educational-domains";
+import { EDUCATIONAL_DOMAINS } from '@acme/api/src/consts/educational-domains';
 
 /**
  * Validates if an email address uses an educational domain

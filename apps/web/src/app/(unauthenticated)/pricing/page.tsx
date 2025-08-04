@@ -1,4 +1,4 @@
-import React from "react";
+import React from 'react';
 
 // Using nuqs We will check if the student Boolean query parameter is available and if so show the 50% off prices as students get 50% off their pro plan. ?student=true
 

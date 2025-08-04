@@ -13,8 +13,8 @@
   },
   "scripts": {
     "clean": "git clean -xdf .cache .turbo dist node_modules",
-    "format": "prettier --check . --ignore-path ../../.gitignore",
-    "lint": "eslint",
+    "lint": "ultracite lint",
+    "format": "ultracite format",
     "generate": "dotenv -e ../../.env -- pnpx @better-auth/cli generate --output ../db/src/auth-schema.ts",
     "typecheck": "tsc --noEmit"
   },
@@ -33,13 +33,9 @@
     "zod": "catalog:"
   },
   "devDependencies": {
-    "@acme/eslint-config": "workspace:*",
-    "@acme/prettier-config": "workspace:*",
     "@acme/tsconfig": "workspace:*",
+    "@biomejs/biome": "catalog:",
     "@types/react": "catalog:react19",
-    "eslint": "catalog:",
-    "prettier": "catalog:",
     "typescript": "catalog:"
-  },
-  "prettier": "@acme/prettier-config"
+  }
 }

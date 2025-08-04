@@ -1,21 +1,20 @@
-import { useMemo } from "react";
-import { motion } from "motion/react";
+import { cn } from '@acme/ui/lib/utils';
+import { motion } from 'motion/react';
+import { useMemo } from 'react';
 
-import { cn } from "@acme/ui/lib/utils";
-
-import { useGeckoBarState } from "~/hooks/use-gecko-bar-state";
-import { analytics } from "~/lib/analytics/posthog-analytics";
-import { useEventStore } from "~/stores/event.store";
-import { AudioVisualizer } from "../audio-visualizer";
+import { useGeckoBarState } from '~/hooks/use-gecko-bar-state';
+import { analytics } from '~/lib/analytics/posthog-analytics';
+import { useEventStore } from '~/stores/event.store';
+import { AudioVisualizer } from '../audio-visualizer';
 import {
   ANIMATIONS,
   DIMENSIONS,
   GECKO_PATTERN_SVG,
   STYLES,
-} from "./gecko-bar-app.constants";
-import { isButtonEnabled, shouldShowActiveState } from "./gecko-bar-app.utils";
-import { GeckoBarButton } from "./gecko-bar-button";
-import { GeckoBarTooltip } from "./gecko-bar-tooltip";
+} from './gecko-bar-app.constants';
+import { isButtonEnabled, shouldShowActiveState } from './gecko-bar-app.utils';
+import { GeckoBarButton } from './gecko-bar-button';
+import { GeckoBarTooltip } from './gecko-bar-tooltip';
 
 export function GeckoBarApp() {
   const { state, handlers } = useGeckoBarState();
@@ -40,14 +39,14 @@ export function GeckoBarApp() {
       state.isTransitioning,
       recordingStatus,
       state.wasRecentlyRecording,
-    ],
+    ]
   );
 
   // Memoize button states
   const cancelButtonState = useMemo(
     () => ({
       isVisible: showActiveState,
-      isEnabled: isButtonEnabled("cancel", {
+      isEnabled: isButtonEnabled('cancel', {
         isRecording,
         isTranscribing,
         isTransitioning: state.isTransitioning,
@@ -61,13 +60,13 @@ export function GeckoBarApp() {
       isTranscribing,
       state.isTransitioning,
       state.isLoading,
-    ],
+    ]
   );
 
   const finishButtonState = useMemo(
     () => ({
       isVisible: showActiveState,
-      isEnabled: isButtonEnabled("finish", {
+      isEnabled: isButtonEnabled('finish', {
         isRecording,
         isTranscribing,
         isTransitioning: state.isTransitioning,
@@ -81,7 +80,7 @@ export function GeckoBarApp() {
       isTranscribing,
       state.isTransitioning,
       state.isLoading,
-    ],
+    ]
   );
 
   // Memoize animation dimensions
@@ -98,80 +97,80 @@ export function GeckoBarApp() {
           ? DIMENSIONS.BAR.HOVER_HEIGHT
           : DIMENSIONS.BAR.COLLAPSED_HEIGHT,
     }),
-    [showActiveState, state.isExpanded],
+    [showActiveState, state.isExpanded]
   );
 
   // Memoize background pattern style
   const patternStyle = useMemo(
     () => ({
       backgroundImage: GECKO_PATTERN_SVG,
-      backgroundPosition: "center",
-      backgroundRepeat: "repeat",
+      backgroundPosition: 'center',
+      backgroundRepeat: 'repeat',
       backgroundSize: `${STYLES.PATTERN_SIZE}px ${STYLES.PATTERN_SIZE}px`,
     }),
-    [],
+    []
   );
 
   return (
     <div className="dark">
       <div
-        className="fixed bottom-2.5 left-1/2 z-50 -translate-x-1/2"
-        style={{
-          width: DIMENSIONS.HITBOX.WIDTH,
-          height: DIMENSIONS.HITBOX.HEIGHT,
-          display: "flex",
-          alignItems: "flex-end",
-          justifyContent: "center",
-        }}
+        className="-translate-x-1/2 fixed bottom-2.5 left-1/2 z-50"
         onMouseEnter={() => {
           handlers.onMouseEnter();
           // Track hover interaction
-          analytics.track("gecko_bar_interaction", {
-            action: "hover",
+          analytics.track('gecko_bar_interaction', {
+            action: 'hover',
             state: showActiveState
-              ? "recording"
+              ? 'recording'
               : state.isExpanded
-                ? "expanded"
-                : "collapsed",
+                ? 'expanded'
+                : 'collapsed',
           });
         }}
         onMouseLeave={handlers.onMouseLeave}
+        style={{
+          width: DIMENSIONS.HITBOX.WIDTH,
+          height: DIMENSIONS.HITBOX.HEIGHT,
+          display: 'flex',
+          alignItems: 'flex-end',
+          justifyContent: 'center',
+        }}
       >
         {/* Tooltip */}
         <GeckoBarTooltip
-          show={state.showTooltip}
           isRecording={isRecording}
           message={state.tooltipMessage}
+          show={state.showTooltip}
         />
 
         {/* Main bar */}
         <motion.div
-          className={cn(
-            "!border-primary/70 relative flex items-center justify-center overflow-hidden rounded-full border",
-            state.isLoading
-              ? "bg-muted/70 cursor-wait shadow-lg"
-              : "bg-muted/70",
-          )}
           animate={animationDimensions}
-          transition={{
-            type: "spring",
-            stiffness: ANIMATIONS.SPRING.STIFFNESS,
-            damping: ANIMATIONS.SPRING.DAMPING,
-            mass: ANIMATIONS.SPRING.MASS,
-          }}
+          className={cn(
+            '!border-primary/70 relative flex items-center justify-center overflow-hidden rounded-full border',
+            state.isLoading
+              ? 'cursor-wait bg-muted/70 shadow-lg'
+              : 'bg-muted/70'
+          )}
+          onClick={handlers.onClick}
           onMouseDown={() => {
             handlers.onClick();
             // Track click interaction
-            analytics.track("gecko_bar_interaction", {
-              action: "click",
+            analytics.track('gecko_bar_interaction', {
+              action: 'click',
               state: showActiveState
-                ? "recording"
+                ? 'recording'
                 : state.isExpanded
-                  ? "expanded"
-                  : "collapsed",
+                  ? 'expanded'
+                  : 'collapsed',
             });
           }}
-          onClick={handlers.onClick} // Keep as fallback
+          transition={{
+            type: 'spring',
+            stiffness: ANIMATIONS.SPRING.STIFFNESS,
+            damping: ANIMATIONS.SPRING.DAMPING,
+            mass: ANIMATIONS.SPRING.MASS,
+          }} // Keep as fallback
         >
           {/* Gecko scales background pattern */}
           <div
@@ -185,37 +184,37 @@ export function GeckoBarApp() {
           {/* Expanded state content */}
           <div
             className={cn(
-              "relative flex h-full w-full items-center justify-center",
+              'relative flex h-full w-full items-center justify-center',
               state.isExpanded || showActiveState
-                ? "opacity-100"
-                : "pointer-events-none opacity-0",
+                ? 'opacity-100'
+                : 'pointer-events-none opacity-0'
             )}
             style={{
               pointerEvents:
-                state.isExpanded || showActiveState ? "auto" : "none",
+                state.isExpanded || showActiveState ? 'auto' : 'none',
             }}
           >
             {/* Cancel button */}
             <GeckoBarButton
-              type="cancel"
-              state={cancelButtonState}
               onClick={handlers.onCancel}
+              state={cancelButtonState}
+              type="cancel"
             />
 
             {/* Audio visualizer */}
             <AudioVisualizer
               audioLevel={state.audioLevel}
+              className="flex-1"
               isRecording={state.visualizerActive}
               mode="voice-reactive"
               size="small"
-              className="flex-1"
             />
 
             {/* Finish button */}
             <GeckoBarButton
-              type="finish"
-              state={finishButtonState}
               onClick={handlers.onFinish}
+              state={finishButtonState}
+              type="finish"
             />
           </div>
         </motion.div>

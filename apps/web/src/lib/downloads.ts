@@ -1,18 +1,18 @@
-import { Octokit } from "@octokit/rest";
-
-import type { DownloadsData, PlatformDownloads } from "./downloads-utils";
-import type { GitHubRelease, TauriTarget } from "~/types/updater";
-import { env } from "~/env";
-import { PLATFORM_FILE_EXTENSIONS } from "~/types/updater";
+import { log } from '@acme/observability';
+import { Octokit } from '@octokit/rest';
+import { env } from '~/env';
+import type { GitHubRelease, TauriTarget } from '~/types/updater';
+import { PLATFORM_FILE_EXTENSIONS } from '~/types/updater';
+import type { DownloadsData, PlatformDownloads } from './downloads-utils';
 
 // Configuration - using the public releases repository
-const RELEASES_GITHUB_OWNER = "Lukem121";
-const RELEASES_GITHUB_REPO = "voicegecko-releases";
+const RELEASES_GITHUB_OWNER = 'Lukem121';
+const RELEASES_GITHUB_REPO = 'voicegecko-releases';
 
 // Initialize GitHub client
 const octokit = new Octokit({
   auth: env.GITHUB_TOKEN,
-  userAgent: "VoiceGecko-Downloads/1.0",
+  userAgent: 'VoiceGecko-Downloads/1.0',
 });
 
 /**
@@ -38,13 +38,13 @@ async function fetchLatestRelease(): Promise<GitHubRelease | null> {
 
         return releases.length > 0 ? (releases[0] as GitHubRelease) : null;
       } catch (listError) {
-        console.error("Error fetching releases list:", listError);
+        log.error('Error fetching releases list:', listError);
         return null;
       }
     }
 
     throw new Error(
-      `GitHub API error: ${error.status} ${error.message || "Unknown error"}`,
+      `GitHub API error: ${error.status} ${error.message || 'Unknown error'}`
     );
   }
 }
@@ -54,15 +54,15 @@ async function fetchLatestRelease(): Promise<GitHubRelease | null> {
  */
 function processReleaseForDownloads(release: GitHubRelease): DownloadsData {
   const platforms = {
-    windows: processAssetsForPlatform(release.assets, "windows-x86_64"),
+    windows: processAssetsForPlatform(release.assets, 'windows-x86_64'),
     macos: {
       available: false,
       assets: [
-        ...processAssetsForPlatform(release.assets, "darwin-x86_64").assets,
-        ...processAssetsForPlatform(release.assets, "darwin-aarch64").assets,
+        ...processAssetsForPlatform(release.assets, 'darwin-x86_64').assets,
+        ...processAssetsForPlatform(release.assets, 'darwin-aarch64').assets,
       ],
     },
-    linux: processAssetsForPlatform(release.assets, "linux-x86_64"),
+    linux: processAssetsForPlatform(release.assets, 'linux-x86_64'),
   };
 
   // Check if macOS has any available assets
@@ -80,8 +80,8 @@ function processReleaseForDownloads(release: GitHubRelease): DownloadsData {
  * Process assets for a specific platform
  */
 function processAssetsForPlatform(
-  assets: GitHubRelease["assets"],
-  platform: TauriTarget,
+  assets: GitHubRelease['assets'],
+  platform: TauriTarget
 ): PlatformDownloads {
   const supportedExtensions = PLATFORM_FILE_EXTENSIONS[platform];
 
@@ -89,7 +89,7 @@ function processAssetsForPlatform(
     .filter(
       (asset) =>
         supportedExtensions.some((ext) => asset.name.endsWith(ext)) &&
-        !asset.name.endsWith(".sig"), // Exclude signature files from download list
+        !asset.name.endsWith('.sig') // Exclude signature files from download list
     )
     .map((asset) => ({
       name: asset.name,
@@ -108,10 +108,10 @@ function processAssetsForPlatform(
  * Normalize version string (remove prefixes like 'app-v' or 'v')
  */
 function normalizeVersion(version: string): string {
-  if (version.startsWith("app-v")) {
+  if (version.startsWith('app-v')) {
     return version.slice(5);
   }
-  if (version.startsWith("v")) {
+  if (version.startsWith('v')) {
     return version.slice(1);
   }
   return version;
@@ -123,14 +123,14 @@ function normalizeVersion(version: string): string {
 export async function getDownloadsData(): Promise<DownloadsData> {
   // Validate environment configuration
   if (!env.GITHUB_TOKEN) {
-    throw new Error("Missing required environment variable: GITHUB_TOKEN");
+    throw new Error('Missing required environment variable: GITHUB_TOKEN');
   }
 
   // Fetch the latest release from the public releases repository
   const release = await fetchLatestRelease();
 
   if (!release) {
-    throw new Error("No releases found in the releases repository");
+    throw new Error('No releases found in the releases repository');
   }
 
   // Process the release data for the downloads page
@@ -138,4 +138,4 @@ export async function getDownloadsData(): Promise<DownloadsData> {
 }
 
 // Re-export the client-safe utilities
-export { formatFileSize, getPrimaryDownload } from "./downloads-utils";
+export { formatFileSize, getPrimaryDownload } from './downloads-utils';

@@ -1,6 +1,6 @@
-import { TRPCError } from "@trpc/server";
+import { TRPCError } from '@trpc/server';
 
-import { usageRepository } from "../../repository/usage.repository";
+import { usageRepository } from '../../repository/usage.repository';
 
 const FREE_TIER_WEEKLY_WORD_LIMIT = 2000;
 
@@ -82,7 +82,7 @@ export class UsageService {
    */
   async updateUsageAfterTranscription(
     userId: string,
-    wordCount: number,
+    wordCount: number
   ): Promise<void> {
     // Skip tracking for pro users
     const hasSubscription = await this.userHasActiveSubscription(userId);
@@ -135,7 +135,7 @@ export class UsageService {
         transcriptions: monthlyStats.monthlyTranscriptions,
         timeSaved: monthlyStats.monthlyWords / 40, // minutes
       },
-      wordsPerMinute: wordsPerMinute,
+      wordsPerMinute,
     };
   }
 
@@ -152,7 +152,7 @@ export class UsageService {
 
     // Check if subscription is active and not cancelled
     return (
-      subscriptionInfo.subscription.status === "active" &&
+      subscriptionInfo.subscription.status === 'active' &&
       !subscriptionInfo.subscription.cancelAtPeriodEnd
     );
   }
@@ -175,8 +175,8 @@ export class UsageService {
 
       if (!usage) {
         throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to create usage record",
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to create usage record',
         });
       }
     }

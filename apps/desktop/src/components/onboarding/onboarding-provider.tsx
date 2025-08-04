@@ -1,18 +1,24 @@
-"use client";
+'use client';
 
+import { useNavigate } from '@tanstack/react-router';
 import React, {
-  createContext,
+import
+{
+  log;
+}
+from;
+('@acme/observability');
+createContext,
   useCallback,
   useContext,
   useEffect,
   useReducer,
-} from "react";
-import { useNavigate } from "@tanstack/react-router";
+} from 'react'
 
-import type { MascotMessage } from "~/components/mascot";
-import { useMascotChat } from "~/components/mascot";
-import { analytics } from "~/lib/analytics/posthog-analytics";
-import { useSettingsStore } from "~/stores/settings.store";
+import type { MascotMessage } from '~/components/mascot';
+import { useMascotChat } from '~/components/mascot';
+import { analytics } from '~/lib/analytics/posthog-analytics';
+import { useSettingsStore } from '~/stores/settings.store';
 
 // Simplified types - removed complex lifecycle callbacks
 export interface OnboardingStepConfig {
@@ -24,13 +30,13 @@ export interface OnboardingStepConfig {
   autoAdvance?: boolean;
   dependencies?: string[];
   mascotAnimation?:
-    | "idle"
-    | "listening"
-    | "thinking"
-    | "celebrating"
-    | "welcoming"
-    | "processing"
-    | "dancing";
+    | 'idle'
+    | 'listening'
+    | 'thinking'
+    | 'celebrating'
+    | 'welcoming'
+    | 'processing'
+    | 'dancing';
 }
 
 export interface OnboardingEvent {
@@ -72,7 +78,7 @@ export interface OnboardingContextValue {
   emitEvent: (type: string, data?: Record<string, any>) => void;
 
   // Mascot integration
-  sendMascotMessage: (message: Omit<MascotMessage, "id">) => void;
+  sendMascotMessage: (message: Omit<MascotMessage, 'id'>) => void;
   triggerMascotAnimation: (animation: string) => void;
 
   // Utilities
@@ -84,16 +90,16 @@ export interface OnboardingContextValue {
 
 // Action types for the reducer
 type OnboardingAction =
-  | { type: "INITIALIZE"; payload: { steps: OnboardingStepConfig[] } }
-  | { type: "SET_CURRENT_STEP"; payload: string }
+  | { type: 'INITIALIZE'; payload: { steps: OnboardingStepConfig[] } }
+  | { type: 'SET_CURRENT_STEP'; payload: string }
   | {
-      type: "MARK_STEP_COMPLETED";
+      type: 'MARK_STEP_COMPLETED';
       payload: { stepId: string; progress?: number };
     }
-  | { type: "SET_STEP_PROGRESS"; payload: { stepId: string; progress: number } }
-  | { type: "SET_CAN_PROCEED"; payload: boolean }
-  | { type: "ADD_EVENT"; payload: OnboardingEvent }
-  | { type: "RESET" };
+  | { type: 'SET_STEP_PROGRESS'; payload: { stepId: string; progress: number } }
+  | { type: 'SET_CAN_PROCEED'; payload: boolean }
+  | { type: 'ADD_EVENT'; payload: OnboardingEvent }
+  | { type: 'RESET' };
 
 // Initial state
 const initialState: OnboardingState = {
@@ -109,24 +115,24 @@ const initialState: OnboardingState = {
 // Reducer for managing onboarding state
 function onboardingReducer(
   state: OnboardingState,
-  action: OnboardingAction,
+  action: OnboardingAction
 ): OnboardingState {
   switch (action.type) {
-    case "INITIALIZE":
+    case 'INITIALIZE':
       return {
         ...state,
         isInitialized: true,
         currentStepId: action.payload.steps[0]?.id || null,
       };
 
-    case "SET_CURRENT_STEP":
+    case 'SET_CURRENT_STEP':
       return {
         ...state,
         currentStepId: action.payload,
         canProceed: false,
       };
 
-    case "MARK_STEP_COMPLETED": {
+    case 'MARK_STEP_COMPLETED': {
       const { stepId, progress = 100 } = action.payload;
       const newCompletedSteps = new Set(state.completedSteps);
       newCompletedSteps.add(stepId);
@@ -142,7 +148,7 @@ function onboardingReducer(
       };
     }
 
-    case "SET_STEP_PROGRESS": {
+    case 'SET_STEP_PROGRESS': {
       const { stepId, progress } = action.payload;
       return {
         ...state,
@@ -153,19 +159,19 @@ function onboardingReducer(
       };
     }
 
-    case "SET_CAN_PROCEED":
+    case 'SET_CAN_PROCEED':
       return {
         ...state,
         canProceed: action.payload,
       };
 
-    case "ADD_EVENT":
+    case 'ADD_EVENT':
       return {
         ...state,
         events: [...state.events, action.payload],
       };
 
-    case "RESET":
+    case 'RESET':
       return {
         ...initialState,
         isInitialized: true,
@@ -183,7 +189,7 @@ const OnboardingContext = createContext<OnboardingContextValue | null>(null);
 export function useOnboarding(): OnboardingContextValue {
   const context = useContext(OnboardingContext);
   if (!context) {
-    throw new Error("useOnboarding must be used within an OnboardingProvider");
+    throw new Error('useOnboarding must be used within an OnboardingProvider');
   }
   return context;
 }
@@ -214,14 +220,14 @@ export function OnboardingProvider({
     isInitializedRef.current = true;
     onboardingStartTimeRef.current = Date.now();
 
-    dispatch({ type: "INITIALIZE", payload: { steps } });
+    dispatch({ type: 'INITIALIZE', payload: { steps } });
 
     if (initialStepId && steps.find((s) => s.id === initialStepId)) {
-      dispatch({ type: "SET_CURRENT_STEP", payload: initialStepId });
+      dispatch({ type: 'SET_CURRENT_STEP', payload: initialStepId });
     }
 
     // Track onboarding start
-    analytics.track("onboarding_started", {});
+    analytics.track('onboarding_started', {});
   }, [steps, initialStepId]);
 
   // Get current step configuration
@@ -232,7 +238,7 @@ export function OnboardingProvider({
   // Helper functions with stable references
   const getStepIndex = useCallback(
     (stepId: string) => steps.findIndex((step) => step.id === stepId),
-    [steps],
+    [steps]
   );
 
   const canAdvanceToStep = useCallback(
@@ -244,7 +250,7 @@ export function OnboardingProvider({
       // Allow free navigation - no dependency requirements
       return true;
     },
-    [steps],
+    [steps]
   );
 
   const getNextStepId = useCallback(
@@ -268,7 +274,7 @@ export function OnboardingProvider({
 
       return null;
     },
-    [state.currentStepId, getStepIndex, canAdvanceToStep, steps],
+    [state.currentStepId, getStepIndex, canAdvanceToStep, steps]
   );
 
   const getPreviousStepId = useCallback(() => {
@@ -286,14 +292,14 @@ export function OnboardingProvider({
     (type: string, data?: Record<string, any>) => {
       const event: OnboardingEvent = {
         type,
-        stepId: state.currentStepId || "",
+        stepId: state.currentStepId || '',
         data,
         timestamp: Date.now(),
       };
 
-      dispatch({ type: "ADD_EVENT", payload: event });
+      dispatch({ type: 'ADD_EVENT', payload: event });
     },
-    [state.currentStepId],
+    [state.currentStepId]
   );
 
   // Navigation actions
@@ -301,22 +307,20 @@ export function OnboardingProvider({
     async (stepId: string, assumeCompleted?: string) => {
       const step = steps.find((s) => s.id === stepId);
       if (!step) {
-        console.error(`Step ${stepId} not found`);
+        log.error(`Step ${stepId} not found`);
         return;
       }
 
       if (!canAdvanceToStep(stepId, assumeCompleted)) {
-        console.error(
-          `Cannot advance to step ${stepId} - dependencies not met`,
-        );
+        log.error(`Cannot advance to step ${stepId} - dependencies not met`);
         return;
       }
 
       await navigate({ to: step.route });
-      dispatch({ type: "SET_CURRENT_STEP", payload: stepId });
-      emitEvent("step_changed", { from: state.currentStepId, to: stepId });
+      dispatch({ type: 'SET_CURRENT_STEP', payload: stepId });
+      emitEvent('step_changed', { from: state.currentStepId, to: stepId });
     },
-    [steps, canAdvanceToStep, navigate, state.currentStepId, emitEvent],
+    [steps, canAdvanceToStep, navigate, state.currentStepId, emitEvent]
   );
 
   const nextStep = useCallback(
@@ -330,7 +334,7 @@ export function OnboardingProvider({
         await completeOnboarding();
       }
     },
-    [getNextStepId, goToStep],
+    [getNextStepId, goToStep]
   );
 
   const previousStep = useCallback(async () => {
@@ -345,15 +349,15 @@ export function OnboardingProvider({
     const completedSteps = state.completedSteps.size;
 
     // Track onboarding abandonment
-    analytics.track("onboarding_abandoned", {
-      last_step_id: state.currentStepId || "unknown",
+    analytics.track('onboarding_abandoned', {
+      last_step_id: state.currentStepId || 'unknown',
       steps_completed: completedSteps,
       time_spent_seconds: totalTime,
     });
 
     await updateOnboardingCompleted(true);
-    emitEvent("onboarding_skipped");
-    await navigate({ to: "/" });
+    emitEvent('onboarding_skipped');
+    await navigate({ to: '/' });
   }, [
     updateOnboardingCompleted,
     emitEvent,
@@ -369,21 +373,21 @@ export function OnboardingProvider({
     const skippedSteps = totalSteps - completedSteps;
 
     // Track onboarding completion
-    analytics.track("onboarding_completed", {
+    analytics.track('onboarding_completed', {
       total_time_seconds: totalTime,
       steps_completed: completedSteps,
       steps_skipped: skippedSteps,
     });
 
     await updateOnboardingCompleted(true);
-    emitEvent("onboarding_completed");
+    emitEvent('onboarding_completed');
 
     mascotChat.celebrate(
-      "🎉 Congratulations! You've completed the onboarding! Welcome to VoiceGecko!",
+      "🎉 Congratulations! You've completed the onboarding! Welcome to VoiceGecko!"
     );
 
     setTimeout(async () => {
-      await navigate({ to: "/" });
+      await navigate({ to: '/' });
     }, 2000);
   }, [
     updateOnboardingCompleted,
@@ -415,15 +419,15 @@ export function OnboardingProvider({
       const timeSpent = startTime ? (Date.now() - startTime) / 1000 : 0;
 
       // Track step completion
-      analytics.track("onboarding_step_completed", {
+      analytics.track('onboarding_step_completed', {
         step_id: stepId,
-        step_title: step?.title || "Unknown Step",
+        step_title: step?.title || 'Unknown Step',
         step_index: stepIndex,
         time_spent_seconds: timeSpent,
       });
 
-      dispatch({ type: "MARK_STEP_COMPLETED", payload: { stepId, progress } });
-      emitEvent("step_completed", { stepId, progress });
+      dispatch({ type: 'MARK_STEP_COMPLETED', payload: { stepId, progress } });
+      emitEvent('step_completed', { stepId, progress });
 
       // Auto-advance if enabled
       if (step?.autoAdvance && stepId === state.currentStepId) {
@@ -432,39 +436,39 @@ export function OnboardingProvider({
         }, 1500);
       }
     },
-    [steps, state.currentStepId, emitEvent, nextStep],
+    [steps, state.currentStepId, emitEvent, nextStep]
   );
 
   const setStepProgress = useCallback(
     (stepId: string, progress: number) => {
-      dispatch({ type: "SET_STEP_PROGRESS", payload: { stepId, progress } });
-      emitEvent("step_progress", { stepId, progress });
+      dispatch({ type: 'SET_STEP_PROGRESS', payload: { stepId, progress } });
+      emitEvent('step_progress', { stepId, progress });
     },
-    [emitEvent],
+    [emitEvent]
   );
 
   const setCanProceed = useCallback((canProceed: boolean) => {
-    dispatch({ type: "SET_CAN_PROCEED", payload: canProceed });
+    dispatch({ type: 'SET_CAN_PROCEED', payload: canProceed });
   }, []);
 
   // Mascot integration
   const sendMascotMessage = useCallback(
-    (message: Omit<MascotMessage, "id">) => {
+    (message: Omit<MascotMessage, 'id'>) => {
       mascotChat.sendMessage(message);
     },
-    [mascotChat],
+    [mascotChat]
   );
 
   const triggerMascotAnimation = useCallback(
     (animation: string) => {
       const validAnimations = [
-        "idle",
-        "listening",
-        "thinking",
-        "celebrating",
-        "welcoming",
-        "processing",
-        "dancing",
+        'idle',
+        'listening',
+        'thinking',
+        'celebrating',
+        'welcoming',
+        'processing',
+        'dancing',
       ];
       if (validAnimations.includes(animation)) {
         mascotChat.setAnimation({
@@ -473,7 +477,7 @@ export function OnboardingProvider({
         });
       }
     },
-    [mascotChat],
+    [mascotChat]
   );
 
   // Update mascot animation when step changes (simplified)
@@ -483,12 +487,12 @@ export function OnboardingProvider({
   useEffect(() => {
     // If tutorial is completed, show dancing animation only once
     if (
-      state.completedSteps.has("tutorial") &&
-      lastSetAnimationRef.current !== "dancing-tutorial-complete"
+      state.completedSteps.has('tutorial') &&
+      lastSetAnimationRef.current !== 'dancing-tutorial-complete'
     ) {
-      lastSetAnimationRef.current = "dancing-tutorial-complete";
+      lastSetAnimationRef.current = 'dancing-tutorial-complete';
       mascotChat.setAnimation({
-        type: "dancing",
+        type: 'dancing',
         duration: 3000,
       });
       return;
@@ -553,7 +557,7 @@ export function OnboardingProvider({
       getStepIndex,
       getNextStepId,
       getPreviousStepId,
-    ],
+    ]
   );
 
   return (

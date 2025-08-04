@@ -9,7 +9,8 @@
  * - No continuous background polling
  */
 
-import { analytics } from "./analytics/posthog-analytics";
+import { log } from '@acme/observability';
+import { analytics } from './analytics/posthog-analytics';
 
 export interface ConnectivityState {
   isOnline: boolean;
@@ -17,7 +18,7 @@ export interface ConnectivityState {
   isChecking: boolean;
   lastChecked: Date | null;
   error: string | null;
-  diagnosis: "healthy" | "no_internet" | "api_down" | "unknown";
+  diagnosis: 'healthy' | 'no_internet' | 'api_down' | 'unknown';
   lastSuccessfulCheck: Date | null;
 }
 
@@ -30,7 +31,7 @@ class ConnectivityManager {
     isChecking: false,
     lastChecked: null,
     error: null,
-    diagnosis: "unknown",
+    diagnosis: 'unknown',
     lastSuccessfulCheck: null,
   };
 
@@ -61,23 +62,23 @@ class ConnectivityManager {
   activate(): void {
     if (this.isActive) return;
 
-    console.log("🔄 [ConnectivityManager] Activating connectivity monitoring");
+    log.info('🔄 [ConnectivityManager] Activating connectivity monitoring');
     this.isActive = true;
 
     // Force immediate check to get initial status
-    console.log(
-      "🚀 [ConnectivityManager] Running immediate connectivity check...",
+    log.info(
+      '🚀 [ConnectivityManager] Running immediate connectivity check...'
     );
     this.checkConnectivity();
 
     // Set up retry interval (30 seconds)
     this.retryInterval = setInterval(() => {
       this.checkConnectivity();
-    }, 30000);
+    }, 30_000);
 
     // Browser events
-    window.addEventListener("online", this.handleOnline);
-    window.addEventListener("offline", this.handleOffline);
+    window.addEventListener('online', this.handleOnline);
+    window.addEventListener('offline', this.handleOffline);
   }
 
   /**
@@ -86,9 +87,7 @@ class ConnectivityManager {
   private deactivate(): void {
     if (!this.isActive) return;
 
-    console.log(
-      "✅ [ConnectivityManager] Deactivating connectivity monitoring",
-    );
+    log.info('✅ [ConnectivityManager] Deactivating connectivity monitoring');
     this.isActive = false;
 
     if (this.retryInterval) {
@@ -96,8 +95,8 @@ class ConnectivityManager {
       this.retryInterval = null;
     }
 
-    window.removeEventListener("online", this.handleOnline);
-    window.removeEventListener("offline", this.handleOffline);
+    window.removeEventListener('online', this.handleOnline);
+    window.removeEventListener('offline', this.handleOffline);
   }
 
   /**
@@ -105,11 +104,11 @@ class ConnectivityManager {
    */
   async checkConnectivity(): Promise<void> {
     if (this.state.isChecking) {
-      console.log("⏸️ [ConnectivityManager] Check already in progress");
+      log.info('⏸️ [ConnectivityManager] Check already in progress');
       return;
     }
 
-    console.log("🔍 [ConnectivityManager] Starting connectivity check");
+    log.info('🔍 [ConnectivityManager] Starting connectivity check');
 
     this.updateState({ isChecking: true, error: null });
 
@@ -118,33 +117,33 @@ class ConnectivityManager {
       this.updateState(result);
 
       // If we're healthy, deactivate monitoring
-      if (result.diagnosis === "healthy") {
+      if (result.diagnosis === 'healthy') {
         this.deactivate();
       } else {
         // Track connectivity issues
-        analytics.track("error_occurred", {
-          error_type: "connectivity_issue",
+        analytics.track('error_occurred', {
+          error_type: 'connectivity_issue',
           error_message: `Connectivity diagnosis: ${result.diagnosis}`,
-          component: "ConnectivityManager",
-          user_action: "connectivity_check",
+          component: 'ConnectivityManager',
+          user_action: 'connectivity_check',
         });
       }
     } catch (error) {
-      console.error("💥 [ConnectivityManager] Check failed:", error);
+      log.error('💥 [ConnectivityManager] Check failed:', error);
 
       // Track connectivity check failure
-      analytics.track("error_occurred", {
-        error_type: "connectivity_check_failed",
-        error_message: error instanceof Error ? error.message : "Check failed",
-        component: "ConnectivityManager",
-        user_action: "connectivity_check",
+      analytics.track('error_occurred', {
+        error_type: 'connectivity_check_failed',
+        error_message: error instanceof Error ? error.message : 'Check failed',
+        component: 'ConnectivityManager',
+        user_action: 'connectivity_check',
       });
 
       this.updateState({
         ...this.state,
         isChecking: false,
-        error: error instanceof Error ? error.message : "Check failed",
-        diagnosis: "unknown",
+        error: error instanceof Error ? error.message : 'Check failed',
+        diagnosis: 'unknown',
         lastChecked: new Date(),
       });
     }
@@ -161,7 +160,7 @@ class ConnectivityManager {
    * Check if we have connectivity issues
    */
   hasIssues(): boolean {
-    return this.state.diagnosis !== "healthy";
+    return this.state.diagnosis !== 'healthy';
   }
 
   private async runConnectivityCheck(): Promise<ConnectivityState> {
@@ -170,65 +169,65 @@ class ConnectivityManager {
 
     // Step 1: Quick internet check (3 seconds max)
     try {
-      console.log("🌐 [ConnectivityManager] Testing internet...");
+      log.info('🌐 [ConnectivityManager] Testing internet...');
       const controller = new AbortController();
       setTimeout(() => controller.abort(), 3000);
 
-      await fetch("https://www.google.com/favicon.ico", {
-        method: "HEAD",
-        mode: "no-cors",
+      await fetch('https://www.google.com/favicon.ico', {
+        method: 'HEAD',
+        mode: 'no-cors',
         signal: controller.signal,
-        cache: "no-cache",
+        cache: 'no-cache',
       });
 
       isOnline = true;
-      console.log("✅ [ConnectivityManager] Internet: ONLINE");
+      log.info('✅ [ConnectivityManager] Internet: ONLINE');
     } catch (error) {
       isOnline = false;
-      console.log("❌ [ConnectivityManager] Internet: OFFLINE", error);
+      log.info('❌ [ConnectivityManager] Internet: OFFLINE', error);
     }
 
     // Step 2: API check (only if internet works)
     if (isOnline) {
       try {
-        console.log("🔗 [ConnectivityManager] Testing VoiceGecko API...");
+        log.info('🔗 [ConnectivityManager] Testing VoiceGecko API...');
         const controller = new AbortController();
         setTimeout(() => controller.abort(), 5000);
 
         const response = await fetch(
           `${import.meta.env.VITE_PUBLIC_VOICEGECKO_URL}/api/health`,
           {
-            method: "GET",
+            method: 'GET',
             signal: controller.signal,
-            cache: "no-cache",
-            credentials: "omit",
-          },
+            cache: 'no-cache',
+            credentials: 'omit',
+          }
         );
 
         isApiReachable = response.ok || response.status === 405;
-        console.log(
-          `✅ [ConnectivityManager] API: ${isApiReachable ? "REACHABLE" : "UNREACHABLE"} (${response.status})`,
+        log.info(
+          `✅ [ConnectivityManager] API: ${isApiReachable ? 'REACHABLE' : 'UNREACHABLE'} (${response.status})`
         );
       } catch (error) {
         isApiReachable = false;
-        console.log("❌ [ConnectivityManager] API: FAILED", error);
+        log.info('❌ [ConnectivityManager] API: FAILED', error);
       }
     } else {
-      console.log("⏭️ [ConnectivityManager] Skipping API check (no internet)");
+      log.info('⏭️ [ConnectivityManager] Skipping API check (no internet)');
     }
 
     // Determine diagnosis
-    let diagnosis: ConnectivityState["diagnosis"];
+    let diagnosis: ConnectivityState['diagnosis'];
     if (isOnline && isApiReachable) {
-      diagnosis = "healthy";
-    } else if (!isOnline) {
-      diagnosis = "no_internet";
+      diagnosis = 'healthy';
+    } else if (isOnline) {
+      diagnosis = 'api_down';
     } else {
-      diagnosis = "api_down";
+      diagnosis = 'no_internet';
     }
 
     const now = new Date();
-    console.log(`🎯 [ConnectivityManager] Check complete: ${diagnosis}`);
+    log.info(`🎯 [ConnectivityManager] Check complete: ${diagnosis}`);
 
     return {
       isOnline,
@@ -238,7 +237,7 @@ class ConnectivityManager {
       error: null,
       diagnosis,
       lastSuccessfulCheck:
-        diagnosis === "healthy" ? now : this.state.lastSuccessfulCheck,
+        diagnosis === 'healthy' ? now : this.state.lastSuccessfulCheck,
     };
   }
 
@@ -249,16 +248,16 @@ class ConnectivityManager {
   }
 
   private handleOnline = (): void => {
-    console.log("🟢 [ConnectivityManager] Browser online event");
+    log.info('🟢 [ConnectivityManager] Browser online event');
     this.checkConnectivity();
   };
 
   private handleOffline = (): void => {
-    console.log("🔴 [ConnectivityManager] Browser offline event");
+    log.info('🔴 [ConnectivityManager] Browser offline event');
     this.updateState({
       isOnline: false,
       isApiReachable: false,
-      diagnosis: "no_internet",
+      diagnosis: 'no_internet',
       isChecking: false,
       lastChecked: new Date(),
     });
@@ -269,15 +268,15 @@ class ConnectivityManager {
    */
   getDiagnosisMessage(): string {
     switch (this.state.diagnosis) {
-      case "healthy":
-        return "All systems operational";
-      case "no_internet":
-        return "No internet connection detected";
-      case "api_down":
-        return "VoiceGecko servers are unreachable (your internet is working)";
-      case "unknown":
+      case 'healthy':
+        return 'All systems operational';
+      case 'no_internet':
+        return 'No internet connection detected';
+      case 'api_down':
+        return 'VoiceGecko servers are unreachable (your internet is working)';
+      case 'unknown':
       default:
-        return "Connectivity issue detected";
+        return 'Connectivity issue detected';
     }
   }
 }

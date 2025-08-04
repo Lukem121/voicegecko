@@ -1,4 +1,4 @@
-import type { SafeToCollapseChecker } from "./gecko-bar-app.types";
+import type { SafeToCollapseChecker } from './gecko-bar-app.types';
 
 /**
  * Determines if it's safe to collapse the gecko bar based on current state.
@@ -14,11 +14,8 @@ export const isSafeToCollapse: SafeToCollapseChecker = ({
   wasRecentlyRecording,
 }) => {
   return (
-    !isRecording &&
-    !isLoading &&
-    !isTranscribing &&
-    !isTransitioning &&
-    recordingStatus === "idle" &&
+    !(isRecording || isLoading || isTranscribing || isTransitioning) &&
+    recordingStatus === 'idle' &&
     !isHovered &&
     !wasRecentlyRecording
   );
@@ -45,7 +42,7 @@ export const shouldShowActiveState = ({
     isRecording ||
     isTranscribing ||
     isTransitioning ||
-    recordingStatus !== "idle" ||
+    recordingStatus !== 'idle' ||
     wasRecentlyRecording
   );
 };
@@ -54,7 +51,7 @@ export const shouldShowActiveState = ({
  * Determines if a button should be enabled based on current state.
  */
 export const isButtonEnabled = (
-  buttonType: "cancel" | "finish",
+  buttonType: 'cancel' | 'finish',
   {
     isRecording,
     isTranscribing,
@@ -65,14 +62,16 @@ export const isButtonEnabled = (
     isTranscribing: boolean;
     isTransitioning: boolean;
     isLoading: boolean;
-  },
+  }
 ) => {
-  if (isLoading) return false;
+  if (isLoading) {
+    return false;
+  }
 
   switch (buttonType) {
-    case "cancel":
+    case 'cancel':
       return isRecording && !isTranscribing && !isTransitioning;
-    case "finish":
+    case 'finish':
       return isRecording && !isTranscribing;
     default:
       return false;

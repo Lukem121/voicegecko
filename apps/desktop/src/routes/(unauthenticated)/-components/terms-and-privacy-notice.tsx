@@ -1,19 +1,19 @@
-import { Link } from "@tanstack/react-router";
+import { Link } from '@tanstack/react-router';
 
 export default function TermsAndPrivacyNotice() {
   return (
-    <p className="text-muted-foreground px-8 text-center text-sm">
-      By continuing, you agree to our{" "}
+    <p className="px-8 text-center text-muted-foreground text-sm">
+      By continuing, you agree to our{' '}
       <Link
+        className="underline underline-offset-4 hover:text-primary"
         to="/legal/terms"
-        className="hover:text-primary underline underline-offset-4"
       >
         Terms of Service
-      </Link>{" "}
-      and{" "}
+      </Link>{' '}
+      and{' '}
       <Link
+        className="underline underline-offset-4 hover:text-primary"
         to="/legal/privacy"
-        className="hover:text-primary underline underline-offset-4"
       >
         Privacy Policy
       </Link>

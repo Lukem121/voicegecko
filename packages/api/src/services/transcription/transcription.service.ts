@@ -1,11 +1,12 @@
-import { TRPCError } from "@trpc/server";
+import { log } from '@acme/observability';
+import { TRPCError } from '@trpc/server';
 
 import type {
   CreateTranscriptionData,
   TranscriptionItem,
-} from "../../repository/transcription.repository";
-import { transcriptionRepository } from "../../repository/transcription.repository";
-import { countWords } from "../../utils/word-counter";
+} from '../../repository/transcription.repository';
+import { transcriptionRepository } from '../../repository/transcription.repository';
+import { countWords } from '../../utils/word-counter';
 
 export interface TranscriptionGroup {
   date: string;
@@ -13,7 +14,7 @@ export interface TranscriptionGroup {
     id: number;
     timestamp: string;
     content: string;
-    status: "normal" | "silent";
+    status: 'normal' | 'silent';
   }[];
 }
 
@@ -31,7 +32,7 @@ export interface PaginatedTranscriptionsResult {
 }
 
 export class TranscriptionService {
-  async createTranscription(data: Omit<CreateTranscriptionData, "wordCount">) {
+  async createTranscription(data: Omit<CreateTranscriptionData, 'wordCount'>) {
     try {
       // Count words in the content
       const wordCount = countWords(data.content);
@@ -42,17 +43,17 @@ export class TranscriptionService {
       });
       return result;
     } catch (error) {
-      console.error(error);
+      log.error(error);
       throw new TRPCError({
-        code: "INTERNAL_SERVER_ERROR",
-        message: "Failed to save transcription",
+        code: 'INTERNAL_SERVER_ERROR',
+        message: 'Failed to save transcription',
       });
     }
   }
 
   async getUserTranscriptions(
     userId: string,
-    params: PaginationParams = { limit: 20 },
+    params: PaginationParams = { limit: 20 }
   ): Promise<PaginatedTranscriptionsResult> {
     const { cursor, limit, search } = params;
 
@@ -89,7 +90,7 @@ export class TranscriptionService {
 
     if (!transcription) {
       throw new TRPCError({
-        code: "NOT_FOUND",
+        code: 'NOT_FOUND',
         message:
           "Transcription not found or you don't have permission to access it",
       });
@@ -103,7 +104,7 @@ export class TranscriptionService {
 
     if (!result) {
       throw new TRPCError({
-        code: "NOT_FOUND",
+        code: 'NOT_FOUND',
         message:
           "Transcription not found or you don't have permission to delete it",
       });
@@ -113,7 +114,7 @@ export class TranscriptionService {
   }
 
   private groupTranscriptionsByDate(
-    transcriptions: TranscriptionItem[],
+    transcriptions: TranscriptionItem[]
   ): TranscriptionGroup[] {
     const today = new Date();
     const yesterday = new Date(today);
@@ -126,16 +127,16 @@ export class TranscriptionService {
       let dateLabel: string;
 
       if (this.isSameDay(date, today)) {
-        dateLabel = "TODAY";
+        dateLabel = 'TODAY';
       } else if (this.isSameDay(date, yesterday)) {
-        dateLabel = "YESTERDAY";
+        dateLabel = 'YESTERDAY';
       } else {
         dateLabel = date
-          .toLocaleDateString("en-US", {
-            weekday: "long",
-            year: "numeric",
-            month: "long",
-            day: "numeric",
+          .toLocaleDateString('en-US', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
           })
           .toUpperCase();
       }
@@ -150,9 +151,9 @@ export class TranscriptionService {
       const group = groups.get(dateLabel)!;
       group.items.push({
         id: transcription.id,
-        timestamp: date.toLocaleTimeString("en-US", {
-          hour: "numeric",
-          minute: "2-digit",
+        timestamp: date.toLocaleTimeString('en-US', {
+          hour: 'numeric',
+          minute: '2-digit',
           hour12: true,
         }),
         content: transcription.content,
@@ -165,10 +166,10 @@ export class TranscriptionService {
 
     // Custom sort to ensure TODAY is first, YESTERDAY second, then others
     result.sort((a, b) => {
-      if (a.date === "TODAY") return -1;
-      if (b.date === "TODAY") return 1;
-      if (a.date === "YESTERDAY") return -1;
-      if (b.date === "YESTERDAY") return 1;
+      if (a.date === 'TODAY') return -1;
+      if (b.date === 'TODAY') return 1;
+      if (a.date === 'YESTERDAY') return -1;
+      if (b.date === 'YESTERDAY') return 1;
       return 0;
     });
 

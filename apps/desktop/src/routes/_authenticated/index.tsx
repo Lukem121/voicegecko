@@ -1,7 +1,30 @@
-import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { createFileRoute, Link } from "@tanstack/react-router";
-import Fuse from "fuse.js";
+import { Button } from '@acme/ui/components/ui/button';
+import { Card, CardContent } from '@acme/ui/components/ui/card';
+import {
+import
+{
+  log;
+}
+from;
+('@acme/observability');
+DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@acme/ui/components/ui/dropdown-menu'
+
+import { Input } from '@acme/ui/components/ui/input';
+import { Textarea } from '@acme/ui/components/ui/textarea';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@acme/ui/components/ui/tooltip';
+import { cn } from '@acme/ui/lib/utils';
+import { useQuery } from '@tanstack/react-query';
+import { createFileRoute, Link } from '@tanstack/react-router';
+import Fuse from 'fuse.js';
 import {
   Copy,
   Info,
@@ -13,35 +36,18 @@ import {
   Square,
   Trash2,
   X,
-} from "lucide-react";
+} from 'lucide-react';
+import { useState } from 'react';
 
-import { Button } from "@acme/ui/components/ui/button";
-import { Card, CardContent } from "@acme/ui/components/ui/card";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@acme/ui/components/ui/dropdown-menu";
-import { Input } from "@acme/ui/components/ui/input";
-import { Textarea } from "@acme/ui/components/ui/textarea";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@acme/ui/components/ui/tooltip";
-import { cn } from "@acme/ui/lib/utils";
+import { useDeleteTranscription } from '~/features/transcription/use-delete-transcription';
+import { useGetTranscriptions } from '~/features/transcription/use-get-transcriptions';
+import { useUser } from '~/hooks/auth';
+import { useDebouncedSearch } from '~/hooks/use-debounced-search';
+import { recordingService } from '~/services/recording.service';
+import { useEventStore } from '~/stores/event.store';
+import { queryClient, trpc } from '~/trpc';
 
-import { useDeleteTranscription } from "~/features/transcription/use-delete-transcription";
-import { useGetTranscriptions } from "~/features/transcription/use-get-transcriptions";
-import { useUser } from "~/hooks/auth";
-import { useDebouncedSearch } from "~/hooks/use-debounced-search";
-import { recordingService } from "~/services/recording.service";
-import { useEventStore } from "~/stores/event.store";
-import { queryClient, trpc } from "~/trpc";
-
-export const Route = createFileRoute("/_authenticated/")({
+export const Route = createFileRoute('/_authenticated/')({
   component: RecordingPage,
 });
 
@@ -58,7 +64,7 @@ function RecordingPage() {
   const recordingStatus = useEventStore((state) => state.recordingStatus);
   const transcript = useEventStore((state) => state.transcript);
   const transcriptionStatus = useEventStore(
-    (state) => state.transcriptionStatus,
+    (state) => state.transcriptionStatus
   );
   const transcriptionError = useEventStore((state) => state.transcriptionError);
   const isRecording = useEventStore((state) => state.isRecording());
@@ -82,7 +88,7 @@ function RecordingPage() {
 
     // Perform fuzzy search on all transcriptions
     const fuse = new Fuse(allTranscriptions, {
-      keys: ["content"],
+      keys: ['content'],
       threshold: 0.4,
       includeScore: true,
     });
@@ -93,53 +99,48 @@ function RecordingPage() {
     return fuzzyResults.slice(0, 10).map((result) => result.item);
   })();
 
-  console.log(
-    "[RecordingPage] Component render - transcript:",
+  log.info(
+    '[RecordingPage] Component render - transcript:',
     transcript,
-    "transcriptionStatus:",
+    'transcriptionStatus:',
     transcriptionStatus,
-    "recordingStatus:",
+    'recordingStatus:',
     recordingStatus,
-    "error:",
-    transcriptionError,
+    'error:',
+    transcriptionError
   );
 
   const handleMicClick = async () => {
-    console.log(
-      "[Recording] 🎯 handleMicClick called, status:",
-      recordingStatus,
-    );
+    log.info('[Recording] 🎯 handleMicClick called, status:', recordingStatus);
 
-    if (recordingStatus === "recording") {
+    if (recordingStatus === 'recording') {
       setIsProcessing(true);
     }
 
     try {
-      console.log(
-        "[Recording] 🚀 Calling recordingService.toggleRecording()...",
-      );
+      log.info('[Recording] 🚀 Calling recordingService.toggleRecording()...');
       await recordingService.toggleRecording();
-      console.log("[Recording] ✅ Recording toggled successfully");
+      log.info('[Recording] ✅ Recording toggled successfully');
     } catch (error) {
-      console.error("[Recording] ❌ Error during recording flow:", error);
+      log.error('[Recording] ❌ Error during recording flow:', error);
     } finally {
       setIsProcessing(false);
     }
   };
 
   const handleCopy = (content: string) => {
-    void navigator.clipboard.writeText(content);
+    navigator.clipboard.writeText(content);
   };
 
   const handleSendFeedback = (id: number) => {
-    console.log("Send feedback for:", id);
+    log.info('Send feedback for:', id);
   };
 
   const handleDeleteTranscript = async (id: number) => {
     try {
       await deleteTranscription({ id });
     } catch (error) {
-      console.error("Failed to delete transcription:", error);
+      log.error('Failed to delete transcription:', error);
     }
   };
 
@@ -147,28 +148,28 @@ function RecordingPage() {
     <TooltipProvider>
       <div className="flex flex-1 flex-col gap-6">
         <div className="flex h-10 items-center justify-between">
-          <h1 className="text-2xl font-bold tracking-tight">Record</h1>
+          <h1 className="font-bold text-2xl tracking-tight">Record</h1>
         </div>
         <Card>
           <CardContent>
             <div className="space-y-4">
               <div className="relative">
                 <Textarea
-                  placeholder="Start typing or click the microphone to record..."
                   className="min-h-[200px] resize-none border-0 text-base focus-visible:ring-0"
-                  value={transcript ?? ""}
+                  placeholder="Start typing or click the microphone to record..."
+                  value={transcript ?? ''}
                 />
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Button
-                      variant={isRecording ? "destructive" : "secondary"}
-                      size="icon"
                       className={cn(
-                        `absolute top-3 right-3 h-10 w-10 rounded-full`,
-                        isRecording && "animate-pulse",
+                        'absolute top-3 right-3 h-10 w-10 rounded-full',
+                        isRecording && 'animate-pulse'
                       )}
-                      onClick={handleMicClick}
                       disabled={isTranscribing || isProcessing || isAtLimit}
+                      onClick={handleMicClick}
+                      size="icon"
+                      variant={isRecording ? 'destructive' : 'secondary'}
                     >
                       {isTranscribing ? (
                         <Loader2 className="h-5 w-5 animate-spin" />
@@ -184,7 +185,7 @@ function RecordingPage() {
                       <p>Usage limit reached.</p>
                     ) : usageStatus && !usageStatus.isUnlimited ? (
                       <p>
-                        {usageStatus.wordsUsed.toLocaleString()} /{" "}
+                        {usageStatus.wordsUsed.toLocaleString()} /{' '}
                         {usageStatus.wordsLimit.toLocaleString()} words used
                         this week
                       </p>
@@ -201,7 +202,7 @@ function RecordingPage() {
         {/* Recents Section */}
         <div className="space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-medium tracking-wide text-gray-500 uppercase">
+            <h2 className="font-medium text-gray-500 text-lg uppercase tracking-wide">
               RECENTS
             </h2>
             <div className="flex items-center gap-1">
@@ -209,41 +210,41 @@ function RecordingPage() {
                 <div className="flex items-center gap-2">
                   <div className="relative">
                     <Input
+                      autoFocus
+                      className="h-8 w-64 pr-8"
+                      onChange={(e) => search.setSearchTerm(e.target.value)}
                       placeholder="Search transcriptions..."
                       value={search.searchTerm}
-                      onChange={(e) => search.setSearchTerm(e.target.value)}
-                      className="h-8 w-64 pr-8"
-                      autoFocus
                     />
                     {search.searchTerm && (
                       <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={search.clearSearch}
                         className="absolute top-0 right-1 h-8 w-8 p-0"
+                        onClick={search.clearSearch}
+                        size="sm"
+                        variant="ghost"
                       >
                         <X className="h-3 w-3" />
                       </Button>
                     )}
                   </div>
                   <Button
-                    variant="ghost"
-                    size="sm"
                     className="h-8 w-8 p-0"
                     onClick={() => {
                       setIsSearchExpanded(false);
                       search.clearSearch();
                     }}
+                    size="sm"
+                    variant="ghost"
                   >
                     <X className="h-4 w-4" />
                   </Button>
                 </div>
               ) : (
                 <Button
-                  variant="ghost"
-                  size="sm"
                   className="h-8 w-8 p-0"
                   onClick={() => setIsSearchExpanded(true)}
+                  size="sm"
+                  variant="ghost"
                 >
                   <Search className="h-4 w-4" />
                 </Button>
@@ -253,10 +254,10 @@ function RecordingPage() {
 
           {/* Search results info */}
           {search.debouncedSearchTerm && (
-            <div className="text-muted-foreground flex items-center gap-2 text-sm">
+            <div className="flex items-center gap-2 text-muted-foreground text-sm">
               <span>
                 Found {filteredTranscriptions.length} result
-                {filteredTranscriptions.length !== 1 ? "s" : ""} for "
+                {filteredTranscriptions.length !== 1 ? 's' : ''} for "
                 {search.debouncedSearchTerm}"
               </span>
             </div>
@@ -265,7 +266,7 @@ function RecordingPage() {
           {/* Recent Transcriptions */}
           <div className="overflow-hidden rounded-lg border">
             {filteredTranscriptions.length === 0 ? (
-              <div className="text-muted-foreground p-8 text-center">
+              <div className="p-8 text-center text-muted-foreground">
                 {search.debouncedSearchTerm ? (
                   <>
                     <p>
@@ -286,33 +287,33 @@ function RecordingPage() {
             ) : (
               filteredTranscriptions.map((item, index) => (
                 <div
-                  key={item.id}
-                  className={`group hover:bg-muted/50 flex items-start justify-between border-transparent p-3 transition-colors ${
+                  className={`group flex items-start justify-between border-transparent p-3 transition-colors hover:bg-muted/50 ${
                     index < filteredTranscriptions.length - 1
-                      ? "border-border border-b"
-                      : ""
+                      ? 'border-border border-b'
+                      : ''
                   }`}
+                  key={item.id}
                 >
                   <div className="flex min-w-0 flex-1 items-start gap-3 pr-4">
-                    <div className="text-muted-foreground text-sm whitespace-nowrap">
+                    <div className="whitespace-nowrap text-muted-foreground text-sm">
                       {item.timestamp}
                     </div>
                     <div className="flex min-w-0 flex-1 items-start gap-2">
                       <div
                         className={`text-sm leading-relaxed ${
-                          item.status === "silent"
-                            ? "text-muted-foreground italic"
-                            : "text-foreground"
+                          item.status === 'silent'
+                            ? 'text-muted-foreground italic'
+                            : 'text-foreground'
                         }`}
                       >
                         {item.content.length > 80
                           ? `${item.content.substring(0, 80)}...`
                           : item.content}
                       </div>
-                      {item.status === "silent" && (
+                      {item.status === 'silent' && (
                         <Tooltip>
                           <TooltipTrigger>
-                            <Info className="text-muted-foreground mt-0.5 h-4 w-4 flex-shrink-0" />
+                            <Info className="mt-0.5 h-4 w-4 flex-shrink-0 text-muted-foreground" />
                           </TooltipTrigger>
                           <TooltipContent>
                             <p>No audio detected during this recording</p>
@@ -322,17 +323,17 @@ function RecordingPage() {
                     </div>
                   </div>
                   <div className="flex items-center gap-1 opacity-0 transition-opacity group-hover:opacity-100">
-                    {item.status !== "silent" && (
+                    {item.status !== 'silent' && (
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <Button
-                            variant="ghost"
-                            size="sm"
+                            className="h-8 w-8 p-0"
                             onClick={(e) => {
                               e.stopPropagation();
                               handleCopy(item.content);
                             }}
-                            className="h-8 w-8 p-0"
+                            size="sm"
+                            variant="ghost"
                           >
                             <Copy className="h-4 w-4" />
                           </Button>
@@ -345,13 +346,13 @@ function RecordingPage() {
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <Button
-                          variant="ghost"
-                          size="sm"
+                          className="h-8 w-8 p-0"
                           onClick={(e) => {
                             e.stopPropagation();
                             handleSendFeedback(item.id);
                           }}
-                          className="h-8 w-8 p-0"
+                          size="sm"
+                          variant="ghost"
                         >
                           <MessageSquare className="h-4 w-4" />
                         </Button>
@@ -363,17 +364,17 @@ function RecordingPage() {
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button
-                          variant="ghost"
-                          size="sm"
                           className="h-8 w-8 p-0"
+                          size="sm"
+                          variant="ghost"
                         >
                           <MoreVertical className="h-4 w-4" />
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end" className="w-48">
                         <DropdownMenuItem
-                          onClick={() => handleDeleteTranscript(item.id)}
                           className="text-red-600 focus:text-red-600"
+                          onClick={() => handleDeleteTranscript(item.id)}
                         >
                           <Trash2 className="mr-2 h-4 w-4" />
                           Delete transcription
@@ -390,17 +391,17 @@ function RecordingPage() {
           {(search.debouncedSearchTerm || allTranscriptions.length > 5) && (
             <div className="flex justify-center py-2">
               <Link
-                to="/transcriptions"
+                className="text-muted-foreground text-sm transition-colors hover:text-foreground"
                 search={
                   search.debouncedSearchTerm
                     ? { search: search.debouncedSearchTerm }
                     : {}
                 }
-                className="text-muted-foreground hover:text-foreground text-sm transition-colors"
+                to="/transcriptions"
               >
                 {search.debouncedSearchTerm
-                  ? "View all search results in transcriptions →"
-                  : "View all transcriptions →"}
+                  ? 'View all search results in transcriptions →'
+                  : 'View all transcriptions →'}
               </Link>
             </div>
           )}

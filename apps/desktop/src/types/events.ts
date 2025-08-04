@@ -4,18 +4,18 @@
  */
 
 export interface TauriEventMap {
-  "transcription-progress": TranscriptionProgressEvent;
-  "recording-state-changed": RecordingStateChangedEvent;
-  "recording-error": RecordingErrorEvent;
-  "model-download-progress": ModelDownloadProgressEvent;
-  "model-download-complete": ModelDownloadCompleteEvent;
-  "model-delete-complete": ModelDeleteCompleteEvent;
-  "audio-level": AudioLevelEvent;
-  "microphone-test-level": AudioLevelEvent;
-  "microphone-test-started": void;
-  "microphone-test-stopped": void;
-  "microphone-test-error": string;
-  "gecko-bar-notification": GeckoBarNotificationEvent;
+  'transcription-progress': TranscriptionProgressEvent;
+  'recording-state-changed': RecordingStateChangedEvent;
+  'recording-error': RecordingErrorEvent;
+  'model-download-progress': ModelDownloadProgressEvent;
+  'model-download-complete': ModelDownloadCompleteEvent;
+  'model-delete-complete': ModelDeleteCompleteEvent;
+  'audio-level': AudioLevelEvent;
+  'microphone-test-level': AudioLevelEvent;
+  'microphone-test-started': void;
+  'microphone-test-stopped': void;
+  'microphone-test-error': string;
+  'gecko-bar-notification': GeckoBarNotificationEvent;
 }
 
 // Transcription Events
@@ -29,10 +29,10 @@ export interface TranscriptionProgressEvent {
 
 // Backend sends raw string, not an object
 export type RecordingStateChangedEvent =
-  | "idle"
-  | "recording"
-  | "processing"
-  | "error";
+  | 'idle'
+  | 'recording'
+  | 'processing'
+  | 'error';
 
 // Backend sends raw string, not an object
 export type RecordingErrorEvent = string;
@@ -41,7 +41,7 @@ export type RecordingErrorEvent = string;
 export interface GeckoBarNotificationEvent {
   message: string;
   duration?: number;
-  priority?: "high" | "normal";
+  priority?: 'high' | 'normal';
 }
 
 export interface ModelDownloadProgressEvent {
@@ -76,7 +76,7 @@ export interface AudioData {
 /**
  * Sound variant for notification sounds
  */
-export type SoundVariant = "Start" | "End";
+export type SoundVariant = 'Start' | 'End';
 
 /**
  * Audio level event for real-time audio monitoring with advanced analysis

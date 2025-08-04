@@ -1,10 +1,10 @@
-import type { StripePlan, Subscription } from "@better-auth/stripe";
-import type { Stripe } from "stripe";
+import { sendWelcomeProEmail } from '@acme/email';
+import { log } from '@acme/observability';
+import type { StripePlan, Subscription } from '@better-auth/stripe';
+import type { Stripe } from 'stripe';
 
-import { sendWelcomeProEmail } from "@acme/email";
-
-import { paymentEnv } from "../../env";
-import { getUserForEmail } from "./user-lookup";
+import { paymentEnv } from '../../env';
+import { getUserForEmail } from './user-lookup';
 
 interface SubscriptionCompleteParams {
   event: Stripe.Event;
@@ -19,7 +19,7 @@ export const onSubscriptionComplete = async ({
   stripeSubscription,
   plan,
 }: SubscriptionCompleteParams) => {
-  console.log(`[Subscription] New subscription created:`, {
+  log.info('[Subscription] New subscription created:', {
     subscriptionId: subscription.id,
     userId: subscription.referenceId, // This is the user ID in BetterAuth
     plan: plan.name,
@@ -36,16 +36,16 @@ export const onSubscriptionComplete = async ({
         user,
         planName: plan.name,
       });
-      console.log(
-        `[Subscription] Welcome email sent to user ${subscription.referenceId} for plan ${plan.name}`,
+      log.info(
+        `[Subscription] Welcome email sent to user ${subscription.referenceId} for plan ${plan.name}`
       );
     } else {
-      console.error(
-        `[Subscription] Could not find user ${subscription.referenceId} to send welcome email`,
+      log.error(
+        `[Subscription] Could not find user ${subscription.referenceId} to send welcome email`
       );
     }
   } catch (error) {
-    console.error(`[Subscription] Error sending welcome email:`, error);
+    log.error('[Subscription] Error sending welcome email:', error);
   }
 
   // No special handling needed - our usage service already checks

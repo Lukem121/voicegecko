@@ -1,9 +1,10 @@
-import type { ShortcutCategory } from "~/lib/shortcuts/types";
-import { migrationManager } from "~/lib/settings/migrations/manager";
-import { shortcutManager } from "~/lib/shortcuts/manager";
-import { useShortcutStore } from "~/lib/stores/shortcut-store";
-import { useConnectivityStore } from "./connectivity.store";
-import { useSettingsStore } from "./settings.store";
+import { log } from '@acme/observability';
+import { migrationManager } from '~/lib/settings/migrations/manager';
+import { shortcutManager } from '~/lib/shortcuts/manager';
+import type { ShortcutCategory } from '~/lib/shortcuts/types';
+import { useShortcutStore } from '~/lib/stores/shortcut-store';
+import { useConnectivityStore } from './connectivity.store';
+import { useSettingsStore } from './settings.store';
 
 export interface StoreInitializer {
   name: string;
@@ -31,37 +32,37 @@ class StoreRegistry {
 
   async initializeAll(): Promise<void> {
     if (this.initialized) {
-      console.warn("[StoreRegistry] Already initialized, skipping...");
+      log.warn('[StoreRegistry] Already initialized, skipping...');
       return;
     }
 
-    console.log("[StoreRegistry] Initializing all stores...");
+    log.info('[StoreRegistry] Initializing all stores...');
 
     // Run migrations first
-    console.log("[StoreRegistry] Running settings migration...");
+    log.info('[StoreRegistry] Running settings migration...');
     try {
       const migrationResult = await migrationManager.migrateSettings();
 
       if (migrationResult.success) {
         if (migrationResult.fromVersion !== migrationResult.toVersion) {
-          console.log(
-            `[StoreRegistry] ✅ Migrated settings from v${migrationResult.fromVersion} to v${migrationResult.toVersion}`,
+          log.info(
+            `[StoreRegistry] ✅ Migrated settings from v${migrationResult.fromVersion} to v${migrationResult.toVersion}`
           );
         } else {
-          console.log(
-            `[StoreRegistry] ✅ Settings already up to date (v${migrationResult.fromVersion})`,
+          log.info(
+            `[StoreRegistry] ✅ Settings already up to date (v${migrationResult.fromVersion})`
           );
         }
       } else {
-        console.error(
-          "[StoreRegistry] ❌ Failed to migrate settings:",
-          migrationResult.error,
+        log.error(
+          '[StoreRegistry] ❌ Failed to migrate settings:',
+          migrationResult.error
         );
         // You might want to handle migration failures differently
         // For now, we'll continue with initialization
       }
     } catch (error) {
-      console.error("[StoreRegistry] Migration failed:", error);
+      log.error('[StoreRegistry] Migration failed:', error);
       // Decide if you want to fail fast or continue
       // throw error;
     }
@@ -69,20 +70,20 @@ class StoreRegistry {
     // Then initialize stores
     for (const store of this.stores) {
       try {
-        console.log(`[StoreRegistry] Initializing ${store.name}...`);
+        log.info(`[StoreRegistry] Initializing ${store.name}...`);
         await store.initialize();
-        console.log(`[StoreRegistry] ✅ ${store.name} initialized`);
+        log.info(`[StoreRegistry] ✅ ${store.name} initialized`);
       } catch (error) {
-        console.error(
+        log.error(
           `[StoreRegistry] ❌ Failed to initialize ${store.name}:`,
-          error,
+          error
         );
         throw error; // Fail fast on store initialization errors
       }
     }
 
     this.initialized = true;
-    console.log("[StoreRegistry] ✅ All stores initialized");
+    log.info('[StoreRegistry] ✅ All stores initialized');
   }
 
   isInitialized(): boolean {
@@ -94,7 +95,7 @@ export const storeRegistry = StoreRegistry.getInstance();
 
 // Register stores with their initialization logic
 storeRegistry.register({
-  name: "Settings Store",
+  name: 'Settings Store',
   priority: 1, // Initialize first
   initialize: async () => {
     await useSettingsStore.getState().initialize();
@@ -102,22 +103,22 @@ storeRegistry.register({
 });
 
 storeRegistry.register({
-  name: "Connectivity Store",
+  name: 'Connectivity Store',
   priority: 2, // Initialize after settings, before shortcuts
   initialize: async () => {
     // Activate connectivity monitoring for transcription blocking
-    console.log("[ConnectivityStore] Activating connectivity monitoring...");
+    log.info('[ConnectivityStore] Activating connectivity monitoring...');
     useConnectivityStore.getState().activateMonitoring();
   },
 });
 
 storeRegistry.register({
-  name: "Shortcuts",
+  name: 'Shortcuts',
   priority: 3, // Initialize after connectivity
   initialize: async () => {
     // Load shortcuts from disk into the store
     const store = shortcutManager.getStore();
-    const savedShortcuts = await store.get<ShortcutCategory[]>("shortcuts");
+    const savedShortcuts = await store.get<ShortcutCategory[]>('shortcuts');
     if (savedShortcuts) {
       useShortcutStore.getState().setShortcuts(savedShortcuts);
     }

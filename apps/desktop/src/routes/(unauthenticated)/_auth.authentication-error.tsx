@@ -1,18 +1,17 @@
-import { createFileRoute } from "@tanstack/react-router";
-
-import LogoFull from "@acme/ui/components/logos/logo-full";
-import { Button } from "@acme/ui/components/ui/button";
+import LogoFull from '@acme/ui/components/logos/logo-full';
+import { Button } from '@acme/ui/components/ui/button';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
-} from "@acme/ui/components/ui/card";
+} from '@acme/ui/components/ui/card';
+import { createFileRoute } from '@tanstack/react-router';
 
-import { getClientAuthErrorMessage } from "~/utils/client-error-messages";
+import { getClientAuthErrorMessage } from '~/utils/client-error-messages';
 
 export const Route = createFileRoute(
-  "/(unauthenticated)/_auth/authentication-error",
+  '/(unauthenticated)/_auth/authentication-error'
 )({
   validateSearch: (search: Record<string, unknown>) => {
     return {
@@ -27,14 +26,14 @@ function AuthenticationError() {
   const error = search.error;
 
   const message = error
-    ? getClientAuthErrorMessage(error, "en")
-    : "An authentication error occurred.";
+    ? getClientAuthErrorMessage(error, 'en')
+    : 'An authentication error occurred.';
 
   return (
     <main className="container mx-auto max-w-md px-4 py-8">
       <Card className="shadow-lg">
         <CardHeader className="space-y-3">
-          <LogoFull className="mx-auto h-10" aria-label="VoiceGecko Logo" />
+          <LogoFull aria-label="VoiceGecko Logo" className="mx-auto h-10" />
           <CardDescription className="text-center">
             Authentication Error
           </CardDescription>

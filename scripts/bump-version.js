@@ -1,8 +1,8 @@
 #!/usr/bin/env node
 
-const fs = require("fs");
-const path = require("path");
-const readline = require("readline");
+const fs = require('fs');
+const path = require('path');
+const readline = require('readline');
 
 /**
  * Script to automatically bump version across all project files
@@ -11,37 +11,37 @@ const readline = require("readline");
 
 const VERSION_FILES = [
   {
-    name: "Desktop package.json",
-    file: "apps/desktop/package.json",
+    name: 'Desktop package.json',
+    file: 'apps/desktop/package.json',
     updater: (content, newVersion) => {
       const pkg = JSON.parse(content);
       pkg.version = newVersion;
-      return JSON.stringify(pkg, null, 2) + "\n";
+      return JSON.stringify(pkg, null, 2) + '\n';
     },
   },
   {
-    name: "Web package.json",
-    file: "apps/web/package.json",
+    name: 'Web package.json',
+    file: 'apps/web/package.json',
     updater: (content, newVersion) => {
       const pkg = JSON.parse(content);
       pkg.version = newVersion;
-      return JSON.stringify(pkg, null, 2) + "\n";
+      return JSON.stringify(pkg, null, 2) + '\n';
     },
   },
   {
-    name: "Tauri Cargo.toml",
-    file: "apps/desktop/src-tauri/Cargo.toml",
+    name: 'Tauri Cargo.toml',
+    file: 'apps/desktop/src-tauri/Cargo.toml',
     updater: (content, newVersion) => {
       return content.replace(/^version = ".+"$/m, `version = "${newVersion}"`);
     },
   },
   {
-    name: "Tauri config",
-    file: "apps/desktop/src-tauri/tauri.conf.json",
+    name: 'Tauri config',
+    file: 'apps/desktop/src-tauri/tauri.conf.json',
     updater: (content, newVersion) => {
       const config = JSON.parse(content);
       config.version = newVersion;
-      return JSON.stringify(config, null, 2) + "\n";
+      return JSON.stringify(config, null, 2) + '\n';
     },
   },
 ];
@@ -54,17 +54,17 @@ function isValidSemver(version) {
 
 function getCurrentVersion() {
   try {
-    const pkgPath = path.join(process.cwd(), "apps/desktop/package.json");
-    const content = fs.readFileSync(pkgPath, "utf8");
+    const pkgPath = path.join(process.cwd(), 'apps/desktop/package.json');
+    const content = fs.readFileSync(pkgPath, 'utf8');
     return JSON.parse(content).version;
   } catch (error) {
-    console.error("❌ Could not read current version:", error.message);
+    console.error('❌ Could not read current version:', error.message);
     process.exit(1);
   }
 }
 
 function suggestNextVersions(current) {
-  const [major, minor, patch] = current.split(".").map(Number);
+  const [major, minor, patch] = current.split('.').map(Number);
   return {
     patch: `${major}.${minor}.${patch + 1}`,
     minor: `${major}.${minor + 1}.0`,
@@ -81,10 +81,10 @@ function bumpVersion(newVersion) {
   for (const versionFile of VERSION_FILES) {
     try {
       const filePath = path.join(process.cwd(), versionFile.file);
-      const originalContent = fs.readFileSync(filePath, "utf8");
+      const originalContent = fs.readFileSync(filePath, 'utf8');
       const updatedContent = versionFile.updater(originalContent, newVersion);
 
-      fs.writeFileSync(filePath, updatedContent, "utf8");
+      fs.writeFileSync(filePath, updatedContent, 'utf8');
       changes.push({
         file: versionFile.file,
         name: versionFile.name,
@@ -107,7 +107,7 @@ function bumpVersion(newVersion) {
   const successful = changes.filter((c) => c.success);
   const failed = changes.filter((c) => !c.success);
 
-  console.log(`\n📊 Summary:`);
+  console.log('\n📊 Summary:');
   console.log(`✅ Successfully updated: ${successful.length} files`);
 
   if (failed.length > 0) {
@@ -117,11 +117,11 @@ function bumpVersion(newVersion) {
   }
 
   console.log(`\n🎉 Version successfully bumped to ${newVersion}!`);
-  console.log(`\n📝 Next steps:`);
-  console.log(`   1. Review changes: git diff`);
-  console.log(`   2. Verify: pnpm version:check`);
+  console.log('\n📝 Next steps:');
+  console.log('   1. Review changes: git diff');
+  console.log('   2. Verify: pnpm version:check');
   console.log(
-    `   3. Commit: git add . && git commit -m "chore: bump version to ${newVersion}"`,
+    `   3. Commit: git add . && git commit -m "chore: bump version to ${newVersion}"`
   );
 }
 
@@ -139,30 +139,30 @@ async function promptForVersion() {
   const suggestions = suggestNextVersions(currentVersion);
 
   console.log(`📦 Current version: ${currentVersion}\n`);
-  console.log(`💡 Version options:`);
+  console.log('💡 Version options:');
   console.log(`   1. Patch (${suggestions.patch}) - Bug fixes`);
   console.log(`   2. Minor (${suggestions.minor}) - New features`);
   console.log(`   3. Major (${suggestions.major}) - Breaking changes`);
-  console.log(`   4. Custom version`);
+  console.log('   4. Custom version');
 
-  const choice = await question("\nSelect version type (1-4): ");
+  const choice = await question('\nSelect version type (1-4): ');
 
   let newVersion;
   switch (choice) {
-    case "1":
+    case '1':
       newVersion = suggestions.patch;
       break;
-    case "2":
+    case '2':
       newVersion = suggestions.minor;
       break;
-    case "3":
+    case '3':
       newVersion = suggestions.major;
       break;
-    case "4":
-      newVersion = await question("Enter custom version: ");
+    case '4':
+      newVersion = await question('Enter custom version: ');
       break;
     default:
-      console.log("❌ Invalid choice");
+      console.log('❌ Invalid choice');
       rl.close();
       process.exit(1);
   }
@@ -181,7 +181,7 @@ async function main() {
 
   if (!isValidSemver(newVersion)) {
     console.error(`❌ Invalid semantic version: ${newVersion}`);
-    console.error(`   Expected format: X.Y.Z (e.g., 1.2.3)`);
+    console.error('   Expected format: X.Y.Z (e.g., 1.2.3)');
     rl.close();
     process.exit(1);
   }
@@ -197,9 +197,9 @@ async function main() {
   console.log(`🎯 Target version: ${newVersion}`);
 
   // Confirmation prompt
-  const confirm = await question("\nProceed with version bump? (y/N): ");
-  if (confirm.toLowerCase() !== "y") {
-    console.log("❌ Version bump cancelled");
+  const confirm = await question('\nProceed with version bump? (y/N): ');
+  if (confirm.toLowerCase() !== 'y') {
+    console.log('❌ Version bump cancelled');
     rl.close();
     process.exit(0);
   }
@@ -209,7 +209,7 @@ async function main() {
 }
 
 main().catch((error) => {
-  console.error("❌ Version bump failed:", error);
+  console.error('❌ Version bump failed:', error);
   rl.close();
   process.exit(1);
 });

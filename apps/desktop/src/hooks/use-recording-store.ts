@@ -1,11 +1,11 @@
-import { create } from "zustand";
+import { create } from 'zustand';
 
-export type NotificationSound = "beep" | "chime" | "tone";
+export type NotificationSound = 'beep' | 'chime' | 'tone';
 export type NotificationTiming =
-  | "start_completion"
-  | "start_stop"
-  | "completion_only"
-  | "disabled";
+  | 'start_completion'
+  | 'start_stop'
+  | 'completion_only'
+  | 'disabled';
 
 export interface AudioDevice {
   name: string;
@@ -33,8 +33,8 @@ export const useRecordingStore = create<RecordingSettingsState>((set) => ({
   // Audio settings
   devices: [],
   selectedDevice: null,
-  selectedSound: "chime",
-  notificationTiming: "start_completion",
+  selectedSound: 'chime',
+  notificationTiming: 'start_completion',
   volume: 1.0,
   muteSystemAudio: true, // Default to true as per requirement
 

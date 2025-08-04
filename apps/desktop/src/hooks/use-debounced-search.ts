@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState } from 'react';
 
 export interface UseSearchParams {
   initialValue?: string;
@@ -6,7 +6,7 @@ export interface UseSearchParams {
 }
 
 export const useDebouncedSearch = ({
-  initialValue = "",
+  initialValue = '',
   delay = 300,
 }: UseSearchParams = {}) => {
   const [searchTerm, setSearchTerm] = useState(initialValue);
@@ -23,8 +23,8 @@ export const useDebouncedSearch = ({
   }, [searchTerm, delay]);
 
   const clearSearch = () => {
-    setSearchTerm("");
-    setDebouncedSearchTerm("");
+    setSearchTerm('');
+    setDebouncedSearchTerm('');
   };
 
   return {

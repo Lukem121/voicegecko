@@ -1,9 +1,8 @@
-import { NextResponse } from "next/server";
-import { Octokit } from "@octokit/rest";
-
-import type { GitHubRelease, TauriTarget } from "~/types/updater";
-import { env } from "~/env";
-import { PLATFORM_FILE_EXTENSIONS } from "~/types/updater";
+import { Octokit } from '@octokit/rest';
+import { NextResponse } from 'next/server';
+import { env } from '~/env';
+import type { GitHubRelease, TauriTarget } from '~/types/updater';
+import { PLATFORM_FILE_EXTENSIONS } from '~/types/updater';
 
 // Environment variables
 const GITHUB_TOKEN = env.GITHUB_TOKEN;
@@ -13,7 +12,7 @@ const GITHUB_REPO = env.GITHUB_REPO;
 // Initialize GitHub client
 const octokit = new Octokit({
   auth: GITHUB_TOKEN,
-  userAgent: "VoiceGecko-Updater/1.0",
+  userAgent: 'VoiceGecko-Updater/1.0',
 });
 
 /**
@@ -25,17 +24,17 @@ const octokit = new Octokit({
 export async function GET() {
   try {
     // Validate environment configuration
-    if (!GITHUB_TOKEN || !GITHUB_OWNER || !GITHUB_REPO) {
+    if (!(GITHUB_TOKEN && GITHUB_OWNER && GITHUB_REPO)) {
       return NextResponse.json(
         {
           success: false,
           error: {
-            code: "CONFIG_ERROR",
+            code: 'CONFIG_ERROR',
             message:
-              "Missing required environment variables: GITHUB_TOKEN, GITHUB_OWNER, GITHUB_REPO",
+              'Missing required environment variables: GITHUB_TOKEN, GITHUB_OWNER, GITHUB_REPO',
           },
         },
-        { status: 500 },
+        { status: 500 }
       );
     }
 
@@ -48,7 +47,7 @@ export async function GET() {
         data: {
           repository: `${GITHUB_OWNER}/${GITHUB_REPO}`,
           releases: [],
-          message: "No releases found in repository",
+          message: 'No releases found in repository',
         },
       });
     }
@@ -64,13 +63,13 @@ export async function GET() {
 
         // Find binary assets for this platform
         const binaryAssets = release.assets.filter((asset) =>
-          supportedExtensions.some((ext) => asset.name.endsWith(ext)),
+          supportedExtensions.some((ext) => asset.name.endsWith(ext))
         );
 
         // Check for signature files
         const assetsWithSignatures = binaryAssets.map((binaryAsset) => {
           const signatureAsset = release.assets.find(
-            (asset) => asset.name === `${binaryAsset.name}.sig`,
+            (asset) => asset.name === `${binaryAsset.name}.sig`
           );
 
           return {
@@ -86,7 +85,7 @@ export async function GET() {
           compatible: binaryAssets.length > 0,
           assets: assetsWithSignatures,
           missing_signatures: assetsWithSignatures.filter(
-            (asset) => !asset.has_signature,
+            (asset) => !asset.has_signature
           ).length,
         };
       });
@@ -115,17 +114,17 @@ export async function GET() {
       platforms_summary: Object.keys(PLATFORM_FILE_EXTENSIONS).reduce(
         (acc, platform) => {
           const compatibleReleases = processedReleases.filter(
-            (release) => release.platforms[platform].compatible,
+            (release) => release.platforms[platform].compatible
           ).length;
           acc[platform] = {
             compatible_releases: compatibleReleases,
             percentage: Math.round(
-              (compatibleReleases / processedReleases.length) * 100,
+              (compatibleReleases / processedReleases.length) * 100
             ),
           };
           return acc;
         },
-        {} as Record<string, unknown>,
+        {} as Record<string, unknown>
       ),
     };
 
@@ -138,17 +137,17 @@ export async function GET() {
       },
     });
   } catch (error) {
-    if (error instanceof Error && error.message.includes("rate limit")) {
+    if (error instanceof Error && error.message.includes('rate limit')) {
       return NextResponse.json(
         {
           success: false,
           error: {
-            code: "GITHUB_API_ERROR",
-            message: "GitHub API rate limit exceeded. Please try again later.",
+            code: 'GITHUB_API_ERROR',
+            message: 'GitHub API rate limit exceeded. Please try again later.',
             details: { retryAfter: 3600 },
           },
         },
-        { status: 429 },
+        { status: 429 }
       );
     }
 
@@ -156,12 +155,12 @@ export async function GET() {
       {
         success: false,
         error: {
-          code: "GITHUB_API_ERROR",
+          code: 'GITHUB_API_ERROR',
           message:
-            error instanceof Error ? error.message : "Unknown error occurred",
+            error instanceof Error ? error.message : 'Unknown error occurred',
         },
       },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }
@@ -182,7 +181,7 @@ async function fetchAllReleases(): Promise<GitHubRelease[] | null> {
       return null;
     }
     throw new Error(
-      `GitHub API error: ${error.status} ${error.message || "Unknown error"}`,
+      `GitHub API error: ${error.status} ${error.message || 'Unknown error'}`
     );
   }
 }

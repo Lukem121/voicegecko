@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect } from 'react';
 
 const DEFAULT_POLL_INTERVAL = 5000;
 
@@ -8,7 +8,7 @@ const DEFAULT_POLL_INTERVAL = 5000;
  */
 export const usePolling = (
   fn: () => void,
-  interval: number = DEFAULT_POLL_INTERVAL,
+  interval: number = DEFAULT_POLL_INTERVAL
 ) => {
   useEffect(() => {
     const intervalId = setInterval(() => {

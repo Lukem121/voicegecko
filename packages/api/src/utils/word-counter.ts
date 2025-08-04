@@ -4,7 +4,7 @@
  * @returns The number of words
  */
 export function countWords(text: string): number {
-  if (!text || typeof text !== "string") {
+  if (!text || typeof text !== 'string') {
     return 0;
   }
 

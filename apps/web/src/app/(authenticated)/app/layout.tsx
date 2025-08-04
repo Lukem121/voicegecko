@@ -1,9 +1,9 @@
-"use client";
+'use client';
 
-import { SidebarInset, SidebarProvider } from "@acme/ui/components/ui/sidebar";
+import { SidebarInset, SidebarProvider } from '@acme/ui/components/ui/sidebar';
 
-import { UserMenu } from "../_components/user-menu";
-import AppSidebar from "../_components/web-sidebar";
+import { UserMenu } from '../_components/user-menu';
+import AppSidebar from '../_components/web-sidebar';
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (

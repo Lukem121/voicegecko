@@ -1,5 +1,6 @@
-import { useCallback, useEffect, useState } from "react";
-import { invoke } from "@tauri-apps/api/core";
+import { log } from '@acme/observability';
+import { invoke } from '@tauri-apps/api/core';
+import { useCallback, useEffect, useState } from 'react';
 
 interface GeckoBarConfig {
   enabled: boolean;
@@ -17,7 +18,7 @@ export function useGeckoBarSettings() {
     async function loadSettings() {
       try {
         const geckoBarConfig = await invoke<GeckoBarConfig>(
-          "get_gecko_bar_config",
+          'get_gecko_bar_config'
         );
         // Handle migration from old config that might not have hideOnFullscreen
         const migratedConfig = {
@@ -26,13 +27,13 @@ export function useGeckoBarSettings() {
         };
         setConfig(migratedConfig);
       } catch (error) {
-        console.error("Failed to load gecko bar settings:", error);
+        log.error('Failed to load gecko bar settings:', error);
       } finally {
         setIsLoading(false);
       }
     }
 
-    void loadSettings();
+    loadSettings();
   }, []);
 
   const setEnabled = useCallback(
@@ -41,21 +42,21 @@ export function useGeckoBarSettings() {
       setConfig(newConfig);
 
       try {
-        await invoke("set_gecko_bar_config", { config: newConfig });
+        await invoke('set_gecko_bar_config', { config: newConfig });
 
         // Show or hide the gecko bar based on the setting
         if (enabled) {
-          await invoke("show_gecko_bar");
+          await invoke('show_gecko_bar');
         } else {
-          await invoke("hide_gecko_bar");
+          await invoke('hide_gecko_bar');
         }
       } catch (error) {
-        console.error("Failed to update gecko bar settings:", error);
+        log.error('Failed to update gecko bar settings:', error);
         // Revert the state if the update failed
         setConfig(config);
       }
     },
-    [config],
+    [config]
   );
 
   const setHideOnFullscreen = useCallback(
@@ -64,14 +65,14 @@ export function useGeckoBarSettings() {
       setConfig(newConfig);
 
       try {
-        await invoke("set_gecko_bar_config", { config: newConfig });
+        await invoke('set_gecko_bar_config', { config: newConfig });
       } catch (error) {
-        console.error("Failed to update gecko bar fullscreen setting:", error);
+        log.error('Failed to update gecko bar fullscreen setting:', error);
         // Revert the state if the update failed
         setConfig(config);
       }
     },
-    [config],
+    [config]
   );
 
   return {

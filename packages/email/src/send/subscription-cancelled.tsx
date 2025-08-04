@@ -1,5 +1,5 @@
-import { sendEmail } from "../lib/send-email";
-import { SubscriptionCancelledTemplate } from "../templates/subscription-cancelled";
+import { sendEmail } from '../lib/send-email';
+import { SubscriptionCancelledTemplate } from '../templates/subscription-cancelled';
 
 type UserWithEmail = {
   email: string;
@@ -20,19 +20,19 @@ export const sendSubscriptionCancelledEmail = async ({
   await sendEmail({
     to: {
       email: user.email,
-      name: user.name || "",
+      name: user.name || '',
     },
     from: {
-      email: "no-reply@voicegecko.io",
-      name: "VoiceGecko",
+      email: 'no-reply@voicegecko.io',
+      name: 'VoiceGecko',
     },
-    categories: ["subscription_cancelled"],
+    categories: ['subscription_cancelled'],
     subject: `${planName} subscription has been cancelled`,
     react: (
       <SubscriptionCancelledTemplate
+        accessUntilDate={accessUntilDate}
         name={user.name}
         planName={planName}
-        accessUntilDate={accessUntilDate}
         reactivateUrl={reactivateUrl}
       />
     ),

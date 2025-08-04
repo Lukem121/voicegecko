@@ -1,5 +1,3 @@
-import React from "react";
-
 import {
   Stepper,
   StepperIndicator,
@@ -7,9 +5,10 @@ import {
   StepperSeparator,
   StepperTitle,
   StepperTrigger,
-} from "@acme/ui/components/stepper";
+} from '@acme/ui/components/stepper';
+import React from 'react';
 
-import { useOnboarding } from "./onboarding-provider";
+import { useOnboarding } from './onboarding-provider';
 
 export function OnboardingStepper() {
   const { steps, currentStep, state, goToStep, getStepIndex } = useOnboarding();
@@ -35,11 +34,11 @@ export function OnboardingStepper() {
 
             return (
               <StepperItem
-                key={step.id}
-                step={index + 1}
-                completed={isCompleted}
-                disabled={false} // Allow clicking any step
                 className="not-last:flex-1 max-md:items-start"
+                completed={isCompleted}
+                disabled={false}
+                key={step.id} // Allow clicking any step
+                step={index + 1}
               >
                 <StepperTrigger
                   className=""
@@ -48,7 +47,7 @@ export function OnboardingStepper() {
                 >
                   <StepperIndicator />
                   <div className="text-center md:text-left">
-                    <StepperTitle className={isActive ? "text-primary" : ""}>
+                    <StepperTitle className={isActive ? 'text-primary' : ''}>
                       {step.title}
                     </StepperTitle>
                   </div>

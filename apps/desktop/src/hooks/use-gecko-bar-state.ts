@@ -1,18 +1,24 @@
-import { useCallback, useEffect, useState } from "react";
-
+import { useCallback, useEffect, useState } from 'react';
+import { TIMINGS } from '~/components/gecko-bar/gecko-bar-app.constants';
 import type {
-  GeckoBarEventHandlers,
+import
+{
+  log;
+}
+from;
+('@acme/observability');
+GeckoBarEventHandlers,
   UseGeckoBarStateReturn,
-} from "~/components/gecko-bar/gecko-bar-app.types";
-import { TIMINGS } from "~/components/gecko-bar/gecko-bar-app.constants";
-import { isSafeToCollapse } from "~/components/gecko-bar/gecko-bar-app.utils";
-import { initializeGeckoBarEvents } from "~/lib/gecko-bar-events";
-import { initializeTauriEvents } from "~/lib/tauri-events";
-import { recordingService } from "~/services/recording.service";
-import { useEventStore } from "~/stores/event.store";
-import { useAudioProcessor } from "./use-audio-processor";
-import { useGeckoBarDisplayState } from "./use-gecko-bar-display-state";
-import { useTimeoutManager } from "./use-timeout-manager";
+} from '~/components/gecko-bar/gecko-bar-app.types'
+
+import { isSafeToCollapse } from '~/components/gecko-bar/gecko-bar-app.utils';
+import { initializeGeckoBarEvents } from '~/lib/gecko-bar-events';
+import { initializeTauriEvents } from '~/lib/tauri-events';
+import { recordingService } from '~/services/recording.service';
+import { useEventStore } from '~/stores/event.store';
+import { useAudioProcessor } from './use-audio-processor';
+import { useGeckoBarDisplayState } from './use-gecko-bar-display-state';
+import { useTimeoutManager } from './use-timeout-manager';
 
 export function useGeckoBarState(): UseGeckoBarStateReturn {
   // Basic UI state (only what's not managed by display state machine)
@@ -54,14 +60,14 @@ export function useGeckoBarState(): UseGeckoBarStateReturn {
     if (isRecording) {
       setWasRecentlyRecording(true);
     } else if (
-      recordingStatus === "idle" &&
+      recordingStatus === 'idle' &&
       !isTranscribing &&
       !isTransitioning
     ) {
       timeoutManager.setTimeout(
-        "cleanup",
+        'cleanup',
         () => setWasRecentlyRecording(false),
-        TIMINGS.RECENT_RECORDING_GRACE_PERIOD,
+        TIMINGS.RECENT_RECORDING_GRACE_PERIOD
       );
     }
   }, [
@@ -79,9 +85,9 @@ export function useGeckoBarState(): UseGeckoBarStateReturn {
         setIsTransitioning(false);
       } else {
         timeoutManager.setTimeout(
-          "expand", // Use valid timeout key
+          'expand', // Use valid timeout key
           () => setIsTransitioning(false),
-          TIMINGS.TRANSITION_TIMEOUT,
+          TIMINGS.TRANSITION_TIMEOUT
         );
       }
     }
@@ -90,20 +96,17 @@ export function useGeckoBarState(): UseGeckoBarStateReturn {
   // Initialize event systems for gecko bar window
   useEffect(() => {
     initializeTauriEvents({ isGeckoBar: true }).catch((error) => {
-      console.error(
-        "Failed to initialize main Tauri events in gecko bar:",
-        error,
-      );
+      log.error('Failed to initialize main Tauri events in gecko bar:', error);
     });
 
     initializeGeckoBarEvents().catch((error) => {
-      console.error("Failed to initialize Gecko Bar events:", error);
+      log.error('Failed to initialize Gecko Bar events:', error);
     });
 
     // Initialize stores for gecko bar window
-    import("~/stores/store-registry").then(({ storeRegistry }) => {
+    import('~/stores/store-registry').then(({ storeRegistry }) => {
       storeRegistry.initializeAll().catch((error) => {
-        console.error("[GeckoBar] Failed to initialize stores:", error);
+        log.error('[GeckoBar] Failed to initialize stores:', error);
       });
     });
   }, []);
@@ -112,21 +115,21 @@ export function useGeckoBarState(): UseGeckoBarStateReturn {
   const handleMouseEnter = useCallback(() => {
     setIsHovered(true);
     // Clear any pending timeouts
-    timeoutManager.clearTimeout("collapse");
-    timeoutManager.clearTimeout("expand");
+    timeoutManager.clearTimeout('collapse');
+    timeoutManager.clearTimeout('expand');
   }, [timeoutManager]);
 
   const handleMouseLeave = useCallback(() => {
     setIsHovered(false);
     // Clear expand timeout
-    timeoutManager.clearTimeout("expand");
+    timeoutManager.clearTimeout('expand');
   }, [timeoutManager]);
 
   // Click handler for recording
   const handleClick = useCallback(() => {
     const eventState = useEventStore.getState();
 
-    if (eventState.recordingStatus === "idle" && !eventState.isRecording()) {
+    if (eventState.recordingStatus === 'idle' && !eventState.isRecording()) {
       recordingService
         .toggleRecording({ isKeyboardShortcut: false })
         .catch(console.error);
@@ -144,12 +147,12 @@ export function useGeckoBarState(): UseGeckoBarStateReturn {
       try {
         await recordingService.cancelRecording();
       } catch (error) {
-        console.error("Failed to cancel recording:", error);
+        log.error('Failed to cancel recording:', error);
       } finally {
         setIsLoading(false);
       }
     },
-    [isLoading, isRecording],
+    [isLoading, isRecording]
   );
 
   // Finish button handler
@@ -163,13 +166,13 @@ export function useGeckoBarState(): UseGeckoBarStateReturn {
       try {
         await recordingService.toggleRecording();
       } catch (error) {
-        console.error("Failed to finish recording:", error);
+        log.error('Failed to finish recording:', error);
         setIsTransitioning(false);
       } finally {
         setIsLoading(false);
       }
     },
-    [isLoading, isRecording],
+    [isLoading, isRecording]
   );
 
   const handlers: GeckoBarEventHandlers = {

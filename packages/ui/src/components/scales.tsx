@@ -1,29 +1,29 @@
-import { cn } from "../lib/utils";
+import { cn } from '../lib/utils';
 
 export default function Scales({ className }: { className?: string }) {
   return (
     <svg xmlns="http://www.w3.org/2000/svg">
       <defs>
         <pattern
+          className={cn(className)}
           id="a"
           patternTransform="rotate(55)scale(1)"
           patternUnits="userSpaceOnUse"
-          className={cn(className)}
         >
-          <rect width="100%" height="100%" fill="#262428" />
+          <rect fill="#262428" height="100%" width="100%" />
           <path
+            d="M-10-10A10 10 0 0 0-20 0a10 10 0 0 0 10 10A10 10 0 0 1 0 0a10 10 0 0 0-10-10zm20 0A10 10 0 0 0 0 0a10 10 0 0 1 10 10A10 10 0 0 1 20 0a10 10 0 0 0-10-10zm20 0A10 10 0 0 0 20 0a10 10 0 0 1 10 10A10 10 0 0 1 40 0a10 10 0 0 0-10-10zm-40 20a10 10 0 0 0-10 10 10 10 0 0 0 10 10A10 10 0 0 1 0 20a10 10 0 0 0-10-10zm20 0A10 10 0 0 0 0 20a10 10 0 0 1 10 10 10 10 0 0 1 10-10 10 10 0 0 0-10-10zm20 0a10 10 0 0 0-10 10 10 10 0 0 1 10 10 10 10 0 0 1 10-10 10 10 0 0 0-10-10z"
             fill="none"
             stroke="#6d9c49"
             stroke-width=".5"
-            d="M-10-10A10 10 0 0 0-20 0a10 10 0 0 0 10 10A10 10 0 0 1 0 0a10 10 0 0 0-10-10zm20 0A10 10 0 0 0 0 0a10 10 0 0 1 10 10A10 10 0 0 1 20 0a10 10 0 0 0-10-10zm20 0A10 10 0 0 0 20 0a10 10 0 0 1 10 10A10 10 0 0 1 40 0a10 10 0 0 0-10-10zm-40 20a10 10 0 0 0-10 10 10 10 0 0 0 10 10A10 10 0 0 1 0 20a10 10 0 0 0-10-10zm20 0A10 10 0 0 0 0 20a10 10 0 0 1 10 10 10 10 0 0 1 10-10 10 10 0 0 0-10-10zm20 0a10 10 0 0 0-10 10 10 10 0 0 1 10 10 10 10 0 0 1 10-10 10 10 0 0 0-10-10z"
           />
         </pattern>
       </defs>
       <rect
-        width="800%"
-        height="800%"
         fill="url(#a)"
+        height="800%"
         transform="translate(0 -8)"
+        width="800%"
       />
     </svg>
   );

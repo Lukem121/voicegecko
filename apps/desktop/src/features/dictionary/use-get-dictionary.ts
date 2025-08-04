@@ -1,22 +1,22 @@
-import { useMemo, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import Fuse from "fuse.js";
+import { useQuery } from '@tanstack/react-query';
+import Fuse from 'fuse.js';
+import { useMemo, useState } from 'react';
 
-import { useDebouncedSearch } from "~/hooks/use-debounced-search";
-import analytics from "~/lib/analytics/posthog-analytics";
-import { trpc } from "~/trpc";
+import { useDebouncedSearch } from '~/hooks/use-debounced-search';
+import analytics from '~/lib/analytics/posthog-analytics';
+import { trpc } from '~/trpc';
 
-export type SortBy = "alphabetical" | "newest" | "oldest";
+export type SortBy = 'alphabetical' | 'newest' | 'oldest';
 
 export const useGetDictionary = () => {
-  const [sortBy, setSortBy] = useState<SortBy>("alphabetical");
+  const [sortBy, setSortBy] = useState<SortBy>('alphabetical');
   const search = useDebouncedSearch({ delay: 300 });
 
   // Fetch dictionary entries
   const query = useQuery(
     trpc.dictionary.getAll.queryOptions({
       sortBy,
-    }),
+    })
   );
 
   // Perform client-side fuzzy search when search term is present
@@ -25,7 +25,7 @@ export const useGetDictionary = () => {
     if (!search.debouncedSearchTerm) return query.data.entries;
 
     const fuse = new Fuse(query.data.entries, {
-      keys: ["word"],
+      keys: ['word'],
       threshold: 0.3,
       includeScore: true,
     });
@@ -34,10 +34,10 @@ export const useGetDictionary = () => {
     const filteredResults = results.map((result) => result.item);
 
     // Track search usage
-    analytics.track("dictionary_searched", {
+    analytics.track('dictionary_searched', {
       search_term_length: search.debouncedSearchTerm.length,
       results_count: filteredResults.length,
-      search_type: "fuzzy",
+      search_type: 'fuzzy',
     });
 
     return filteredResults;

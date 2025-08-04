@@ -1,8 +1,9 @@
-import { useEffect, useRef } from "react";
+import { log } from '@acme/observability';
+import { useEffect, useRef } from 'react';
 
-import { useSession } from "./auth";
-import { useAuth } from "./use-auth";
-import { useAuthConnectivityHandler } from "./use-connectivity";
+import { useSession } from './auth';
+import { useAuth } from './use-auth';
+import { useAuthConnectivityHandler } from './use-connectivity';
 
 /**
  * Enhanced auth hook with smart connectivity integration
@@ -15,7 +16,7 @@ import { useAuthConnectivityHandler } from "./use-connectivity";
 export function useAuthWithConnectivity() {
   const auth = useAuth();
   const { isConnectivityError, connectivity } = useAuthConnectivityHandler(
-    auth.error,
+    auth.error
   );
   const { query } = useSession();
   const previousDiagnosisRef = useRef(connectivity.diagnosis);
@@ -27,29 +28,29 @@ export function useAuthWithConnectivity() {
 
     // If we went from having connectivity issues to being healthy, refresh the session
     if (
-      previousDiagnosis !== "healthy" &&
-      currentDiagnosis === "healthy" &&
-      previousDiagnosis !== "unknown" // Don't refresh on initial load
+      previousDiagnosis !== 'healthy' &&
+      currentDiagnosis === 'healthy' &&
+      previousDiagnosis !== 'unknown' // Don't refresh on initial load
     ) {
-      console.log("🔄 [Auth] Connectivity restored, refreshing session...");
-      void query.refetch();
+      log.info('🔄 [Auth] Connectivity restored, refreshing session...');
+      query.refetch();
     }
 
     previousDiagnosisRef.current = currentDiagnosis;
   }, [connectivity.diagnosis, query]);
 
   const getAuthIssueType = () => {
-    if (auth.isLoading) return "loading";
+    if (auth.isLoading) return 'loading';
 
     // Only show connectivity error for actual internet issues, not just API down
     // API down should not block the entire UI when user is already authenticated
-    if (isConnectivityError && connectivity.diagnosis === "no_internet") {
-      return "connectivity";
+    if (isConnectivityError && connectivity.diagnosis === 'no_internet') {
+      return 'connectivity';
     }
 
-    if (auth.error) return "auth";
-    if (!auth.user) return "unauthenticated";
-    return "authenticated";
+    if (auth.error) return 'auth';
+    if (!auth.user) return 'unauthenticated';
+    return 'authenticated';
   };
 
   return {

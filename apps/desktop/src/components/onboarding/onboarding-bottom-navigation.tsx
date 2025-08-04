@@ -1,14 +1,13 @@
-import React from "react";
+import { Button } from '@acme/ui/components/ui/button';
 import {
   ChevronLeft,
   ChevronRight,
   ChevronsRight,
   SkipForward,
-} from "lucide-react";
+} from 'lucide-react';
+import React from 'react';
 
-import { Button } from "@acme/ui/components/ui/button";
-
-import { useOnboarding } from "./onboarding-provider";
+import { useOnboarding } from './onboarding-provider';
 
 export function OnboardingBottomNavigation() {
   const {
@@ -32,9 +31,9 @@ export function OnboardingBottomNavigation() {
         <div className="flex items-center space-x-2">
           {hasPreviousStep ? (
             <Button
-              variant="outline"
-              onClick={() => previousStep()}
               className="flex items-center gap-2"
+              onClick={() => previousStep()}
+              variant="outline"
             >
               <ChevronLeft className="h-4 w-4" />
               Back
@@ -49,9 +48,9 @@ export function OnboardingBottomNavigation() {
           {/* Skip Button - Show on all steps except last */}
           {!isLastStep && (
             <Button
-              variant="ghost"
-              onClick={() => skipOnboarding()}
               className="flex items-center gap-2"
+              onClick={() => skipOnboarding()}
+              variant="ghost"
             >
               Skip
               <ChevronsRight className="h-4 w-4" />
@@ -61,16 +60,16 @@ export function OnboardingBottomNavigation() {
           {/* Next/Complete Button */}
           {hasNextStep ? (
             <Button
-              onClick={() => nextStep()}
               className="flex items-center gap-2"
+              onClick={() => nextStep()}
             >
               Next
               <ChevronRight className="h-4 w-4" />
             </Button>
           ) : (
             <Button
-              onClick={() => skipOnboarding()} // Complete onboarding
-              className="flex items-center gap-2"
+              className="flex items-center gap-2" // Complete onboarding
+              onClick={() => skipOnboarding()}
             >
               Complete Setup
               <ChevronRight className="h-4 w-4" />

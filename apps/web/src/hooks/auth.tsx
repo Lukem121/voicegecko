@@ -1,10 +1,10 @@
-import { useRouter } from "next/navigation";
+import { useRouter } from 'next/navigation';
 
-import { authClient } from "~/lib/auth/client";
+import { authClient } from '~/lib/auth/client';
 
 export const useSignIn = () => {
   const router = useRouter();
-  return () => router.push("/sign-in");
+  return () => router.push('/sign-in');
 };
 
 export const useUser = () => {
@@ -17,6 +17,6 @@ export const useSignOut = () => {
 
   return async () => {
     await authClient.signOut();
-    return router.push("/sign-in");
+    return router.push('/sign-in');
   };
 };

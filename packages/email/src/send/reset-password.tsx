@@ -1,5 +1,5 @@
-import { sendEmail } from "../lib/send-email";
-import LinkTemplate from "../templates/link";
+import { sendEmail } from '../lib/send-email';
+import LinkTemplate from '../templates/link';
 
 type UserWithEmail = {
   name: string;
@@ -19,15 +19,15 @@ export const sendResetPasswordEmail = async ({
       name: user.name,
     },
     from: {
-      email: "no-reply@voicegecko.io",
-      name: "VoiceGecko",
+      email: 'no-reply@voicegecko.io',
+      name: 'VoiceGecko',
     },
-    categories: ["reset_password"],
-    subject: "Reset your password",
+    categories: ['reset_password'],
+    subject: 'Reset your password',
     react: (
       <LinkTemplate
-        heading="Reset your password"
         description="Your reset password link is below - click it to reset your password. This will redirect you back to VoiceGecko."
+        heading="Reset your password"
         url={url}
       />
     ),

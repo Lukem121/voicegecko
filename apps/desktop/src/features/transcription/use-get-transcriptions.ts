@@ -1,6 +1,6 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery } from '@tanstack/react-query';
 
-import { trpc } from "~/trpc";
+import { trpc } from '~/trpc';
 
 export interface UseGetTranscriptionsParams {
   cursor?: number;
@@ -9,7 +9,7 @@ export interface UseGetTranscriptionsParams {
 }
 
 export const useGetTranscriptions = (
-  params: UseGetTranscriptionsParams = {},
+  params: UseGetTranscriptionsParams = {}
 ) => {
   const { cursor, limit = 20, search } = params;
 
@@ -18,7 +18,7 @@ export const useGetTranscriptions = (
       cursor,
       limit,
       search,
-    }),
+    })
   );
 
   return {

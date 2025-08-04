@@ -1,9 +1,10 @@
-import { useCallback, useEffect, useRef } from "react";
-import { useNavigate } from "@tanstack/react-router";
-import { invoke } from "@tauri-apps/api/core";
-import { listen } from "@tauri-apps/api/event";
+import { log } from '@acme/observability';
+import { useNavigate } from '@tanstack/react-router';
+import { invoke } from '@tauri-apps/api/core';
+import { listen } from '@tauri-apps/api/event';
+import { useCallback, useEffect, useRef } from 'react';
 
-import { useUsageStats } from "~/hooks/use-usage-stats";
+import { useUsageStats } from '~/hooks/use-usage-stats';
 
 export function useTrayManager() {
   const navigate = useNavigate();
@@ -20,15 +21,15 @@ export function useTrayManager() {
   // Listen for navigation events from Rust
   useEffect(() => {
     const setupListener = async () => {
-      const unlisten = await listen<string>("navigate", (event) => {
-        void navigate({ to: event.payload });
+      const unlisten = await listen<string>('navigate', (event) => {
+        navigate({ to: event.payload });
       });
       return unlisten;
     };
 
     let unlistenFn: (() => void) | null = null;
 
-    void setupListener().then((fn) => {
+    setupListener().then((fn) => {
       unlistenFn = fn;
     });
 
@@ -43,16 +44,16 @@ export function useTrayManager() {
   const updateTrayStats = useCallback(
     async (wordsCount: string, timeSaved: string, wordsPerMinute: string) => {
       try {
-        await invoke("update_tray_stats", {
+        await invoke('update_tray_stats', {
           wordsCount,
           timeSaved,
           wordsPerMinute,
         });
       } catch (error) {
-        console.error("Failed to update tray stats:", error);
+        log.error('Failed to update tray stats:', error);
       }
     },
-    [],
+    []
   );
 
   // Debounced update to prevent excessive calls
@@ -62,23 +63,23 @@ export function useTrayManager() {
         clearTimeout(updateRef.current);
       }
       updateRef.current = setTimeout(() => {
-        void updateTrayStats(wordsCount, timeSaved, wordsPerMinute);
+        updateTrayStats(wordsCount, timeSaved, wordsPerMinute);
       }, 500); // 500ms debounce
     },
-    [updateTrayStats],
+    [updateTrayStats]
   );
 
   // Update tray when usage stats change
   useEffect(() => {
     if (!usageLoading) {
-      const formattedWordsProcessed = wordsProcessed || "0";
-      const formattedTimeSaved = timeSaved || "0 min";
-      const formattedWordsPerMinute = wordsPerMinute || "—";
+      const formattedWordsProcessed = wordsProcessed || '0';
+      const formattedTimeSaved = timeSaved || '0 min';
+      const formattedWordsPerMinute = wordsPerMinute || '—';
 
       debouncedUpdate(
         formattedWordsProcessed,
         formattedTimeSaved,
-        formattedWordsPerMinute,
+        formattedWordsPerMinute
       );
     }
   }, [

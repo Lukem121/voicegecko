@@ -1,12 +1,11 @@
-"use client";
+'use client';
 
-import React from "react";
-import { motion } from "motion/react";
+import GeckoFullBody from '@acme/ui/components/geckos/gecko-full-body';
+import { cn } from '@acme/ui/lib/utils';
+import { motion } from 'motion/react';
+import type React from 'react';
 
-import GeckoFullBody from "@acme/ui/components/geckos/gecko-full-body";
-import { cn } from "@acme/ui/lib/utils";
-
-import type { MascotAnimation } from "./mascot-chat-provider";
+import type { MascotAnimation } from './mascot-chat-provider';
 
 // Type for mascot component props
 export interface MascotComponentProps {
@@ -23,7 +22,7 @@ export interface MascotVariant {
 
 // Animation configurations for different states
 const getAnimationConfig = (animation: MascotAnimation) => {
-  const { type, intensity = "medium", duration } = animation;
+  const { type, intensity = 'medium', duration } = animation;
 
   const intensityMultipliers = {
     low: 0.6,
@@ -34,7 +33,7 @@ const getAnimationConfig = (animation: MascotAnimation) => {
   const multiplier = intensityMultipliers[intensity];
 
   switch (type) {
-    case "welcoming":
+    case 'welcoming':
       return {
         animate: {
           rotate: [-3 * multiplier, 3 * multiplier, -3 * multiplier, 0],
@@ -42,12 +41,12 @@ const getAnimationConfig = (animation: MascotAnimation) => {
         },
         transition: {
           duration: duration ? duration / 1000 : 2,
-          ease: "easeInOut" as const,
+          ease: 'easeInOut' as const,
           times: [0, 0.3, 0.7, 1],
         },
       };
 
-    case "celebrating":
+    case 'celebrating':
       return {
         animate: {
           y: [0, -8 * multiplier, 0, -4 * multiplier, 0],
@@ -56,12 +55,12 @@ const getAnimationConfig = (animation: MascotAnimation) => {
         },
         transition: {
           duration: duration ? duration / 1000 : 1.5,
-          ease: "easeInOut" as const,
-          repeat: intensity === "high" ? 2 : 1,
+          ease: 'easeInOut' as const,
+          repeat: intensity === 'high' ? 2 : 1,
         },
       };
 
-    case "thinking":
+    case 'thinking':
       return {
         animate: {
           rotate: [0, -2 * multiplier, 2 * multiplier, -1 * multiplier, 0],
@@ -69,13 +68,13 @@ const getAnimationConfig = (animation: MascotAnimation) => {
         },
         transition: {
           duration: duration ? duration / 1000 : 3,
-          ease: "easeInOut" as const,
-          repeat: Infinity,
-          repeatType: "reverse" as const,
+          ease: 'easeInOut' as const,
+          repeat: Number.POSITIVE_INFINITY,
+          repeatType: 'reverse' as const,
         },
       };
 
-    case "listening":
+    case 'listening':
       return {
         animate: {
           scale: [1, 1.05 * multiplier, 1],
@@ -83,13 +82,13 @@ const getAnimationConfig = (animation: MascotAnimation) => {
         },
         transition: {
           duration: duration ? duration / 1000 : 2,
-          ease: "easeInOut" as const,
-          repeat: Infinity,
-          repeatType: "reverse" as const,
+          ease: 'easeInOut' as const,
+          repeat: Number.POSITIVE_INFINITY,
+          repeatType: 'reverse' as const,
         },
       };
 
-    case "processing":
+    case 'processing':
       return {
         animate: {
           rotate: [0, 360],
@@ -98,19 +97,19 @@ const getAnimationConfig = (animation: MascotAnimation) => {
         transition: {
           rotate: {
             duration: duration ? duration / 1000 : 2,
-            ease: "linear" as const,
-            repeat: Infinity,
+            ease: 'linear' as const,
+            repeat: Number.POSITIVE_INFINITY,
           },
           scale: {
             duration: 1,
-            ease: "easeInOut" as const,
-            repeat: Infinity,
-            repeatType: "reverse" as const,
+            ease: 'easeInOut' as const,
+            repeat: Number.POSITIVE_INFINITY,
+            repeatType: 'reverse' as const,
           },
         },
       };
 
-    case "dancing":
+    case 'dancing':
       return {
         animate: {
           y: [0, -8 * multiplier, 0, -4 * multiplier, 0],
@@ -120,13 +119,13 @@ const getAnimationConfig = (animation: MascotAnimation) => {
         },
         transition: {
           duration: duration ? duration / 1000 : 1.8,
-          ease: "easeInOut" as const,
-          repeat: Infinity,
-          repeatType: "loop" as const,
+          ease: 'easeInOut' as const,
+          repeat: Number.POSITIVE_INFINITY,
+          repeatType: 'loop' as const,
         },
       };
 
-    case "idle":
+    case 'idle':
     default:
       return {
         animate: {
@@ -135,9 +134,9 @@ const getAnimationConfig = (animation: MascotAnimation) => {
         },
         transition: {
           duration: 4,
-          ease: "easeInOut" as const,
-          repeat: Infinity,
-          repeatType: "reverse" as const,
+          ease: 'easeInOut' as const,
+          repeat: Number.POSITIVE_INFINITY,
+          repeatType: 'reverse' as const,
         },
       };
   }
@@ -151,9 +150,9 @@ const getFloatingAnimation = (isEnabled: boolean) => {
     y: [0, -3, 0],
     transition: {
       duration: 3,
-      ease: "easeInOut" as const,
-      repeat: Infinity,
-      repeatType: "reverse" as const,
+      ease: 'easeInOut' as const,
+      repeat: Number.POSITIVE_INFINITY,
+      repeatType: 'reverse' as const,
     },
   };
 };
@@ -167,7 +166,7 @@ const getHoverEffects = (enableHover: boolean) => {
       scale: 1.05,
       rotate: 2,
       transition: {
-        type: "spring" as const,
+        type: 'spring' as const,
         stiffness: 300,
         damping: 20,
       },
@@ -186,7 +185,7 @@ interface MascotCharacterProps {
   variant: MascotVariant;
   animation: MascotAnimation;
   className?: string;
-  size?: "sm" | "md" | "lg" | "xl" | "2xl";
+  size?: 'sm' | 'md' | 'lg' | 'xl' | '2xl';
   enableFloating?: boolean;
   onClick?: () => void;
   style?: React.CSSProperties;
@@ -194,18 +193,18 @@ interface MascotCharacterProps {
 
 // Size configurations
 const sizeClasses = {
-  sm: "h-16 w-16",
-  md: "h-24 w-24",
-  lg: "h-32 w-32",
-  xl: "h-40 w-40",
-  "2xl": "h-48 w-48",
+  sm: 'h-16 w-16',
+  md: 'h-24 w-24',
+  lg: 'h-32 w-32',
+  xl: 'h-40 w-40',
+  '2xl': 'h-48 w-48',
 };
 
 export function MascotCharacter({
   variant,
   animation,
   className,
-  size = "lg",
+  size = 'lg',
   enableFloating = true,
   onClick,
   style,
@@ -213,12 +212,12 @@ export function MascotCharacter({
   const MascotComponent = variant.component;
 
   // For composite variants that handle their own animation, use idle animation for container
-  const isCompositeVariant = variant.name === "Dancing Gecko with Confetti";
-  const isDancingComposite = isCompositeVariant && animation.type === "dancing";
+  const isCompositeVariant = variant.name === 'Dancing Gecko with Confetti';
+  const isDancingComposite = isCompositeVariant && animation.type === 'dancing';
 
   const containerAnimation = isDancingComposite
     ? {
-        type: "idle" as const,
+        type: 'idle' as const,
         intensity: animation.intensity,
         duration: animation.duration,
       }
@@ -226,7 +225,7 @@ export function MascotCharacter({
 
   const animationConfig = getAnimationConfig(containerAnimation);
   const floatingAnimation = getFloatingAnimation(
-    enableFloating && containerAnimation.type === "idle" && !isDancingComposite,
+    enableFloating && containerAnimation.type === 'idle' && !isDancingComposite
   );
   // Combine animations - floating is base layer, specific animation on top
   // For dancing composite, keep container completely static
@@ -239,48 +238,48 @@ export function MascotCharacter({
 
   return (
     <motion.div
-      className={cn(
-        "relative cursor-pointer select-none",
-        sizeClasses[size],
-        onClick && "cursor-pointer",
-        className,
-      )}
       animate={combinedAnimation}
-      transition={isDancingComposite ? {} : animationConfig.transition}
-      style={style}
+      className={cn(
+        'relative cursor-pointer select-none',
+        sizeClasses[size],
+        onClick && 'cursor-pointer',
+        className
+      )}
       onClick={onClick}
+      style={style}
+      transition={isDancingComposite ? {} : animationConfig.transition}
     >
       <MascotComponent
         className="h-full w-full object-contain"
         style={{
           filter:
-            animation.type === "processing" ||
-            (animation.type === "dancing" && !isDancingComposite)
-              ? "brightness(1.1)"
+            animation.type === 'processing' ||
+            (animation.type === 'dancing' && !isDancingComposite)
+              ? 'brightness(1.1)'
               : undefined,
         }}
       />
 
       {/* Optional glow effect for special states */}
-      {(animation.type === "celebrating" ||
-        animation.type === "processing" ||
-        animation.type === "dancing") && (
+      {(animation.type === 'celebrating' ||
+        animation.type === 'processing' ||
+        animation.type === 'dancing') && (
         <motion.div
-          className="absolute inset-0 rounded-full opacity-30"
-          style={{
-            background:
-              animation.type === "celebrating" || animation.type === "dancing"
-                ? "radial-gradient(circle, rgba(168, 85, 247, 0.3) 0%, transparent 70%)"
-                : "radial-gradient(circle, rgba(59, 130, 246, 0.3) 0%, transparent 70%)",
-          }}
           animate={{
             opacity: [0.3, 0.6, 0.3],
             scale: [1, 1.2, 1],
           }}
+          className="absolute inset-0 rounded-full opacity-30"
+          style={{
+            background:
+              animation.type === 'celebrating' || animation.type === 'dancing'
+                ? 'radial-gradient(circle, rgba(168, 85, 247, 0.3) 0%, transparent 70%)'
+                : 'radial-gradient(circle, rgba(59, 130, 246, 0.3) 0%, transparent 70%)',
+          }}
           transition={{
             duration: 1.5,
-            repeat: Infinity,
-            ease: "easeInOut",
+            repeat: Number.POSITIVE_INFINITY,
+            ease: 'easeInOut',
           }}
         />
       )}
@@ -292,7 +291,7 @@ export function MascotCharacter({
 export function createMascotVariant(
   component: React.ComponentType<MascotComponentProps>,
   name: string,
-  description?: string,
+  description?: string
 ): MascotVariant {
   return {
     component,
@@ -308,38 +307,38 @@ export const mascotVariants = {
     ({ className, style }: MascotComponentProps) => (
       <GeckoFullBody
         className={className}
-        style={{ ...style, transform: "scaleX(-1)" }}
+        style={{ ...style, transform: 'scaleX(-1)' }}
       />
     ),
-    "Default Gecko",
-    "The standard VoiceGecko mascot",
+    'Default Gecko',
+    'The standard VoiceGecko mascot'
   ),
 
   // Gecko with microphone for audio setup steps
   withMicrophone: createMascotVariant(
     ({ className, style }: MascotComponentProps) => (
       <img
-        src="/geckos/gecko-laptop-w-mic.png"
         alt="Voice Gecko on laptop with microphone"
         className={className}
+        src="/geckos/gecko-laptop-w-mic.png"
         style={style}
       />
     ),
-    "Gecko with Microphone",
-    "VoiceGecko mascot for microphone and audio setup",
+    'Gecko with Microphone',
+    'VoiceGecko mascot for microphone and audio setup'
   ),
 
   withWelcomeSign: createMascotVariant(
     ({ className, style }: MascotComponentProps) => (
       <img
-        src="/geckos/gecko-welcome-sign-small.png"
         alt="Voice Gecko on welcome sign"
         className={className}
+        src="/geckos/gecko-welcome-sign-small.png"
         style={style}
       />
     ),
-    "Gecko with Welcome Sign",
-    "VoiceGecko mascot for welcome sign",
+    'Gecko with Welcome Sign',
+    'VoiceGecko mascot for welcome sign'
   ),
   // Dancing gecko with confetti background - composite variant
   dancingWithConfetti: createMascotVariant(
@@ -347,37 +346,37 @@ export const mascotVariants = {
       <div className={className} style={style}>
         {/* Static confetti background */}
         <img
-          src="/geckos/confeti-bg.png"
           alt="Confetti background"
           className="pointer-events-none absolute inset-0 h-full w-full object-contain"
+          src="/geckos/confeti-bg.png"
           style={{ zIndex: 1 }}
         />
         {/* Animated dancing gecko */}
         <motion.img
-          src="/geckos/gecko-dancing.png"
           alt="Dancing Voice Gecko"
-          className="relative h-full w-full object-contain"
-          style={{
-            zIndex: 2,
-            filter: "brightness(1.1)",
-          }}
           animate={{
             y: [0, -4, 0, -2, 0],
             x: [0, 1, 0, -1, 0],
             rotate: [0, 2, 0, -2, 0],
             scale: [1, 1.02, 1, 1.01, 1],
           }}
+          className="relative h-full w-full object-contain"
+          src="/geckos/gecko-dancing.png"
+          style={{
+            zIndex: 2,
+            filter: 'brightness(1.1)',
+          }}
           transition={{
             duration: 2.2,
-            ease: "easeInOut",
-            repeat: Infinity,
-            repeatType: "loop",
+            ease: 'easeInOut',
+            repeat: Number.POSITIVE_INFINITY,
+            repeatType: 'loop',
           }}
         />
       </div>
     ),
-    "Dancing Gecko with Confetti",
-    "VoiceGecko mascot dancing with confetti background",
+    'Dancing Gecko with Confetti',
+    'VoiceGecko mascot dancing with confetti background'
   ),
 
   // Example of how you might add more variants in the future:

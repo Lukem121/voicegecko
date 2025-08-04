@@ -1,5 +1,5 @@
-import { sendEmail } from "../lib/send-email";
-import { WelcomeTemplate } from "../templates/welcome";
+import { sendEmail } from '../lib/send-email';
+import { WelcomeTemplate } from '../templates/welcome';
 
 type UserWithEmail = {
   email: string;
@@ -16,14 +16,14 @@ export const sendWelcomeEmail = async ({
   await sendEmail({
     to: {
       email: user.email,
-      name: user.name || "",
+      name: user.name || '',
     },
     from: {
-      email: "no-reply@voicegecko.io",
-      name: "VoiceGecko",
+      email: 'no-reply@voicegecko.io',
+      name: 'VoiceGecko',
     },
-    categories: ["welcome"],
-    subject: "Welcome to VoiceGecko - Your voice-to-text journey begins now!",
-    react: <WelcomeTemplate name={user.name} downloadUrl={downloadUrl} />,
+    categories: ['welcome'],
+    subject: 'Welcome to VoiceGecko - Your voice-to-text journey begins now!',
+    react: <WelcomeTemplate downloadUrl={downloadUrl} name={user.name} />,
   });
 };

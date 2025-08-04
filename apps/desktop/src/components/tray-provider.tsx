@@ -1,4 +1,4 @@
-import { useTrayManager } from "~/hooks/use-tray-manager";
+import { useTrayManager } from '~/hooks/use-tray-manager';
 
 interface TrayProviderProps {
   children: React.ReactNode;

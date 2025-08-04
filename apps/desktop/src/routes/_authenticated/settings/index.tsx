@@ -1,4 +1,23 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { Button } from '@acme/ui/components/ui/button';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@acme/ui/components/ui/card';
+import { Label } from '@acme/ui/components/ui/label';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@acme/ui/components/ui/select';
+import { Slider } from '@acme/ui/components/ui/slider';
+import { Switch } from '@acme/ui/components/ui/switch';
+import { ThemeToggle } from '@acme/ui/components/ui/theme';
+import { createFileRoute, Link } from '@tanstack/react-router';
 import {
   Cpu,
   Keyboard,
@@ -7,31 +26,11 @@ import {
   Settings,
   Shield,
   Volume2,
-} from "lucide-react";
+} from 'lucide-react';
 
-import { Button } from "@acme/ui/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@acme/ui/components/ui/card";
-import { Label } from "@acme/ui/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@acme/ui/components/ui/select";
-import { Slider } from "@acme/ui/components/ui/slider";
-import { Switch } from "@acme/ui/components/ui/switch";
-import { ThemeToggle } from "@acme/ui/components/ui/theme";
+import { useSettingsStore } from '~/stores/settings.store';
 
-import { useSettingsStore } from "~/stores/settings.store";
-
-export const Route = createFileRoute("/_authenticated/settings/")({
+export const Route = createFileRoute('/_authenticated/settings/')({
   component: SettingsPage,
 });
 
@@ -126,12 +125,12 @@ function SettingsPage() {
             <div className="space-y-2">
               <Label htmlFor="microphone">Default Microphone</Label>
               <Select
-                value={settings.audio.selectedDevice?.name ?? ""}
                 onValueChange={(name) => {
                   const device =
                     audioDevices.find((d) => d.name === name) ?? null;
-                  void updateAudioDevice(device);
+                  updateAudioDevice(device);
                 }}
+                value={settings.audio.selectedDevice?.name ?? ''}
               >
                 <SelectTrigger id="microphone">
                   <SelectValue placeholder="Select a microphone" />
@@ -150,12 +149,12 @@ function SettingsPage() {
               <div className="space-y-2">
                 <Label htmlFor="notification-sound">Notification Sound</Label>
                 <Select
-                  value={settings.audio.selectedSound}
-                  onValueChange={updateNotificationSound}
                   disabled={
-                    settings.audio.notificationTiming === "disabled" ||
+                    settings.audio.notificationTiming === 'disabled' ||
                     !settings.personalization.interactionSounds
                   }
+                  onValueChange={updateNotificationSound}
+                  value={settings.audio.selectedSound}
                 >
                   <SelectTrigger id="notification-sound">
                     <SelectValue />
@@ -173,9 +172,9 @@ function SettingsPage() {
                   Play Notification Sound
                 </Label>
                 <Select
-                  value={settings.audio.notificationTiming}
-                  onValueChange={updateNotificationTiming}
                   disabled={!settings.personalization.interactionSounds}
+                  onValueChange={updateNotificationTiming}
+                  value={settings.audio.notificationTiming}
                 >
                   <SelectTrigger id="notification-timing">
                     <SelectValue />
@@ -200,20 +199,20 @@ function SettingsPage() {
               <Label htmlFor="volume">Notification Volume</Label>
               <div className="flex items-center gap-2">
                 <Slider
-                  id="volume"
-                  value={[settings.audio.notificationVolume]}
-                  onValueChange={(v) => updateNotificationVolume(v[0] ?? 1)}
-                  max={1}
-                  step={0.1}
                   disabled={!settings.personalization.interactionSounds}
+                  id="volume"
+                  max={1}
+                  onValueChange={(v) => updateNotificationVolume(v[0] ?? 1)}
+                  step={0.1}
+                  value={[settings.audio.notificationVolume]}
                 />
                 <Button
-                  variant="outline"
-                  size="icon"
                   className="h-8 w-8"
-                  onClick={playTestSound}
-                  type="button"
                   disabled={!settings.personalization.interactionSounds}
+                  onClick={playTestSound}
+                  size="icon"
+                  type="button"
+                  variant="outline"
                 >
                   <Volume2 className="h-4 w-4" />
                 </Button>
@@ -222,7 +221,7 @@ function SettingsPage() {
 
             {!settings.personalization.interactionSounds && (
               <p className="text-muted-foreground text-xs">
-                Notification sound settings are{" "}
+                Notification sound settings are{' '}
                 <span className="italic">disabled</span> because interaction
                 sounds are turned off in the Personalization section.
               </p>
@@ -266,7 +265,7 @@ function SettingsPage() {
               <Switch
                 checked={settings.privacy.usageAnalytics}
                 onCheckedChange={(checked) =>
-                  updatePrivacySetting("usageAnalytics", checked)
+                  updatePrivacySetting('usageAnalytics', checked)
                 }
               />
             </div>
@@ -281,7 +280,7 @@ function SettingsPage() {
               <Switch
                 checked={settings.privacy.crashReports}
                 onCheckedChange={(checked) =>
-                  updatePrivacySetting("crashReports", checked)
+                  updatePrivacySetting('crashReports', checked)
                 }
               />
             </div>
@@ -320,7 +319,7 @@ function SettingsPage() {
               <Switch
                 checked={settings.personalization.interactionSounds}
                 onCheckedChange={(checked) =>
-                  updatePersonalizationSetting("interactionSounds", checked)
+                  updatePersonalizationSetting('interactionSounds', checked)
                 }
               />
             </div>
@@ -368,7 +367,7 @@ function SettingsPage() {
               <Switch
                 checked={settings.personalization.autoPasteOnCompletion}
                 onCheckedChange={(checked) =>
-                  updatePersonalizationSetting("autoPasteOnCompletion", checked)
+                  updatePersonalizationSetting('autoPasteOnCompletion', checked)
                 }
               />
             </div>
@@ -384,14 +383,14 @@ function SettingsPage() {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid gap-4 md:grid-cols-3">
-            <Link to="/settings/shortcuts" className="w-full">
-              <Button variant="outline" className="w-full justify-start gap-2">
+            <Link className="w-full" to="/settings/shortcuts">
+              <Button className="w-full justify-start gap-2" variant="outline">
                 <Keyboard className="h-4 w-4" />
                 Keyboard Shortcuts
               </Button>
             </Link>
-            <Link to="/settings/models" className="w-full">
-              <Button variant="outline" className="w-full justify-start gap-2">
+            <Link className="w-full" to="/settings/models">
+              <Button className="w-full justify-start gap-2" variant="outline">
                 <Cpu className="h-4 w-4" />
                 Model Settings
               </Button>

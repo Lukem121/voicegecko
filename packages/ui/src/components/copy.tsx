@@ -1,26 +1,32 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { CheckIcon, CopyIcon } from "lucide-react";
-
-import { Button } from "@acme/ui/components/ui/button";
+import { Button } from '@acme/ui/components/ui/button';
 import {
-  Tooltip,
+import
+{
+  log;
+}
+from;
+('@acme/observability');
+Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@acme/ui/components/ui/tooltip";
-import { cn } from "@acme/ui/lib/utils";
+} from '@acme/ui/components/ui/tooltip'
+
+import { cn } from '@acme/ui/lib/utils';
+import { CheckIcon, CopyIcon } from 'lucide-react';
+import { useState } from 'react';
 
 export const CopyButton = ({
   text,
   className,
-  variant = "outline",
+  variant = 'outline',
   onClick,
 }: {
   text: string;
   className?: string;
-  variant?: "default" | "outline" | "ghost";
+  variant?: 'default' | 'outline' | 'ghost';
   onClick?: () => void;
 }) => {
   const [copied, setCopied] = useState<boolean>(false);
@@ -33,7 +39,7 @@ export const CopyButton = ({
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
     } catch (err) {
-      console.error("Failed to copy text: ", err);
+      log.error('Failed to copy text: ', err);
     }
   };
 
@@ -42,32 +48,32 @@ export const CopyButton = ({
       <Tooltip>
         <TooltipTrigger asChild>
           <Button
-            variant={variant}
-            size="icon"
-            className={cn("disabled:opacity-100", className)}
-            onClick={handleCopy}
-            aria-label={copied ? "Copied" : "Copy to clipboard"}
+            aria-label={copied ? 'Copied' : 'Copy to clipboard'}
+            className={cn('disabled:opacity-100', className)}
             disabled={copied}
+            onClick={handleCopy}
+            size="icon"
+            variant={variant}
           >
             <div
               className={cn(
-                "transition-all",
-                copied ? "scale-100 opacity-100" : "scale-0 opacity-0",
+                'transition-all',
+                copied ? 'scale-100 opacity-100' : 'scale-0 opacity-0'
               )}
             >
               <CheckIcon
+                aria-hidden="true"
                 className="stroke-emerald-500"
                 size={16}
-                aria-hidden="true"
               />
             </div>
             <div
               className={cn(
-                "absolute transition-all",
-                copied ? "scale-0 opacity-0" : "scale-100 opacity-100",
+                'absolute transition-all',
+                copied ? 'scale-0 opacity-0' : 'scale-100 opacity-100'
               )}
             >
-              <CopyIcon size={16} aria-hidden="true" />
+              <CopyIcon aria-hidden="true" size={16} />
             </div>
           </Button>
         </TooltipTrigger>

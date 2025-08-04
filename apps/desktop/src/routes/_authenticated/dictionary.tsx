@@ -1,17 +1,3 @@
-import { useState } from "react";
-import { createFileRoute } from "@tanstack/react-router";
-import {
-  ArrowDownAZ,
-  Calendar,
-  CalendarDays,
-  Loader2,
-  MoreVertical,
-  Plus,
-  Search,
-  X,
-} from "lucide-react";
-import { toast } from "sonner";
-
 import {
   AlertDialog,
   AlertDialogAction,
@@ -21,8 +7,8 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@acme/ui/components/ui/alert-dialog";
-import { Button } from "@acme/ui/components/ui/button";
+} from '@acme/ui/components/ui/alert-dialog';
+import { Button } from '@acme/ui/components/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -30,22 +16,35 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@acme/ui/components/ui/dialog";
+} from '@acme/ui/components/ui/dialog';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@acme/ui/components/ui/dropdown-menu";
-import { Input } from "@acme/ui/components/ui/input";
-import { Label } from "@acme/ui/components/ui/label";
+} from '@acme/ui/components/ui/dropdown-menu';
+import { Input } from '@acme/ui/components/ui/input';
+import { Label } from '@acme/ui/components/ui/label';
+import { createFileRoute } from '@tanstack/react-router';
+import {
+  ArrowDownAZ,
+  Calendar,
+  CalendarDays,
+  Loader2,
+  MoreVertical,
+  Plus,
+  Search,
+  X,
+} from 'lucide-react';
+import { useState } from 'react';
+import { toast } from 'sonner';
 
-import { useAddDictionary } from "~/features/dictionary/use-add-dictionary";
-import { useDeleteDictionary } from "~/features/dictionary/use-delete-dictionary";
-import { useGetDictionary } from "~/features/dictionary/use-get-dictionary";
-import { useUpdateDictionary } from "~/features/dictionary/use-update-dictionary";
+import { useAddDictionary } from '~/features/dictionary/use-add-dictionary';
+import { useDeleteDictionary } from '~/features/dictionary/use-delete-dictionary';
+import { useGetDictionary } from '~/features/dictionary/use-get-dictionary';
+import { useUpdateDictionary } from '~/features/dictionary/use-update-dictionary';
 
-export const Route = createFileRoute("/_authenticated/dictionary")({
+export const Route = createFileRoute('/_authenticated/dictionary')({
   component: DictionaryPage,
 });
 
@@ -68,7 +67,7 @@ function DictionaryPage() {
 
   const [isSearchExpanded, setIsSearchExpanded] = useState(false);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [newWord, setNewWord] = useState("");
+  const [newWord, setNewWord] = useState('');
   const [addError, setAddError] = useState<string | null>(null);
 
   const [editingEntry, setEditingEntry] = useState<{
@@ -91,13 +90,13 @@ function DictionaryPage() {
 
     try {
       await addWord({ word: newWord });
-      toast.success("Word added to dictionary");
+      toast.success('Word added to dictionary');
       setIsAddDialogOpen(false);
-      setNewWord("");
+      setNewWord('');
       setAddError(null);
     } catch (error) {
       const errorMessage =
-        error instanceof Error ? error.message : "Failed to add word";
+        error instanceof Error ? error.message : 'Failed to add word';
       setAddError(errorMessage);
     }
   };
@@ -112,13 +111,13 @@ function DictionaryPage() {
         id: editingEntry.id,
         word: editingEntry.word,
       });
-      toast.success("Word updated");
+      toast.success('Word updated');
       setIsEditDialogOpen(false);
       setEditingEntry(null);
       setEditError(null);
     } catch (error) {
       const errorMessage =
-        error instanceof Error ? error.message : "Failed to update word";
+        error instanceof Error ? error.message : 'Failed to update word';
       setEditError(errorMessage);
     }
   };
@@ -128,84 +127,84 @@ function DictionaryPage() {
 
     try {
       await deleteWord({ id: deletingEntry.id });
-      toast.success("Word deleted");
+      toast.success('Word deleted');
       setIsDeleteDialogOpen(false);
       setDeletingEntry(null);
     } catch (error) {
       const errorMessage =
-        error instanceof Error ? error.message : "Failed to delete word";
+        error instanceof Error ? error.message : 'Failed to delete word';
       toast.error(errorMessage);
     }
   };
 
   const getSortIcon = () => {
     switch (sortBy) {
-      case "alphabetical":
+      case 'alphabetical':
         return <ArrowDownAZ className="h-4 w-4" />;
-      case "newest":
+      case 'newest':
         return <CalendarDays className="h-4 w-4" />;
-      case "oldest":
+      case 'oldest':
         return <Calendar className="h-4 w-4" />;
     }
   };
 
   const getSortLabel = () => {
     switch (sortBy) {
-      case "alphabetical":
-        return "A-Z";
-      case "newest":
-        return "Newest";
-      case "oldest":
-        return "Oldest";
+      case 'alphabetical':
+        return 'A-Z';
+      case 'newest':
+        return 'Newest';
+      case 'oldest':
+        return 'Oldest';
     }
   };
 
   return (
     <div className="flex flex-1 flex-col gap-4">
       <div className="flex h-10 items-center justify-between">
-        <h1 className="text-2xl font-bold tracking-tight">Dictionary</h1>
+        <h1 className="font-bold text-2xl tracking-tight">Dictionary</h1>
         <div className="flex items-center gap-2">
           {/* Search */}
           {isSearchExpanded ? (
             <div className="flex items-center gap-2">
               <div className="relative">
-                <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
+                <Search className="-translate-y-1/2 absolute top-1/2 left-3 h-4 w-4 text-muted-foreground" />
                 <Input
+                  autoFocus
+                  className="w-64 border-transparent pr-8 pl-10 ring-1 ring-border/50 focus-visible:border-transparent focus-visible:ring-ring"
+                  onChange={(e) => setSearchTerm(e.target.value)}
                   placeholder="Search words..."
                   value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="ring-border/50 focus-visible:ring-ring w-64 border-transparent pr-8 pl-10 ring-1 focus-visible:border-transparent"
-                  autoFocus
                 />
                 {searchTerm && (
                   <Button
-                    variant="ghost"
-                    size="sm"
+                    className="-translate-y-1/2 absolute top-1/2 right-1 h-7 w-7 p-0"
                     onClick={clearSearch}
-                    className="absolute top-1/2 right-1 h-7 w-7 -translate-y-1/2 p-0"
+                    size="sm"
+                    variant="ghost"
                   >
                     <X className="h-4 w-4" />
                   </Button>
                 )}
               </div>
               <Button
-                variant="ghost"
-                size="sm"
                 className="h-8 w-8 p-0"
                 onClick={() => {
                   setIsSearchExpanded(false);
                   clearSearch();
                 }}
+                size="sm"
+                variant="ghost"
               >
                 <X className="h-4 w-4" />
               </Button>
             </div>
           ) : (
             <Button
-              variant="ghost"
-              size="sm"
               className="h-8 w-8 p-0"
               onClick={() => setIsSearchExpanded(true)}
+              size="sm"
+              variant="ghost"
             >
               <Search className="h-4 w-4" />
             </Button>
@@ -214,21 +213,21 @@ function DictionaryPage() {
           {/* Sort */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm" className="gap-1">
+              <Button className="gap-1" size="sm" variant="ghost">
                 {getSortIcon()}
                 <span className="text-xs">{getSortLabel()}</span>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => setSortBy("alphabetical")}>
+              <DropdownMenuItem onClick={() => setSortBy('alphabetical')}>
                 <ArrowDownAZ className="mr-2 h-4 w-4" />
                 Alphabetical
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setSortBy("newest")}>
+              <DropdownMenuItem onClick={() => setSortBy('newest')}>
                 <CalendarDays className="mr-2 h-4 w-4" />
                 Newest first
               </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => setSortBy("oldest")}>
+              <DropdownMenuItem onClick={() => setSortBy('oldest')}>
                 <Calendar className="mr-2 h-4 w-4" />
                 Oldest first
               </DropdownMenuItem>
@@ -237,12 +236,12 @@ function DictionaryPage() {
 
           {/* Add button */}
           <Button
-            size="sm"
+            disabled={count >= maxEntries}
             onClick={() => {
               setIsAddDialogOpen(true);
               setAddError(null); // Clear any previous errors
             }}
-            disabled={count >= maxEntries}
+            size="sm"
           >
             <Plus className="mr-1 h-4 w-4" />
             Add word
@@ -258,14 +257,14 @@ function DictionaryPage() {
       {/* Dictionary entries */}
       {isLoading ? (
         <div className="flex flex-1 items-center justify-center">
-          <Loader2 className="text-muted-foreground h-8 w-8 animate-spin" />
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
         </div>
       ) : entries.length === 0 ? (
         <div className="flex flex-1 flex-col items-center justify-center gap-2 text-center">
           <p className="text-muted-foreground">
             {searchTerm
-              ? "No words found matching your search"
-              : "No words in your dictionary yet"}
+              ? 'No words found matching your search'
+              : 'No words in your dictionary yet'}
           </p>
           {!searchTerm && (
             <p className="text-muted-foreground text-sm">
@@ -277,16 +276,16 @@ function DictionaryPage() {
         <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
           {entries.map((entry) => (
             <div
+              className="group flex items-center justify-between rounded-lg border p-3 transition-colors hover:bg-muted/50"
               key={entry.id}
-              className="group hover:bg-muted/50 flex items-center justify-between rounded-lg border p-3 transition-colors"
             >
               <span className="truncate pr-2">{entry.word}</span>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button
-                    variant="ghost"
-                    size="sm"
                     className="h-8 w-8 p-0 opacity-0 transition-opacity group-hover:opacity-100"
+                    size="sm"
+                    variant="ghost"
                   >
                     <MoreVertical className="h-4 w-4" />
                   </Button>
@@ -302,11 +301,11 @@ function DictionaryPage() {
                     Edit
                   </DropdownMenuItem>
                   <DropdownMenuItem
+                    className="text-red-600 focus:text-red-600"
                     onClick={() => {
                       setDeletingEntry({ id: entry.id, word: entry.word });
                       setIsDeleteDialogOpen(true);
                     }}
-                    className="text-red-600 focus:text-red-600"
                   >
                     Delete
                   </DropdownMenuItem>
@@ -318,7 +317,7 @@ function DictionaryPage() {
       )}
 
       {/* Add dialog */}
-      <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+      <Dialog onOpenChange={setIsAddDialogOpen} open={isAddDialogOpen}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Add to vocabulary</DialogTitle>
@@ -331,38 +330,38 @@ function DictionaryPage() {
               <Label htmlFor="new-word">Word</Label>
               <Input
                 id="new-word"
-                placeholder="Add a new word"
-                value={newWord}
+                maxLength={60}
                 onChange={(e) => {
                   setNewWord(e.target.value);
                   if (addError) setAddError(null); // Clear error when user types
                 }}
                 onKeyDown={(e) => {
-                  if (e.key === "Enter" && !isAdding) {
+                  if (e.key === 'Enter' && !isAdding) {
                     handleAddWord();
                   }
                 }}
-                maxLength={60}
+                placeholder="Add a new word"
+                value={newWord}
               />
               {addError && (
-                <p className="mt-2 text-sm text-red-500">{addError}</p>
+                <p className="mt-2 text-red-500 text-sm">{addError}</p>
               )}
             </div>
           </div>
           <DialogFooter>
             <Button
-              variant="outline"
               onClick={() => {
                 setIsAddDialogOpen(false);
-                setNewWord("");
+                setNewWord('');
                 setAddError(null);
               }}
+              variant="outline"
             >
               Cancel
             </Button>
             <Button
-              onClick={handleAddWord}
               disabled={isAdding || !newWord.trim()}
+              onClick={handleAddWord}
             >
               {isAdding && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Add word
@@ -372,7 +371,7 @@ function DictionaryPage() {
       </Dialog>
 
       {/* Edit dialog */}
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+      <Dialog onOpenChange={setIsEditDialogOpen} open={isEditDialogOpen}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Edit word</DialogTitle>
@@ -382,41 +381,41 @@ function DictionaryPage() {
               <Label htmlFor="edit-word">Word</Label>
               <Input
                 id="edit-word"
-                value={editingEntry?.word ?? ""}
+                maxLength={60}
                 onChange={(e) => {
                   setEditingEntry(
                     editingEntry
                       ? { ...editingEntry, word: e.target.value }
-                      : null,
+                      : null
                   );
                   if (editError) setEditError(null); // Clear error when user types
                 }}
                 onKeyDown={(e) => {
-                  if (e.key === "Enter" && !isUpdating) {
+                  if (e.key === 'Enter' && !isUpdating) {
                     handleUpdateWord();
                   }
                 }}
-                maxLength={60}
+                value={editingEntry?.word ?? ''}
               />
               {editError && (
-                <p className="mt-2 text-sm text-red-500">{editError}</p>
+                <p className="mt-2 text-red-500 text-sm">{editError}</p>
               )}
             </div>
           </div>
           <DialogFooter>
             <Button
-              variant="outline"
               onClick={() => {
                 setIsEditDialogOpen(false);
                 setEditingEntry(null);
                 setEditError(null);
               }}
+              variant="outline"
             >
               Cancel
             </Button>
             <Button
-              onClick={handleUpdateWord}
               disabled={isUpdating || !editingEntry?.word.trim()}
+              onClick={handleUpdateWord}
             >
               {isUpdating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Save changes
@@ -427,8 +426,8 @@ function DictionaryPage() {
 
       {/* Delete confirmation dialog */}
       <AlertDialog
-        open={isDeleteDialogOpen}
         onOpenChange={setIsDeleteDialogOpen}
+        open={isDeleteDialogOpen}
       >
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -447,9 +446,9 @@ function DictionaryPage() {
               Cancel
             </AlertDialogCancel>
             <AlertDialogAction
-              onClick={handleDeleteWord}
-              disabled={isDeleting}
               className="bg-red-600 hover:bg-red-700"
+              disabled={isDeleting}
+              onClick={handleDeleteWord}
             >
               {isDeleting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               Yes, delete it

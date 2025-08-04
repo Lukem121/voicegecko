@@ -1,14 +1,15 @@
-import { invoke } from "@tauri-apps/api/core";
-import { writeText } from "@tauri-apps/plugin-clipboard-manager";
-import { toast } from "sonner";
+import { log } from '@acme/observability';
+import { invoke } from '@tauri-apps/api/core';
+import { writeText } from '@tauri-apps/plugin-clipboard-manager';
+import { toast } from 'sonner';
 
-import { analytics } from "~/lib/analytics/posthog-analytics";
-import { useSettingsStore } from "~/stores/settings.store";
-import { recordingService } from "./recording.service";
+import { analytics } from '~/lib/analytics/posthog-analytics';
+import { useSettingsStore } from '~/stores/settings.store';
+import { recordingService } from './recording.service';
 
 export class TranscriptionService {
   private static instance: TranscriptionService | undefined;
-  private lastTranscription = "";
+  private lastTranscription = '';
   private lastTranscriptionId: string | null = null;
 
   private constructor() {
@@ -50,9 +51,9 @@ export class TranscriptionService {
   async pasteLastTranscription(): Promise<void> {
     if (this.lastTranscription) {
       await writeText(this.lastTranscription);
-      toast.success("Last transcription copied to clipboard.");
+      toast.success('Last transcription copied to clipboard.');
     } else {
-      toast.info("No transcription available to paste.");
+      toast.info('No transcription available to paste.');
     }
   }
 
@@ -60,9 +61,9 @@ export class TranscriptionService {
    * Handle completed transcription with clipboard and state management
    */
   async handleCompletedTranscription(transcript: string): Promise<void> {
-    console.log(
-      "[TranscriptionService] Handling completed transcription:",
-      transcript,
+    log.info(
+      '[TranscriptionService] Handling completed transcription:',
+      transcript
     );
 
     if (transcript) {
@@ -77,37 +78,34 @@ export class TranscriptionService {
         const { settings } = useSettingsStore.getState();
         if (settings.personalization.autoPasteOnCompletion) {
           try {
-            console.log("[TranscriptionService] Auto-pasting transcription...");
-            await invoke("simulate_paste");
-            console.log("[TranscriptionService] ✅ Auto-paste successful");
-            toast.success("Transcription complete and pasted!");
+            log.info('[TranscriptionService] Auto-pasting transcription...');
+            await invoke('simulate_paste');
+            log.info('[TranscriptionService] ✅ Auto-paste successful');
+            toast.success('Transcription complete and pasted!');
           } catch (pasteError) {
-            console.error(
-              "[TranscriptionService] Failed to auto-paste:",
-              pasteError,
+            log.error(
+              '[TranscriptionService] Failed to auto-paste:',
+              pasteError
             );
             // Still show success for clipboard copy even if paste fails
-            toast.success("Transcription complete and copied to clipboard!");
+            toast.success('Transcription complete and copied to clipboard!');
             toast.warning(
-              "Auto-paste failed - text copied to clipboard instead",
+              'Auto-paste failed - text copied to clipboard instead'
             );
           }
         } else {
           // Show success toast for clipboard copy only
-          toast.success("Transcription complete and copied to clipboard!");
+          toast.success('Transcription complete and copied to clipboard!');
         }
       } catch (error) {
-        console.error(
-          "[TranscriptionService] Failed to copy to clipboard:",
-          error,
-        );
-        toast.error("Failed to copy to clipboard", {
-          description: error instanceof Error ? error.message : "Unknown error",
+        log.error('[TranscriptionService] Failed to copy to clipboard:', error);
+        toast.error('Failed to copy to clipboard', {
+          description: error instanceof Error ? error.message : 'Unknown error',
         });
       }
     } else {
-      console.warn("[TranscriptionService] Empty transcript received");
-      toast.warning("Transcription returned an empty result.");
+      log.warn('[TranscriptionService] Empty transcript received');
+      toast.warning('Transcription returned an empty result.');
     }
   }
 
@@ -121,27 +119,24 @@ export class TranscriptionService {
 
       // First check if interaction sounds are enabled
       if (!settings.personalization.interactionSounds) {
-        console.log("[TranscriptionService] Interaction sounds disabled");
+        log.info('[TranscriptionService] Interaction sounds disabled');
         return;
       }
 
       // Play end sound on transcription completion for "completion_only" and "start_completion" timings
       // "start_stop" timing plays sounds when recording starts/stops, not on transcription
       if (
-        notificationTiming === "completion_only" ||
-        notificationTiming === "start_completion"
+        notificationTiming === 'completion_only' ||
+        notificationTiming === 'start_completion'
       ) {
-        console.log("[TranscriptionService] Playing end notification sound");
-        await recordingService.playNotificationSound("End");
-        console.log("[TranscriptionService] ✅ End sound played successfully");
+        log.info('[TranscriptionService] Playing end notification sound');
+        await recordingService.playNotificationSound('End');
+        log.info('[TranscriptionService] ✅ End sound played successfully');
       } else {
-        console.log("[TranscriptionService] End sound disabled by settings");
+        log.info('[TranscriptionService] End sound disabled by settings');
       }
     } catch (error) {
-      console.error(
-        "[TranscriptionService] ❌ Failed to play end sound:",
-        error,
-      );
+      log.error('[TranscriptionService] ❌ Failed to play end sound:', error);
       // Don't throw - notification sound failure shouldn't stop transcription completion
     }
   }
@@ -150,7 +145,7 @@ export class TranscriptionService {
    * Open last transcription (placeholder for future functionality)
    */
   openLastTranscription(): void {
-    toast.success("Opened transcriptions");
+    toast.success('Opened transcriptions');
   }
 }
 
