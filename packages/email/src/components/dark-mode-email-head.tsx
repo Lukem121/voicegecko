@@ -1,4 +1,4 @@
-import { Head } from "@react-email/components";
+import { Head } from '@react-email/components';
 
 export const DarkModeEmailHead = () => (
   <Head>

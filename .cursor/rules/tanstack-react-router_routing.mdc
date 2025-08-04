@@ -640,7 +640,6 @@ If your project is configured to use a linter and/or formatter, you may want to 
 Here are some resources to help you ignore the generated route tree file:
 
 - Prettier - [https://prettier.io/docs/en/ignore.html#ignoring-files-prettierignore](https://prettier.io/docs/en/ignore.html#ignoring-files-prettierignore)
-- ESLint - [https://eslint.org/docs/latest/use/configure/ignore#ignoring-files](https://eslint.org/docs/latest/use/configure/ignore#ignoring-files)
 - Biome - [https://biomejs.dev/reference/configuration/#filesignore](https://biomejs.dev/reference/configuration/#filesignore)
 
 > [!WARNING]
@@ -739,7 +738,6 @@ If your project is configured to use a linter and/or formatter, you may want to 
 Here are some resources to help you ignore the generated route tree file:
 
 - Prettier - [https://prettier.io/docs/en/ignore.html#ignoring-files-prettierignore](https://prettier.io/docs/en/ignore.html#ignoring-files-prettierignore)
-- ESLint - [https://eslint.org/docs/latest/use/configure/ignore#ignoring-files](https://eslint.org/docs/latest/use/configure/ignore#ignoring-files)
 - Biome - [https://biomejs.dev/reference/configuration/#filesignore](https://biomejs.dev/reference/configuration/#filesignore)
 
 > [!WARNING]
@@ -829,7 +827,6 @@ If your project is configured to use a linter and/or formatter, you may want to 
 Here are some resources to help you ignore the generated route tree file:
 
 - Prettier - [https://prettier.io/docs/en/ignore.html#ignoring-files-prettierignore](https://prettier.io/docs/en/ignore.html#ignoring-files-prettierignore)
-- ESLint - [https://eslint.org/docs/latest/use/configure/ignore#ignoring-files](https://eslint.org/docs/latest/use/configure/ignore#ignoring-files)
 - Biome - [https://biomejs.dev/reference/configuration/#filesignore](https://biomejs.dev/reference/configuration/#filesignore)
 
 > [!WARNING]
@@ -918,7 +915,6 @@ If your project is configured to use a linter and/or formatter, you may want to 
 Here are some resources to help you ignore the generated route tree file:
 
 - Prettier - [https://prettier.io/docs/en/ignore.html#ignoring-files-prettierignore](https://prettier.io/docs/en/ignore.html#ignoring-files-prettierignore)
-- ESLint - [https://eslint.org/docs/latest/use/configure/ignore#ignoring-files](https://eslint.org/docs/latest/use/configure/ignore#ignoring-files)
 - Biome - [https://biomejs.dev/reference/configuration/#filesignore](https://biomejs.dev/reference/configuration/#filesignore)
 
 > [!WARNING]
@@ -998,7 +994,6 @@ If your project is configured to use a linter and/or formatter, you may want to 
 Here are some resources to help you ignore the generated route tree file:
 
 - Prettier - [https://prettier.io/docs/en/ignore.html#ignoring-files-prettierignore](https://prettier.io/docs/en/ignore.html#ignoring-files-prettierignore)
-- ESLint - [https://eslint.org/docs/latest/use/configure/ignore#ignoring-files](https://eslint.org/docs/latest/use/configure/ignore#ignoring-files)
 - Biome - [https://biomejs.dev/reference/configuration/#filesignore](https://biomejs.dev/reference/configuration/#filesignore)
 
 > [!WARNING]

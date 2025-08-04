@@ -10,11 +10,11 @@ import {
   Section,
   Tailwind,
   Text,
-} from "@react-email/components";
+} from '@react-email/components';
 
-import { DarkModeAwareLogoFull } from "../components/dark-mode-aware-logo-full";
-import { DarkModeEmailHead } from "../components/dark-mode-email-head";
-import { EmailFooter } from "../components/email-footer";
+import { DarkModeAwareLogoFull } from '../components/dark-mode-aware-logo-full';
+import { DarkModeEmailHead } from '../components/dark-mode-email-head';
+import { EmailFooter } from '../components/email-footer';
 
 interface LinkEmailProps {
   heading: string;
@@ -32,7 +32,7 @@ export const LinkTemplate = ({ heading, description, url }: LinkEmailProps) => (
           <Section className="mt-4 px-2 sm:mt-8 sm:px-0">
             <DarkModeAwareLogoFull />
           </Section>
-          <Heading className="my-4 px-2 text-2xl leading-tight font-bold text-[#1d1c1d] sm:my-7 sm:px-0 sm:text-3xl">
+          <Heading className="my-4 px-2 font-bold text-2xl text-[#1d1c1d] leading-tight sm:my-7 sm:px-0 sm:text-3xl">
             {heading}
           </Heading>
           <Text className="mb-5 px-2 text-lg leading-6 sm:mb-7 sm:px-0 sm:leading-7">
@@ -41,14 +41,14 @@ export const LinkTemplate = ({ heading, description, url }: LinkEmailProps) => (
 
           <Section className="mx-2 mb-5 rounded-md bg-gray-100 p-6 sm:mx-0 sm:mb-7 sm:p-10">
             <Link
-              className="text-base leading-6 break-all text-blue-600 hover:text-blue-800 sm:text-lg"
+              className="break-all text-base text-blue-600 leading-6 hover:text-blue-800 sm:text-lg"
               href={url}
             >
               {url}
             </Link>
           </Section>
 
-          <Text className="px-2 text-base leading-6 text-black sm:px-0">
+          <Text className="px-2 text-base text-black leading-6 sm:px-0">
             If you didn't request this email, there's nothing to worry about,
             you can safely ignore it.
           </Text>

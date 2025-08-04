@@ -1,4 +1,11 @@
-import { useEffect, useState } from "react";
+import { Button } from '@acme/ui/components/ui/button';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from '@acme/ui/components/ui/card';
+import { cn } from '@acme/ui/lib/utils';
 import {
   AlertCircle,
   Globe,
@@ -6,22 +13,14 @@ import {
   Server,
   Wifi,
   WifiOff,
-} from "lucide-react";
-
-import { Button } from "@acme/ui/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@acme/ui/components/ui/card";
-import { cn } from "@acme/ui/lib/utils";
+} from 'lucide-react';
+import { useEffect, useState } from 'react';
 
 interface ConnectivityErrorProps {
   isOnline: boolean;
   isApiReachable: boolean;
   isChecking: boolean;
-  diagnosis: "healthy" | "no_internet" | "api_down" | "unknown";
+  diagnosis: 'healthy' | 'no_internet' | 'api_down' | 'unknown';
   lastSuccessfulCheck?: Date | null;
   onRetry: () => void;
   className?: string;
@@ -42,7 +41,7 @@ export function ConnectivityError({
 
   // Auto-retry every 30 seconds continuously, but not if user recently clicked manual retry
   useEffect(() => {
-    if (diagnosis !== "healthy") {
+    if (diagnosis !== 'healthy') {
       // Reset countdown when starting a new cycle
       setNextAutoRetryIn(30);
 
@@ -53,17 +52,16 @@ export function ConnectivityError({
         }
 
         onRetry();
-      }, 30000);
+      }, 30_000);
 
       return () => clearTimeout(timer);
-    } else {
-      setNextAutoRetryIn(30);
     }
+    setNextAutoRetryIn(30);
   }, [diagnosis, onRetry, manualRetryDisabledUntil]);
 
   // Countdown timer for next auto-retry
   useEffect(() => {
-    if (diagnosis !== "healthy" && !isChecking) {
+    if (diagnosis !== 'healthy' && !isChecking) {
       const interval = setInterval(() => {
         setNextAutoRetryIn((prev) => {
           if (prev <= 1) {
@@ -79,43 +77,43 @@ export function ConnectivityError({
 
   const getStatusInfo = () => {
     switch (diagnosis) {
-      case "no_internet":
+      case 'no_internet':
         return {
           icon: WifiOff,
-          title: "No Internet Connection",
+          title: 'No Internet Connection',
           description:
             "Your device isn't connected to the internet. Voice Gecko can't reach our servers without an active internet connection.",
-          variant: "destructive" as const,
+          variant: 'destructive' as const,
           isUserIssue: true,
         };
 
-      case "api_down":
+      case 'api_down':
         return {
           icon: Server,
-          title: "Servers Unavailable",
+          title: 'Servers Unavailable',
           description:
             "Your internet connection is working, but we can't reach Voice Gecko's servers. This is likely a temporary issue on our end.",
-          variant: "warning" as const,
+          variant: 'warning' as const,
           isUserIssue: false,
         };
 
-      case "healthy":
+      case 'healthy':
         return {
           icon: Wifi,
-          title: "Connection Restored",
+          title: 'Connection Restored',
           description: "You're back online and connected to Voice Gecko!",
-          variant: "success" as const,
+          variant: 'success' as const,
           isUserIssue: false,
         };
 
-      case "unknown":
+      case 'unknown':
       default:
         return {
           icon: AlertCircle,
-          title: "Connection Issue",
+          title: 'Connection Issue',
           description:
             "We're having trouble connecting to Voice Gecko. This could be an internet or server issue.",
-          variant: "warning" as const,
+          variant: 'warning' as const,
           isUserIssue: null, // Could be either
         };
     }
@@ -124,19 +122,19 @@ export function ConnectivityError({
   const status = getStatusInfo();
 
   const formatLastSuccessful = (date: Date | null) => {
-    if (!date) return "Never";
+    if (!date) return 'Never';
 
     const now = new Date();
     const diffMs = now.getTime() - date.getTime();
-    const diffMins = Math.floor(diffMs / 60000);
+    const diffMins = Math.floor(diffMs / 60_000);
 
-    if (diffMins < 1) return "Just now";
+    if (diffMins < 1) return 'Just now';
     if (diffMins < 60)
-      return `${diffMins} minute${diffMins !== 1 ? "s" : ""} ago`;
+      return `${diffMins} minute${diffMins !== 1 ? 's' : ''} ago`;
 
     const diffHours = Math.floor(diffMins / 60);
     if (diffHours < 24)
-      return `${diffHours} hour${diffHours !== 1 ? "s" : ""} ago`;
+      return `${diffHours} hour${diffHours !== 1 ? 's' : ''} ago`;
 
     return date.toLocaleDateString();
   };
@@ -144,19 +142,19 @@ export function ConnectivityError({
   return (
     <div
       className={cn(
-        "flex min-h-screen items-center justify-center p-4",
-        className,
+        'flex min-h-screen items-center justify-center p-4',
+        className
       )}
     >
       <div className="relative w-full max-w-md">
         {/* Main Error Card */}
         <Card className="relative w-full">
           {/* Gecko Mascot - positioned at bottom-left corner of card */}
-          <div className="absolute -bottom-2 -left-2 z-10 hidden sm:block">
+          <div className="-bottom-2 -left-2 absolute z-10 hidden sm:block">
             <img
-              src="/geckos/worker.png"
               alt="Voice Gecko construction worker"
-              className="h-16 w-16 origin-bottom cursor-pointer object-contain transition-transform duration-300 ease-in-out hover:-rotate-[5deg]"
+              className="hover:-rotate-[5deg] h-16 w-16 origin-bottom cursor-pointer object-contain transition-transform duration-300 ease-in-out"
+              src="/geckos/worker.png"
             />
           </div>
 
@@ -170,67 +168,69 @@ export function ConnectivityError({
 
             {/* Status indicators */}
             <div className="space-y-2 text-sm">
-              <div className="bg-muted/50 flex items-center justify-between rounded-lg px-3 py-2">
+              <div className="flex items-center justify-between rounded-lg bg-muted/50 px-3 py-2">
                 <div className="flex items-center gap-2">
                   <Globe className="h-4 w-4" />
                   <span>Internet Connection</span>
                 </div>
                 <span
                   className={cn(
-                    "font-medium",
-                    isOnline ? "text-green-600" : "text-red-600",
+                    'font-medium',
+                    isOnline ? 'text-green-600' : 'text-red-600'
                   )}
                 >
-                  {isOnline ? "Connected" : "Disconnected"}
+                  {isOnline ? 'Connected' : 'Disconnected'}
                 </span>
               </div>
 
-              <div className="bg-muted/50 flex items-center justify-between rounded-lg px-3 py-2">
+              <div className="flex items-center justify-between rounded-lg bg-muted/50 px-3 py-2">
                 <div className="flex items-center gap-2">
                   <Server className="h-4 w-4" />
                   <span>Voice Gecko Servers</span>
                 </div>
                 <span
                   className={cn(
-                    "font-medium",
+                    'font-medium',
                     isApiReachable
-                      ? "text-green-600"
+                      ? 'text-green-600'
                       : isOnline
-                        ? "text-red-600"
-                        : "text-gray-500",
+                        ? 'text-red-600'
+                        : 'text-gray-500'
                   )}
                 >
                   {isApiReachable
-                    ? "Reachable"
+                    ? 'Reachable'
                     : isOnline
-                      ? "Unreachable"
-                      : "Not checked"}
+                      ? 'Unreachable'
+                      : 'Not checked'}
                 </span>
               </div>
             </div>
 
-            {diagnosis !== "healthy" && (
+            {diagnosis !== 'healthy' && (
               <>
                 <div className="space-y-2">
                   {lastSuccessfulCheck && (
                     <p className="text-muted-foreground text-xs">
-                      Last successful connection:{" "}
+                      Last successful connection:{' '}
                       {formatLastSuccessful(lastSuccessfulCheck)}
                     </p>
                   )}
 
                   <Button
+                    className={cn(
+                      'w-full transition-all duration-300',
+                      !isChecking && 'border-dashed'
+                    )}
+                    disabled={isChecking}
                     onClick={() => {
                       setNextAutoRetryIn(30);
                       // Disable auto-retry for 60 seconds after manual retry
-                      setManualRetryDisabledUntil(new Date(Date.now() + 60000));
+                      setManualRetryDisabledUntil(
+                        new Date(Date.now() + 60_000)
+                      );
                       onRetry();
                     }}
-                    disabled={isChecking}
-                    className={cn(
-                      "w-full transition-all duration-300",
-                      !isChecking && "border-dashed",
-                    )}
                     variant="outline"
                   >
                     {isChecking ? (
@@ -244,7 +244,7 @@ export function ConnectivityError({
                         <span>Check Again</span>
                         <span
                           className={cn(
-                            "bg-muted ml-2 rounded px-2 py-0.5 font-mono text-xs transition-all duration-200 ease-in-out",
+                            'ml-2 rounded bg-muted px-2 py-0.5 font-mono text-xs transition-all duration-200 ease-in-out'
                           )}
                         >
                           {nextAutoRetryIn}s
@@ -254,16 +254,16 @@ export function ConnectivityError({
                   </Button>
                 </div>
 
-                <div className="text-muted-foreground space-y-2 text-xs">
+                <div className="space-y-2 text-muted-foreground text-xs">
                   <p className="text-left font-medium">
                     {status.isUserIssue === true
-                      ? "How to fix this:"
+                      ? 'How to fix this:'
                       : status.isUserIssue === false
                         ? "What we're doing:"
-                        : "Troubleshooting:"}
+                        : 'Troubleshooting:'}
                   </p>
                   <ul className="space-y-1 text-left">
-                    {diagnosis === "no_internet" ? (
+                    {diagnosis === 'no_internet' ? (
                       <>
                         <li>• Check your WiFi or ethernet connection</li>
                         <li>• Try opening a website in your browser</li>
@@ -272,7 +272,7 @@ export function ConnectivityError({
                           • Contact your internet provider if the issue persists
                         </li>
                       </>
-                    ) : diagnosis === "api_down" ? (
+                    ) : diagnosis === 'api_down' ? (
                       <>
                         <li>• Our team has been automatically notified</li>
                         <li>
@@ -303,9 +303,9 @@ export function ConnectivityError({
         <div className="mt-4 flex justify-center sm:hidden">
           <div className="relative">
             <img
-              src="/geckos/worker.png"
               alt="Voice Gecko construction worker"
-              className="h-12 w-12 origin-bottom cursor-pointer object-contain opacity-60 transition-transform duration-300 ease-in-out hover:-rotate-[5deg]"
+              className="hover:-rotate-[5deg] h-12 w-12 origin-bottom cursor-pointer object-contain opacity-60 transition-transform duration-300 ease-in-out"
+              src="/geckos/worker.png"
             />
           </div>
         </div>
@@ -321,7 +321,7 @@ interface ConnectivityIndicatorProps {
   isOnline: boolean;
   isApiReachable: boolean;
   isChecking: boolean;
-  diagnosis: "healthy" | "no_internet" | "api_down" | "unknown";
+  diagnosis: 'healthy' | 'no_internet' | 'api_down' | 'unknown';
   lastChecked?: Date | null;
   className?: string;
 }
@@ -334,12 +334,12 @@ export function ConnectivityIndicator({
   lastChecked,
   className,
 }: ConnectivityIndicatorProps) {
-  if (diagnosis === "healthy") {
+  if (diagnosis === 'healthy') {
     return null; // Don't show anything when everything is working
   }
 
   // Don't show indicator for initial "unknown" state before any checks have been performed
-  if (diagnosis === "unknown" && !lastChecked) {
+  if (diagnosis === 'unknown' && !lastChecked) {
     return null;
   }
 
@@ -347,31 +347,31 @@ export function ConnectivityIndicator({
     if (isChecking) {
       return {
         icon: RefreshCw,
-        className: "text-yellow-500 animate-spin",
-        text: "Checking connection...",
+        className: 'text-yellow-500 animate-spin',
+        text: 'Checking connection...',
       };
     }
 
     switch (diagnosis) {
-      case "no_internet":
+      case 'no_internet':
         return {
           icon: WifiOff,
-          className: "text-red-500",
-          text: "No internet connection",
+          className: 'text-red-500',
+          text: 'No internet connection',
         };
 
-      case "api_down":
+      case 'api_down':
         return {
           icon: Server,
-          className: "text-yellow-500",
-          text: "Voice Gecko servers unavailable",
+          className: 'text-yellow-500',
+          text: 'Voice Gecko servers unavailable',
         };
 
       default:
         return {
           icon: AlertCircle,
-          className: "text-yellow-500",
-          text: "Connection issue",
+          className: 'text-yellow-500',
+          text: 'Connection issue',
         };
     }
   };
@@ -380,8 +380,8 @@ export function ConnectivityIndicator({
   const Icon = indicator.icon;
 
   return (
-    <div className={cn("flex items-center gap-2 text-sm", className)}>
-      <Icon className={cn("h-4 w-4", indicator.className)} />
+    <div className={cn('flex items-center gap-2 text-sm', className)}>
+      <Icon className={cn('h-4 w-4', indicator.className)} />
       <span className="text-muted-foreground">{indicator.text}</span>
     </div>
   );

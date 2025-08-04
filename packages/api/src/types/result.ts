@@ -12,20 +12,20 @@ export interface AppError {
 
 // Dictionary-specific error codes
 export const DictionaryErrorCodes = {
-  DUPLICATE_WORD: "DUPLICATE_WORD",
-  WORD_NOT_FOUND: "WORD_NOT_FOUND",
-  LIMIT_EXCEEDED: "LIMIT_EXCEEDED",
-  INVALID_WORD: "INVALID_WORD",
-  DATABASE_ERROR: "DATABASE_ERROR",
+  DUPLICATE_WORD: 'DUPLICATE_WORD',
+  WORD_NOT_FOUND: 'WORD_NOT_FOUND',
+  LIMIT_EXCEEDED: 'LIMIT_EXCEEDED',
+  INVALID_WORD: 'INVALID_WORD',
+  DATABASE_ERROR: 'DATABASE_ERROR',
 } as const;
 
 // Feedback-specific error codes
 export const FeedbackErrorCodes = {
-  FEEDBACK_TOO_LONG: "FEEDBACK_TOO_LONG",
-  FEEDBACK_EMPTY: "FEEDBACK_EMPTY",
-  TRANSCRIPTION_NOT_FOUND: "TRANSCRIPTION_NOT_FOUND",
-  DISCORD_SEND_FAILED: "DISCORD_SEND_FAILED",
-  INTERNAL_ERROR: "INTERNAL_ERROR",
+  FEEDBACK_TOO_LONG: 'FEEDBACK_TOO_LONG',
+  FEEDBACK_EMPTY: 'FEEDBACK_EMPTY',
+  TRANSCRIPTION_NOT_FOUND: 'TRANSCRIPTION_NOT_FOUND',
+  DISCORD_SEND_FAILED: 'DISCORD_SEND_FAILED',
+  INTERNAL_ERROR: 'INTERNAL_ERROR',
 } as const;
 
 // Helper functions for creating results
@@ -46,7 +46,7 @@ export const dictionaryError = {
 
   wordNotFound: (id: number): AppError => ({
     code: DictionaryErrorCodes.WORD_NOT_FOUND,
-    message: "Dictionary entry not found",
+    message: 'Dictionary entry not found',
     details: { id },
   }),
 
@@ -79,19 +79,20 @@ export const feedbackError = {
 
   feedbackEmpty: (): AppError => ({
     code: FeedbackErrorCodes.FEEDBACK_EMPTY,
-    message: "Feedback cannot be empty. Please provide some text.",
+    message: 'Feedback cannot be empty. Please provide some text.',
     details: {},
   }),
 
   transcriptionNotFound: (transcriptionId: number): AppError => ({
     code: FeedbackErrorCodes.TRANSCRIPTION_NOT_FOUND,
-    message: "The transcription you're trying to provide feedback for was not found.",
+    message:
+      "The transcription you're trying to provide feedback for was not found.",
     details: { transcriptionId },
   }),
 
   discordSendFailed: (originalError: string): AppError => ({
     code: FeedbackErrorCodes.DISCORD_SEND_FAILED,
-    message: "Failed to send feedback to our team. Please try again later.",
+    message: 'Failed to send feedback to our team. Please try again later.',
     details: { originalError },
   }),
 

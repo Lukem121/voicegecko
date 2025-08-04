@@ -1,11 +1,11 @@
-import type { MailDataRequired } from "@sendgrid/mail";
-import type { ReactElement } from "react";
-import { render } from "@react-email/components";
-import sendgrid from "@sendgrid/mail";
+import { render } from '@react-email/components';
+import type { MailDataRequired } from '@sendgrid/mail';
+import sendgrid from '@sendgrid/mail';
+import type { ReactElement } from 'react';
 
-import { keys } from "../env";
+import { keys } from '../env';
 
-type Options = Omit<MailDataRequired, "html"> & {
+type Options = Omit<MailDataRequired, 'html'> & {
   react: ReactElement;
 };
 

@@ -1,12 +1,12 @@
-"use client";
+'use client';
 
-import type { ReactNode } from "react";
-import { useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter } from 'next/navigation';
+import type { ReactNode } from 'react';
+import { useEffect } from 'react';
 
-import { authClient } from "~/lib/auth/client";
-import { APP_ROUTES } from "~/utils/app-routes";
-import { usePolling } from "../hooks/use-polling-refresh";
+import { authClient } from '~/lib/auth/client';
+import { APP_ROUTES } from '~/utils/app-routes';
+import { usePolling } from '../hooks/use-polling-refresh';
 
 const POLL_INTERVAL = 5000;
 

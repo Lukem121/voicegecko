@@ -1,7 +1,7 @@
-import { eq } from "drizzle-orm";
-
-import { db } from "@acme/db/client";
-import { user as UserTable } from "@acme/db/schema";
+import { db } from '@acme/db/client';
+import { user as UserTable } from '@acme/db/schema';
+import { log } from '@acme/observability';
+import { eq } from 'drizzle-orm';
 
 export interface UserForEmail {
   email: string;
@@ -12,7 +12,7 @@ export interface UserForEmail {
  * Fetches user details needed for sending emails
  */
 export async function getUserForEmail(
-  userId: string,
+  userId: string
 ): Promise<UserForEmail | null> {
   try {
     const [userRecord] = await db
@@ -25,7 +25,7 @@ export async function getUserForEmail(
       .limit(1);
 
     if (!userRecord) {
-      console.error(`[Email] User not found for userId: ${userId}`);
+      log.error(`[Email] User not found for userId: ${userId}`);
       return null;
     }
 
@@ -34,7 +34,7 @@ export async function getUserForEmail(
       name: userRecord.name || undefined,
     };
   } catch (error) {
-    console.error(`[Email] Error fetching user for email:`, error);
+    log.error('[Email] Error fetching user for email:', error);
     return null;
   }
 }

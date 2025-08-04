@@ -1,8 +1,8 @@
-import { headers } from "next/headers";
+import { headers } from 'next/headers';
 
-import { authClient } from "~/lib/auth/client";
-import { caller } from "~/trpc/server";
-import Billing from "./_components/billing";
+import { authClient } from '~/lib/auth/client';
+import { caller } from '~/trpc/server';
+import Billing from './_components/billing';
 
 export default async function BillingPage() {
   const [prices, subscriptionData] = await Promise.all([
@@ -19,9 +19,9 @@ export default async function BillingPage() {
 
   return (
     <Billing
+      error={error}
       prices={prices}
       subscription={subscription ?? null}
-      error={error}
     />
   );
 }

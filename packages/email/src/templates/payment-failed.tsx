@@ -10,11 +10,11 @@ import {
   Section,
   Tailwind,
   Text,
-} from "@react-email/components";
+} from '@react-email/components';
 
-import { DarkModeAwareLogoFull } from "../components/dark-mode-aware-logo-full";
-import { DarkModeEmailHead } from "../components/dark-mode-email-head";
-import { EmailFooter } from "../components/email-footer";
+import { DarkModeAwareLogoFull } from '../components/dark-mode-aware-logo-full';
+import { DarkModeEmailHead } from '../components/dark-mode-email-head';
+import { EmailFooter } from '../components/email-footer';
 
 interface PaymentFailedEmailProps {
   name?: string;
@@ -39,16 +39,16 @@ export const PaymentFailedTemplate = ({
             <DarkModeAwareLogoFull />
           </Section>
 
-          <Heading className="my-4 px-2 text-2xl leading-tight font-bold text-[#1d1c1d] sm:my-7 sm:px-0 sm:text-3xl">
+          <Heading className="my-4 px-2 font-bold text-2xl text-[#1d1c1d] leading-tight sm:my-7 sm:px-0 sm:text-3xl">
             Payment Issue with Your Subscription
           </Heading>
 
           <Text className="mb-3 px-2 text-lg leading-6 sm:mb-4 sm:px-0 sm:leading-7">
-            We had trouble processing the payment for your{" "}
+            We had trouble processing the payment for your{' '}
             <strong>{planName}</strong> subscription.
           </Text>
 
-          <Text className="mb-5 px-2 text-base leading-6 text-gray-700 sm:mb-7 sm:px-0">
+          <Text className="mb-5 px-2 text-base text-gray-700 leading-6 sm:mb-7 sm:px-0">
             Don't worry – your subscription is still active for now, and we'll
             retry the payment automatically. However, to avoid any interruption
             to your service, we recommend updating your payment method.
@@ -56,7 +56,7 @@ export const PaymentFailedTemplate = ({
 
           {/* Action Section */}
           <Section className="mx-2 mb-5 rounded-md bg-blue-50 p-4 text-center sm:mx-0 sm:mb-7 sm:p-6">
-            <Text className="mb-4 px-2 text-base leading-6 text-gray-700 sm:mb-6 sm:px-0">
+            <Text className="mb-4 px-2 text-base text-gray-700 leading-6 sm:mb-6 sm:px-0">
               To continue enjoying your VoiceGecko subscription without
               interruption, please update your payment information.
             </Text>
@@ -68,7 +68,7 @@ export const PaymentFailedTemplate = ({
             </Link>
             <div className="mt-4">
               <Link
-                className="text-sm text-blue-600 underline hover:text-blue-800"
+                className="text-blue-600 text-sm underline hover:text-blue-800"
                 href={accountUrl}
               >
                 Or manage your account settings
@@ -78,10 +78,10 @@ export const PaymentFailedTemplate = ({
 
           {/* Account Status */}
           <Section className="mb-5 px-2 sm:mb-7 sm:px-0">
-            <Heading className="mb-3 text-base font-semibold text-[#1d1c1d] sm:text-lg">
+            <Heading className="mb-3 font-semibold text-[#1d1c1d] text-base sm:text-lg">
               📋 Your Account Status
             </Heading>
-            <ul className="space-y-2 pl-4 text-sm leading-6 text-gray-700 sm:pl-5">
+            <ul className="space-y-2 pl-4 text-gray-700 text-sm leading-6 sm:pl-5">
               <li className="flex items-start">
                 <span className="mr-3 text-green-600">✓</span>
                 <span>
@@ -114,7 +114,7 @@ export const PaymentFailedTemplate = ({
               >
                 Contact Support
               </Link>
-              {" • "}
+              {' • '}
               <Link
                 className="text-blue-600 underline hover:text-blue-800"
                 href="https://discord.gg/BFxNQCzZjB"
@@ -124,7 +124,7 @@ export const PaymentFailedTemplate = ({
             </Text>
           </Section>
 
-          <Text className="px-2 text-base leading-6 text-black sm:px-0">
+          <Text className="px-2 text-base text-black leading-6 sm:px-0">
             Thank you for being a VoiceGecko user. We appreciate your business
             and want to keep you transcribing!
           </Text>

@@ -1,34 +1,39 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
-import { createFileRoute } from "@tanstack/react-router";
-import { invoke } from "@tauri-apps/api/core";
-import { listen } from "@tauri-apps/api/event";
-import { AlertCircle, Mic, MicOff } from "lucide-react";
-import { motion } from "motion/react";
-
-import { Alert, AlertDescription } from "@acme/ui/components/ui/alert";
-import { Button } from "@acme/ui/components/ui/button";
+import { Alert, AlertDescription } from '@acme/ui/components/ui/alert';
+import { Button } from '@acme/ui/components/ui/button';
 import {
-  Card,
+import
+{
+  log;
+}
+from;
+('@acme/observability');
+Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@acme/ui/components/ui/card";
+} from '@acme/ui/components/ui/card'
+
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@acme/ui/components/ui/dialog";
+} from '@acme/ui/components/ui/dialog';
+import { createFileRoute } from '@tanstack/react-router';
+import { invoke } from '@tauri-apps/api/core';
+import { listen } from '@tauri-apps/api/event';
+import { AlertCircle, Mic, MicOff } from 'lucide-react';
+import { motion } from 'motion/react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { useOnboarding } from '~/components/onboarding/onboarding-provider';
+import { analytics } from '~/lib/analytics/posthog-analytics';
+import { useSettingsStore } from '~/stores/settings.store';
+import type { AudioLevelEvent } from '~/types/events';
+import type { AudioDevice } from '~/types/settings';
 
-import type { AudioLevelEvent } from "~/types/events";
-import type { AudioDevice } from "~/types/settings";
-import { useOnboarding } from "~/components/onboarding/onboarding-provider";
-import { analytics } from "~/lib/analytics/posthog-analytics";
-import { useSettingsStore } from "~/stores/settings.store";
-
-export const Route = createFileRoute("/onboarding/microphone-setup")({
+export const Route = createFileRoute('/onboarding/microphone-setup')({
   component: MicrophoneSetupStep,
 });
 
@@ -49,12 +54,12 @@ function MicrophoneSetupStep() {
   } = useSettingsStore();
 
   const [selectedDevice, setSelectedDevice] = useState<AudioDevice | null>(
-    audioSettings.selectedDevice,
+    audioSettings.selectedDevice
   );
   const [audioLevel, setAudioLevel] = useState(0);
   const [showDeviceSelector, setShowDeviceSelector] = useState(false);
   const [microphoneTestError, setMicrophoneTestError] = useState<string | null>(
-    null,
+    null
   );
   const [isConfirming, setIsConfirming] = useState(false);
 
@@ -65,21 +70,21 @@ function MicrophoneSetupStep() {
     try {
       // Set up event listeners for real-time audio levels
       const unlistenLevel = await listen<AudioLevelEvent>(
-        "microphone-test-level",
+        'microphone-test-level',
         (event) => {
           const audioData = event.payload;
           // Convert RMS level to percentage and apply some amplification for UI display
           const displayLevel = Math.min(audioData.level * 700, 100);
           setAudioLevel(displayLevel);
-        },
+        }
       );
 
       const unlistenError = await listen<string>(
-        "microphone-test-error",
+        'microphone-test-error',
         (event) => {
-          console.error("[Onboarding] Microphone test error:", event.payload);
+          log.error('[Onboarding] Microphone test error:', event.payload);
           setMicrophoneTestError(event.payload);
-        },
+        }
       );
 
       // Store unlisten functions for cleanup
@@ -89,13 +94,13 @@ function MicrophoneSetupStep() {
       };
 
       // Start the microphone test - if no device specified, backend will use system default
-      await invoke("start_microphone_test", {
+      await invoke('start_microphone_test', {
         device: device?.name ?? null,
       });
     } catch (error) {
-      console.error("[Onboarding] Failed to start microphone test:", error);
+      log.error('[Onboarding] Failed to start microphone test:', error);
       setMicrophoneTestError(
-        error instanceof Error ? error.message : "Unknown error",
+        error instanceof Error ? error.message : 'Unknown error'
       );
     }
   }, []);
@@ -105,18 +110,18 @@ function MicrophoneSetupStep() {
     if (initialActionsPerformed.current) return;
     initialActionsPerformed.current = true;
 
-    void refreshAudioDevices();
+    refreshAudioDevices();
 
     // Start microphone test immediately with system default device
-    void startMicrophoneTest();
+    startMicrophoneTest();
 
     sendMascotMessage({
       content:
         "Now let's set up your microphone! I'll test it automatically - just speak and see if the bars light up!",
-      type: "guidance",
+      type: 'guidance',
       persist: true,
       duration: 5000,
-      priority: "high",
+      priority: 'high',
     });
   }, [refreshAudioDevices, sendMascotMessage, startMicrophoneTest]);
 
@@ -126,7 +131,7 @@ function MicrophoneSetupStep() {
       const defaultDevice = audioDevices[0];
       if (defaultDevice) {
         setSelectedDevice(defaultDevice);
-        void updateAudioDevice(defaultDevice);
+        updateAudioDevice(defaultDevice);
         // Don't restart the test - it's already running with system default
       }
     }
@@ -144,7 +149,7 @@ function MicrophoneSetupStep() {
         microphoneTestUnlistenRef.current();
       }
       // Stop any ongoing microphone test
-      invoke("stop_microphone_test").catch(console.error);
+      invoke('stop_microphone_test').catch(console.error);
     };
   }, []);
 
@@ -159,24 +164,24 @@ function MicrophoneSetupStep() {
 
       // Stop current test and start with new device
       try {
-        await invoke("stop_microphone_test");
+        await invoke('stop_microphone_test');
         if (microphoneTestUnlistenRef.current) {
           microphoneTestUnlistenRef.current();
         }
       } catch (error) {
-        console.error("Failed to stop previous test:", error);
+        log.error('Failed to stop previous test:', error);
       }
 
       await startMicrophoneTest(device);
 
       sendMascotMessage({
         content: `Testing "${device.name}" now! Speak and see if the bars light up!`,
-        type: "info",
+        type: 'info',
         duration: 4000,
-        priority: "high",
+        priority: 'high',
       });
     },
-    [audioDevices, updateAudioDevice, startMicrophoneTest, sendMascotMessage],
+    [audioDevices, updateAudioDevice, startMicrophoneTest, sendMascotMessage]
   );
 
   const handleConfirmMicrophone = useCallback(() => {
@@ -185,11 +190,11 @@ function MicrophoneSetupStep() {
     // Set confirming state immediately for UI feedback
     setIsConfirming(true);
 
-    markStepCompleted("microphone", 100);
-    setStepProgress("microphone", 100);
+    markStepCompleted('microphone', 100);
+    setStepProgress('microphone', 100);
 
     // Navigate to next onboarding step immediately
-    void nextStep();
+    nextStep();
   }, [
     selectedDevice,
     isConfirming,
@@ -216,11 +221,11 @@ function MicrophoneSetupStep() {
               </CardDescription>
 
               <CardContent className="space-y-6">
-                <div className="bg-muted/50 mx-auto w-fit rounded-full p-4">
-                  <MicOff className="text-muted-foreground h-8 w-8" />
+                <div className="mx-auto w-fit rounded-full bg-muted/50 p-4">
+                  <MicOff className="h-8 w-8 text-muted-foreground" />
                 </div>
                 <div className="text-center">
-                  <h2 className="mb-2 text-lg font-semibold">
+                  <h2 className="mb-2 font-semibold text-lg">
                     No microphones found
                   </h2>
                   <p className="text-muted-foreground text-sm">
@@ -236,7 +241,7 @@ function MicrophoneSetupStep() {
                   </AlertDescription>
                 </Alert>
                 <div className="flex justify-center">
-                  <Button variant="outline" onClick={refreshAudioDevices}>
+                  <Button onClick={refreshAudioDevices} variant="outline">
                     Refresh Devices
                   </Button>
                 </div>
@@ -252,8 +257,8 @@ function MicrophoneSetupStep() {
     <div className="flex min-h-full flex-col">
       <div className="flex flex-1 items-center justify-center px-6 py-12">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
+          initial={{ opacity: 0, y: 20 }}
           transition={{ duration: 0.6 }}
         >
           <Card>
@@ -275,18 +280,18 @@ function MicrophoneSetupStep() {
 
                     return (
                       <div
-                        key={i}
                         className={`h-6 flex-1 rounded transition-colors duration-150 ${
                           isActive
-                            ? "bg-primary"
-                            : "bg-gray-200 dark:bg-gray-700"
+                            ? 'bg-primary'
+                            : 'bg-gray-200 dark:bg-gray-700'
                         }`}
+                        key={i}
                       />
                     );
                   })}
                 </div>
 
-                <p className="text-center text-base font-medium">
+                <p className="text-center font-medium text-base">
                   Do you see bars moving while you speak?
                 </p>
               </div>
@@ -304,16 +309,16 @@ function MicrophoneSetupStep() {
               {/* Action Buttons */}
               <div className="grid grid-cols-2 gap-3">
                 <Button
-                  variant="outline"
-                  onClick={handleChangeMicrophone}
                   disabled={isConfirming}
+                  onClick={handleChangeMicrophone}
+                  variant="outline"
                 >
                   No
                 </Button>
                 <Button
-                  onClick={handleConfirmMicrophone}
-                  disabled={isConfirming}
                   className="bg-black text-white hover:bg-gray-800"
+                  disabled={isConfirming}
+                  onClick={handleConfirmMicrophone}
                 >
                   Yes
                 </Button>
@@ -323,7 +328,7 @@ function MicrophoneSetupStep() {
         </motion.div>
 
         {/* Device Selector Dialog */}
-        <Dialog open={showDeviceSelector} onOpenChange={setShowDeviceSelector}>
+        <Dialog onOpenChange={setShowDeviceSelector} open={showDeviceSelector}>
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Choose your microphone</DialogTitle>
@@ -336,17 +341,17 @@ function MicrophoneSetupStep() {
             <div className="max-h-[400px] space-y-2 overflow-y-auto">
               {audioDevices.map((device) => (
                 <Button
-                  key={device.name}
-                  variant="outline"
-                  onClick={() => {
-                    void handleDeviceChange(device.name);
-                    setShowDeviceSelector(false);
-                  }}
                   className={`h-auto w-full justify-start p-3 ${
                     selectedDevice?.name === device.name
-                      ? "border-primary bg-primary/5"
-                      : ""
+                      ? 'border-primary bg-primary/5'
+                      : ''
                   }`}
+                  key={device.name}
+                  onClick={() => {
+                    handleDeviceChange(device.name);
+                    setShowDeviceSelector(false);
+                  }}
+                  variant="outline"
                 >
                   <div className="flex items-center space-x-2">
                     <Mic className="h-4 w-4 shrink-0" />

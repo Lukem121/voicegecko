@@ -15,5 +15,5 @@ export function countdown(date: Date): string {
   if (minutes > 0) {
     parts.push(`${minutes}m`);
   }
-  return parts.join(" ");
+  return parts.join(' ');
 }

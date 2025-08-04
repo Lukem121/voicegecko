@@ -5,7 +5,7 @@ import {
   CardFooter,
   CardHeader,
   CardTitle,
-} from "@acme/ui/components/ui/card";
+} from '@acme/ui/components/ui/card';
 
 export default function AppPage() {
   return (

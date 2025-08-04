@@ -22,14 +22,11 @@
     "zod": "catalog:"
   },
   "devDependencies": {
-    "@acme/eslint-config": "workspace:*",
-    "@acme/prettier-config": "workspace:*",
     "@acme/tsconfig": "workspace:*",
+    "@biomejs/biome": "catalog:",
     "@react-email/preview-server": "4.2.4",
     "@types/react": "catalog:react19",
     "@types/react-dom": "catalog:react19",
-    "eslint": "catalog:",
-    "prettier": "catalog:",
     "react-email": "^4.2.4",
     "typescript": "catalog:"
   }

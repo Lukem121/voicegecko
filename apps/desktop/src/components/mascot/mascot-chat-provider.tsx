@@ -1,34 +1,41 @@
-"use client";
+'use client';
 
-import React, {
-  createContext,
+import type React from 'react';
+import {
+import
+{
+  log;
+}
+from;
+('@acme/observability');
+createContext,
   useCallback,
   useContext,
   useEffect,
   useReducer,
-} from "react";
+} from 'react'
 
 // Types for the chat system
 export interface MascotMessage {
   id: string;
   content: string;
-  type: "info" | "success" | "warning" | "celebration" | "guidance";
+  type: 'info' | 'success' | 'warning' | 'celebration' | 'guidance';
   duration?: number; // How long to show the message (ms) - ignored if persist is true
   showTyping?: boolean; // Whether to show typing animation
-  priority?: "low" | "normal" | "high"; // Message priority for queue management
+  priority?: 'low' | 'normal' | 'high'; // Message priority for queue management
   persist?: boolean; // If true, message stays until next message arrives
 }
 
 export interface MascotAnimation {
   type:
-    | "idle"
-    | "listening"
-    | "thinking"
-    | "celebrating"
-    | "welcoming"
-    | "processing"
-    | "dancing";
-  intensity?: "low" | "medium" | "high";
+    | 'idle'
+    | 'listening'
+    | 'thinking'
+    | 'celebrating'
+    | 'welcoming'
+    | 'processing'
+    | 'dancing';
+  intensity?: 'low' | 'medium' | 'high';
   duration?: number; // Auto-return to idle after this time
 }
 
@@ -43,7 +50,7 @@ export interface MascotState {
 export interface MascotChatContextValue {
   state: MascotState;
   // Message actions
-  sendMessage: (message: Omit<MascotMessage, "id">) => void;
+  sendMessage: (message: Omit<MascotMessage, 'id'>) => void;
   clearMessage: () => void;
   clearQueue: () => void;
   // Animation actions
@@ -62,28 +69,28 @@ export interface MascotChatContextValue {
 
 // Action types for the reducer
 type MascotAction =
-  | { type: "SEND_MESSAGE"; payload: MascotMessage }
-  | { type: "SHOW_NEXT_MESSAGE" }
-  | { type: "CLEAR_MESSAGE" }
-  | { type: "CLEAR_QUEUE" }
-  | { type: "SET_TYPING"; payload: boolean }
-  | { type: "SET_ANIMATION"; payload: MascotAnimation }
-  | { type: "RESET_ANIMATION" }
-  | { type: "SET_VISIBILITY"; payload: boolean };
+  | { type: 'SEND_MESSAGE'; payload: MascotMessage }
+  | { type: 'SHOW_NEXT_MESSAGE' }
+  | { type: 'CLEAR_MESSAGE' }
+  | { type: 'CLEAR_QUEUE' }
+  | { type: 'SET_TYPING'; payload: boolean }
+  | { type: 'SET_ANIMATION'; payload: MascotAnimation }
+  | { type: 'RESET_ANIMATION' }
+  | { type: 'SET_VISIBILITY'; payload: boolean };
 
 // Initial state
 const initialState: MascotState = {
   currentMessage: null,
   messageQueue: [],
   isTyping: false,
-  currentAnimation: { type: "idle" },
+  currentAnimation: { type: 'idle' },
   isVisible: true,
 };
 
 // Reducer for managing mascot state
 function mascotReducer(state: MascotState, action: MascotAction): MascotState {
   switch (action.type) {
-    case "SEND_MESSAGE": {
+    case 'SEND_MESSAGE': {
       const message = action.payload;
 
       // If no current message, show immediately
@@ -96,7 +103,7 @@ function mascotReducer(state: MascotState, action: MascotAction): MascotState {
       }
 
       // If current message is persistent or new message is high priority, replace immediately
-      if (state.currentMessage.persist || message.priority === "high") {
+      if (state.currentMessage.persist || message.priority === 'high') {
         return {
           ...state,
           currentMessage: message,
@@ -109,8 +116,8 @@ function mascotReducer(state: MascotState, action: MascotAction): MascotState {
       const newQueue = [...state.messageQueue, message].sort((a, b) => {
         const priorityOrder = { high: 3, normal: 2, low: 1 };
         return (
-          priorityOrder[b.priority ?? "normal"] -
-          priorityOrder[a.priority ?? "normal"]
+          priorityOrder[b.priority ?? 'normal'] -
+          priorityOrder[a.priority ?? 'normal']
         );
       });
 
@@ -120,7 +127,7 @@ function mascotReducer(state: MascotState, action: MascotAction): MascotState {
       };
     }
 
-    case "SHOW_NEXT_MESSAGE": {
+    case 'SHOW_NEXT_MESSAGE': {
       const [nextMessage, ...remainingQueue] = state.messageQueue;
 
       return {
@@ -131,7 +138,7 @@ function mascotReducer(state: MascotState, action: MascotAction): MascotState {
       };
     }
 
-    case "CLEAR_MESSAGE": {
+    case 'CLEAR_MESSAGE': {
       return {
         ...state,
         currentMessage: null,
@@ -139,35 +146,35 @@ function mascotReducer(state: MascotState, action: MascotAction): MascotState {
       };
     }
 
-    case "CLEAR_QUEUE": {
+    case 'CLEAR_QUEUE': {
       return {
         ...state,
         messageQueue: [],
       };
     }
 
-    case "SET_TYPING": {
+    case 'SET_TYPING': {
       return {
         ...state,
         isTyping: action.payload,
       };
     }
 
-    case "SET_ANIMATION": {
+    case 'SET_ANIMATION': {
       return {
         ...state,
         currentAnimation: action.payload,
       };
     }
 
-    case "RESET_ANIMATION": {
+    case 'RESET_ANIMATION': {
       return {
         ...state,
-        currentAnimation: { type: "idle" },
+        currentAnimation: { type: 'idle' },
       };
     }
 
-    case "SET_VISIBILITY": {
+    case 'SET_VISIBILITY': {
       return {
         ...state,
         isVisible: action.payload,
@@ -186,7 +193,7 @@ const MascotChatContext = createContext<MascotChatContextValue | null>(null);
 export function useMascotChat(): MascotChatContextValue {
   const context = useContext(MascotChatContext);
   if (!context) {
-    throw new Error("useMascotChat must be used within a MascotChatProvider");
+    throw new Error('useMascotChat must be used within a MascotChatProvider');
   }
   return context;
 }
@@ -200,7 +207,7 @@ interface MascotChatProviderProps {
 
 export function MascotChatProvider({
   children,
-  defaultAnimation = { type: "idle" },
+  defaultAnimation = { type: 'idle' },
   autoProcessQueue = true,
 }: MascotChatProviderProps) {
   const [state, dispatch] = useReducer(mascotReducer, {
@@ -221,12 +228,12 @@ export function MascotChatProvider({
 
     if (!state.currentMessage && state.messageQueue.length > 0) {
       // Show next message immediately if no current message
-      dispatch({ type: "SHOW_NEXT_MESSAGE" });
+      dispatch({ type: 'SHOW_NEXT_MESSAGE' });
     } else if (state.currentMessage && !state.currentMessage.persist) {
       // Auto-clear current message after duration (only if not persistent)
       const duration = state.currentMessage.duration ?? 5000;
       timeoutId = setTimeout(() => {
-        dispatch({ type: "CLEAR_MESSAGE" });
+        dispatch({ type: 'CLEAR_MESSAGE' });
       }, duration);
     }
 
@@ -241,7 +248,7 @@ export function MascotChatProvider({
 
     // If no current message, clear typing immediately
     if (!state.currentMessage) {
-      dispatch({ type: "SET_TYPING", payload: false });
+      dispatch({ type: 'SET_TYPING', payload: false });
       return;
     }
 
@@ -250,7 +257,7 @@ export function MascotChatProvider({
       : 1000;
 
     const timeoutId = setTimeout(() => {
-      dispatch({ type: "SET_TYPING", payload: false });
+      dispatch({ type: 'SET_TYPING', payload: false });
     }, typingDuration);
 
     return () => clearTimeout(timeoutId);
@@ -258,11 +265,11 @@ export function MascotChatProvider({
 
   // Auto-reset animations
   useEffect(() => {
-    if (state.currentAnimation.type === "idle") return;
+    if (state.currentAnimation.type === 'idle') return;
 
     const duration = state.currentAnimation.duration ?? 3000;
     const timeoutId = setTimeout(() => {
-      dispatch({ type: "RESET_ANIMATION" });
+      dispatch({ type: 'RESET_ANIMATION' });
     }, duration);
 
     return () => clearTimeout(timeoutId);
@@ -270,11 +277,11 @@ export function MascotChatProvider({
 
   // Action implementations
   const sendMessage = useCallback(
-    (messageData: Omit<MascotMessage, "id">) => {
+    (messageData: Omit<MascotMessage, 'id'>) => {
       // Validate message content
-      if (!messageData.content || messageData.content.trim() === "") {
-        console.warn(
-          "[MascotChatProvider] Attempted to send empty message, ignoring",
+      if (!messageData.content || messageData.content.trim() === '') {
+        log.warn(
+          '[MascotChatProvider] Attempted to send empty message, ignoring'
         );
         return;
       }
@@ -283,33 +290,33 @@ export function MascotChatProvider({
         ...messageData,
         id: generateMessageId(),
       };
-      dispatch({ type: "SEND_MESSAGE", payload: message });
+      dispatch({ type: 'SEND_MESSAGE', payload: message });
     },
-    [generateMessageId],
+    [generateMessageId]
   );
 
   const clearMessage = useCallback(() => {
-    dispatch({ type: "CLEAR_MESSAGE" });
+    dispatch({ type: 'CLEAR_MESSAGE' });
   }, []);
 
   const clearQueue = useCallback(() => {
-    dispatch({ type: "CLEAR_QUEUE" });
+    dispatch({ type: 'CLEAR_QUEUE' });
   }, []);
 
   const setAnimation = useCallback((animation: MascotAnimation) => {
-    dispatch({ type: "SET_ANIMATION", payload: animation });
+    dispatch({ type: 'SET_ANIMATION', payload: animation });
   }, []);
 
   const resetAnimation = useCallback(() => {
-    dispatch({ type: "RESET_ANIMATION" });
+    dispatch({ type: 'RESET_ANIMATION' });
   }, []);
 
   const show = useCallback(() => {
-    dispatch({ type: "SET_VISIBILITY", payload: true });
+    dispatch({ type: 'SET_VISIBILITY', payload: true });
   }, []);
 
   const hide = useCallback(() => {
-    dispatch({ type: "SET_VISIBILITY", payload: false });
+    dispatch({ type: 'SET_VISIBILITY', payload: false });
   }, []);
 
   // Convenience methods
@@ -319,77 +326,77 @@ export function MascotChatProvider({
         content:
           customMessage ??
           "👋 Hi there! I'm your friendly VoiceGecko guide. Let's get started!",
-        type: "info",
+        type: 'info',
         showTyping: true,
         duration: 4000,
         persist,
       });
-      setAnimation({ type: "welcoming", duration: 2000 });
+      setAnimation({ type: 'welcoming', duration: 2000 });
     },
-    [sendMessage, setAnimation],
+    [sendMessage, setAnimation]
   );
 
   const celebrate = useCallback(
     (message?: string, persist?: boolean) => {
       sendMessage({
         content: message ?? "🎉 Awesome work! You're doing great!",
-        type: "celebration",
+        type: 'celebration',
         showTyping: true,
         duration: 3000,
-        priority: "high",
+        priority: 'high',
         persist,
       });
-      setAnimation({ type: "celebrating", intensity: "high", duration: 3000 });
+      setAnimation({ type: 'celebrating', intensity: 'high', duration: 3000 });
     },
-    [sendMessage, setAnimation],
+    [sendMessage, setAnimation]
   );
 
   const showGuidance = useCallback(
     (message: string, persist?: boolean) => {
       sendMessage({
         content: message,
-        type: "guidance",
+        type: 'guidance',
         showTyping: true,
         duration: 6000,
         persist,
       });
-      setAnimation({ type: "thinking", duration: 2000 });
+      setAnimation({ type: 'thinking', duration: 2000 });
     },
-    [sendMessage, setAnimation],
+    [sendMessage, setAnimation]
   );
 
   const showSuccess = useCallback(
     (message: string, persist?: boolean) => {
       sendMessage({
         content: message,
-        type: "success",
+        type: 'success',
         showTyping: true,
         duration: 4000,
-        priority: "high",
+        priority: 'high',
         persist,
       });
       setAnimation({
-        type: "celebrating",
-        intensity: "medium",
+        type: 'celebrating',
+        intensity: 'medium',
         duration: 2000,
       });
     },
-    [sendMessage, setAnimation],
+    [sendMessage, setAnimation]
   );
 
   const showError = useCallback(
     (message: string, persist?: boolean) => {
       sendMessage({
         content: message,
-        type: "warning",
+        type: 'warning',
         showTyping: true,
         duration: 5000,
-        priority: "high",
+        priority: 'high',
         persist,
       });
-      setAnimation({ type: "thinking", intensity: "low", duration: 1500 });
+      setAnimation({ type: 'thinking', intensity: 'low', duration: 1500 });
     },
-    [sendMessage, setAnimation],
+    [sendMessage, setAnimation]
   );
 
   const contextValue: MascotChatContextValue = {

@@ -1,13 +1,12 @@
-import type { GenericEndpointContext, User } from "better-auth";
-
-import { sendWelcomeEmail } from "@acme/email";
-import { DiscordAdapter } from "@acme/notifications";
+import { sendWelcomeEmail } from '@acme/email';
+import { DiscordAdapter } from '@acme/notifications';
+import type { GenericEndpointContext, User } from 'better-auth';
 
 const discordAdapter = new DiscordAdapter();
 
 export const handleCreateAfterHook = async (
   user: User,
-  _?: GenericEndpointContext,
+  _?: GenericEndpointContext
 ) => {
   await Promise.all([
     discordAdapter.sendUserSignup({

@@ -9,11 +9,11 @@ import {
   Section,
   Tailwind,
   Text,
-} from "@react-email/components";
+} from '@react-email/components';
 
-import { DarkModeAwareLogoFull } from "../components/dark-mode-aware-logo-full";
-import { DarkModeEmailHead } from "../components/dark-mode-email-head";
-import { EmailFooter } from "../components/email-footer";
+import { DarkModeAwareLogoFull } from '../components/dark-mode-aware-logo-full';
+import { DarkModeEmailHead } from '../components/dark-mode-email-head';
+import { EmailFooter } from '../components/email-footer';
 
 interface SubscriptionCancelledEmailProps {
   name?: string;
@@ -38,31 +38,31 @@ export const SubscriptionCancelledTemplate = ({
             <DarkModeAwareLogoFull />
           </Section>
 
-          <Heading className="my-4 px-2 text-2xl leading-tight font-bold text-[#1d1c1d] sm:my-7 sm:px-0 sm:text-3xl">
+          <Heading className="my-4 px-2 font-bold text-2xl text-[#1d1c1d] leading-tight sm:my-7 sm:px-0 sm:text-3xl">
             Your Subscription is Cancelled
           </Heading>
 
           <Text className="mb-3 px-2 text-lg leading-6 sm:mb-4 sm:px-0 sm:leading-7">
-            We're sorry to see you go. Your <strong>{planName}</strong>{" "}
+            We're sorry to see you go. Your <strong>{planName}</strong>{' '}
             subscription has been successfully cancelled.
           </Text>
 
-          <Text className="mb-5 px-2 text-base leading-6 text-gray-700 sm:mb-7 sm:px-0">
-            Your premium features will remain active until{" "}
+          <Text className="mb-5 px-2 text-base text-gray-700 leading-6 sm:mb-7 sm:px-0">
+            Your premium features will remain active until{' '}
             <strong>{accessUntilDate}</strong>. After that, your account will
             automatically switch to our free tier.
           </Text>
 
           {/* Access Information */}
           <Section className="mx-2 mb-5 rounded-md bg-blue-50 p-3 sm:mx-0 sm:mb-7 sm:p-6">
-            <Heading className="mb-3 text-lg font-semibold text-[#1d1c1d] sm:mb-4 sm:text-xl">
+            <Heading className="mb-3 font-semibold text-[#1d1c1d] text-lg sm:mb-4 sm:text-xl">
               What Happens Next
             </Heading>
-            <ul className="space-y-2 pl-4 text-sm leading-5 text-gray-700 sm:space-y-3 sm:pl-5 sm:leading-6">
+            <ul className="space-y-2 pl-4 text-gray-700 text-sm leading-5 sm:space-y-3 sm:pl-5 sm:leading-6">
               <li className="flex items-start">
                 <span className="mr-3 text-green-600">✓</span>
                 <span>
-                  You keep all <strong>{planName}</strong> features until{" "}
+                  You keep all <strong>{planName}</strong> features until{' '}
                   <strong>{accessUntilDate}</strong>
                 </span>
               </li>
@@ -89,11 +89,11 @@ export const SubscriptionCancelledTemplate = ({
           {/* Win-back Section */}
           {reactivateUrl && (
             <Section className="mb-5 px-2 text-center sm:mb-7 sm:px-0">
-              <Heading className="mb-3 text-lg font-semibold text-[#1d1c1d] sm:mb-4 sm:text-xl">
+              <Heading className="mb-3 font-semibold text-[#1d1c1d] text-lg sm:mb-4 sm:text-xl">
                 Changed Your Mind?
               </Heading>
-              <Text className="mb-4 text-base leading-6 text-gray-700 sm:mb-6">
-                You can reactivate your subscription anytime before{" "}
+              <Text className="mb-4 text-base text-gray-700 leading-6 sm:mb-6">
+                You can reactivate your subscription anytime before{' '}
                 {accessUntilDate} and pick up right where you left off.
               </Text>
               <Link
@@ -107,10 +107,10 @@ export const SubscriptionCancelledTemplate = ({
 
           {/* Feedback Section */}
           <Section className="mx-2 mb-5 rounded-md bg-gray-50 p-3 sm:mx-0 sm:mb-7 sm:p-6">
-            <Heading className="mb-3 text-base font-semibold text-[#1d1c1d] sm:text-lg">
+            <Heading className="mb-3 font-semibold text-[#1d1c1d] text-base sm:text-lg">
               💬 Help Us Improve
             </Heading>
-            <Text className="mb-3 text-base leading-6 text-gray-700 sm:mb-4">
+            <Text className="mb-3 text-base text-gray-700 leading-6 sm:mb-4">
               We'd love to know what we could have done better. Your feedback
               helps us build a better experience for everyone.
             </Text>
@@ -122,7 +122,7 @@ export const SubscriptionCancelledTemplate = ({
             </Link>
           </Section>
 
-          <Text className="px-2 text-base leading-6 text-black sm:px-0">
+          <Text className="px-2 text-base text-black leading-6 sm:px-0">
             Thank you for being part of the VoiceGecko community. We hope to see
             you again in the future! 🦎
           </Text>

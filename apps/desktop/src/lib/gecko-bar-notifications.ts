@@ -1,28 +1,26 @@
-import { invoke } from "@tauri-apps/api/core";
+import { log } from '@acme/observability';
+import { invoke } from '@tauri-apps/api/core';
 
 export interface GeckoBarNotification {
   message: string;
   duration?: number; // milliseconds
-  priority?: "high" | "normal";
+  priority?: 'high' | 'normal';
 }
 
 /**
  * Send a notification to the gecko bar
  */
 export async function sendGeckoBarNotification(
-  notification: GeckoBarNotification,
+  notification: GeckoBarNotification
 ): Promise<void> {
   try {
-    await invoke("send_gecko_bar_notification", {
+    await invoke('send_gecko_bar_notification', {
       message: notification.message,
       duration: notification.duration,
       priority: notification.priority,
     });
   } catch (error) {
-    console.error(
-      "[GeckoBarNotifications] Failed to send notification:",
-      error,
-    );
+    log.error('[GeckoBarNotifications] Failed to send notification:', error);
   }
 }
 
@@ -31,9 +29,9 @@ export async function sendGeckoBarNotification(
  */
 export function showUsageLimitNotification(): Promise<void> {
   return sendGeckoBarNotification({
-    message: "Usage limit reached",
+    message: 'Usage limit reached',
     duration: 3000, // 3 seconds
-    priority: "high",
+    priority: 'high',
   });
 }
 
@@ -42,8 +40,8 @@ export function showUsageLimitNotification(): Promise<void> {
  */
 export function showNoInternetNotification(): Promise<void> {
   return sendGeckoBarNotification({
-    message: "No internet connection",
+    message: 'No internet connection',
     duration: 3000, // 3 seconds
-    priority: "high",
+    priority: 'high',
   });
 }

@@ -1,10 +1,11 @@
-import { notificationsEnv } from "./env";
+import { log } from '@acme/observability';
+import { notificationsEnv } from './env';
 
 // Notification types enum for extensibility
 export enum DiscordNotificationType {
-  ERROR_REPORT = "ERROR_REPORT",
-  FEEDBACK = "FEEDBACK",
-  USER_SIGNUP = "USER_SIGNUP",
+  ERROR_REPORT = 'ERROR_REPORT',
+  FEEDBACK = 'FEEDBACK',
+  USER_SIGNUP = 'USER_SIGNUP',
 }
 
 // Base interface for all notifications
@@ -21,7 +22,7 @@ export interface ErrorReport extends BaseNotification {
 }
 
 export interface FeedbackReport extends BaseNotification {
-  feedbackType: "bug" | "feature" | "general";
+  feedbackType: 'bug' | 'feature' | 'general';
   message: string;
   rating?: number;
 }
@@ -71,35 +72,35 @@ export class DiscordAdapter {
       report.error instanceof Error ? report.error.stack : undefined;
 
     const embed: DiscordEmbed = {
-      title: "🚨 Error Report",
-      color: 0xff0000, // Red
+      title: '🚨 Error Report',
+      color: 0xff_00_00, // Red
       timestamp: report.timestamp ?? new Date().toISOString(),
       fields: [
         {
-          name: "Error Message",
+          name: 'Error Message',
           value: errorMessage.slice(0, 1024), // Discord has a 1024 char limit per field
         },
         {
-          name: "User ID",
-          value: report.userId ?? "Not available",
+          name: 'User ID',
+          value: report.userId ?? 'Not available',
         },
         {
-          name: "URL",
-          value: report.url ?? "Not available",
+          name: 'URL',
+          value: report.url ?? 'Not available',
         },
       ],
     };
 
     if (stack) {
       embed.fields.push({
-        name: "Stack Trace",
+        name: 'Stack Trace',
         value: `\`\`\`\n${stack.slice(0, 1000)}\n\`\`\``,
       });
     }
 
     if (report.additionalContext) {
       embed.fields.push({
-        name: "Additional Context",
+        name: 'Additional Context',
         value: `\`\`\`json\n${JSON.stringify(report.additionalContext, null, 2).slice(0, 1000)}\n\`\`\``,
       });
     }
@@ -109,44 +110,44 @@ export class DiscordAdapter {
 
   async sendFeedbackReport(report: FeedbackReport) {
     const embed: DiscordEmbed = {
-      title: "💬 Feedback Report",
-      color: 0x00ff00, // Green
+      title: '💬 Feedback Report',
+      color: 0x00_ff_00, // Green
       timestamp: report.timestamp ?? new Date().toISOString(),
       fields: [
         {
-          name: "Feedback Type",
+          name: 'Feedback Type',
           value:
             report.feedbackType.charAt(0).toUpperCase() +
             report.feedbackType.slice(1),
           inline: true,
         },
         {
-          name: "User ID",
-          value: report.userId ?? "Anonymous",
+          name: 'User ID',
+          value: report.userId ?? 'Anonymous',
           inline: true,
         },
         {
-          name: "Message",
+          name: 'Message',
           value: report.message.slice(0, 1024),
         },
         {
-          name: "URL",
-          value: report.url ?? "Not available",
+          name: 'URL',
+          value: report.url ?? 'Not available',
         },
       ],
     };
 
     if (report.rating) {
       embed.fields.push({
-        name: "Rating",
-        value: `${"⭐".repeat(report.rating)} (${report.rating}/5)`,
+        name: 'Rating',
+        value: `${'⭐'.repeat(report.rating)} (${report.rating}/5)`,
         inline: true,
       });
     }
 
     if (report.additionalContext) {
       embed.fields.push({
-        name: "Additional Context",
+        name: 'Additional Context',
         value: `\`\`\`json\n${JSON.stringify(report.additionalContext, null, 2).slice(0, 1000)}\n\`\`\``,
       });
     }
@@ -156,23 +157,23 @@ export class DiscordAdapter {
 
   async sendUserSignup(report: UserSignup) {
     const embed: DiscordEmbed = {
-      title: "🎉 New User Signup",
-      color: 0x7289da, // Discord blue
+      title: '🎉 New User Signup',
+      color: 0x72_89_da, // Discord blue
       timestamp: report.timestamp ?? new Date().toISOString(),
       fields: [
         {
-          name: "Email",
+          name: 'Email',
           value: report.email,
           inline: true,
         },
         {
-          name: "Username",
-          value: report.username ?? "Not available",
+          name: 'Username',
+          value: report.username ?? 'Not available',
           inline: true,
         },
         {
-          name: "User ID",
-          value: report.userId ?? "Not available",
+          name: 'User ID',
+          value: report.userId ?? 'Not available',
           inline: true,
         },
       ],
@@ -180,7 +181,7 @@ export class DiscordAdapter {
 
     if (report.additionalContext) {
       embed.fields.push({
-        name: "Additional Context",
+        name: 'Additional Context',
         value: `\`\`\`json\n${JSON.stringify(report.additionalContext, null, 2).slice(0, 1000)}\n\`\`\``,
         inline: false,
       });
@@ -191,22 +192,22 @@ export class DiscordAdapter {
 
   private async sendWebhook(
     type: DiscordNotificationType,
-    embed: DiscordEmbed,
+    embed: DiscordEmbed
   ) {
     try {
       const webhookUrl = this.webhookUrls.get(type);
 
       if (!webhookUrl) {
-        console.warn(
-          `Discord webhook URL not configured for notification type: ${type}`,
+        log.warn(
+          `Discord webhook URL not configured for notification type: ${type}`
         );
         return;
       }
 
       const response = await fetch(webhookUrl, {
-        method: "POST",
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({ embeds: [embed] }),
       });
@@ -215,7 +216,7 @@ export class DiscordAdapter {
         throw new Error(`Discord webhook failed: ${response.statusText}`);
       }
     } catch (error) {
-      console.error(`Failed to send Discord ${type} notification`, { error });
+      log.error(`Failed to send Discord ${type} notification`, { error });
     }
   }
 }

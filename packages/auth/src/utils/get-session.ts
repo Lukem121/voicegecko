@@ -1,10 +1,10 @@
-"use server";
+'use server';
 
-import { cache } from "react";
-import { headers } from "next/headers";
+import { headers } from 'next/headers';
+import { cache } from 'react';
 
-import type { Session } from "..";
-import { serverAuth } from "..";
+import type { Session } from '..';
+import { serverAuth } from '..';
 
 export const getServerSession = cache(async () => {
   const session = await serverAuth.api.getSession({

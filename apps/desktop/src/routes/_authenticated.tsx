@@ -1,31 +1,28 @@
-/* eslint-disable @typescript-eslint/only-throw-error */
+import { SidebarInset, SidebarProvider } from '@acme/ui/components/ui/sidebar';
+import { createFileRoute, Outlet, redirect } from '@tanstack/react-router';
 
-import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
-
-import { SidebarInset, SidebarProvider } from "@acme/ui/components/ui/sidebar";
-
-import { AppSidebar } from "~/components/app-sidebar";
+import { AppSidebar } from '~/components/app-sidebar';
 import {
   ConnectivityError,
   ConnectivityIndicator,
-} from "~/components/connectivity-error";
-import { TitleBar } from "~/components/custom-title-bar";
-import { useAuthWithConnectivity } from "~/hooks/use-auth-with-connectivity";
-import { useSettingsStore } from "~/stores/settings.store";
+} from '~/components/connectivity-error';
+import { TitleBar } from '~/components/custom-title-bar';
+import { useAuthWithConnectivity } from '~/hooks/use-auth-with-connectivity';
+import { useSettingsStore } from '~/stores/settings.store';
 
-export const Route = createFileRoute("/_authenticated")({
+export const Route = createFileRoute('/_authenticated')({
   beforeLoad: async ({ context, location }) => {
-    const authIssueType = context.auth.getAuthIssueType?.() ?? "loading";
+    const authIssueType = context.auth.getAuthIssueType?.() ?? 'loading';
 
     // If it's a connectivity issue, let the component handle it (don't redirect)
-    if (authIssueType === "connectivity") {
+    if (authIssueType === 'connectivity') {
       return;
     }
 
     // Only redirect to sign-in for actual auth issues or unauthenticated users
-    if (authIssueType === "auth" || authIssueType === "unauthenticated") {
+    if (authIssueType === 'auth' || authIssueType === 'unauthenticated') {
       throw redirect({
-        to: "/sign-in",
+        to: '/sign-in',
         search: {
           redirect: location.href,
         },
@@ -54,7 +51,7 @@ export const Route = createFileRoute("/_authenticated")({
 
       if (!currentState.settings.onboarding.completed) {
         throw redirect({
-          to: "/onboarding",
+          to: '/onboarding',
         });
       }
     }
@@ -68,16 +65,16 @@ function AuthenticatedLayout() {
   const { isInitialized } = useSettingsStore();
 
   // Show connectivity error when there are network issues
-  if (authIssueType === "connectivity" || authIssueType === "loading") {
+  if (authIssueType === 'connectivity' || authIssueType === 'loading') {
     return (
       <ConnectivityError
-        isOnline={auth.connectivity.isOnline}
+        diagnosis={auth.connectivity.diagnosis}
         isApiReachable={auth.connectivity.isApiReachable}
         isChecking={auth.connectivity.isChecking}
-        diagnosis={auth.connectivity.diagnosis}
+        isOnline={auth.connectivity.isOnline}
         lastSuccessfulCheck={auth.connectivity.lastSuccessfulCheck}
         onRetry={() => {
-          void auth.connectivity.checkConnectivity();
+          auth.connectivity.checkConnectivity();
         }}
       />
     );
@@ -88,7 +85,7 @@ function AuthenticatedLayout() {
     return (
       <div className="flex min-h-screen items-center justify-center">
         <div className="text-center">
-          <div className="border-primary mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-b-2"></div>
+          <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-primary border-b-2" />
           <p className="text-muted-foreground">Initializing application...</p>
         </div>
       </div>
@@ -101,14 +98,14 @@ function AuthenticatedLayout() {
       <SidebarProvider>
         <TitleBar />
         <AppSidebar />
-        <SidebarInset className="!ml-0 pt-8 !shadow-none">
+        <SidebarInset className="!ml-0 !shadow-none pt-8">
           {/* Show connectivity indicator only for serious internet issues */}
           <div className="absolute top-10 right-4 z-50">
             <ConnectivityIndicator
-              isOnline={auth.connectivity.isOnline}
+              diagnosis={auth.connectivity.diagnosis}
               isApiReachable={auth.connectivity.isApiReachable}
               isChecking={auth.connectivity.isChecking}
-              diagnosis={auth.connectivity.diagnosis}
+              isOnline={auth.connectivity.isOnline}
               lastChecked={auth.connectivity.lastSuccessfulCheck}
             />
           </div>

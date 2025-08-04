@@ -1,10 +1,10 @@
-import type { Subscription } from "@better-auth/stripe";
-import type { Stripe } from "stripe";
+import { sendSubscriptionCancelledEmail } from '@acme/email';
+import { log } from '@acme/observability';
+import type { Subscription } from '@better-auth/stripe';
+import type { Stripe } from 'stripe';
 
-import { sendSubscriptionCancelledEmail } from "@acme/email";
-
-import { paymentEnv } from "../../env";
-import { getUserForEmail } from "./user-lookup";
+import { paymentEnv } from '../../env';
+import { getUserForEmail } from './user-lookup';
 
 interface SubscriptionCancelParams {
   event?: Stripe.Event;
@@ -19,7 +19,7 @@ export const onSubscriptionCancel = async ({
   stripeSubscription,
   cancellationDetails,
 }: SubscriptionCancelParams) => {
-  console.log(`[Subscription] Subscription cancelled:`, {
+  log.info('[Subscription] Subscription cancelled:', {
     subscriptionId: subscription.id,
     userId: subscription.referenceId,
     cancelAtPeriodEnd: subscription.cancelAtPeriodEnd,
@@ -33,37 +33,37 @@ export const onSubscriptionCancel = async ({
     const user = await getUserForEmail(subscription.referenceId);
     if (user && subscription.periodEnd) {
       const accessUntilDate = new Date(
-        subscription.periodEnd,
-      ).toLocaleDateString("en-US", {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
+        subscription.periodEnd
+      ).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
       });
 
       // Create reactivate URL - user can manage subscription through billing portal
-      const reactivateUrl = `${paymentEnv().NEXT_PUBLIC_VOICEGECKO_URL || "https://voicegecko.io"}/app/billing`;
+      const reactivateUrl = `${paymentEnv().NEXT_PUBLIC_VOICEGECKO_URL || 'https://voicegecko.io'}/app/billing`;
 
       await sendSubscriptionCancelledEmail({
         user,
-        planName: "VoiceGecko Pro",
+        planName: 'VoiceGecko Pro',
         accessUntilDate,
         reactivateUrl,
       });
-      console.log(
-        `[Subscription] Cancellation email sent to user ${subscription.referenceId}`,
+      log.info(
+        `[Subscription] Cancellation email sent to user ${subscription.referenceId}`
       );
     } else {
-      console.error(
-        `[Subscription] Could not send cancellation email - missing user or periodEnd`,
+      log.error(
+        '[Subscription] Could not send cancellation email - missing user or periodEnd',
         {
           userId: subscription.referenceId,
           hasUser: !!user,
           hasPeriodEnd: !!subscription.periodEnd,
-        },
+        }
       );
     }
   } catch (error) {
-    console.error(`[Subscription] Error sending cancellation email:`, error);
+    log.error('[Subscription] Error sending cancellation email:', error);
   }
 
   // No special handling needed - the subscription remains active until periodEnd

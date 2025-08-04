@@ -1,27 +1,26 @@
-import { getCurrentWindow } from "@tauri-apps/api/window";
-import { Minus, Square, X } from "lucide-react";
-
-import LogoText from "@acme/ui/components/logos/logo-text";
-import { Button } from "@acme/ui/components/ui/button";
+import LogoText from '@acme/ui/components/logos/logo-text';
+import { Button } from '@acme/ui/components/ui/button';
+import { getCurrentWindow } from '@tauri-apps/api/window';
+import { Minus, Square, X } from 'lucide-react';
 
 const appWindow = getCurrentWindow();
 
 export function OnboardingTitleBar() {
   const handleMinimize = () => {
-    void appWindow.minimize();
+    appWindow.minimize();
   };
 
   const handleMaximize = () => {
-    void appWindow.toggleMaximize();
+    appWindow.toggleMaximize();
   };
 
   const handleClose = () => {
-    void appWindow.close();
+    appWindow.close();
   };
 
   return (
-    <div className="bg-background border-border fixed top-0 right-0 left-0 z-[9999] flex h-12 border-b select-none">
-      <div data-tauri-drag-region className="h-full flex-1" />
+    <div className="fixed top-0 right-0 left-0 z-[9999] flex h-12 select-none border-border border-b bg-background">
+      <div className="h-full flex-1" data-tauri-drag-region />
 
       <div className="pointer-events-none absolute top-0 right-0 left-2 flex h-full items-center justify-between">
         {/* Left side - Logo */}
@@ -33,26 +32,26 @@ export function OnboardingTitleBar() {
         {/* Right side - Window Controls */}
         <div className="pointer-events-auto flex items-center">
           <Button
-            variant="ghost"
-            size="sm"
-            className="hover:bg-muted/50 h-8 w-8 p-0"
+            className="h-8 w-8 p-0 hover:bg-muted/50"
             onClick={handleMinimize}
+            size="sm"
+            variant="ghost"
           >
             <Minus className="h-3 w-3" />
           </Button>
           <Button
-            variant="ghost"
-            size="sm"
-            className="hover:bg-muted/50 h-8 w-8 p-0"
+            className="h-8 w-8 p-0 hover:bg-muted/50"
             onClick={handleMaximize}
+            size="sm"
+            variant="ghost"
           >
             <Square className="h-3 w-3" />
           </Button>
           <Button
-            variant="ghost"
-            size="sm"
-            className="hover:bg-destructive/20 hover:text-destructive h-8 w-8 p-0"
+            className="h-8 w-8 p-0 hover:bg-destructive/20 hover:text-destructive"
             onClick={handleClose}
+            size="sm"
+            variant="ghost"
           >
             <X className="h-3 w-3" />
           </Button>

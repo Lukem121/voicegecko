@@ -1,9 +1,9 @@
-import { create } from "zustand";
+import { create } from 'zustand';
 
 interface GeckoBarNotification {
   message: string;
   duration?: number; // Duration in milliseconds
-  priority?: "high" | "normal"; // High priority messages override any current message
+  priority?: 'high' | 'normal'; // High priority messages override any current message
 }
 
 interface GeckoBarNotificationStore {
@@ -33,5 +33,5 @@ export const useGeckoBarNotificationStore = create<GeckoBarNotificationStore>(
     clearNotification: () => {
       set({ notification: null });
     },
-  }),
+  })
 );

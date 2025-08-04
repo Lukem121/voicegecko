@@ -1,8 +1,8 @@
-"use client";
+'use client';
 
-import type { ElementType } from "react";
-import { createElement, useEffect, useRef, useState } from "react";
-import { motion } from "motion/react";
+import { motion } from 'motion/react';
+import type { ElementType } from 'react';
+import { createElement, useEffect, useRef, useState } from 'react';
 
 // Example usage:
 {
@@ -38,17 +38,17 @@ interface TextTypeProps {
 
 const TextType = ({
   text,
-  as: Component = "div",
+  as: Component = 'div',
   typingSpeed = 50,
   initialDelay = 0,
   pauseDuration = 2000,
   deletingSpeed = 30,
   loop = true,
-  className = "",
+  className = '',
   showCursor = true,
   hideCursorWhileTyping = false,
-  cursorCharacter = "|",
-  cursorClassName = "",
+  cursorCharacter = '|',
+  cursorClassName = '',
   cursorBlinkDuration = 0.5,
   textColors = [],
   variableSpeed,
@@ -57,7 +57,7 @@ const TextType = ({
   reverseMode = false,
   ...props
 }: TextTypeProps & React.HTMLAttributes<HTMLElement>) => {
-  const [displayedText, setDisplayedText] = useState("");
+  const [displayedText, setDisplayedText] = useState('');
   const [currentCharIndex, setCurrentCharIndex] = useState(0);
   const [isDeleting, setIsDeleting] = useState(false);
   const [currentTextIndex, setCurrentTextIndex] = useState(0);
@@ -73,12 +73,12 @@ const TextType = ({
   };
 
   const getCurrentTextColor = () => {
-    if (textColors.length === 0) return undefined;
+    if (textColors.length === 0) return;
     return textColors[currentTextIndex % textColors.length];
   };
 
   useEffect(() => {
-    if (!startOnVisible || !containerRef.current) return;
+    if (!(startOnVisible && containerRef.current)) return;
 
     const observer = new IntersectionObserver(
       (entries) => {
@@ -88,7 +88,7 @@ const TextType = ({
           }
         });
       },
-      { threshold: 0.1 },
+      { threshold: 0.1 }
     );
 
     observer.observe(containerRef.current);
@@ -103,12 +103,12 @@ const TextType = ({
     const currentText = textArray[currentTextIndex];
     const processedText =
       reverseMode && currentText
-        ? currentText.split("").reverse().join("")
+        ? currentText.split('').reverse().join('')
         : currentText;
 
     const executeTypingAnimation = () => {
       if (isDeleting) {
-        if (displayedText === "") {
+        if (displayedText === '') {
           setIsDeleting(false);
           if (currentTextIndex === textArray.length - 1 && !loop) {
             return;
@@ -116,8 +116,8 @@ const TextType = ({
 
           if (onSentenceComplete) {
             onSentenceComplete(
-              textArray[currentTextIndex] ?? "",
-              currentTextIndex,
+              textArray[currentTextIndex] ?? '',
+              currentTextIndex
             );
           }
 
@@ -129,26 +129,22 @@ const TextType = ({
             setDisplayedText((prev) => prev.slice(0, -1));
           }, deletingSpeed);
         }
-      } else {
-        if (processedText && currentCharIndex < processedText.length) {
-          timeout = setTimeout(
-            () => {
-              setDisplayedText(
-                (prev) => prev + processedText[currentCharIndex],
-              );
-              setCurrentCharIndex((prev) => prev + 1);
-            },
-            variableSpeed ? getRandomSpeed() : typingSpeed,
-          );
-        } else if (textArray.length > 1) {
-          timeout = setTimeout(() => {
-            setIsDeleting(true);
-          }, pauseDuration);
-        }
+      } else if (processedText && currentCharIndex < processedText.length) {
+        timeout = setTimeout(
+          () => {
+            setDisplayedText((prev) => prev + processedText[currentCharIndex]);
+            setCurrentCharIndex((prev) => prev + 1);
+          },
+          variableSpeed ? getRandomSpeed() : typingSpeed
+        );
+      } else if (textArray.length > 1) {
+        timeout = setTimeout(() => {
+          setIsDeleting(true);
+        }, pauseDuration);
       }
     };
 
-    if (currentCharIndex === 0 && !isDeleting && displayedText === "") {
+    if (currentCharIndex === 0 && !isDeleting && displayedText === '') {
       timeout = setTimeout(executeTypingAnimation, initialDelay);
     } else {
       executeTypingAnimation();
@@ -194,18 +190,18 @@ const TextType = ({
     </span>,
     showCursor && (
       <motion.span
-        className={`ml-1 inline-block ${shouldHideCursor ? "hidden" : ""} ${cursorClassName}`}
         animate={{ opacity: [1, 0] }}
+        className={`ml-1 inline-block ${shouldHideCursor ? 'hidden' : ''} ${cursorClassName}`}
         transition={{
           duration: cursorBlinkDuration,
-          repeat: Infinity,
-          repeatType: "reverse",
-          ease: "easeInOut",
+          repeat: Number.POSITIVE_INFINITY,
+          repeatType: 'reverse',
+          ease: 'easeInOut',
         }}
       >
         {cursorCharacter}
       </motion.span>
-    ),
+    )
   );
 };
 

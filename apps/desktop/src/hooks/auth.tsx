@@ -1,11 +1,12 @@
-import { useEffect } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { useRouter } from "@tanstack/react-router";
-import { isRegistered, register } from "@tauri-apps/plugin-deep-link";
-import { openUrl } from "@tauri-apps/plugin-opener";
+import { log } from '@acme/observability';
+import { useQuery } from '@tanstack/react-query';
+import { useRouter } from '@tanstack/react-router';
+import { isRegistered, register } from '@tauri-apps/plugin-deep-link';
+import { openUrl } from '@tauri-apps/plugin-opener';
+import { useEffect } from 'react';
 
-import { authClient } from "~/lib/client";
-import { queryClient, trpc } from "~/trpc";
+import { authClient } from '~/lib/client';
+import { queryClient, trpc } from '~/trpc';
 
 /**
  * Utility function to check if an error is likely network-related
@@ -16,20 +17,20 @@ export function isNetworkError(error: unknown): boolean {
   const errorMessage =
     error instanceof Error
       ? error.message.toLowerCase()
-      : typeof error === "string"
+      : typeof error === 'string'
         ? error.toLowerCase()
         : JSON.stringify(error).toLowerCase();
 
   return (
-    errorMessage.includes("network") ||
-    errorMessage.includes("fetch") ||
-    errorMessage.includes("connection") ||
-    errorMessage.includes("timeout") ||
-    errorMessage.includes("aborted") ||
-    errorMessage.includes("unreachable") ||
-    errorMessage.includes("failed to fetch") ||
-    errorMessage.includes("load failed") ||
-    errorMessage.includes("no internet")
+    errorMessage.includes('network') ||
+    errorMessage.includes('fetch') ||
+    errorMessage.includes('connection') ||
+    errorMessage.includes('timeout') ||
+    errorMessage.includes('aborted') ||
+    errorMessage.includes('unreachable') ||
+    errorMessage.includes('failed to fetch') ||
+    errorMessage.includes('load failed') ||
+    errorMessage.includes('no internet')
   );
 }
 
@@ -65,7 +66,7 @@ export const useAuth = () => {
 
   useEffect(() => {
     if (error) {
-      console.error("Auth error", error);
+      log.error('Auth error', error);
     }
   }, [error]);
 
@@ -80,13 +81,13 @@ export const useAuth = () => {
 export const useSignIn = () => {
   const router = useRouter();
   return async () => {
-    if (!(await isRegistered("voicegecko"))) {
-      await register("voicegecko");
-      console.log('Registered "voicegecko"');
+    if (!(await isRegistered('voicegecko'))) {
+      await register('voicegecko');
+      log.info('Registered "voicegecko"');
     }
 
     await signIn();
-    return router.navigate({ to: "/" });
+    return router.navigate({ to: '/' });
   };
 };
 
@@ -94,9 +95,9 @@ export const useSignOut = () => {
   const router = useRouter();
   const options = trpc.auth.getSession.queryKey();
   return async () => {
-    console.log("🚪 Signing out...");
+    log.info('🚪 Signing out...');
     await authClient.signOut();
     await queryClient.invalidateQueries({ queryKey: options });
-    return router.navigate({ to: "/sign-in", search: { redirect: null } });
+    return router.navigate({ to: '/sign-in', search: { redirect: null } });
   };
 };

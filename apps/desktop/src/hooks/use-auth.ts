@@ -1,10 +1,11 @@
-import { useEffect } from "react";
-import { useRouter } from "@tanstack/react-router";
-import { isRegistered, register } from "@tauri-apps/plugin-deep-link";
-import { openUrl } from "@tauri-apps/plugin-opener";
+import { log } from '@acme/observability';
+import { useRouter } from '@tanstack/react-router';
+import { isRegistered, register } from '@tauri-apps/plugin-deep-link';
+import { openUrl } from '@tauri-apps/plugin-opener';
+import { useEffect } from 'react';
 
-import { authClient } from "~/lib/client";
-import { useSession } from "./auth";
+import { authClient } from '~/lib/client';
+import { useSession } from './auth';
 
 export const signIn = async () => {
   const signInUrl = `${import.meta.env.VITE_PUBLIC_VOICEGECKO_URL}/api/auth/signin?redirect=voicegecko://login`;
@@ -25,11 +26,11 @@ export const useAuth = () => {
     query: { isPending, error },
   } = useSession();
 
-  console.log("useAuth", session, isPending, error);
+  log.info('useAuth', session, isPending, error);
 
   useEffect(() => {
     if (error) {
-      console.error("Auth error", error);
+      log.error('Auth error', error);
     }
   }, [error]);
 
@@ -40,10 +41,10 @@ export const useAuth = () => {
     error,
     // Simple auth state determination
     getAuthState: () => {
-      if (isPending) return "loading";
-      if (error) return "error";
-      if (!session?.user) return "unauthenticated";
-      return "authenticated";
+      if (isPending) return 'loading';
+      if (error) return 'error';
+      if (!session?.user) return 'unauthenticated';
+      return 'authenticated';
     },
   };
 };
@@ -51,13 +52,13 @@ export const useAuth = () => {
 export const useSignIn = () => {
   const router = useRouter();
   return async () => {
-    if (!(await isRegistered("voicegecko"))) {
-      await register("voicegecko");
-      console.log('Registered "voicegecko"');
+    if (!(await isRegistered('voicegecko'))) {
+      await register('voicegecko');
+      log.info('Registered "voicegecko"');
     }
 
     await signIn();
-    return router.navigate({ to: "/" });
+    return router.navigate({ to: '/' });
   };
 };
 
@@ -65,9 +66,9 @@ export const useSignOut = () => {
   const router = useRouter();
 
   return async () => {
-    console.log("🚪 Signing out...");
+    log.info('🚪 Signing out...');
     await authClient.signOut();
-    return router.navigate({ to: "/sign-in", search: { redirect: null } });
+    return router.navigate({ to: '/sign-in', search: { redirect: null } });
   };
 };
 
@@ -80,19 +81,19 @@ export function isNetworkError(error: unknown): boolean {
   const errorMessage =
     error instanceof Error
       ? error.message.toLowerCase()
-      : typeof error === "string"
+      : typeof error === 'string'
         ? error.toLowerCase()
         : JSON.stringify(error).toLowerCase();
 
   return (
-    errorMessage.includes("network") ||
-    errorMessage.includes("fetch") ||
-    errorMessage.includes("connection") ||
-    errorMessage.includes("timeout") ||
-    errorMessage.includes("aborted") ||
-    errorMessage.includes("unreachable") ||
-    errorMessage.includes("failed to fetch") ||
-    errorMessage.includes("load failed") ||
-    errorMessage.includes("no internet")
+    errorMessage.includes('network') ||
+    errorMessage.includes('fetch') ||
+    errorMessage.includes('connection') ||
+    errorMessage.includes('timeout') ||
+    errorMessage.includes('aborted') ||
+    errorMessage.includes('unreachable') ||
+    errorMessage.includes('failed to fetch') ||
+    errorMessage.includes('load failed') ||
+    errorMessage.includes('no internet')
   );
 }

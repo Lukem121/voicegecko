@@ -1,12 +1,12 @@
-"use client";
+'use client';
 
-import React from "react";
-import { AnimatePresence, motion } from "motion/react";
+import { log } from '@acme/observability';
+import TextType from '@acme/ui/components/text-type';
+import { cn } from '@acme/ui/lib/utils';
+import { AnimatePresence, motion } from 'motion/react';
+import React from 'react';
 
-import TextType from "@acme/ui/components/text-type";
-import { cn } from "@acme/ui/lib/utils";
-
-import type { MascotMessage } from "./mascot-chat-provider";
+import type { MascotMessage } from './mascot-chat-provider';
 
 // Typing dots component for the typing effect
 function TypingDots() {
@@ -14,17 +14,17 @@ function TypingDots() {
     <div className="flex space-x-1">
       {[0, 1, 2].map((i) => (
         <motion.div
-          key={i}
-          className="bg-muted-foreground h-1.5 w-1.5 rounded-full"
           animate={{
             opacity: [0.4, 1, 0.4],
             scale: [0.8, 1, 0.8],
           }}
+          className="h-1.5 w-1.5 rounded-full bg-muted-foreground"
+          key={i}
           transition={{
             duration: 1.2,
-            repeat: Infinity,
+            repeat: Number.POSITIVE_INFINITY,
             delay: i * 0.2,
-            ease: "easeInOut",
+            ease: 'easeInOut',
           }}
         />
       ))}
@@ -33,35 +33,35 @@ function TypingDots() {
 }
 
 // Chat bubble styles based on message type
-const getBubbleStyles = (type: MascotMessage["type"]) => {
+const getBubbleStyles = (type: MascotMessage['type']) => {
   const baseStyles =
-    "relative rounded-2xl px-4 py-3 shadow-lg backdrop-blur-sm border";
+    'relative rounded-2xl px-4 py-3 shadow-lg backdrop-blur-sm border';
 
   switch (type) {
-    case "success":
+    case 'success':
       return cn(
         baseStyles,
-        "!border-green-200 bg-green-50 text-green-800 dark:!border-green-800 dark:bg-green-900/30 dark:text-green-200",
+        '!border-green-200 dark:!border-green-800 bg-green-50 text-green-800 dark:bg-green-900/30 dark:text-green-200'
       );
-    case "warning":
+    case 'warning':
       return cn(
         baseStyles,
-        "!border-yellow-200 bg-yellow-50 text-yellow-800 dark:!border-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200",
+        '!border-yellow-200 dark:!border-yellow-800 bg-yellow-50 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-200'
       );
-    case "celebration":
+    case 'celebration':
       return cn(
         baseStyles,
-        "!border-purple-200 bg-gradient-to-r from-purple-50 to-pink-50 text-purple-800 dark:!border-purple-800 dark:from-purple-900/30 dark:to-pink-900/30 dark:text-purple-200",
+        '!border-purple-200 dark:!border-purple-800 bg-gradient-to-r from-purple-50 to-pink-50 text-purple-800 dark:from-purple-900/30 dark:to-pink-900/30 dark:text-purple-200'
       );
-    case "guidance":
+    case 'guidance':
       return cn(
         baseStyles,
-        "!border-blue-200 bg-blue-50 text-blue-800 dark:!border-blue-800 dark:bg-blue-900/30 dark:text-blue-200",
+        '!border-blue-200 dark:!border-blue-800 bg-blue-50 text-blue-800 dark:bg-blue-900/30 dark:text-blue-200'
       );
     default:
       return cn(
         baseStyles,
-        "!border-border text-foreground bg-white/80 dark:bg-black/20",
+        '!border-border bg-white/80 text-foreground dark:bg-black/20'
       );
   }
 };
@@ -71,24 +71,24 @@ interface MascotChatBubbleProps {
   message: MascotMessage | null;
   isTyping: boolean;
   className?: string;
-  position?: "top" | "bottom" | "left" | "right";
+  position?: 'top' | 'bottom' | 'left' | 'right';
 }
 
 export function MascotChatBubble({
   message,
   isTyping,
   className,
-  position = "bottom",
+  position = 'bottom',
 }: MascotChatBubbleProps) {
   // Don't render if no message and not typing
-  if (!message && !isTyping) {
+  if (!(message || isTyping)) {
     return null;
   }
 
   // Don't render if message exists but has no content
-  if (message && (!message.content || message.content.trim() === "")) {
-    console.warn(
-      "[MascotChatBubble] Message with empty content detected, not rendering",
+  if (message && (!message.content || message.content.trim() === '')) {
+    log.warn(
+      '[MascotChatBubble] Message with empty content detected, not rendering'
     );
     return null;
   }
@@ -101,7 +101,7 @@ export function MascotChatBubble({
         opacity: 1,
         scale: 1,
         transition: {
-          type: "spring" as const,
+          type: 'spring' as const,
           stiffness: 300,
           damping: 20,
         },
@@ -116,21 +116,21 @@ export function MascotChatBubble({
     };
 
     switch (position) {
-      case "top":
+      case 'top':
         return {
           ...baseVariants,
           hidden: { ...baseVariants.hidden, y: 10 },
           visible: { ...baseVariants.visible, y: 0 },
           exit: { ...baseVariants.exit, y: -10 },
         };
-      case "left":
+      case 'left':
         return {
           ...baseVariants,
           hidden: { ...baseVariants.hidden, x: 10 },
           visible: { ...baseVariants.visible, x: 0 },
           exit: { ...baseVariants.exit, x: -10 },
         };
-      case "right":
+      case 'right':
         return {
           ...baseVariants,
           hidden: { ...baseVariants.hidden, x: -10 },
@@ -151,16 +151,16 @@ export function MascotChatBubble({
     <AnimatePresence mode="wait">
       {(message ?? isTyping) && (
         <motion.div
-          key={message?.id ?? "typing"}
-          variants={getAnimationVariants()}
-          initial="hidden"
           animate="visible"
+          className={cn('relative max-w-sm', className)}
           exit="exit"
-          className={cn("relative max-w-sm", className)}
+          initial="hidden"
+          key={message?.id ?? 'typing'}
+          variants={getAnimationVariants()}
         >
           <div
             className={cn(
-              message ? getBubbleStyles(message.type) : getBubbleStyles("info"),
+              message ? getBubbleStyles(message.type) : getBubbleStyles('info')
             )}
           >
             {isTyping && !message ? (
@@ -174,15 +174,15 @@ export function MascotChatBubble({
             ) : message ? (
               // Show message content
               <div>
-                <p className="text-sm leading-relaxed font-medium">
+                <p className="font-medium text-sm leading-relaxed">
                   <TextType
-                    text={message.content}
-                    typingSpeed={10}
-                    showCursor={false}
-                    loop={false}
                     as="span"
                     className="inline"
+                    loop={false}
+                    showCursor={false}
                     startOnVisible={true}
+                    text={message.content}
+                    typingSpeed={10}
                   />
                 </p>
               </div>

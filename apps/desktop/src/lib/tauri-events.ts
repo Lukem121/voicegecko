@@ -1,17 +1,23 @@
-import { listen } from "@tauri-apps/api/event";
-import { toast } from "sonner";
-
+import { listen } from '@tauri-apps/api/event';
+import { toast } from 'sonner';
+import { transcriptionService } from '~/services/transcription.service';
+import { useEventStore } from '~/stores/event.store';
+import { queryClient, trpcClient } from '~/trpc';
 import type {
-  AudioData,
+import
+{
+  log;
+}
+from;
+('@acme/observability');
+AudioData,
   AudioLevelEvent,
   RecordingErrorEvent,
   RecordingStateChangedEvent,
   TranscriptionProgressEvent,
-} from "~/types/events";
-import { transcriptionService } from "~/services/transcription.service";
-import { useEventStore } from "~/stores/event.store";
-import { queryClient, trpcClient } from "~/trpc";
-import { TranscriptionTracker } from "./analytics/posthog-analytics";
+} from '~/types/events'
+
+import { TranscriptionTracker } from './analytics/posthog-analytics';
 
 let initialized = false;
 let initializationId: string | null = null;
@@ -25,29 +31,29 @@ interface InitializeOptions {
  * Should be called once during app startup
  */
 export async function initializeTauriEvents(
-  options: InitializeOptions = {},
+  options: InitializeOptions = {}
 ): Promise<void> {
   const callerId = `${Date.now()}-${Math.random()}`;
-  console.log(`[TauriEvents] Initialization attempt with ID: ${callerId}`);
+  log.info(`[TauriEvents] Initialization attempt with ID: ${callerId}`);
 
   if (initialized) {
-    console.log(
-      `[TauriEvents] ⚠️ Already initialized by ${initializationId}, skipping (attempted by ${callerId})...`,
+    log.info(
+      `[TauriEvents] ⚠️ Already initialized by ${initializationId}, skipping (attempted by ${callerId})...`
     );
     return;
   }
 
   initialized = true;
   initializationId = callerId;
-  console.log(
-    `[TauriEvents] 🚀 Initializing Tauri event listeners (ID: ${callerId})...`,
+  log.info(
+    `[TauriEvents] 🚀 Initializing Tauri event listeners (ID: ${callerId})...`
   );
 
   try {
     // Listen for transcription progress events (always needed for UI state)
-    await listen("transcription-progress", (event) => {
+    await listen('transcription-progress', (event) => {
       const payload = event.payload as TranscriptionProgressEvent;
-      console.log("[TauriEvents] 📝 Transcription progress:", payload);
+      log.info('[TauriEvents] 📝 Transcription progress:', payload);
 
       const store = useEventStore.getState();
       const metadata = {
@@ -59,35 +65,35 @@ export async function initializeTauriEvents(
       store.setTranscriptionProgress(payload.status, payload.data, metadata);
 
       // Only handle completion business logic in main window
-      if (!options.isGeckoBar && payload.status === "Complete") {
-        console.log(
-          "[TauriEvents] Handling transcription completion in main window",
+      if (!options.isGeckoBar && payload.status === 'Complete') {
+        log.info(
+          '[TauriEvents] Handling transcription completion in main window'
         );
-        void store.handleTranscriptionComplete(payload.data ?? "", metadata);
+        store.handleTranscriptionComplete(payload.data ?? '', metadata);
       }
     });
 
     // Listen for recording state changes
-    await listen("recording-state-changed", (event) => {
+    await listen('recording-state-changed', (event) => {
       const payload = event.payload as RecordingStateChangedEvent;
-      console.log("[TauriEvents] 🎙️ Recording state changed:", payload);
+      log.info('[TauriEvents] 🎙️ Recording state changed:', payload);
 
       useEventStore.getState().setRecordingStatus(payload);
     });
 
     // Listen for cloud transcription requests
-    await listen("cloud-transcription-requested", (event) => {
+    await listen('cloud-transcription-requested', (event) => {
       void (async () => {
         const audioData = event.payload as AudioData;
 
         // Initialize transcription tracker for cloud transcription
         const audioDuration = audioData.samples.length / audioData.sample_rate;
         const transcriptionTracker = new TranscriptionTracker(
-          "cloud",
+          'cloud',
           audioDuration,
-          "whisper-1",
+          'whisper-1'
         );
-        console.log("[TauriEvents] ☁️ Cloud transcription requested", {
+        log.info('[TauriEvents] ☁️ Cloud transcription requested', {
           samplesLength: audioData.samples.length,
           sampleRate: audioData.sample_rate,
         });
@@ -95,7 +101,7 @@ export async function initializeTauriEvents(
         try {
           // Update UI to show transcribing state
           const store = useEventStore.getState();
-          store.setTranscriptionProgress("Transcribing");
+          store.setTranscriptionProgress('Transcribing');
 
           // Call the cloud transcription API
           const result = await trpcClient.transcription.cloudTranscribe.mutate({
@@ -112,9 +118,9 @@ export async function initializeTauriEvents(
 
           // Update transcription progress to complete
           store.setTranscriptionProgress(
-            "Complete",
+            'Complete',
             result.transcript,
-            metadata,
+            metadata
           );
 
           // Handle completion business logic only if not in gecko bar
@@ -122,74 +128,72 @@ export async function initializeTauriEvents(
             // For cloud transcriptions, the backend already saved the transcription
             // So we only need to handle clipboard and play notification sound
             await transcriptionService.handleCompletedTranscription(
-              result.transcript,
+              result.transcript
             );
             await transcriptionService.playEndSoundIfEnabled();
 
             // Invalidate queries to update UI
-            console.log(
-              "[TauriEvents] 🔄 Invalidating queries after cloud transcription...",
+            log.info(
+              '[TauriEvents] 🔄 Invalidating queries after cloud transcription...'
             );
 
             await queryClient.invalidateQueries({
-              queryKey: ["transcription"],
+              queryKey: ['transcription'],
             });
 
             await queryClient.invalidateQueries({
-              queryKey: ["usage"],
+              queryKey: ['usage'],
             });
 
-            console.log("[TauriEvents] ✅ Cache invalidation completed");
+            log.info('[TauriEvents] ✅ Cache invalidation completed');
           }
         } catch (error) {
-          console.error("[TauriEvents] Cloud transcription error:", error);
+          log.error('[TauriEvents] Cloud transcription error:', error);
 
           // Track transcription failure
           transcriptionTracker.trackFailed(
-            "cloud_api_error",
-            error instanceof Error ? error.message : "Unknown error",
+            'cloud_api_error',
+            error instanceof Error ? error.message : 'Unknown error'
           );
 
           // Update error state directly
           const store = useEventStore.getState();
           store.setTranscriptionProgress(
-            "Error",
+            'Error',
             error instanceof Error
               ? error.message
-              : "Cloud transcription failed",
+              : 'Cloud transcription failed'
           );
 
-          toast.error("Cloud transcription failed", {
+          toast.error('Cloud transcription failed', {
             description:
-              error instanceof Error ? error.message : "Unknown error",
+              error instanceof Error ? error.message : 'Unknown error',
           });
         }
       })();
     });
 
     // Listen for recording errors
-    await listen("recording-error", (event) => {
+    await listen('recording-error', (event) => {
       const payload = event.payload as RecordingErrorEvent;
-      console.log("[TauriEvents] ❌ Recording error:", payload);
+      log.info('[TauriEvents] ❌ Recording error:', payload);
 
       useEventStore.getState().setRecordingError(payload);
-      toast.error("Recording error", { description: payload });
+      toast.error('Recording error', { description: payload });
     });
 
     // Listen for audio level events
-    await listen("audio-level", (event) => {
+    await listen('audio-level', (event) => {
       const payload = event.payload as AudioLevelEvent;
       // Emit to any components that need real-time audio levels
-      window.dispatchEvent(new CustomEvent("audio-level", { detail: payload }));
+      window.dispatchEvent(new CustomEvent('audio-level', { detail: payload }));
     });
 
-    console.log(
-      "[TauriEvents] ✅ Tauri event listeners initialized successfully",
-    );
+    log.info('[TauriEvents] ✅ Tauri event listeners initialized successfully');
   } catch (error) {
-    console.error(
-      "[TauriEvents] ❌ Failed to initialize Tauri event listeners:",
-      error,
+    log.error(
+      '[TauriEvents] ❌ Failed to initialize Tauri event listeners:',
+      error
     );
     initialized = false;
     throw error;

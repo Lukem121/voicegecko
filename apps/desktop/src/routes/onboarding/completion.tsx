@@ -1,6 +1,21 @@
-import React, { useEffect } from "react";
-import { createFileRoute } from "@tanstack/react-router";
-import { openUrl } from "@tauri-apps/plugin-opener";
+import { Button } from '@acme/ui/components/ui/button';
+import {
+import
+{
+  log;
+}
+from;
+('@acme/observability');
+Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@acme/ui/components/ui/card'
+
+import { log } from '@acme/observability';
+import { createFileRoute } from '@tanstack/react-router';
+import { openUrl } from '@tauri-apps/plugin-opener';
 import {
   BookOpen,
   Check,
@@ -8,21 +23,12 @@ import {
   ExternalLink,
   Globe,
   MessageCircle,
-} from "lucide-react";
-import { motion } from "motion/react";
+} from 'lucide-react';
+import { motion } from 'motion/react';
+import React, { useEffect } from 'react';
+import { useOnboarding } from '~/components/onboarding/onboarding-provider';
 
-import { Button } from "@acme/ui/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@acme/ui/components/ui/card";
-
-import { useOnboarding } from "~/components/onboarding/onboarding-provider";
-
-export const Route = createFileRoute("/onboarding/completion")({
+export const Route = createFileRoute('/onboarding/completion')({
   component: CompletionStep,
 });
 
@@ -40,21 +46,21 @@ function CompletionStep() {
     sendMascotMessage({
       content:
         "🎉 Setup complete! You're ready to start transcribing with VoiceGecko.",
-      type: "celebration",
+      type: 'celebration',
       persist: true,
     });
 
     // Mark step completed
-    markStepCompleted("completion", 100);
+    markStepCompleted('completion', 100);
   }, [markStepCompleted, sendMascotMessage]);
 
   const handleJoinDiscord = () => {
-    void openUrl("https://discord.gg/BFxNQCzZjB");
+    openUrl('https://discord.gg/BFxNQCzZjB');
   };
 
   const handleUpgradeToPro = () => {
     // TODO: Open upgrade modal or navigate to subscription page
-    console.log("Navigate to pro upgrade");
+    log.info('Navigate to pro upgrade');
   };
 
   return (
@@ -63,12 +69,12 @@ function CompletionStep() {
         <div className="mx-auto max-w-3xl space-y-8">
           {/* Simple Hero */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
             className="text-center"
+            initial={{ opacity: 0, y: 20 }}
+            transition={{ duration: 0.5 }}
           >
-            <h1 className="mb-2 text-3xl font-medium">🎉 You're All Set!</h1>
+            <h1 className="mb-2 font-medium text-3xl">🎉 You're All Set!</h1>
             <p className="text-muted-foreground">
               VoiceGecko is ready to transcribe your voice anywhere
             </p>
@@ -76,10 +82,10 @@ function CompletionStep() {
 
           {/* Main Actions - Two Columns */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, delay: 0.1 }}
             className="grid gap-6 md:grid-cols-2"
+            initial={{ opacity: 0, y: 20 }}
+            transition={{ duration: 0.5, delay: 0.1 }}
           >
             {/* Community */}
             <Card>
@@ -109,8 +115,8 @@ function CompletionStep() {
               </CardContent>
               <CardFooter>
                 <Button
-                  onClick={handleJoinDiscord}
                   className="w-full bg-[#5865F2] text-white hover:bg-[#4752C4]"
+                  onClick={handleJoinDiscord}
                 >
                   <MessageCircle className="mr-2 h-4 w-4" />
                   Join Discord
@@ -146,9 +152,9 @@ function CompletionStep() {
               </CardContent>
               <CardFooter>
                 <Button
+                  className="w-full"
                   onClick={handleUpgradeToPro}
                   variant="outline"
-                  className="w-full"
                 >
                   Learn About Pro
                 </Button>
@@ -158,8 +164,8 @@ function CompletionStep() {
 
           {/* Quick Tips */}
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0, y: 20 }}
             transition={{ duration: 0.5, delay: 0.2 }}
           >
             <Card className="gap-4">
@@ -169,9 +175,9 @@ function CompletionStep() {
               <CardContent>
                 <div className="grid gap-3 md:grid-cols-3">
                   <div className="flex items-start gap-2">
-                    <Globe className="text-muted-foreground mt-0.5 h-4 w-4 flex-shrink-0" />
+                    <Globe className="mt-0.5 h-4 w-4 flex-shrink-0 text-muted-foreground" />
                     <div>
-                      <h4 className="mb-1 text-sm font-medium">
+                      <h4 className="mb-1 font-medium text-sm">
                         Global Access
                       </h4>
                       <p className="text-muted-foreground text-xs">
@@ -180,18 +186,18 @@ function CompletionStep() {
                     </div>
                   </div>
                   <div className="flex items-start gap-2">
-                    <Clipboard className="text-muted-foreground mt-0.5 h-4 w-4 flex-shrink-0" />
+                    <Clipboard className="mt-0.5 h-4 w-4 flex-shrink-0 text-muted-foreground" />
                     <div>
-                      <h4 className="mb-1 text-sm font-medium">Auto-Paste</h4>
+                      <h4 className="mb-1 font-medium text-sm">Auto-Paste</h4>
                       <p className="text-muted-foreground text-xs">
                         Transcribed text automatically appears where you need it
                       </p>
                     </div>
                   </div>
                   <div className="flex items-start gap-2">
-                    <BookOpen className="text-muted-foreground mt-0.5 h-4 w-4 flex-shrink-0" />
+                    <BookOpen className="mt-0.5 h-4 w-4 flex-shrink-0 text-muted-foreground" />
                     <div>
-                      <h4 className="mb-1 text-sm font-medium">
+                      <h4 className="mb-1 font-medium text-sm">
                         Custom Dictionary
                       </h4>
                       <p className="text-muted-foreground text-xs">

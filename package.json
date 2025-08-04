@@ -15,10 +15,8 @@
     "db:studio": "turbo -F @acme/db studio",
     "dev": "turbo watch dev --continue",
     "dev:web": "turbo watch dev -F @acme/web...",
-    "format": "turbo run format --continue -- --cache --cache-location .cache/.prettiercache",
-    "format:fix": "turbo run format --continue -- --write --cache --cache-location .cache/.prettiercache",
-    "lint": "turbo run lint --continue -- --cache --cache-location .cache/.eslintcache",
-    "lint:fix": "turbo run lint --continue -- --fix --cache --cache-location .cache/.eslintcache",
+    "lint": "ultracite lint",
+    "format": "ultracite format",
     "lint:ws": "pnpm dlx sherif@latest",
     "bump-deps": "npx npm-check-updates --deep -u -x react-day-picker && pnpm install",
     "postinstall": "pnpm lint:ws",
@@ -32,11 +30,10 @@
     "release": "node scripts/release-helper.js"
   },
   "devDependencies": {
-    "@acme/prettier-config": "workspace:*",
+    "@biomejs/biome": "2.1.2",
     "@turbo/gen": "^2.5.5",
-    "prettier": "catalog:",
+    "glob": "^11.0.3",
     "turbo": "^2.5.5",
-    "typescript": "catalog:"
-  },
-  "prettier": "@acme/prettier-config"
+    "ultracite": "5.1.2"
+  }
 }

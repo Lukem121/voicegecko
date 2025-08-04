@@ -1,6 +1,6 @@
-import { useMutation } from "@tanstack/react-query";
+import { useMutation } from '@tanstack/react-query';
 
-import { queryClient, trpc } from "~/trpc";
+import { queryClient, trpc } from '~/trpc';
 
 export const useUpdateDictionary = () => {
   const mutation = useMutation(
@@ -17,7 +17,7 @@ export const useUpdateDictionary = () => {
           ]);
         }
       },
-    }),
+    })
   );
 
   return {

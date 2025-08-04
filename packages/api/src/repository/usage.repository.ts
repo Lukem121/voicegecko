@@ -1,11 +1,11 @@
-import { and, eq, gte, sql } from "@acme/db";
-import { db } from "@acme/db/client";
+import { and, eq, gte, sql } from '@acme/db';
+import { db } from '@acme/db/client';
 import {
   subscription as SubscriptionTable,
   TranscriptionTable,
   UsageTable,
   user as UserTable,
-} from "@acme/db/schema";
+} from '@acme/db/schema';
 
 export interface UsageData {
   userId: string;
@@ -101,17 +101,17 @@ class UsageRepository {
       })
       .from(SubscriptionTable)
       .where(
-        eq(SubscriptionTable.stripeCustomerId, userRecord.stripeCustomerId),
+        eq(SubscriptionTable.stripeCustomerId, userRecord.stripeCustomerId)
       );
 
     // Sort in JavaScript: active subscriptions first, then by period end date
     const sortedSubscriptions = subscriptions.sort((a, b) => {
       // First, prioritize active subscriptions
-      if (a.status === "active" && b.status !== "active") return -1;
-      if (a.status !== "active" && b.status === "active") return 1;
+      if (a.status === 'active' && b.status !== 'active') return -1;
+      if (a.status !== 'active' && b.status === 'active') return 1;
 
       // Then sort by period end date (furthest in future first)
-      if (!a.periodEnd && !b.periodEnd) return 0;
+      if (!(a.periodEnd || b.periodEnd)) return 0;
       if (!a.periodEnd) return 1;
       if (!b.periodEnd) return -1;
       return b.periodEnd.getTime() - a.periodEnd.getTime();
@@ -160,8 +160,8 @@ class UsageRepository {
       .where(
         and(
           eq(TranscriptionTable.userId, userId),
-          gte(TranscriptionTable.createdAt, startOfMonth),
-        ),
+          gte(TranscriptionTable.createdAt, startOfMonth)
+        )
       );
 
     return {
@@ -180,8 +180,8 @@ class UsageRepository {
       .where(
         and(
           eq(TranscriptionTable.userId, userId),
-          sql`${TranscriptionTable.durationSeconds} IS NOT NULL AND ${TranscriptionTable.durationSeconds} > 0`,
-        ),
+          sql`${TranscriptionTable.durationSeconds} IS NOT NULL AND ${TranscriptionTable.durationSeconds} > 0`
+        )
       );
 
     const totalWords = Number(result?.totalWords || 0);

@@ -1,5 +1,25 @@
-import { useState } from "react";
-import { createFileRoute } from "@tanstack/react-router";
+import { CopyButton } from '@acme/ui/components/copy';
+import { Button } from '@acme/ui/components/ui/button';
+import {
+import
+{
+  log;
+}
+from;
+('@acme/observability');
+DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@acme/ui/components/ui/dropdown-menu'
+
+import { Input } from '@acme/ui/components/ui/input';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from '@acme/ui/components/ui/tooltip';
+import { createFileRoute } from '@tanstack/react-router';
 import {
   Info,
   Loader2,
@@ -8,31 +28,17 @@ import {
   Search,
   Trash2,
   X,
-} from "lucide-react";
+} from 'lucide-react';
+import { useState } from 'react';
 
-import { CopyButton } from "@acme/ui/components/copy";
-import { Button } from "@acme/ui/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@acme/ui/components/ui/dropdown-menu";
-import { Input } from "@acme/ui/components/ui/input";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@acme/ui/components/ui/tooltip";
+import { FeedbackModal } from '~/components/feedback-modal';
+import { TranscriptionSkeleton } from '~/components/transcription-skeleton';
+import { useDeleteTranscription } from '~/features/transcription/use-delete-transcription';
+import { useInfiniteTranscriptions } from '~/features/transcription/use-infinite-transcriptions';
+import { useInfiniteScroll } from '~/hooks/use-infinite-scroll';
+import { analytics } from '~/lib/analytics/posthog-analytics';
 
-import { FeedbackModal } from "~/components/feedback-modal";
-import { TranscriptionSkeleton } from "~/components/transcription-skeleton";
-import { useDeleteTranscription } from "~/features/transcription/use-delete-transcription";
-import { useInfiniteTranscriptions } from "~/features/transcription/use-infinite-transcriptions";
-import { useInfiniteScroll } from "~/hooks/use-infinite-scroll";
-import { analytics } from "~/lib/analytics/posthog-analytics";
-
-export const Route = createFileRoute("/_authenticated/transcriptions")({
+export const Route = createFileRoute('/_authenticated/transcriptions')({
   component: TranscriptionsPage,
 });
 
@@ -61,7 +67,7 @@ function TranscriptionsPage() {
   }>({
     isOpen: false,
     transcriptionId: 0,
-    content: "",
+    content: '',
   });
 
   const { loadMoreRef } = useInfiniteScroll({
@@ -75,12 +81,12 @@ function TranscriptionsPage() {
     setFeedbackModal({
       isOpen: true,
       transcriptionId: id,
-      content: content,
+      content,
     });
 
     // Track feedback initiation
-    analytics.track("feedback_submitted", {
-      type: "transcription_quality",
+    analytics.track('feedback_submitted', {
+      type: 'transcription_quality',
       rating: undefined,
       has_text: content.length > 0,
     });
@@ -88,12 +94,12 @@ function TranscriptionsPage() {
 
   const handleDeleteTranscript = async (id: number) => {
     try {
-      console.log("Deleting transcription:", id);
+      log.info('Deleting transcription:', id);
       setDeletingId(id);
       setOpenDropdownId(null); // Close dropdown when deletion starts
       await deleteTranscription({ id });
     } catch (error) {
-      console.error("Failed to delete transcription:", error);
+      log.error('Failed to delete transcription:', error);
     } finally {
       setDeletingId(null);
     }
@@ -102,30 +108,30 @@ function TranscriptionsPage() {
   return (
     <div className="flex flex-1 flex-col gap-4">
       <div className="flex h-10 items-center justify-between">
-        <h1 className="text-2xl font-bold tracking-tight">Recent activity</h1>
+        <h1 className="font-bold text-2xl tracking-tight">Recent activity</h1>
         <div className="flex items-center gap-1">
           {isSearchExpanded ? (
             <div className="flex items-center gap-2">
               <div className="relative">
-                <Search className="text-muted-foreground absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2" />
+                <Search className="-translate-y-1/2 absolute top-1/2 left-3 h-4 w-4 text-muted-foreground" />
                 <Input
+                  autoFocus
+                  className="w-80 pr-12 pl-10"
+                  onChange={(e) => handleSearch(e.target.value)}
                   placeholder="Search transcriptions..."
                   value={searchTerm}
-                  onChange={(e) => handleSearch(e.target.value)}
-                  className="w-80 pr-12 pl-10"
-                  autoFocus
                 />
-                <div className="absolute top-1/2 right-1 flex -translate-y-1/2 items-center gap-1">
+                <div className="-translate-y-1/2 absolute top-1/2 right-1 flex items-center gap-1">
                   {/* Show subtle loading spinner while searching */}
                   {searchTerm && isLoading && (
-                    <Loader2 className="text-muted-foreground h-3 w-3 animate-spin" />
+                    <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />
                   )}
                   {searchTerm && (
                     <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={clearSearch}
                       className="h-7 w-7 p-0"
+                      onClick={clearSearch}
+                      size="sm"
+                      variant="ghost"
                     >
                       <X className="h-4 w-4" />
                     </Button>
@@ -133,26 +139,26 @@ function TranscriptionsPage() {
                 </div>
               </div>
               <Button
-                variant="ghost"
-                size="sm"
                 className="h-8 w-8 p-0"
                 onClick={() => {
                   setIsSearchExpanded(false);
                   clearSearch();
                 }}
+                size="sm"
+                variant="ghost"
               >
                 <X className="h-4 w-4" />
               </Button>
             </div>
           ) : (
             <Button
-              variant="ghost"
-              size="sm"
               className="h-8 w-8 p-0"
               onClick={() => {
                 setIsSearchExpanded(true);
-                analytics.trackFeatureFirstUse("transcription_search");
+                analytics.trackFeatureFirstUse('transcription_search');
               }}
+              size="sm"
+              variant="ghost"
             >
               <Search className="h-4 w-4" />
             </Button>
@@ -162,12 +168,12 @@ function TranscriptionsPage() {
 
       {/* Search results info - only show when we have actual results */}
       {searchTerm && transcriptions.length > 0 && (
-        <div className="text-muted-foreground flex items-center gap-2 text-sm">
+        <div className="flex items-center gap-2 text-muted-foreground text-sm">
           <span>
             {totalResults !== undefined
-              ? `Found ${totalResults} result${totalResults !== 1 ? "s" : ""}`
-              : `${transcriptions.reduce((acc, section) => acc + section.items.length, 0)} result${transcriptions.reduce((acc, section) => acc + section.items.length, 0) !== 1 ? "s" : ""}`}
-            {isFuzzySearch && " (fuzzy search)"}
+              ? `Found ${totalResults} result${totalResults !== 1 ? 's' : ''}`
+              : `${transcriptions.reduce((acc, section) => acc + section.items.length, 0)} result${transcriptions.reduce((acc, section) => acc + section.items.length, 0) !== 1 ? 's' : ''}`}
+            {isFuzzySearch && ' (fuzzy search)'}
           </span>
         </div>
       )}
@@ -178,34 +184,34 @@ function TranscriptionsPage() {
           <TranscriptionSkeleton />
         ) : transcriptions.length === 0 && searchTerm && !isLoading ? (
           <div className="flex flex-col items-center justify-center py-16 text-center">
-            <div className="bg-muted mb-4 rounded-full p-3">
-              <MessageSquare className="text-muted-foreground h-6 w-6" />
+            <div className="mb-4 rounded-full bg-muted p-3">
+              <MessageSquare className="h-6 w-6 text-muted-foreground" />
             </div>
-            <h3 className="mb-2 text-lg font-semibold">
+            <h3 className="mb-2 font-semibold text-lg">
               No transcriptions found
             </h3>
-            <p className="text-muted-foreground mb-4 max-w-md">
+            <p className="mb-4 max-w-md text-muted-foreground">
               We couldn't find any transcriptions matching "{searchTerm}". Try
               adjusting your search terms.
             </p>
             <Button
-              variant="outline"
-              size="sm"
-              onClick={clearSearch}
               className="mt-2"
+              onClick={clearSearch}
+              size="sm"
+              variant="outline"
             >
               Clear search
             </Button>
           </div>
         ) : transcriptions.length === 0 && !searchTerm && !isLoading ? (
           <div className="flex flex-col items-center justify-center py-16 text-center">
-            <div className="bg-muted mb-4 rounded-full p-3">
-              <MessageSquare className="text-muted-foreground h-6 w-6" />
+            <div className="mb-4 rounded-full bg-muted p-3">
+              <MessageSquare className="h-6 w-6 text-muted-foreground" />
             </div>
-            <h3 className="mb-2 text-lg font-semibold">
+            <h3 className="mb-2 font-semibold text-lg">
               No transcriptions yet
             </h3>
-            <p className="text-muted-foreground mb-4 max-w-md">
+            <p className="mb-4 max-w-md text-muted-foreground">
               Start recording to see your transcriptions appear here. Your voice
               recordings will be automatically transcribed and organized by
               date.
@@ -213,8 +219,8 @@ function TranscriptionsPage() {
           </div>
         ) : (
           transcriptions.map((section) => (
-            <div key={`section-${section.date}`} className="space-y-3">
-              <h2 className="text-muted-foreground text-sm font-medium tracking-wide uppercase">
+            <div className="space-y-3" key={`section-${section.date}`}>
+              <h2 className="font-medium text-muted-foreground text-sm uppercase tracking-wide">
                 {section.date}
               </h2>
               <div className="overflow-hidden rounded-lg border">
@@ -223,36 +229,36 @@ function TranscriptionsPage() {
 
                   return (
                     <div
-                      key={item.id}
-                      className={`group hover:bg-muted/50 flex items-start justify-between border-transparent p-3 transition-all will-change-auto ${
+                      className={`group flex items-start justify-between border-transparent p-3 transition-all will-change-auto hover:bg-muted/50 ${
                         index < section.items.length - 1
-                          ? "border-border border-b"
-                          : ""
+                          ? 'border-border border-b'
+                          : ''
                       } ${
                         isBeingDeleted
-                          ? "bg-muted/30 pointer-events-none opacity-50"
-                          : ""
+                          ? 'pointer-events-none bg-muted/30 opacity-50'
+                          : ''
                       }`}
-                      style={{ minHeight: "60px" }} // Ensure consistent minimum height
+                      key={item.id}
+                      style={{ minHeight: '60px' }} // Ensure consistent minimum height
                     >
                       <div className="flex min-w-0 flex-1 items-start gap-3">
-                        <div className="text-muted-foreground text-sm whitespace-nowrap">
+                        <div className="whitespace-nowrap text-muted-foreground text-sm">
                           {item.timestamp}
                         </div>
                         <div className="flex min-w-0 flex-1 items-start gap-2">
                           <div
                             className={`text-sm leading-relaxed ${
-                              item.status === "silent"
-                                ? "text-muted-foreground italic"
-                                : "text-foreground"
+                              item.status === 'silent'
+                                ? 'text-muted-foreground italic'
+                                : 'text-foreground'
                             }`}
                           >
                             {item.content}
                           </div>
-                          {item.status === "silent" && (
+                          {item.status === 'silent' && (
                             <Tooltip>
                               <TooltipTrigger>
-                                <Info className="text-muted-foreground mt-0.5 h-4 w-4 flex-shrink-0" />
+                                <Info className="mt-0.5 h-4 w-4 flex-shrink-0 text-muted-foreground" />
                               </TooltipTrigger>
                               <TooltipContent>
                                 <p>No audio detected during this recording</p>
@@ -264,35 +270,35 @@ function TranscriptionsPage() {
                       <div
                         className={`flex items-center gap-1 transition-opacity ${
                           isBeingDeleted || openDropdownId === item.id
-                            ? "opacity-100"
-                            : "opacity-0 group-hover:opacity-100"
+                            ? 'opacity-100'
+                            : 'opacity-0 group-hover:opacity-100'
                         }`}
                       >
                         {isBeingDeleted && (
-                          <div className="text-muted-foreground flex items-center gap-2 text-sm">
+                          <div className="flex items-center gap-2 text-muted-foreground text-sm">
                             <Loader2 className="h-4 w-4 animate-spin" />
                             <span>Deleting...</span>
                           </div>
                         )}
                         {!isBeingDeleted && (
                           <>
-                            {item.status !== "silent" && (
+                            {item.status !== 'silent' && (
                               <Tooltip>
                                 <TooltipTrigger asChild>
                                   <CopyButton
-                                    text={item.content}
-                                    variant="ghost"
                                     className="h-8 w-8 p-0"
                                     onClick={() => {
                                       // Track copy button usage
-                                      analytics.track("transcription_copied", {
+                                      analytics.track('transcription_copied', {
                                         transcript_length: item.content.length,
-                                        method: "button",
+                                        method: 'button',
                                       });
                                       analytics.trackFeatureFirstUse(
-                                        "copy_transcription",
+                                        'copy_transcription'
                                       );
                                     }}
+                                    text={item.content}
+                                    variant="ghost"
                                   />
                                 </TooltipTrigger>
                                 <TooltipContent>
@@ -303,17 +309,17 @@ function TranscriptionsPage() {
                             <Tooltip>
                               <TooltipTrigger asChild>
                                 <Button
-                                  variant="ghost"
-                                  size="sm"
+                                  className="h-8 w-8 p-0"
                                   onClick={(e) => {
                                     e.stopPropagation();
                                     handleSendFeedback(item.id, item.content);
                                     // Track feature usage
                                     analytics.trackFeatureFirstUse(
-                                      "feedback_modal",
+                                      'feedback_modal'
                                     );
                                   }}
-                                  className="h-8 w-8 p-0"
+                                  size="sm"
+                                  variant="ghost"
                                 >
                                   <MessageSquare className="h-4 w-4" />
                                 </Button>
@@ -329,20 +335,20 @@ function TranscriptionsPage() {
                             >
                               <DropdownMenuTrigger asChild>
                                 <Button
-                                  variant="ghost"
-                                  size="sm"
                                   className="h-8 w-8 p-0"
+                                  size="sm"
+                                  variant="ghost"
                                 >
                                   <MoreVertical className="h-4 w-4" />
                                 </Button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end" className="w-48">
                                 <DropdownMenuItem
+                                  className="text-red-600 focus:text-red-600"
+                                  disabled={isDeleting}
                                   onClick={() =>
                                     handleDeleteTranscript(item.id)
                                   }
-                                  className="text-red-600 focus:text-red-600"
-                                  disabled={isDeleting}
                                 >
                                   <Trash2 className="mr-2 h-4 w-4" />
                                   Delete transcription
@@ -362,15 +368,15 @@ function TranscriptionsPage() {
       </div>
 
       {/* Infinite scroll trigger element */}
-      <div ref={loadMoreRef} className="h-1" />
+      <div className="h-1" ref={loadMoreRef} />
 
       {/* Loading more skeleton */}
       {isFetchingNextPage && !isFuzzySearch && (
         <div className="space-y-6">
           <div className="space-y-3">
             <div className="flex items-center gap-2">
-              <Loader2 className="text-muted-foreground h-3 w-3 animate-spin" />
-              <span className="text-muted-foreground text-xs tracking-wide uppercase">
+              <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />
+              <span className="text-muted-foreground text-xs uppercase tracking-wide">
                 Loading more...
               </span>
             </div>
@@ -379,25 +385,25 @@ function TranscriptionsPage() {
             <div className="overflow-hidden rounded-lg border">
               {Array.from({ length: 2 }).map((_, index) => (
                 <div
-                  key={`loading-skeleton-${index}`}
                   className={`flex items-start justify-between p-3 ${
-                    index < 1 ? "border-border border-b" : ""
+                    index < 1 ? 'border-border border-b' : ''
                   }`}
-                  style={{ minHeight: "60px" }}
+                  key={`loading-skeleton-${index}`}
+                  style={{ minHeight: '60px' }}
                 >
                   <div className="flex min-w-0 flex-1 items-start gap-3">
-                    <div className="bg-muted h-5 w-16 flex-shrink-0 animate-pulse rounded" />
+                    <div className="h-5 w-16 flex-shrink-0 animate-pulse rounded bg-muted" />
                     <div className="flex min-w-0 flex-1 items-start gap-2">
                       <div className="flex-1 space-y-1.5">
-                        <div className="bg-muted h-5 w-full animate-pulse rounded" />
-                        <div className="bg-muted h-5 w-3/4 animate-pulse rounded" />
+                        <div className="h-5 w-full animate-pulse rounded bg-muted" />
+                        <div className="h-5 w-3/4 animate-pulse rounded bg-muted" />
                       </div>
                     </div>
                   </div>
                   <div className="ml-3 flex flex-shrink-0 items-center gap-1">
-                    <div className="bg-muted h-8 w-8 animate-pulse rounded-md" />
-                    <div className="bg-muted h-8 w-8 animate-pulse rounded-md" />
-                    <div className="bg-muted h-8 w-8 animate-pulse rounded-md" />
+                    <div className="h-8 w-8 animate-pulse rounded-md bg-muted" />
+                    <div className="h-8 w-8 animate-pulse rounded-md bg-muted" />
+                    <div className="h-8 w-8 animate-pulse rounded-md bg-muted" />
                   </div>
                 </div>
               ))}
@@ -410,10 +416,10 @@ function TranscriptionsPage() {
       {hasNextPage && !isFetchingNextPage && !isFuzzySearch && (
         <div className="flex justify-center py-4">
           <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => fetchNextPage()}
             className="text-muted-foreground hover:text-foreground"
+            onClick={() => fetchNextPage()}
+            size="sm"
+            variant="ghost"
           >
             Load More
           </Button>
@@ -433,10 +439,10 @@ function TranscriptionsPage() {
       <FeedbackModal
         isOpen={feedbackModal.isOpen}
         onClose={() =>
-          setFeedbackModal({ isOpen: false, transcriptionId: 0, content: "" })
+          setFeedbackModal({ isOpen: false, transcriptionId: 0, content: '' })
         }
-        transcriptionId={feedbackModal.transcriptionId}
         transcriptionContent={feedbackModal.content}
+        transcriptionId={feedbackModal.transcriptionId}
       />
     </div>
   );

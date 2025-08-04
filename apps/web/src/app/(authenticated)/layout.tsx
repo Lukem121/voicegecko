@@ -1,9 +1,8 @@
-import type { ReactNode } from "react";
-import { redirect } from "next/navigation";
+import { getServerSession } from '@acme/auth/utils';
+import { redirect } from 'next/navigation';
+import type { ReactNode } from 'react';
 
-import { getServerSession } from "@acme/auth/utils";
-
-import { APP_ROUTES } from "~/utils/app-routes";
+import { APP_ROUTES } from '~/utils/app-routes';
 
 interface AppLayoutProperties {
   readonly children: ReactNode;

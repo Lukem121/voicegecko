@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
+import { log } from '@acme/observability';
+import { useEffect, useState } from 'react';
 
-import type { ConnectivityState } from "~/lib/connectivity-manager";
-import { connectivityManager } from "~/lib/connectivity-manager";
-import { isNetworkError } from "./auth";
+import type { ConnectivityState } from '~/lib/connectivity-manager';
+import { connectivityManager } from '~/lib/connectivity-manager';
+import { isNetworkError } from './auth';
 
 /**
  * Hook to access global connectivity state
@@ -12,7 +13,7 @@ import { isNetworkError } from "./auth";
  */
 export function useConnectivity() {
   const [state, setState] = useState<ConnectivityState>(
-    connectivityManager.getState(),
+    connectivityManager.getState()
   );
 
   useEffect(() => {
@@ -24,9 +25,9 @@ export function useConnectivity() {
 
   return {
     ...state,
-    hasConnectivityIssue: state.diagnosis !== "healthy",
-    isVoiceGeckoIssue: state.diagnosis === "api_down",
-    isInternetIssue: state.diagnosis === "no_internet",
+    hasConnectivityIssue: state.diagnosis !== 'healthy',
+    isVoiceGeckoIssue: state.diagnosis === 'api_down',
+    isInternetIssue: state.diagnosis === 'no_internet',
     getDiagnosisMessage: () => connectivityManager.getDiagnosisMessage(),
     checkConnectivity: () => connectivityManager.checkConnectivity(),
   };
@@ -43,8 +44,8 @@ export function useAuthConnectivityHandler(authError: unknown) {
 
   useEffect(() => {
     if (authError && isNetworkError(authError)) {
-      console.log(
-        "🔍 [AuthConnectivity] Auth error detected, checking connectivity...",
+      log.info(
+        '🔍 [AuthConnectivity] Auth error detected, checking connectivity...'
       );
       // Activate connectivity monitoring
       connectivityManager.activate();

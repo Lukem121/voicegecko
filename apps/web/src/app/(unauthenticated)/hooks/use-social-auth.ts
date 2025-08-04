@@ -1,9 +1,9 @@
-import { useState } from "react";
+import { useState } from 'react';
 
-import { authClient } from "~/lib/auth/client";
-import { APP_ROUTES } from "~/utils/app-routes";
+import { authClient } from '~/lib/auth/client';
+import { APP_ROUTES } from '~/utils/app-routes';
 
-export type SocialProvider = "discord" | "google";
+export type SocialProvider = 'discord' | 'google';
 
 interface LoadingState {
   discord: boolean;
@@ -47,7 +47,7 @@ export function useSocialAuth({
 
     if (error) {
       setIsLoading((prev) => ({ ...prev, [provider]: false }));
-      setError(error.message ?? "An unexpected error occurred.");
+      setError(error.message ?? 'An unexpected error occurred.');
       return;
     }
   };

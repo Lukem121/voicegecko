@@ -7,25 +7,25 @@ export default function LogoFull({
 }) {
   return (
     <svg
+      className={className}
       fill="none"
+      style={style}
       viewBox="0 0 2370 502"
       xmlns="http://www.w3.org/2000/svg"
-      className={className}
-      style={style}
     >
-      <rect height="117" width="126" fill="#EFDDAF" rx="20" x="358" y="134" />
-      <rect height="16" width="83" fill="#413A2E" rx="8" x="379" y="164" />
-      <rect height="16" width="67" fill="#413A2E" rx="8" x="379" y="201" />
+      <rect fill="#EFDDAF" height="117" rx="20" width="126" x="358" y="134" />
+      <rect fill="#413A2E" height="16" rx="8" width="83" x="379" y="164" />
+      <rect fill="#413A2E" height="16" rx="8" width="67" x="379" y="201" />
       <mask
         height="502"
         id="mask0_931_137"
-        style={{ maskType: "alpha" }}
+        maskUnits="userSpaceOnUse"
+        style={{ maskType: 'alpha' }}
         width="502"
         x="0"
         y="0"
-        maskUnits="userSpaceOnUse"
       >
-        <rect height="502" width="502" fill="#E06B43" rx="57" />
+        <rect fill="#E06B43" height="502" rx="57" width="502" />
       </mask>
       <g mask="url(#mask0_931_137)">
         <path
@@ -108,11 +108,11 @@ export default function LogoFull({
         <mask
           height="374"
           id="mask1_931_137"
-          style={{ maskType: "alpha" }}
+          maskUnits="userSpaceOnUse"
+          style={{ maskType: 'alpha' }}
           width="339"
           x="6"
           y="75"
-          maskUnits="userSpaceOnUse"
         >
           <path
             d="M81 238.686C29.4685 315.194 13.7549 361.347 6 448.686H282L280 394.186C280 355.186 238.5 276.186 259 271.186C298 258.186 343.5 221.686 344.5 191.686C345.5 161.686 341.5 158.686 322 134.686C325 91.1857 284.121 62.8002 242.5 80.1858C227 74.6859 185 72.6859 165.5 79.6858H149C119.491 84.38 108.655 97.4884 89.5 121.186L75.5 230.186L81 238.686Z"
@@ -122,11 +122,11 @@ export default function LogoFull({
         <mask
           height="374"
           id="mask2_931_137"
-          style={{ maskType: "alpha" }}
+          maskUnits="userSpaceOnUse"
+          style={{ maskType: 'alpha' }}
           width="339"
           x="6"
           y="75"
-          maskUnits="userSpaceOnUse"
         >
           <path
             d="M81 238.686C29.4685 315.194 13.7549 361.347 6 448.686H282L280 394.186C280 355.186 238.5 276.186 259 271.186C298 258.186 343.5 221.686 344.5 191.686C345.5 161.686 341.5 158.686 322 134.686C325 91.1857 284.121 62.8002 242.5 80.1858C227 74.6859 185 72.6859 165.5 79.6858H149C119.491 84.38 108.655 97.4884 89.5 121.186C89.5 121.186 57.0946 145.5 55.5 175C53.9054 204.5 75.5 230.186 75.5 230.186L81 238.686Z"

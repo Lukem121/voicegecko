@@ -1,1 +1,1 @@
-export { default } from "@acme/ui/postcss.config";
+export { default } from '@acme/ui/postcss.config';

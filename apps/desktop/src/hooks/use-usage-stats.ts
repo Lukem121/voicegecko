@@ -1,16 +1,16 @@
-import React from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery } from '@tanstack/react-query';
+import React from 'react';
 
-import { analytics } from "~/lib/analytics/posthog-analytics";
-import { trpc } from "~/trpc";
+import { analytics } from '~/lib/analytics/posthog-analytics';
+import { trpc } from '~/trpc';
 
 // Format numbers to compact notation (12k, 1.2M, etc.)
 const formatCompactNumber = (num: number): string => {
-  if (num >= 1000000) {
-    return (num / 1000000).toFixed(1).replace(/\.0$/, "") + "M";
+  if (num >= 1_000_000) {
+    return (num / 1_000_000).toFixed(1).replace(/\.0$/, '') + 'M';
   }
   if (num >= 1000) {
-    return (num / 1000).toFixed(1).replace(/\.0$/, "") + "k";
+    return (num / 1000).toFixed(1).replace(/\.0$/, '') + 'k';
   }
   return num.toString();
 };
@@ -21,7 +21,7 @@ const formatTime = (minutes: number): string => {
     return `${Math.round(minutes)}min`;
   }
   const hours = minutes / 60;
-  return `${hours.toFixed(1).replace(/\.0$/, "")}h`;
+  return `${hours.toFixed(1).replace(/\.0$/, '')}h`;
 };
 
 interface UsageStatsData {
@@ -44,13 +44,13 @@ export function useUsageStats(): FormattedUsageStats {
   // Track usage stats viewing
   React.useEffect(() => {
     if (query.data && !query.isLoading) {
-      analytics.trackFeatureFirstUse("usage_stats_view");
+      analytics.trackFeatureFirstUse('usage_stats_view');
 
       // Track stats pattern
-      analytics.track("usage_stats_viewed", {
+      analytics.track('usage_stats_viewed', {
         total_words: query.data.total.words,
         total_time_saved: query.data.total.timeSaved,
-        current_plan: query.data.current.isUnlimited ? "unlimited" : "limited",
+        current_plan: query.data.current.isUnlimited ? 'unlimited' : 'limited',
       });
     }
   }, [query.data, query.isLoading]);
@@ -73,7 +73,7 @@ export function useUsageStats(): FormattedUsageStats {
     wordsProcessed: formatCompactNumber(rawStats.wordsProcessed),
     timeSaved: formatTime(rawStats.timeSaved),
     wordsPerMinute:
-      rawStats.wordsPerMinute > 0 ? rawStats.wordsPerMinute.toString() : "—",
+      rawStats.wordsPerMinute > 0 ? rawStats.wordsPerMinute.toString() : '—',
     isLoading: query.isPending,
   };
 }

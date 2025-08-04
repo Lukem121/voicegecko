@@ -1,15 +1,14 @@
-import { createEnv } from "@t3-oss/env-nextjs";
-import { vercel } from "@t3-oss/env-nextjs/presets-zod";
-import { z } from "zod";
-
-import { authEnv } from "@acme/auth/env";
+import { authEnv } from '@acme/auth/env';
+import { createEnv } from '@t3-oss/env-nextjs';
+import { vercel } from '@t3-oss/env-nextjs/presets-zod';
+import { z } from 'zod';
 
 export const env = createEnv({
   extends: [authEnv(), vercel()],
   shared: {
     NODE_ENV: z
-      .enum(["development", "production", "test"])
-      .default("development"),
+      .enum(['development', 'production', 'test'])
+      .default('development'),
   },
   /**
    * Specify your server-side environment variables schema here.
@@ -17,10 +16,10 @@ export const env = createEnv({
    */
   server: {
     DATABASE_URL: z.string().url(),
-    GITHUB_TOKEN: z.string().min(1, "GitHub token is required for updater"),
-    GITHUB_OWNER: z.string().min(1, "GitHub repository owner is required"),
-    GITHUB_REPO: z.string().min(1, "GitHub repository name is required"),
-    SENDGRID_API_KEY: z.string().min(1).startsWith("SG."),
+    GITHUB_TOKEN: z.string().min(1, 'GitHub token is required for updater'),
+    GITHUB_OWNER: z.string().min(1, 'GitHub repository owner is required'),
+    GITHUB_REPO: z.string().min(1, 'GitHub repository name is required'),
+    SENDGRID_API_KEY: z.string().min(1).startsWith('SG.'),
     STRIPE_SECRET_KEY: z.string().min(1),
     STRIPE_PRICE_ID_PRO_MONTHLY: z.string().min(1),
     STRIPE_PRICE_ID_PRO_YEARLY: z.string().min(1),
@@ -43,5 +42,5 @@ export const env = createEnv({
     NEXT_PUBLIC_VOICEGECKO_URL: process.env.NEXT_PUBLIC_VOICEGECKO_URL,
   },
   skipValidation:
-    !!process.env.CI || process.env.npm_lifecycle_event === "lint",
+    !!process.env.CI || process.env.npm_lifecycle_event === 'lint',
 });

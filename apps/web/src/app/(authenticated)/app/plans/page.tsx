@@ -1,8 +1,8 @@
-import { headers } from "next/headers";
+import { headers } from 'next/headers';
 
-import { authClient } from "~/lib/auth/client";
-import { caller } from "~/trpc/server";
-import Plans from "./_components/plans";
+import { authClient } from '~/lib/auth/client';
+import { caller } from '~/trpc/server';
+import Plans from './_components/plans';
 
 export default async function PlansPage() {
   const [prices, subscriptionData] = await Promise.all([
@@ -18,6 +18,6 @@ export default async function PlansPage() {
   const error = subscriptionData.error;
 
   return (
-    <Plans prices={prices} subscription={subscription ?? null} error={error} />
+    <Plans error={error} prices={prices} subscription={subscription ?? null} />
   );
 }
