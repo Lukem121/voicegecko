@@ -51,6 +51,163 @@ const useRestoreSubscription = () => {
   return mutation;
 };
 
+// Helper function to determine subscription status
+const getSubscriptionStatus = (
+  subscription: Subscription | null,
+  isCanceling: boolean
+) => {
+  if (!subscription) {
+    return 'Free';
+  }
+  if (subscription.status === 'trialing') {
+    return 'Trial';
+  }
+  if (isCanceling) {
+    return 'Canceling';
+  }
+  return 'Active';
+};
+
+// Helper function to determine badge variant
+const getBadgeVariant = (isCanceling: boolean): 'destructive' | 'secondary' => {
+  return isCanceling ? 'destructive' : 'secondary';
+};
+
+// Error state component
+function BillingErrorState({
+  error,
+  onRetry,
+  onViewPlans,
+}: {
+  error: BillingProps['error'];
+  onRetry: () => void;
+  onViewPlans: () => void;
+}) {
+  if (!error) {
+    return null;
+  }
+
+  return (
+    <div className="space-y-8">
+      <div className="mb-8">
+        <h1 className="mb-2 font-medium text-3xl">Billing</h1>
+        <p className="text-muted-foreground">
+          Manage your subscription and billing information
+        </p>
+      </div>
+
+      <Alert variant="destructive">
+        <AlertTriangle />
+        <AlertTitle>Failed to Load Subscription Data</AlertTitle>
+        <AlertDescription>
+          {error.message ??
+            `Failed to load subscription information (${error.status}: ${error.statusText})`}
+        </AlertDescription>
+      </Alert>
+
+      <Card className="border-0 shadow-sm">
+        <CardContent className="pt-6">
+          <div className="flex items-center justify-center gap-3">
+            <Button onClick={onRetry} variant="outline">
+              <RefreshCw className="mr-2 h-4 w-4" />
+              Retry
+            </Button>
+            <Button onClick={onViewPlans} variant="outline">
+              View Plans
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+// Current plan card component
+function CurrentPlanCard({
+  subscription,
+  isLoading,
+  isCanceling,
+  onManageSubscription,
+  onUpgradePlan,
+  getCurrentSubscriptionPrice,
+  getPlanDisplayName,
+  formatDate,
+}: {
+  subscription: Subscription | null;
+  isLoading: boolean;
+  isCanceling: boolean;
+  onManageSubscription: () => void;
+  onUpgradePlan: () => void;
+  getCurrentSubscriptionPrice: () => string;
+  getPlanDisplayName: (planName: string) => string;
+  formatDate: (date: Date | string | undefined) => string;
+}) {
+  return (
+    <Card className="border-0 shadow-sm">
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <CardTitle className="mb-2 font-medium text-xl">
+            Current Plan
+          </CardTitle>
+          <CardAction>
+            {subscription ? (
+              <Button
+                className="w-44"
+                disabled={isLoading}
+                onClick={onManageSubscription}
+                variant="outline"
+              >
+                {isLoading ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  'Manage Subscription'
+                )}
+              </Button>
+            ) : (
+              <Button
+                className="w-44"
+                onClick={onUpgradePlan}
+                variant="outline"
+              >
+                Upgrade Plan
+              </Button>
+            )}
+          </CardAction>
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-2">
+        {subscription ? (
+          <div className="flex items-center gap-3">
+            <h3 className="font-medium text-lg">
+              {getPlanDisplayName(subscription.plan)}
+            </h3>
+            <Badge variant={getBadgeVariant(isCanceling)}>
+              {getSubscriptionStatus(subscription, isCanceling)}
+            </Badge>
+          </div>
+        ) : (
+          <div className="flex items-center gap-3">
+            <h3 className="font-medium text-lg">Free Plan</h3>
+            <Badge variant="secondary">Active</Badge>
+          </div>
+        )}
+        {subscription ? (
+          <p className="text-muted-foreground text-sm">
+            {getCurrentSubscriptionPrice()} •
+            {isCanceling
+              ? ` Cancels on ${formatDate(subscription.periodEnd)}`
+              : ` Next billing date: ${formatDate(subscription.periodEnd)}`}
+          </p>
+        ) : (
+          <p className="text-muted-foreground text-sm">
+            You're on the free plan with limited features
+          </p>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
 export default function Billing({ prices, subscription, error }: BillingProps) {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
@@ -139,40 +296,11 @@ export default function Billing({ prices, subscription, error }: BillingProps) {
   // Handle error state
   if (error) {
     return (
-      <div className="space-y-8">
-        <div className="mb-8">
-          <h1 className="mb-2 font-medium text-3xl">Billing</h1>
-          <p className="text-muted-foreground">
-            Manage your subscription and billing information
-          </p>
-        </div>
-
-        <Alert variant="destructive">
-          <AlertTriangle />
-          <AlertTitle>Failed to Load Subscription Data</AlertTitle>
-          <AlertDescription>
-            {error.message ??
-              `Failed to load subscription information (${error.status}: ${error.statusText})`}
-          </AlertDescription>
-        </Alert>
-
-        <Card className="border-0 shadow-sm">
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-center gap-3">
-              <Button onClick={() => router.refresh()} variant="outline">
-                <RefreshCw className="mr-2 h-4 w-4" />
-                Retry
-              </Button>
-              <Button
-                onClick={() => router.push('/app/plans')}
-                variant="outline"
-              >
-                View Plans
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+      <BillingErrorState
+        error={error}
+        onRetry={() => router.refresh()}
+        onViewPlans={() => router.push('/app/plans')}
+      />
     );
   }
 
@@ -252,7 +380,7 @@ export default function Billing({ prices, subscription, error }: BillingProps) {
     return displayNames[planName] ?? planName;
   };
 
-  const isCanceling = subscription?.cancelAtPeriodEnd;
+  const isCanceling = subscription?.cancelAtPeriodEnd ?? false;
   const canRestore =
     subscription && isCanceling && subscription.status === 'active';
 
@@ -285,7 +413,7 @@ export default function Billing({ prices, subscription, error }: BillingProps) {
       )}
 
       {/* Cancellation Alert with Restore Option */}
-      {isCanceling && (
+      {isCanceling && subscription && (
         <Alert variant="destructive">
           <AlertTriangle />
           <AlertTitle>Subscription Ending</AlertTitle>
@@ -321,72 +449,16 @@ export default function Billing({ prices, subscription, error }: BillingProps) {
       )}
 
       {/* Current Plan */}
-      <Card className="border-0 shadow-sm">
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <CardTitle className="mb-2 font-medium text-xl">
-              Current Plan
-            </CardTitle>
-            <CardAction>
-              {subscription ? (
-                <Button
-                  className="w-44"
-                  disabled={isLoading}
-                  onClick={handleManageSubscription}
-                  variant="outline"
-                >
-                  {isLoading ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    'Manage Subscription'
-                  )}
-                </Button>
-              ) : (
-                <Button
-                  className="w-44"
-                  onClick={() => router.push('/app/plans')}
-                  variant="outline"
-                >
-                  Upgrade Plan
-                </Button>
-              )}
-            </CardAction>
-          </div>
-        </CardHeader>
-        <CardContent className="space-y-2">
-          {subscription ? (
-            <div className="flex items-center gap-3">
-              <h3 className="font-medium text-lg">
-                {getPlanDisplayName(subscription.plan)}
-              </h3>
-              <Badge variant={isCanceling ? 'destructive' : 'secondary'}>
-                {isCanceling
-                  ? 'Canceling'
-                  : subscription.status === 'trialing'
-                    ? 'Trial'
-                    : 'Active'}
-              </Badge>
-            </div>
-          ) : (
-            <div className="flex items-center gap-3">
-              <h3 className="font-medium text-lg">Free Plan</h3>
-              <Badge variant="secondary">Active</Badge>
-            </div>
-          )}
-          {subscription ? (
-            <p className="text-muted-foreground text-sm">
-              {getCurrentSubscriptionPrice()} •
-              {isCanceling
-                ? ` Cancels on ${formatDate(subscription.periodEnd)}`
-                : ` Next billing date: ${formatDate(subscription.periodEnd)}`}
-            </p>
-          ) : (
-            <p className="text-muted-foreground text-sm">
-              You're on the free plan with limited features
-            </p>
-          )}
-        </CardContent>
-      </Card>
+      <CurrentPlanCard
+        formatDate={formatDate}
+        getCurrentSubscriptionPrice={getCurrentSubscriptionPrice}
+        getPlanDisplayName={getPlanDisplayName}
+        isCanceling={isCanceling}
+        isLoading={isLoading}
+        onManageSubscription={handleManageSubscription}
+        onUpgradePlan={() => router.push('/app/plans')}
+        subscription={subscription}
+      />
 
       {/* Subscription Details */}
       {subscription && (
@@ -401,11 +473,7 @@ export default function Billing({ prices, subscription, error }: BillingProps) {
               <div className="flex justify-between">
                 <span className="text-muted-foreground text-sm">Status</span>
                 <span className="font-medium text-sm">
-                  {subscription.status === 'trialing'
-                    ? 'Trial'
-                    : isCanceling
-                      ? 'Canceling'
-                      : 'Active'}
+                  {getSubscriptionStatus(subscription, isCanceling)}
                 </span>
               </div>
               <div className="flex justify-between">
