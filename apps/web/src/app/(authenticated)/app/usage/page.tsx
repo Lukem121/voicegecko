@@ -8,13 +8,15 @@ import { BarChart, Clock, FileText, TrendingUp } from 'lucide-react';
 
 import { caller } from '~/trpc/server';
 
+const REGEX_NUM_FORMAT = /\.?0$/;
+
 // Format numbers to compact notation (12k, 1.2M, etc.)
 const formatCompactNumber = (num: number): string => {
   if (num >= 1_000_000) {
-    return `${(num / 1_000_000).toFixed(1).replace(/\.0$/, '')}M`;
+    return `${(num / 1_000_000).toFixed(1).replace(REGEX_NUM_FORMAT, '')}M`;
   }
   if (num >= 1000) {
-    return `${(num / 1000).toFixed(1).replace(/\.0$/, '')}k`;
+    return `${(num / 1000).toFixed(1).replace(REGEX_NUM_FORMAT, '')}k`;
   }
   return num.toString();
 };
@@ -25,7 +27,7 @@ const formatTime = (minutes: number): string => {
     return `${Math.round(minutes)}min`;
   }
   const hours = minutes / 60;
-  return `${hours.toFixed(1).replace(/\.0$/, '')}h`;
+  return `${hours.toFixed(1).replace(REGEX_NUM_FORMAT, '')}h`;
 };
 
 export default async function UsagePage() {
@@ -154,7 +156,10 @@ export default async function UsagePage() {
           </CardHeader>
           <CardContent className="space-y-4">
             {usageStats.map((stat, index) => (
-              <div className="flex items-center justify-between" key={index}>
+              <div
+                className="flex items-center justify-between"
+                key={`${stat.label}-${index}`}
+              >
                 <span className="font-medium text-sm">{stat.label}</span>
                 <div className="flex items-center gap-2">
                   <span className="font-bold text-sm">{stat.value}</span>
