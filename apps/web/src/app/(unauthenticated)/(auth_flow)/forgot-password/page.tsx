@@ -45,7 +45,7 @@ export default function ForgotPassword() {
   const onSubmit = async (values: z.infer<typeof ForgotPasswordSchema>) => {
     setIsLoading(true);
 
-    const { error } = await authClient.forgetPassword({
+    const { error: forgotPasswordError } = await authClient.forgetPassword({
       email: values.email,
       redirectTo: APP_ROUTES.AUTH.RESET_PASSWORD,
       fetchOptions: {
@@ -55,8 +55,8 @@ export default function ForgotPassword() {
       },
     });
 
-    if (error) {
-      const { code, message } = error;
+    if (forgotPasswordError) {
+      const { code, message } = forgotPasswordError;
 
       if (code) {
         const errorMessage = getAuthErrorMessage(code, 'en', message);

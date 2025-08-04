@@ -81,7 +81,7 @@ export default function SignIn() {
     setIsLoading((prev) => ({ ...prev, email: true }));
     setError(null);
 
-    const { error } = await authClient.signIn.email({
+    const { error: signInError } = await authClient.signIn.email({
       email: values.email,
       password: values.password,
       fetchOptions: {
@@ -89,13 +89,13 @@ export default function SignIn() {
       },
     });
 
-    if (!error) {
+    if (!signInError) {
       return;
     }
 
     setIsLoading((prev) => ({ ...prev, email: false }));
 
-    if (error.code === 'FAILED_TO_CREATE_SESSION') {
+    if (signInError.code === 'FAILED_TO_CREATE_SESSION') {
       const status = await getBanStatus.mutateAsync(values.email);
 
       if (!status) {
@@ -109,8 +109,8 @@ export default function SignIn() {
       }
     }
 
-    if (error.code) {
-      setError(getAuthErrorMessage(error.code, 'en'));
+    if (signInError.code) {
+      setError(getAuthErrorMessage(signInError.code, 'en'));
       return;
     }
 

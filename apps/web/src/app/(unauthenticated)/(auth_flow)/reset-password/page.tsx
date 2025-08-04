@@ -59,7 +59,7 @@ export default function ResetPasswordPage() {
       return;
     }
 
-    const { error } = await authClient.resetPassword({
+    const { error: resetPasswordError } = await authClient.resetPassword({
       newPassword: values.password,
       token,
       fetchOptions: {
@@ -71,8 +71,8 @@ export default function ResetPasswordPage() {
       },
     });
 
-    if (error) {
-      const { code, message } = error;
+    if (resetPasswordError) {
+      const { code, message } = resetPasswordError;
       if (code) {
         const errorMessage = getAuthErrorMessage(code, 'en', message);
         setError(errorMessage);

@@ -23,7 +23,6 @@
     "@acme/email": "workspace:*",
     "@acme/notifications": "workspace:*",
     "@acme/payment": "workspace:*",
-    "@better-auth/expo": "1.3.3",
     "@daveyplate/better-auth-tauri": "^0.0.24",
     "@t3-oss/env-nextjs": "^0.13.8",
     "better-auth": "1.3.3",

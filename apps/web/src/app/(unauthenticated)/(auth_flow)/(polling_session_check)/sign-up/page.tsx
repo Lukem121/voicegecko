@@ -88,7 +88,7 @@ export default function SignUp() {
   });
 
   const onSubmit = async (values: z.infer<typeof SignUpSchema>) => {
-    const { error } = await authClient.signUp.email({
+    const { error: signUpError } = await authClient.signUp.email({
       callbackURL,
       email: values.email,
       username: values.username,
@@ -107,23 +107,23 @@ export default function SignUp() {
       },
     });
 
-    if (!error) {
+    if (!signUpError) {
       return;
     }
 
     setIsLoading((prev) => ({ ...prev, email: false }));
 
-    if (error.code) {
-      const errorMessage = getAuthErrorMessage(error.code, 'en');
+    if (signUpError.code) {
+      const errorMessage = getAuthErrorMessage(signUpError.code, 'en');
 
-      if (isUsernameError(error.code)) {
+      if (isUsernameError(signUpError.code)) {
         form.setError('username', {
           message: errorMessage,
         });
         return;
       }
 
-      if (isEmailError(error.code)) {
+      if (isEmailError(signUpError.code)) {
         form.setError('email', {
           message: errorMessage,
         });

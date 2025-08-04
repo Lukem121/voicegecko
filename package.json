@@ -22,8 +22,6 @@
     "postinstall": "pnpm lint:ws",
     "typecheck": "turbo run typecheck",
     "ui-add": "turbo run ui-add",
-    "android": "expo run:android",
-    "ios": "expo run:ios",
     "version:check": "node scripts/check-versions.js",
     "version:bump": "node scripts/bump-version.js",
     "pre-release": "node scripts/pre-release.js",
