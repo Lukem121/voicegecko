@@ -5,7 +5,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   name: "expo",
   slug: "expo",
   scheme: "expo",
-  version: "0.1.0",
+  version: "0.0.7",
   orientation: "portrait",
   icon: "./assets/icon-light.png",
   userInterfaceStyle: "automatic",

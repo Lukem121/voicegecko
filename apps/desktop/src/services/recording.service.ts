@@ -1,7 +1,7 @@
 import { invoke } from "@tauri-apps/api/core";
 import { toast } from "sonner";
 
-import { RecordingSessionTracker } from "~/lib/analytics/posthog-analytics";
+import type { RecordingSessionTracker } from "~/lib/analytics/posthog-analytics";
 import {
   showNoInternetNotification,
   showUsageLimitNotification,

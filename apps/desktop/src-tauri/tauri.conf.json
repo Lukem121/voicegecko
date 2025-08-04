@@ -1,6 +1,6 @@
 {
   "productName": "Voice Gecko",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "identifier": "com.voicegecko.desktop",
   "build": {
     "frontendDist": "../dist",
@@ -47,11 +47,20 @@
   "plugins": {
     "deep-link": {
       "mobile": [
-        { "host": "voicegecko.io", "pathPrefix": ["/login"] },
-        { "host": "voicegecko.io" }
+        {
+          "host": "voicegecko.io",
+          "pathPrefix": [
+            "/login"
+          ]
+        },
+        {
+          "host": "voicegecko.io"
+        }
       ],
       "desktop": {
-        "schemes": ["voicegecko"]
+        "schemes": [
+          "voicegecko"
+        ]
       }
     },
     "updater": {
@@ -66,9 +75,13 @@
   "bundle": {
     "active": true,
     "targets": "all",
-    "icon": ["icons/icon.ico"],
+    "icon": [
+      "icons/icon.ico"
+    ],
     "createUpdaterArtifacts": true,
-    "resources": ["resources/**/*"],
+    "resources": [
+      "resources/**/*"
+    ],
     "macOS": {
       "minimumSystemVersion": "10.15"
     }
