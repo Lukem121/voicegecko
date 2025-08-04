@@ -1,10 +1,10 @@
-import type { TRPCRouterRecord } from "@trpc/server";
-import { z } from "zod/v4";
+import type { TRPCRouterRecord } from '@trpc/server';
+import { z } from 'zod/v4';
 
-import { dictionaryRepository } from "../repository/dictionary.repository";
-import { dictionaryService } from "../services/dictionary/dictionary.service";
-import { protectedProcedure } from "../trpc";
-import { dictionaryError } from "../types/result";
+import { dictionaryRepository } from '../repository/dictionary.repository';
+import { dictionaryService } from '../services/dictionary/dictionary.service';
+import { protectedProcedure } from '../trpc';
+import { dictionaryError } from '../types/result';
 
 // Limit to 75 words to stay safely under the 224 token limit
 // Assuming average word length of ~6 characters + comma separator
@@ -15,7 +15,7 @@ export const dictionaryRouter = {
     .input(
       z.object({
         word: z.string().min(1).max(60).trim(),
-      }),
+      })
     )
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.session.user.id;
@@ -38,14 +38,14 @@ export const dictionaryRouter = {
       z.object({
         id: z.number(),
         word: z.string().min(1).max(60).trim(),
-      }),
+      })
     )
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.session.user.id;
       const result = await dictionaryRepository.update(
         input.id,
         userId,
-        input.word,
+        input.word
       );
       return result;
     }),
@@ -54,7 +54,7 @@ export const dictionaryRouter = {
     .input(
       z.object({
         id: z.number(),
-      }),
+      })
     )
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.session.user.id;
@@ -68,11 +68,11 @@ export const dictionaryRouter = {
         .object({
           search: z.string().optional(),
           sortBy: z
-            .enum(["alphabetical", "newest", "oldest"])
+            .enum(['alphabetical', 'newest', 'oldest'])
             .optional()
-            .default("alphabetical"),
+            .default('alphabetical'),
         })
-        .optional(),
+        .optional()
     )
     .query(async ({ ctx, input }) => {
       const userId = ctx.session.user.id;

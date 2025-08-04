@@ -3,14 +3,14 @@
  * This is used to map a shortcut to a specific function.
  */
 export type ShortcutAction =
-  | "toggle-recording"
-  | "paste-last-transcription"
-  | "open-last-transcription";
+  | 'toggle-recording'
+  | 'paste-last-transcription'
+  | 'open-last-transcription';
 
 /**
  * Special shortcuts that need custom handling beyond simple key press
  */
-export type SpecialShortcut = "push-to-talk";
+export type SpecialShortcut = 'push-to-talk';
 
 /**
  * All possible shortcut identifiers

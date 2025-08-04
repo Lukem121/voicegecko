@@ -5,10 +5,11 @@
  * throughout the application while respecting user privacy settings.
  */
 
-import React from "react";
-import { usePostHog } from "posthog-js/react";
+import { log } from '@acme/observability';
+import { usePostHog } from 'posthog-js/react';
+import React from 'react';
 
-import { useSettingsStore } from "~/stores/settings.store";
+import { useSettingsStore } from '~/stores/settings.store';
 
 // =============================================================================
 // EVENT TYPES & INTERFACES
@@ -16,18 +17,18 @@ import { useSettingsStore } from "~/stores/settings.store";
 
 interface BaseEventProperties {
   timestamp?: number;
-  platform: "desktop";
+  platform: 'desktop';
   app_version?: string;
 }
 
 // User Lifecycle Events
 interface UserLifecycleEvents {
   user_signed_up: {
-    method: "email" | "discord" | "google";
+    method: 'email' | 'discord' | 'google';
     source?: string;
   };
   user_signed_in: {
-    method: "email" | "discord" | "google";
+    method: 'email' | 'discord' | 'google';
     returning_user: boolean;
   };
   user_signed_out: Record<string, never>;
@@ -63,18 +64,18 @@ interface OnboardingEvents {
 // Recording Events
 interface RecordingEvents {
   recording_started: {
-    trigger: "gecko_bar" | "main_ui" | "keyboard_shortcut";
+    trigger: 'gecko_bar' | 'main_ui' | 'keyboard_shortcut';
     device_name?: string;
     device_type?: string;
   };
   recording_stopped: {
     duration_seconds: number;
-    trigger: "user_action" | "auto_stop";
-    method: "gecko_bar" | "main_ui" | "keyboard_shortcut";
+    trigger: 'user_action' | 'auto_stop';
+    method: 'gecko_bar' | 'main_ui' | 'keyboard_shortcut';
   };
   recording_cancelled: {
     duration_seconds: number;
-    reason: "user_action" | "error" | "timeout";
+    reason: 'user_action' | 'error' | 'timeout';
   };
   recording_error: {
     error_type: string;
@@ -86,7 +87,7 @@ interface RecordingEvents {
 // Transcription Events
 interface TranscriptionEvents {
   transcription_started: {
-    model_type: "cloud" | "local";
+    model_type: 'cloud' | 'local';
     model_name?: string;
     audio_duration_seconds: number;
     sample_rate: number;
@@ -94,7 +95,7 @@ interface TranscriptionEvents {
     dictionary_word_count: number;
   };
   transcription_completed: {
-    model_type: "cloud" | "local";
+    model_type: 'cloud' | 'local';
     model_name?: string;
     audio_duration_seconds: number;
     processing_time_seconds: number;
@@ -104,7 +105,7 @@ interface TranscriptionEvents {
     confidence_score?: number;
   };
   transcription_failed: {
-    model_type: "cloud" | "local";
+    model_type: 'cloud' | 'local';
     model_name?: string;
     error_type: string;
     error_message: string;
@@ -113,15 +114,15 @@ interface TranscriptionEvents {
   };
   transcription_copied: {
     transcript_length: number;
-    method: "button" | "auto_paste";
+    method: 'button' | 'auto_paste';
   };
   transcription_deleted: {
     transcription_id: number;
-    method: "user_action" | "bulk_action";
+    method: 'user_action' | 'bulk_action';
   };
   transcription_searched: {
     search_term_length: number;
-    search_type: "server_search" | "fuzzy_search";
+    search_type: 'server_search' | 'fuzzy_search';
   };
 }
 
@@ -130,7 +131,7 @@ interface DictionaryEvents {
   dictionary_word_added: {
     word_length: number;
     total_words_count: number;
-    method: "manual" | "auto_suggestion";
+    method: 'manual' | 'auto_suggestion';
   };
   dictionary_word_updated: {
     old_word_length: number;
@@ -144,10 +145,10 @@ interface DictionaryEvents {
   dictionary_searched: {
     search_term_length: number;
     results_count: number;
-    search_type: "exact" | "fuzzy";
+    search_type: 'exact' | 'fuzzy';
   };
   dictionary_sort_changed: {
-    sort_type: "alphabetical" | "newest" | "oldest";
+    sort_type: 'alphabetical' | 'newest' | 'oldest';
   };
 }
 
@@ -160,7 +161,7 @@ interface NavigationEvents {
     time_since_last_navigation?: number;
   };
   sidebar_navigation: {
-    section: "main" | "smart_features" | "secondary";
+    section: 'main' | 'smart_features' | 'secondary';
     item_title: string;
     item_url: string;
   };
@@ -170,12 +171,12 @@ interface NavigationEvents {
 interface SettingsEvents {
   settings_changed: {
     category:
-      | "audio"
-      | "general"
-      | "privacy"
-      | "personalization"
-      | "models"
-      | "shortcuts";
+      | 'audio'
+      | 'general'
+      | 'privacy'
+      | 'personalization'
+      | 'models'
+      | 'shortcuts';
     setting_key: string;
     old_value: unknown;
     new_value: unknown;
@@ -210,16 +211,16 @@ interface SettingsEvents {
 interface GeckoBarEvents {
   gecko_bar_interaction: {
     action:
-      | "click"
-      | "hover"
-      | "recording_start"
-      | "recording_stop"
-      | "recording_cancel";
-    state: "collapsed" | "expanded" | "recording" | "processing";
+      | 'click'
+      | 'hover'
+      | 'recording_start'
+      | 'recording_stop'
+      | 'recording_cancel';
+    state: 'collapsed' | 'expanded' | 'recording' | 'processing';
   };
   gecko_bar_visibility_changed: {
     visible: boolean;
-    trigger: "settings" | "fullscreen" | "manual";
+    trigger: 'settings' | 'fullscreen' | 'manual';
   };
 }
 
@@ -252,28 +253,28 @@ interface PerformanceEvents {
 // Business Intelligence Events
 interface BusinessEvents {
   usage_limit_approached: {
-    limit_type: "transcription" | "storage";
+    limit_type: 'transcription' | 'storage';
     current_usage: number;
     limit_value: number;
     percentage_used: number;
   };
   usage_limit_exceeded: {
-    limit_type: "transcription" | "storage";
+    limit_type: 'transcription' | 'storage';
     attempted_action: string;
   };
   upgrade_prompt_shown: {
-    trigger: "usage_limit" | "feature_gate" | "manual" | "usage_page";
+    trigger: 'usage_limit' | 'feature_gate' | 'manual' | 'usage_page';
     plan_suggested: string;
   };
   feedback_submitted: {
-    type: "transcription_quality" | "bug_report" | "feature_request";
+    type: 'transcription_quality' | 'bug_report' | 'feature_request';
     rating?: number;
     has_text: boolean;
   };
   usage_stats_viewed: {
     total_words: number;
     total_time_saved: number;
-    current_plan: "unlimited" | "limited";
+    current_plan: 'unlimited' | 'limited';
   };
 }
 
@@ -329,7 +330,7 @@ class PostHogAnalyticsService {
   private getCommonProperties(): BaseEventProperties {
     return {
       timestamp: Date.now(),
-      platform: "desktop" as const,
+      platform: 'desktop' as const,
     };
   }
 
@@ -338,13 +339,11 @@ class PostHogAnalyticsService {
    */
   track<T extends EventName>(
     event: T,
-    properties?: Omit<EventProperties<T>, keyof BaseEventProperties>,
+    properties?: Omit<EventProperties<T>, keyof BaseEventProperties>
   ) {
     // Don't track if analytics are disabled
     if (!this.isAnalyticsEnabled()) {
-      console.log(
-        `[Analytics] Skipped tracking "${event}" - analytics disabled`,
-      );
+      log.info(`[Analytics] Skipped tracking "${event}" - analytics disabled`);
       return;
     }
 
@@ -353,20 +352,18 @@ class PostHogAnalyticsService {
       ...properties,
     };
 
-    if (!this.isInitialized || !this.posthog) {
+    if (!(this.isInitialized && this.posthog)) {
       // Queue the event for later processing
       this.queuedEvents.push({ event, properties: finalProperties });
-      console.log(
-        `[Analytics] Queued event "${event}" - PostHog not initialized`,
-      );
+      log.info(`[Analytics] Queued event "${event}" - PostHog not initialized`);
       return;
     }
 
     try {
       this.posthog.capture(event, finalProperties);
-      console.log(`[Analytics] Tracked event "${event}"`, finalProperties);
+      log.info(`[Analytics] Tracked event "${event}"`, finalProperties);
     } catch (error) {
-      console.error(`[Analytics] Failed to track event "${event}":`, error);
+      log.error(`[Analytics] Failed to track event "${event}":`, error);
     }
   }
 
@@ -374,15 +371,15 @@ class PostHogAnalyticsService {
    * Identify a user with PostHog
    */
   identify(userId: string, properties?: Record<string, any>) {
-    if (!this.isAnalyticsEnabled() || !this.posthog) {
+    if (!(this.isAnalyticsEnabled() && this.posthog)) {
       return;
     }
 
     try {
       this.posthog.identify(userId, properties);
-      console.log(`[Analytics] Identified user "${userId}"`, properties);
+      log.info(`[Analytics] Identified user "${userId}"`, properties);
     } catch (error) {
-      console.error(`[Analytics] Failed to identify user "${userId}":`, error);
+      log.error(`[Analytics] Failed to identify user "${userId}":`, error);
     }
   }
 
@@ -390,15 +387,15 @@ class PostHogAnalyticsService {
    * Set user properties
    */
   setUserProperties(properties: Record<string, any>) {
-    if (!this.isAnalyticsEnabled() || !this.posthog) {
+    if (!(this.isAnalyticsEnabled() && this.posthog)) {
       return;
     }
 
     try {
       this.posthog.setPersonProperties(properties);
-      console.log(`[Analytics] Set user properties`, properties);
+      log.info('[Analytics] Set user properties', properties);
     } catch (error) {
-      console.error(`[Analytics] Failed to set user properties:`, error);
+      log.error('[Analytics] Failed to set user properties:', error);
     }
   }
 
@@ -412,9 +409,9 @@ class PostHogAnalyticsService {
 
     try {
       this.posthog.reset();
-      console.log(`[Analytics] Reset analytics`);
+      log.info('[Analytics] Reset analytics');
     } catch (error) {
-      console.error(`[Analytics] Failed to reset analytics:`, error);
+      log.error('[Analytics] Failed to reset analytics:', error);
     }
   }
 
@@ -423,17 +420,17 @@ class PostHogAnalyticsService {
    */
   trackPageView(pageName: string, pagePath: string) {
     // Simple previous page tracking (could be enhanced with a proper navigation store)
-    const previousPage = sessionStorage.getItem("currentPage");
-    sessionStorage.setItem("currentPage", pageName);
+    const previousPage = sessionStorage.getItem('currentPage');
+    sessionStorage.setItem('currentPage', pageName);
 
     const timeSinceLastNavigation = previousPage
       ? Date.now() -
-        parseInt(sessionStorage.getItem("lastNavigationTime") || "0", 10)
+        Number.parseInt(sessionStorage.getItem('lastNavigationTime') || '0', 10)
       : undefined;
 
-    sessionStorage.setItem("lastNavigationTime", Date.now().toString());
+    sessionStorage.setItem('lastNavigationTime', Date.now().toString());
 
-    this.track("page_viewed", {
+    this.track('page_viewed', {
       page_name: pageName,
       page_path: pagePath,
       previous_page: previousPage || undefined,
@@ -449,15 +446,15 @@ class PostHogAnalyticsService {
     const hasUsedBefore = localStorage.getItem(storageKey);
 
     if (!hasUsedBefore) {
-      const appStartTime = parseInt(
-        sessionStorage.getItem("appStartTime") || "0",
-        10,
+      const appStartTime = Number.parseInt(
+        sessionStorage.getItem('appStartTime') || '0',
+        10
       );
       const timeToFirstUse = appStartTime
         ? (Date.now() - appStartTime) / 1000
         : 0;
 
-      this.track("feature_first_use", {
+      this.track('feature_first_use', {
         feature_name: featureName,
         time_to_first_use_seconds: timeToFirstUse,
       });
@@ -474,9 +471,9 @@ class PostHogAnalyticsService {
   }
 
   endTiming(eventKey: string): number {
-    const startTime = parseInt(
-      sessionStorage.getItem(`timing_${eventKey}`) || "0",
-      10,
+    const startTime = Number.parseInt(
+      sessionStorage.getItem(`timing_${eventKey}`) || '0',
+      10
     );
     sessionStorage.removeItem(`timing_${eventKey}`);
     return startTime ? (Date.now() - startTime) / 1000 : 0;
@@ -529,33 +526,33 @@ export function useAnalytics() {
  */
 export class RecordingSessionTracker {
   private startTime: number;
-  private trigger: "gecko_bar" | "main_ui" | "keyboard_shortcut";
+  private trigger: 'gecko_bar' | 'main_ui' | 'keyboard_shortcut';
 
-  constructor(trigger: "gecko_bar" | "main_ui" | "keyboard_shortcut") {
+  constructor(trigger: 'gecko_bar' | 'main_ui' | 'keyboard_shortcut') {
     this.startTime = Date.now();
     this.trigger = trigger;
   }
 
   trackStart(deviceName?: string, deviceType?: string) {
-    analytics.track("recording_started", {
+    analytics.track('recording_started', {
       trigger: this.trigger,
       device_name: deviceName,
       device_type: deviceType,
     });
   }
 
-  trackStop(method: "gecko_bar" | "main_ui" | "keyboard_shortcut") {
+  trackStop(method: 'gecko_bar' | 'main_ui' | 'keyboard_shortcut') {
     const duration = (Date.now() - this.startTime) / 1000;
-    analytics.track("recording_stopped", {
+    analytics.track('recording_stopped', {
       duration_seconds: duration,
-      trigger: "user_action",
+      trigger: 'user_action',
       method,
     });
   }
 
-  trackCancel(reason: "user_action" | "error" | "timeout") {
+  trackCancel(reason: 'user_action' | 'error' | 'timeout') {
     const duration = (Date.now() - this.startTime) / 1000;
-    analytics.track("recording_cancelled", {
+    analytics.track('recording_cancelled', {
       duration_seconds: duration,
       reason,
     });
@@ -563,7 +560,7 @@ export class RecordingSessionTracker {
 
   trackError(errorType: string, errorMessage: string) {
     const duration = (Date.now() - this.startTime) / 1000;
-    analytics.track("recording_error", {
+    analytics.track('recording_error', {
       error_type: errorType,
       error_message: errorMessage,
       duration_before_error: duration,
@@ -576,14 +573,14 @@ export class RecordingSessionTracker {
  */
 export class TranscriptionTracker {
   private startTime: number;
-  private modelType: "cloud" | "local";
+  private modelType: 'cloud' | 'local';
   private modelName?: string;
   private audioDuration: number;
 
   constructor(
-    modelType: "cloud" | "local",
+    modelType: 'cloud' | 'local',
     audioDuration: number,
-    modelName?: string,
+    modelName?: string
   ) {
     this.startTime = Date.now();
     this.modelType = modelType;
@@ -594,9 +591,9 @@ export class TranscriptionTracker {
   trackStart(
     hasDictionaryWords: boolean,
     dictionaryWordCount: number,
-    sampleRate: number,
+    sampleRate: number
   ) {
-    analytics.track("transcription_started", {
+    analytics.track('transcription_started', {
       model_type: this.modelType,
       model_name: this.modelName,
       audio_duration_seconds: this.audioDuration,
@@ -609,12 +606,12 @@ export class TranscriptionTracker {
   trackCompleted(
     transcript: string,
     isSilent: boolean,
-    confidenceScore?: number,
+    confidenceScore?: number
   ) {
     const processingTime = (Date.now() - this.startTime) / 1000;
     const wordCount = transcript.trim().split(/\s+/).length;
 
-    analytics.track("transcription_completed", {
+    analytics.track('transcription_completed', {
       model_type: this.modelType,
       model_name: this.modelName,
       audio_duration_seconds: this.audioDuration,
@@ -628,7 +625,7 @@ export class TranscriptionTracker {
 
   trackFailed(errorType: string, errorMessage: string) {
     const processingTime = (Date.now() - this.startTime) / 1000;
-    analytics.track("transcription_failed", {
+    analytics.track('transcription_failed', {
       model_type: this.modelType,
       model_name: this.modelName,
       error_type: errorType,

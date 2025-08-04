@@ -1,11 +1,11 @@
-import React, { useMemo } from "react";
-import { useInfiniteQuery } from "@tanstack/react-query";
-import Fuse from "fuse.js";
+import { useInfiniteQuery } from '@tanstack/react-query';
+import Fuse from 'fuse.js';
+import React, { useMemo } from 'react';
 
-import { useDebouncedSearch } from "~/hooks/use-debounced-search";
-import { analytics } from "~/lib/analytics/posthog-analytics";
-import { trpc } from "~/trpc";
-import { useGetTranscriptions } from "./use-get-transcriptions";
+import { useDebouncedSearch } from '~/hooks/use-debounced-search';
+import { analytics } from '~/lib/analytics/posthog-analytics';
+import { trpc } from '~/trpc';
+import { useGetTranscriptions } from './use-get-transcriptions';
 
 export interface UseInfiniteTranscriptionsParams {
   limit?: number;
@@ -18,7 +18,7 @@ interface TranscriptionGroup {
     id: number;
     timestamp: string;
     content: string;
-    status: "normal" | "silent";
+    status: 'normal' | 'silent';
   }[];
 }
 
@@ -31,12 +31,12 @@ export const useInfiniteTranscriptions = ({
   // Track search usage
   React.useEffect(() => {
     if (search.debouncedSearchTerm) {
-      analytics.track("transcription_searched", {
+      analytics.track('transcription_searched', {
         search_term_length: search.debouncedSearchTerm.length,
-        search_type: "server_search",
+        search_type: 'server_search',
       });
 
-      analytics.trackFeatureFirstUse("transcription_search");
+      analytics.trackFeatureFirstUse('transcription_search');
     }
   }, [search.debouncedSearchTerm]);
 
@@ -51,8 +51,8 @@ export const useInfiniteTranscriptions = ({
         getNextPageParam: (lastPage) => {
           return lastPage.hasNextPage ? lastPage.nextCursor : undefined;
         },
-      },
-    ),
+      }
+    )
   );
 
   // Fallback query for fuzzy search when server search returns no results
@@ -69,8 +69,7 @@ export const useInfiniteTranscriptions = ({
   // Perform fuzzy search with memoization
   const fuzzySearchResults = useMemo(() => {
     if (
-      !shouldUseFuzzySearch ||
-      !search.debouncedSearchTerm ||
+      !(shouldUseFuzzySearch && search.debouncedSearchTerm) ||
       allTranscriptions.length === 0
     ) {
       return [];
@@ -81,11 +80,11 @@ export const useInfiniteTranscriptions = ({
       group.items.map((item) => ({
         ...item,
         groupDate: group.date,
-      })),
+      }))
     );
 
     const fuse = new Fuse(allItems, {
-      keys: ["content"],
+      keys: ['content'],
       threshold: 0.4,
       includeScore: true,
     });
@@ -134,7 +133,7 @@ export const useInfiniteTranscriptions = ({
         // Ensure stable ordering by checking for duplicates and maintaining sort order
         const newItems = group.items.filter(
           (newItem) =>
-            !existingGroup.items.some((existing) => existing.id === newItem.id),
+            !existingGroup.items.some((existing) => existing.id === newItem.id)
         );
         existingGroup.items.push(...newItems);
         // Sort items by ID to maintain consistent order

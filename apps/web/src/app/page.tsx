@@ -1,6 +1,7 @@
-import type { DownloadsData } from "~/lib/downloads-utils";
-import { getDownloadsData } from "~/lib/downloads";
-import LandingPageClient from "./_components/landing-page-client";
+import { log } from '@acme/observability';
+import { getDownloadsData } from '~/lib/downloads';
+import type { DownloadsData } from '~/lib/downloads-utils';
+import LandingPageClient from './_components/landing-page-client';
 
 export default async function LandingPage() {
   let downloadsData: DownloadsData | null = null;
@@ -10,14 +11,14 @@ export default async function LandingPage() {
     downloadsData = await getDownloadsData();
   } catch (err) {
     downloadError =
-      err instanceof Error ? err.message : "Unable to load download data";
-    console.error("Failed to fetch downloads data:", err);
+      err instanceof Error ? err.message : 'Unable to load download data';
+    log.error('Failed to fetch downloads data:', err);
   }
 
   return (
     <LandingPageClient
-      downloadsData={downloadsData}
       downloadError={downloadError}
+      downloadsData={downloadsData}
     />
   );
 }

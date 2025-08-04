@@ -1,35 +1,16 @@
-import type { LucideIcon } from "lucide-react";
-import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { Link, useLocation } from "@tanstack/react-router";
-import { open } from "@tauri-apps/plugin-shell";
-import {
-  BookOpen,
-  ChartBar,
-  ChevronUp,
-  CreditCard,
-  ExternalLink,
-  FileText,
-  HelpCircle,
-  LogOut,
-  Mic,
-  Settings2,
-  Wand2,
-} from "lucide-react";
-
-import { CopyButton } from "@acme/ui/components/copy";
+import { CopyButton } from '@acme/ui/components/copy';
 import {
   Avatar,
   AvatarFallback,
   AvatarImage,
-} from "@acme/ui/components/ui/avatar";
+} from '@acme/ui/components/ui/avatar';
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@acme/ui/components/ui/dialog";
+} from '@acme/ui/components/ui/dialog';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -37,8 +18,8 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@acme/ui/components/ui/dropdown-menu";
-import { Progress } from "@acme/ui/components/ui/progress";
+} from '@acme/ui/components/ui/dropdown-menu';
+import { Progress } from '@acme/ui/components/ui/progress';
 import {
   Sidebar,
   SidebarContent,
@@ -53,11 +34,29 @@ import {
   SidebarMenuSubButton,
   SidebarMenuSubItem,
   useSidebar,
-} from "@acme/ui/components/ui/sidebar";
+} from '@acme/ui/components/ui/sidebar';
+import { useQuery } from '@tanstack/react-query';
+import { Link, useLocation } from '@tanstack/react-router';
+import { open } from '@tauri-apps/plugin-shell';
+import type { LucideIcon } from 'lucide-react';
+import {
+  BookOpen,
+  ChartBar,
+  ChevronUp,
+  CreditCard,
+  ExternalLink,
+  FileText,
+  HelpCircle,
+  LogOut,
+  Mic,
+  Settings2,
+  Wand2,
+} from 'lucide-react';
+import { useState } from 'react';
 
-import { useSignOut } from "~/hooks/auth";
-import { useAuthWithConnectivity } from "~/hooks/use-auth-with-connectivity";
-import { trpc } from "~/trpc";
+import { useSignOut } from '~/hooks/auth';
+import { useAuthWithConnectivity } from '~/hooks/use-auth-with-connectivity';
+import { trpc } from '~/trpc';
 
 interface NavigationSubItem {
   title: string;
@@ -79,22 +78,22 @@ interface NavigationData {
 
 // Helper functions for link handling
 const isExternalLink = (url: string) => {
-  return url.startsWith("http") || url.startsWith("https");
+  return url.startsWith('http') || url.startsWith('https');
 };
 
 const isSpecialLink = (url: string) => {
-  return url.startsWith("#");
+  return url.startsWith('#');
 };
 
 const handleLinkClick = async (
   url: string,
-  setShowSupportDialog?: (show: boolean) => void,
+  setShowSupportDialog?: (show: boolean) => void
 ) => {
-  if (url === "#plans") {
+  if (url === '#plans') {
     const websiteUrl =
-      import.meta.env.VITE_PUBLIC_VOICEGECKO_URL || "https://www.voicegecko.io";
+      import.meta.env.VITE_PUBLIC_VOICEGECKO_URL || 'https://www.voicegecko.io';
     await open(`${websiteUrl}/app/plans`);
-  } else if (url === "#support") {
+  } else if (url === '#support') {
     setShowSupportDialog?.(true);
   } else if (isExternalLink(url)) {
     await open(url);
@@ -102,59 +101,59 @@ const handleLinkClick = async (
 };
 
 const shouldUseAsChild = (url: string) => {
-  return !isSpecialLink(url) && !isExternalLink(url);
+  return !(isSpecialLink(url) || isExternalLink(url));
 };
 
 const data: NavigationData = {
   navMain: [
     {
-      title: "Recording",
-      url: "/",
+      title: 'Recording',
+      url: '/',
       icon: Mic,
     },
     {
-      title: "Transcriptions",
-      url: "/transcriptions",
+      title: 'Transcriptions',
+      url: '/transcriptions',
       icon: FileText,
     },
     {
-      title: "Dictionary",
-      url: "/dictionary",
+      title: 'Dictionary',
+      url: '/dictionary',
       icon: BookOpen,
     },
   ],
   navSmartFeatures: [
     {
-      title: "Smart Edit",
-      url: "#coming-soon",
+      title: 'Smart Edit',
+      url: '#coming-soon',
       icon: Wand2,
     },
   ],
   navSecondary: [
     {
-      title: "Plans",
-      url: "#plans",
+      title: 'Plans',
+      url: '#plans',
       icon: CreditCard,
     },
     {
-      title: "Usage",
-      url: "/usage",
+      title: 'Usage',
+      url: '/usage',
       icon: ChartBar,
     },
     {
-      title: "Settings",
-      url: "/settings",
+      title: 'Settings',
+      url: '/settings',
       icon: Settings2,
       items: [
         {
-          title: "Keyboard Shortcuts",
-          url: "/settings/shortcuts",
+          title: 'Keyboard Shortcuts',
+          url: '/settings/shortcuts',
         },
       ],
     },
     {
-      title: "Help & Support",
-      url: "#support",
+      title: 'Help & Support',
+      url: '#support',
       icon: HelpCircle,
     },
   ],
@@ -164,8 +163,8 @@ const isDev = import.meta.env.DEV;
 
 if (isDev) {
   data.navSecondary[2]!.items?.push({
-    title: "Quality",
-    url: "/settings/models",
+    title: 'Quality',
+    url: '/settings/models',
   });
 }
 
@@ -187,34 +186,34 @@ function CircularProgress({
 
   return (
     <div className="relative flex items-center justify-center">
-      <svg width={size} height={size} className="-rotate-90 transform">
+      <svg className="-rotate-90 transform" height={size} width={size}>
         {/* Background circle */}
         <circle
+          className="text-muted-foreground/20"
           cx={size / 2}
           cy={size / 2}
+          fill="none"
           r={radius}
           stroke="currentColor"
           strokeWidth={strokeWidth}
-          fill="none"
-          className="text-muted-foreground/20"
         />
         {/* Progress circle */}
         <circle
+          className="text-primary transition-all duration-300 ease-in-out"
           cx={size / 2}
           cy={size / 2}
+          fill="none"
           r={radius}
           stroke="currentColor"
-          strokeWidth={strokeWidth}
-          fill="none"
           strokeDasharray={circumference}
           strokeDashoffset={strokeDashoffset}
           strokeLinecap="round"
-          className="text-primary transition-all duration-300 ease-in-out"
+          strokeWidth={strokeWidth}
         />
       </svg>
       {/* Percentage text in center */}
       <div className="absolute inset-0 flex items-center justify-center">
-        <span className="text-[10px] font-medium">
+        <span className="font-medium text-[10px]">
           {Math.round(percentage)}%
         </span>
       </div>
@@ -233,7 +232,7 @@ export function AppSidebar() {
   // Fetch usage status
   const { data: usageStatus } = useQuery({
     ...trpc.usage.getStatus.queryOptions(),
-    refetchInterval: 60000, // Refetch every minute
+    refetchInterval: 60_000, // Refetch every minute
     enabled: !!user,
   });
 
@@ -245,9 +244,9 @@ export function AppSidebar() {
 
   return (
     <Sidebar
-      variant="inset"
+      className="top-12 h-[calc(100svh-3rem)] border-border border-r"
       collapsible="icon"
-      className="border-border top-12 h-[calc(100svh-3rem)] border-r"
+      variant="inset"
     >
       <SidebarContent>
         <SidebarGroup>
@@ -259,7 +258,7 @@ export function AppSidebar() {
                   <SidebarMenuButton
                     asChild
                     isActive={
-                      item.url === "/"
+                      item.url === '/'
                         ? location.pathname === item.url
                         : location.pathname.startsWith(item.url)
                     }
@@ -299,15 +298,15 @@ export function AppSidebar() {
                   <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton
                       asChild={false}
+                      className="cursor-not-allowed opacity-60"
                       isActive={false}
                       onClick={() => {
                         // Do nothing for coming soon items
                       }}
-                      className="cursor-not-allowed opacity-60"
                     >
                       <item.icon />
                       <span>{item.title}</span>
-                      <span className="text-muted-foreground ml-auto text-[11px]">
+                      <span className="ml-auto text-[11px] text-muted-foreground">
                         Coming Soon
                       </span>
                     </SidebarMenuButton>
@@ -345,20 +344,20 @@ export function AppSidebar() {
                   <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton
                       asChild={isInternal}
-                      size="sm"
+                      className="cursor-pointer"
                       isActive={
                         isInternal &&
-                        (item.url === "/"
+                        (item.url === '/'
                           ? location.pathname === item.url
                           : location.pathname.startsWith(item.url))
                       }
                       onClick={
-                        !isInternal
-                          ? () =>
+                        isInternal
+                          ? undefined
+                          : () =>
                               handleLinkClick(item.url, setShowSupportDialog)
-                          : undefined
                       }
-                      className="cursor-pointer"
+                      size="sm"
                     >
                       {isInternal ? (
                         <Link to={item.url}>
@@ -370,7 +369,7 @@ export function AppSidebar() {
                           <item.icon />
                           <span>{item.title}</span>
                           {showExternalIcon && (
-                            <ExternalLink className="ml-auto !size-3" />
+                            <ExternalLink className="!size-3 ml-auto" />
                           )}
                         </>
                       )}
@@ -402,35 +401,35 @@ export function AppSidebar() {
         {/* Usage Progress for Free Users */}
         {isFreePlan && (
           <div className="mb-4 px-2">
-            {sidebarState === "expanded" ? (
+            {sidebarState === 'expanded' ? (
               <div className="space-y-2">
                 <div className="flex items-center justify-between text-xs">
                   <span className="text-muted-foreground">Weekly Usage</span>
                   <span className="font-medium">
-                    {usageStatus.wordsUsed.toLocaleString()} /{" "}
+                    {usageStatus.wordsUsed.toLocaleString()} /{' '}
                     {usageStatus.wordsLimit.toLocaleString()}
                   </span>
                 </div>
-                <Progress value={usagePercentage} className="h-2" />
+                <Progress className="h-2" value={usagePercentage} />
                 {usagePercentage >= 90 && (
-                  <p className="text-xs text-amber-600">
+                  <p className="text-amber-600 text-xs">
                     {usagePercentage >= 100 ? (
                       <>
-                        Limit reached.{" "}
+                        Limit reached.{' '}
                         <button
+                          className="cursor-pointer underline"
                           onClick={async () => {
                             const websiteUrl =
                               import.meta.env.VITE_PUBLIC_VOICEGECKO_URL ||
-                              "https://www.voicegecko.io";
+                              'https://www.voicegecko.io';
                             await open(`${websiteUrl}/app/plans`);
                           }}
-                          className="cursor-pointer underline"
                         >
                           Upgrade to Pro.
                         </button>
                       </>
                     ) : (
-                      "Approaching usage limit."
+                      'Approaching usage limit.'
                     )}
                   </p>
                 )}
@@ -449,22 +448,22 @@ export function AppSidebar() {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <SidebarMenuButton
-                  size="lg"
                   className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+                  size="lg"
                 >
                   <Avatar className="h-8 w-8 rounded-lg">
                     <AvatarImage
-                      src={user?.image ?? ""}
-                      alt={user?.name ?? ""}
+                      alt={user?.name ?? ''}
+                      src={user?.image ?? ''}
                     />
                     <AvatarFallback className="rounded-lg">
                       {user?.name
                         ? user.name
-                            .split(" ")
+                            .split(' ')
                             .map((n) => n[0])
-                            .join("")
+                            .join('')
                             .toUpperCase()
-                        : "U"}
+                        : 'U'}
                     </AvatarFallback>
                   </Avatar>
                   <div className="grid flex-1 text-left text-sm leading-tight">
@@ -475,26 +474,26 @@ export function AppSidebar() {
                 </SidebarMenuButton>
               </DropdownMenuTrigger>
               <DropdownMenuContent
+                align="end"
                 className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg"
                 side="bottom"
-                align="end"
                 sideOffset={4}
               >
                 <DropdownMenuLabel className="p-0 font-normal">
                   <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
                     <Avatar className="h-8 w-8 rounded-lg">
                       <AvatarImage
-                        src={user?.image ?? ""}
-                        alt={user?.name ?? ""}
+                        alt={user?.name ?? ''}
+                        src={user?.image ?? ''}
                       />
                       <AvatarFallback className="rounded-lg">
                         {user?.name
                           ? user.name
-                              .split(" ")
+                              .split(' ')
                               .map((n) => n[0])
-                              .join("")
+                              .join('')
                               .toUpperCase()
-                          : "U"}
+                          : 'U'}
                       </AvatarFallback>
                     </Avatar>
                     <div className="grid flex-1 text-left text-sm leading-tight">
@@ -513,13 +512,13 @@ export function AppSidebar() {
                   </Link>
                 </DropdownMenuItem>
                 <DropdownMenuItem
+                  className="cursor-pointer"
                   onClick={async () => {
                     const websiteUrl =
                       import.meta.env.VITE_PUBLIC_VOICEGECKO_URL ||
-                      "https://www.voicegecko.io";
+                      'https://www.voicegecko.io';
                     await open(`${websiteUrl}/app/billing`);
                   }}
-                  className="cursor-pointer"
                 >
                   <CreditCard className="mr-2 size-4" />
                   Billing
@@ -536,7 +535,7 @@ export function AppSidebar() {
       </SidebarFooter>
 
       {/* Support Dialog */}
-      <Dialog open={showSupportDialog} onOpenChange={setShowSupportDialog}>
+      <Dialog onOpenChange={setShowSupportDialog} open={showSupportDialog}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Help & Support</DialogTitle>
@@ -547,9 +546,9 @@ export function AppSidebar() {
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium">Email Support</label>
+              <label className="font-medium text-sm">Email Support</label>
               <div className="flex items-center space-x-2">
-                <div className="bg-muted flex-1 rounded p-2 font-mono text-sm">
+                <div className="flex-1 rounded bg-muted p-2 font-mono text-sm">
                   support@voicegecko.io
                 </div>
                 <CopyButton text="support@voicegecko.io" />
@@ -557,9 +556,9 @@ export function AppSidebar() {
             </div>
             {user?.id && (
               <div className="space-y-2">
-                <label className="text-sm font-medium">Your User ID</label>
+                <label className="font-medium text-sm">Your User ID</label>
                 <div className="flex items-center space-x-2">
-                  <div className="bg-muted flex-1 rounded p-2 font-mono text-sm">
+                  <div className="flex-1 rounded bg-muted p-2 font-mono text-sm">
                     {user.id}
                   </div>
                   <CopyButton text={user.id} />

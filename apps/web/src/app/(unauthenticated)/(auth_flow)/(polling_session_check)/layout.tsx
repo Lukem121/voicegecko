@@ -1,6 +1,6 @@
-import type { ReactNode } from "react";
+import type { ReactNode } from 'react';
 
-import PollingAuthWrapper from "../../components/polling-wrapper";
+import PollingAuthWrapper from '../../components/polling-wrapper';
 
 interface NoSessionLayoutProps {
   readonly children: ReactNode;

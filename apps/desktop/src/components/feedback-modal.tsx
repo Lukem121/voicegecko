@@ -1,20 +1,26 @@
-import React, { useState } from "react";
-import { Loader2, MessageSquare } from "lucide-react";
-import { toast } from "sonner";
-
-import { Button } from "@acme/ui/components/ui/button";
+import { Button } from '@acme/ui/components/ui/button';
 import {
-  Dialog,
+import
+{
+  log;
+}
+from;
+('@acme/observability');
+Dialog,
   DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@acme/ui/components/ui/dialog";
-import { Textarea } from "@acme/ui/components/ui/textarea";
+} from '@acme/ui/components/ui/dialog'
 
-import { useSendFeedback } from "~/features/transcription/use-send-feedback";
-import { analytics } from "~/lib/analytics/posthog-analytics";
+import { Textarea } from '@acme/ui/components/ui/textarea';
+import { Loader2, MessageSquare } from 'lucide-react';
+import React, { useState } from 'react';
+import { toast } from 'sonner';
+
+import { useSendFeedback } from '~/features/transcription/use-send-feedback';
+import { analytics } from '~/lib/analytics/posthog-analytics';
 
 interface FeedbackModalProps {
   isOpen: boolean;
@@ -32,13 +38,13 @@ export function FeedbackModal({
   transcriptionId,
   transcriptionContent,
 }: FeedbackModalProps) {
-  const [feedback, setFeedback] = useState("");
+  const [feedback, setFeedback] = useState('');
   const { sendFeedback, isSending } = useSendFeedback();
 
   // Track feedback modal open
   React.useEffect(() => {
     if (isOpen) {
-      analytics.trackFeatureFirstUse("feedback_modal");
+      analytics.trackFeatureFirstUse('feedback_modal');
     }
   }, [isOpen]);
 
@@ -46,13 +52,13 @@ export function FeedbackModal({
     const trimmedFeedback = feedback.trim();
 
     if (!trimmedFeedback) {
-      toast.error("Please enter your feedback before submitting.");
+      toast.error('Please enter your feedback before submitting.');
       return;
     }
 
     if (trimmedFeedback.length > MAX_FEEDBACK_LENGTH) {
       toast.error(
-        `Feedback is too long. Maximum ${MAX_FEEDBACK_LENGTH} characters allowed.`,
+        `Feedback is too long. Maximum ${MAX_FEEDBACK_LENGTH} characters allowed.`
       );
       return;
     }
@@ -64,39 +70,39 @@ export function FeedbackModal({
       });
 
       // Track successful feedback submission
-      analytics.track("feedback_submitted", {
-        type: "transcription_quality",
+      analytics.track('feedback_submitted', {
+        type: 'transcription_quality',
         rating: undefined,
         has_text: trimmedFeedback.length > 0,
       });
 
       toast.success(
-        "Feedback sent successfully! Thank you for helping us improve.",
+        'Feedback sent successfully! Thank you for helping us improve.'
       );
 
       // Reset form and close modal
-      setFeedback("");
+      setFeedback('');
       onClose();
     } catch (error) {
-      console.error("Failed to send feedback:", error);
+      log.error('Failed to send feedback:', error);
       // The error message from the backend should be user-friendly
       const errorMessage =
         error instanceof Error
           ? error.message
-          : "Failed to send feedback. Please try again later.";
+          : 'Failed to send feedback. Please try again later.';
       toast.error(errorMessage);
     }
   };
 
   const handleClose = () => {
     if (!isSending) {
-      setFeedback("");
+      setFeedback('');
       onClose();
     }
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={handleClose}>
+    <Dialog onOpenChange={handleClose} open={isOpen}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
@@ -113,36 +119,36 @@ export function FeedbackModal({
           {/* Feedback input */}
           <div className="space-y-2">
             <div className="flex items-center justify-between">
-              <label htmlFor="feedback" className="text-sm font-medium">
+              <label className="font-medium text-sm" htmlFor="feedback">
                 What did you expect instead?
               </label>
               <span
                 className={`text-xs ${
                   feedback.length > MAX_FEEDBACK_LENGTH
-                    ? "text-red-500"
+                    ? 'text-red-500'
                     : feedback.length > MAX_FEEDBACK_LENGTH * 0.9
-                      ? "text-yellow-500"
-                      : "text-muted-foreground"
+                      ? 'text-yellow-500'
+                      : 'text-muted-foreground'
                 }`}
               >
                 {feedback.length}/{MAX_FEEDBACK_LENGTH}
               </span>
             </div>
             <Textarea
-              id="feedback"
-              placeholder="Describe what you expected instead..."
-              value={feedback}
-              onChange={(e) => setFeedback(e.target.value)}
               className={`min-h-[150px] w-full max-w-full resize-none whitespace-pre-wrap ${
-                feedback.length > MAX_FEEDBACK_LENGTH ? "border-red-500" : ""
+                feedback.length > MAX_FEEDBACK_LENGTH ? 'border-red-500' : ''
               }`}
               disabled={isSending}
-              maxLength={MAX_FEEDBACK_LENGTH + 50} // Allow a bit over for better UX
-              style={{ fieldSizing: "fixed" } as any} // Override field-sizing-content from base component
+              id="feedback"
+              maxLength={MAX_FEEDBACK_LENGTH + 50}
+              onChange={(e) => setFeedback(e.target.value)}
+              placeholder="Describe what you expected instead..."
+              style={{ fieldSizing: 'fixed' } as any} // Allow a bit over for better UX
+              value={feedback} // Override field-sizing-content from base component
             />
             {feedback.length > MAX_FEEDBACK_LENGTH && (
-              <p className="text-xs text-red-500">
-                Feedback is too long. Please shorten it by{" "}
+              <p className="text-red-500 text-xs">
+                Feedback is too long. Please shorten it by{' '}
                 {feedback.length - MAX_FEEDBACK_LENGTH} characters.
               </p>
             )}
@@ -150,16 +156,16 @@ export function FeedbackModal({
         </div>
 
         <DialogFooter>
-          <Button variant="outline" onClick={handleClose} disabled={isSending}>
+          <Button disabled={isSending} onClick={handleClose} variant="outline">
             Cancel
           </Button>
           <Button
-            onClick={handleSubmit}
             disabled={
               isSending ||
               !feedback.trim() ||
               feedback.length > MAX_FEEDBACK_LENGTH
             }
+            onClick={handleSubmit}
           >
             {isSending && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Send Feedback

@@ -1,10 +1,10 @@
-import { createEnv } from "@t3-oss/env-nextjs";
-import { z } from "zod/v4";
+import { createEnv } from '@t3-oss/env-nextjs';
+import { z } from 'zod/v4';
 
 export function paymentEnv() {
   return createEnv({
     server: {
-      NODE_ENV: z.enum(["development", "production"]).optional(),
+      NODE_ENV: z.enum(['development', 'production']).optional(),
       STRIPE_SECRET_KEY: z.string().min(1),
     },
     client: {
@@ -14,6 +14,6 @@ export function paymentEnv() {
       NEXT_PUBLIC_VOICEGECKO_URL: process.env.NEXT_PUBLIC_VOICEGECKO_URL,
     },
     skipValidation:
-      !!process.env.CI || process.env.npm_lifecycle_event === "lint",
+      !!process.env.CI || process.env.npm_lifecycle_event === 'lint',
   });
 }

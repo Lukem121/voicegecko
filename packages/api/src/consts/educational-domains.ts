@@ -1,51 +1,51 @@
 export const EDUCATIONAL_DOMAINS = [
   // US Educational domains
-  ".edu",
+  '.edu',
   // UK Educational domains
-  ".ac.uk",
-  ".edu.uk",
+  '.ac.uk',
+  '.edu.uk',
   // Canadian Educational domains
-  ".ca",
-  ".edu.ca",
+  '.ca',
+  '.edu.ca',
   // Australian Educational domains
-  ".edu.au",
-  ".ac.au",
+  '.edu.au',
+  '.ac.au',
   // German Educational domains
-  ".edu.de",
-  ".uni.de",
+  '.edu.de',
+  '.uni.de',
   // French Educational domains
-  ".edu.fr",
-  ".univ.fr",
+  '.edu.fr',
+  '.univ.fr',
   // Italian Educational domains
-  ".edu.it",
-  ".univ.it",
+  '.edu.it',
+  '.univ.it',
   // Spanish Educational domains
-  ".edu.es",
-  ".univ.es",
+  '.edu.es',
+  '.univ.es',
   // Netherlands Educational domains
-  ".edu.nl",
-  ".uni.nl",
+  '.edu.nl',
+  '.uni.nl',
   // Swedish Educational domains
-  ".edu.se",
-  ".uni.se",
+  '.edu.se',
+  '.uni.se',
   // Norwegian Educational domains
-  ".edu.no",
-  ".uni.no",
+  '.edu.no',
+  '.uni.no',
   // Danish Educational domains
-  ".edu.dk",
-  ".uni.dk",
+  '.edu.dk',
+  '.uni.dk',
   // Finnish Educational domains
-  ".edu.fi",
-  ".uni.fi",
+  '.edu.fi',
+  '.uni.fi',
   // European and International
-  ".eu",
-  ".int",
+  '.eu',
+  '.int',
   // Other common educational domains
-  ".school",
-  ".college",
-  ".university",
-  ".academy",
+  '.school',
+  '.college',
+  '.university',
+  '.academy',
 
   // Luke's email
-  "lukeask@hotmail.co.uk",
+  'lukeask@hotmail.co.uk',
 ];

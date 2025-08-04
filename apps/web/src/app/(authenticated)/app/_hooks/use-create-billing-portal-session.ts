@@ -1,6 +1,6 @@
-import { useMutation } from "@tanstack/react-query";
+import { useMutation } from '@tanstack/react-query';
 
-import { useTRPC } from "~/trpc/react";
+import { useTRPC } from '~/trpc/react';
 
 export const useCreateBillingPortalSession = () => {
   const trpc = useTRPC();

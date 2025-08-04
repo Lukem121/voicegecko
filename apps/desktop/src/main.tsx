@@ -1,26 +1,27 @@
-import { StrictMode, useEffect, useState } from "react";
+import { log } from '@acme/observability';
+import { StrictMode, useEffect, useState } from 'react';
 
-import { authClient } from "~/lib/client";
+import { authClient } from '~/lib/client';
 
-import "@acme/ui/globals.css";
-import "~/styles/fonts.css";
+import '@acme/ui/globals.css';
+import '~/styles/fonts.css';
 
-import { useBetterAuthTauri } from "@daveyplate/better-auth-tauri/react";
-import { createRouter, RouterProvider } from "@tanstack/react-router";
-import ReactDOM from "react-dom/client";
+import { useBetterAuthTauri } from '@daveyplate/better-auth-tauri/react';
+import { createRouter, RouterProvider } from '@tanstack/react-router';
+import ReactDOM from 'react-dom/client';
 
-import { AppLauncher } from "~/components/app-launcher";
-import { FullscreenDetector } from "~/components/fullscreen-detector";
-import { GeckoBarApp } from "~/components/gecko-bar/gecko-bar-app";
-import { useAuth } from "~/hooks/use-auth";
-import { isGeckoBarWindow } from "~/lib/window-detection";
-import { routeTree } from "~/routeTree.gen";
-import { useSettingsStore } from "~/stores/settings.store";
-import { TRPCReactProvider } from "~/trpc";
-import { useSession } from "./hooks/auth";
-import { analytics, useAnalyticsInit } from "./lib/analytics/posthog-analytics";
-import PostHogProvider from "./lib/posthog/posthog-provider";
-import { ThemeProvider } from "./providers/theme";
+import { AppLauncher } from '~/components/app-launcher';
+import { FullscreenDetector } from '~/components/fullscreen-detector';
+import { GeckoBarApp } from '~/components/gecko-bar/gecko-bar-app';
+import { useAuth } from '~/hooks/use-auth';
+import { isGeckoBarWindow } from '~/lib/window-detection';
+import { routeTree } from '~/routeTree.gen';
+import { useSettingsStore } from '~/stores/settings.store';
+import { TRPCReactProvider } from '~/trpc';
+import { useSession } from './hooks/auth';
+import { analytics, useAnalyticsInit } from './lib/analytics/posthog-analytics';
+import PostHogProvider from './lib/posthog/posthog-provider';
+import { ThemeProvider } from './providers/theme';
 
 // Create a new router instance
 const router = createRouter({
@@ -35,7 +36,7 @@ const router = createRouter({
 });
 
 // Register the router instance for type safety
-declare module "@tanstack/react-router" {
+declare module '@tanstack/react-router' {
   interface Register {
     router: typeof router;
   }
@@ -63,36 +64,36 @@ function InnerApp() {
       });
 
       // Track sign in event
-      analytics.track("user_signed_in", {
-        method: "email", // Could be enhanced to detect actual method
+      analytics.track('user_signed_in', {
+        method: 'email', // Could be enhanced to detect actual method
         returning_user: true, // Could be enhanced with proper detection
       });
-    } else if (!auth.isLoading && !auth.isAuthenticated) {
+    } else if (!(auth.isLoading || auth.isAuthenticated)) {
       // Reset analytics on sign out
       analytics.reset();
-      analytics.track("user_signed_out", {});
+      analytics.track('user_signed_out', {});
     }
   }, [session?.user, auth.isAuthenticated, auth.isLoading]);
 
   useBetterAuthTauri({
     authClient,
-    scheme: "voicegecko",
+    scheme: 'voicegecko',
     debugLogs: true,
     onRequest: (href) => {
-      console.log("🔄 Auth request:", href);
+      log.info('🔄 Auth request:', href);
     },
     onSuccess: (callbackURL) => {
-      console.log("✅ Auth successful, callback URL:", callbackURL);
-      void query.refetch();
+      log.info('✅ Auth successful, callback URL:', callbackURL);
+      query.refetch();
     },
     onError: (error) => {
-      console.error("❌ Auth error:", error);
+      log.error('❌ Auth error:', error);
     },
   });
 
   useEffect(() => {
-    console.log("Auth state changed", session, query.isPending);
-    void router.invalidate();
+    log.info('Auth state changed', session, query.isPending);
+    router.invalidate();
   }, [session, query.isPending]);
 
   return (
@@ -104,7 +105,7 @@ function InnerApp() {
         }
         geckoBarEnabled={settings.general.showGeckoBar}
       />
-      <RouterProvider router={router} context={{ auth }} />
+      <RouterProvider context={{ auth }} router={router} />
     </>
   );
 }
@@ -116,7 +117,7 @@ function App() {
   // Track app startup time
   useEffect(() => {
     if (!isGeckoBar) {
-      sessionStorage.setItem("appStartTime", Date.now().toString());
+      sessionStorage.setItem('appStartTime', Date.now().toString());
     }
   }, [isGeckoBar]);
 
@@ -134,9 +135,9 @@ function App() {
 }
 
 // Render the app
-const rootElement = document.getElementById("root");
+const rootElement = document.getElementById('root');
 
-if (!rootElement) throw new Error("Root not in body");
+if (!rootElement) throw new Error('Root not in body');
 
 if (!rootElement.innerHTML) {
   const root = ReactDOM.createRoot(rootElement);
@@ -149,6 +150,6 @@ if (!rootElement.innerHTML) {
           </ThemeProvider>
         </PostHogProvider>
       </TRPCReactProvider>
-    </StrictMode>,
+    </StrictMode>
   );
 }

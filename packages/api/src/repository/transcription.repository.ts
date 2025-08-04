@@ -1,11 +1,11 @@
-import { and, count, desc, eq, ilike, lt, sql } from "@acme/db";
-import { db } from "@acme/db/client";
-import { TranscriptionTable } from "@acme/db/schema";
+import { and, count, desc, eq, ilike, lt, sql } from '@acme/db';
+import { db } from '@acme/db/client';
+import { TranscriptionTable } from '@acme/db/schema';
 
 export interface CreateTranscriptionData {
   userId: string;
   content: string;
-  status: "normal" | "silent";
+  status: 'normal' | 'silent';
   durationSeconds?: number;
   modelUsed?: string;
   sampleRate?: number;
@@ -16,7 +16,7 @@ export interface CreateTranscriptionData {
 export interface TranscriptionItem {
   id: number;
   content: string;
-  status: "normal" | "silent";
+  status: 'normal' | 'silent';
   createdAt: Date;
 }
 
@@ -57,13 +57,13 @@ class TranscriptionRepository {
         results.map((row) => ({
           ...row,
           status: row.status,
-        })),
+        }))
       );
   }
 
   async findByUserIdPaginated(
     userId: string,
-    params: FindPaginatedParams,
+    params: FindPaginatedParams
   ): Promise<PaginatedResult> {
     const { cursor, limit, search } = params;
 
@@ -84,8 +84,8 @@ class TranscriptionRepository {
       query = query.where(
         and(
           eq(TranscriptionTable.userId, userId),
-          lt(TranscriptionTable.id, cursor),
-        ),
+          lt(TranscriptionTable.id, cursor)
+        )
       );
     }
 
@@ -96,8 +96,8 @@ class TranscriptionRepository {
         and(
           eq(TranscriptionTable.userId, userId),
           ilike(TranscriptionTable.content, searchTerm),
-          cursor ? lt(TranscriptionTable.id, cursor) : sql`true`,
-        ),
+          cursor ? lt(TranscriptionTable.id, cursor) : sql`true`
+        )
       );
     }
 
@@ -109,7 +109,7 @@ class TranscriptionRepository {
         results.map((row) => ({
           ...row,
           status: row.status,
-        })),
+        }))
       );
 
     // Get total count for search results (optional, only when searching)
@@ -121,8 +121,8 @@ class TranscriptionRepository {
         .where(
           and(
             eq(TranscriptionTable.userId, userId),
-            ilike(TranscriptionTable.content, `%${search.trim()}%`),
-          ),
+            ilike(TranscriptionTable.content, `%${search.trim()}%`)
+          )
         );
 
       totalResults = countResult[0]?.count ?? 0;
@@ -147,8 +147,8 @@ class TranscriptionRepository {
       .where(
         and(
           eq(TranscriptionTable.id, id),
-          eq(TranscriptionTable.userId, userId),
-        ),
+          eq(TranscriptionTable.userId, userId)
+        )
       )
       .limit(1);
 
@@ -161,8 +161,8 @@ class TranscriptionRepository {
       .where(
         and(
           eq(TranscriptionTable.id, id),
-          eq(TranscriptionTable.userId, userId),
-        ),
+          eq(TranscriptionTable.userId, userId)
+        )
       )
       .returning();
 

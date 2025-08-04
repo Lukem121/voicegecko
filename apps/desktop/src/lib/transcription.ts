@@ -1,8 +1,8 @@
-import { invoke } from "@tauri-apps/api/core";
-import { toast } from "sonner";
-
-import type { AudioData } from "~/types/events";
-import { dictionaryService } from "~/services/dictionary.service";
+import { log } from '@acme/observability';
+import { invoke } from '@tauri-apps/api/core';
+import { toast } from 'sonner';
+import { dictionaryService } from '~/services/dictionary.service';
+import type { AudioData } from '~/types/events';
 
 /**
  * Invokes the transcription process on the backend using audio buffer data.
@@ -11,7 +11,7 @@ import { dictionaryService } from "~/services/dictionary.service";
  * @param audioData - The audio data including samples, sample rate, and channels.
  */
 export async function invokeTranscriptionFromBuffer(audioData: AudioData) {
-  console.log("[invokeTranscriptionFromBuffer] Called with audio data:", {
+  log.info('[invokeTranscriptionFromBuffer] Called with audio data:', {
     samplesLength: audioData.samples.length,
     sampleRate: audioData.sample_rate,
     channels: audioData.channels,
@@ -20,21 +20,21 @@ export async function invokeTranscriptionFromBuffer(audioData: AudioData) {
   try {
     // Fetch dictionary prompt before transcription
     const dictionaryPrompt = await dictionaryService.getDictionaryPrompt();
-    console.log(
-      "[invokeTranscriptionFromBuffer] Dictionary prompt:",
-      dictionaryPrompt,
+    log.info(
+      '[invokeTranscriptionFromBuffer] Dictionary prompt:',
+      dictionaryPrompt
     );
 
-    await invoke("transcribe_audio_buffer", {
+    await invoke('transcribe_audio_buffer', {
       audioData,
       dictionaryPrompt,
     });
-    console.log("[invokeTranscriptionFromBuffer] Command invoked successfully");
+    log.info('[invokeTranscriptionFromBuffer] Command invoked successfully');
   } catch (error) {
-    console.error("Failed to invoke transcription from buffer:", error);
-    toast.error("Failed to start transcription", {
+    log.error('Failed to invoke transcription from buffer:', error);
+    toast.error('Failed to start transcription', {
       description:
-        error instanceof Error ? error.message : "Could not start process.",
+        error instanceof Error ? error.message : 'Could not start process.',
     });
   }
 }

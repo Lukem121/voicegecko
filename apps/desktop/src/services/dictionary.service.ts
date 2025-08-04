@@ -1,4 +1,5 @@
-import { queryClient, trpc } from "~/trpc";
+import { log } from '@acme/observability';
+import { queryClient, trpc } from '~/trpc';
 
 export class DictionaryService {
   private static instance: DictionaryService | undefined;
@@ -19,17 +20,14 @@ export class DictionaryService {
   async getDictionaryPrompt(): Promise<string | null> {
     try {
       // Always fetch the latest data - this ensures we get updates after dictionary changes
-      console.log("[DictionaryService] Fetching dictionary prompt");
+      log.info('[DictionaryService] Fetching dictionary prompt');
       const prompt = await queryClient.fetchQuery(
-        trpc.dictionary.getPrompt.queryOptions(),
+        trpc.dictionary.getPrompt.queryOptions()
       );
 
       return prompt || null;
     } catch (error) {
-      console.error(
-        "[DictionaryService] Failed to get dictionary prompt:",
-        error,
-      );
+      log.error('[DictionaryService] Failed to get dictionary prompt:', error);
       // Don't fail transcription if dictionary fetch fails
       return null;
     }
@@ -41,11 +39,11 @@ export class DictionaryService {
   async prefetchDictionaryPrompt(): Promise<void> {
     try {
       await queryClient.prefetchQuery(trpc.dictionary.getPrompt.queryOptions());
-      console.log("[DictionaryService] Dictionary prompt prefetched");
+      log.info('[DictionaryService] Dictionary prompt prefetched');
     } catch (error) {
-      console.error(
-        "[DictionaryService] Failed to prefetch dictionary prompt:",
-        error,
+      log.error(
+        '[DictionaryService] Failed to prefetch dictionary prompt:',
+        error
       );
     }
   }

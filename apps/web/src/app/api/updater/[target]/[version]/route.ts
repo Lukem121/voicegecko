@@ -1,17 +1,23 @@
-import type { NextRequest } from "next/server";
-import { NextResponse } from "next/server";
-import { Octokit } from "@octokit/rest";
-import { z } from "zod";
-
+import { Octokit } from '@octokit/rest';
+import type { NextRequest } from 'next/server';
+import { NextResponse } from 'next/server';
+import { z } from 'zod';
+import { env } from '~/env';
 import type {
-  GitHubRelease,
+import
+{
+  log;
+}
+from;
+('@acme/observability');
+GitHubRelease,
   ProcessedAsset,
   TauriTarget,
   TauriUpdaterResponse,
   UpdaterError,
-} from "~/types/updater";
-import { env } from "~/env";
-import { PLATFORM_FILE_EXTENSIONS } from "~/types/updater";
+} from '~/types/updater'
+
+import { PLATFORM_FILE_EXTENSIONS } from '~/types/updater';
 
 // ===== CONFIGURATION =====
 
@@ -28,14 +34,14 @@ const CONFIG: Config = {
 } as const;
 
 const PLATFORM_MAPPINGS: Record<string, TauriTarget> = {
-  windows: "windows-x86_64",
-  linux: "linux-x86_64",
-  darwin: "darwin-x86_64",
-  macos: "darwin-x86_64",
-  "windows-x86_64": "windows-x86_64",
-  "linux-x86_64": "linux-x86_64",
-  "darwin-x86_64": "darwin-x86_64",
-  "darwin-aarch64": "darwin-aarch64",
+  windows: 'windows-x86_64',
+  linux: 'linux-x86_64',
+  darwin: 'darwin-x86_64',
+  macos: 'darwin-x86_64',
+  'windows-x86_64': 'windows-x86_64',
+  'linux-x86_64': 'linux-x86_64',
+  'darwin-x86_64': 'darwin-x86_64',
+  'darwin-aarch64': 'darwin-aarch64',
 } as const;
 
 // ===== VALIDATION SCHEMAS =====
@@ -48,12 +54,12 @@ const requestParamsSchema = z.object({
 // ===== CUSTOM ERRORS =====
 
 abstract class UpdaterServiceError extends Error {
-  abstract readonly code: UpdaterError["code"];
+  abstract readonly code: UpdaterError['code'];
   abstract readonly httpStatus: number;
 
   constructor(
     message: string,
-    public readonly details?: unknown,
+    public readonly details?: unknown
   ) {
     super(message);
     this.name = this.constructor.name;
@@ -61,22 +67,22 @@ abstract class UpdaterServiceError extends Error {
 }
 
 class ConfigurationError extends UpdaterServiceError {
-  readonly code = "CONFIG_ERROR" as const;
+  readonly code = 'CONFIG_ERROR' as const;
   readonly httpStatus = 500;
 }
 
 class InvalidPlatformError extends UpdaterServiceError {
-  readonly code = "INVALID_PLATFORM" as const;
+  readonly code = 'INVALID_PLATFORM' as const;
   readonly httpStatus = 400;
 }
 
 class NoReleaseFoundError extends UpdaterServiceError {
-  readonly code = "NO_RELEASE_FOUND" as const;
+  readonly code = 'NO_RELEASE_FOUND' as const;
   readonly httpStatus = 404;
 }
 
 class GitHubApiError extends UpdaterServiceError {
-  readonly code = "GITHUB_API_ERROR" as const;
+  readonly code = 'GITHUB_API_ERROR' as const;
   readonly httpStatus = 500;
 }
 
@@ -88,7 +94,7 @@ class GitHubService {
   constructor(config: Config) {
     this.octokit = new Octokit({
       auth: config.githubToken,
-      userAgent: "VoiceGecko-Updater/1.0",
+      userAgent: 'VoiceGecko-Updater/1.0',
     });
   }
 
@@ -99,20 +105,20 @@ class GitHubService {
         repo: CONFIG.githubRepo,
       });
 
-      Logger.info("Found latest published release", { version: data.tag_name });
+      Logger.info('Found latest published release', { version: data.tag_name });
       return data as GitHubRelease;
     } catch (error) {
-      if (error instanceof Error && "status" in error && error.status === 404) {
-        Logger.info("No published releases found, checking drafts");
+      if (error instanceof Error && 'status' in error && error.status === 404) {
+        Logger.info('No published releases found, checking drafts');
         return this.getLatestReleaseIncludingDrafts();
       }
       if (error instanceof Error) {
         throw new GitHubApiError(
           `Failed to fetch latest release: ${error.message}`,
-          error,
+          error
         );
       }
-      throw new GitHubApiError("Failed to fetch latest release", error);
+      throw new GitHubApiError('Failed to fetch latest release', error);
     }
   }
 
@@ -129,10 +135,10 @@ class GitHubService {
       if (error instanceof Error) {
         throw new GitHubApiError(
           `Failed to fetch releases: ${error.message}`,
-          error,
+          error
         );
       }
-      throw new GitHubApiError("Failed to fetch releases", error);
+      throw new GitHubApiError('Failed to fetch releases', error);
     }
   }
 
@@ -143,7 +149,7 @@ class GitHubService {
         repo: CONFIG.githubRepo,
         asset_id: assetId,
         headers: {
-          Accept: "application/octet-stream",
+          Accept: 'application/octet-stream',
         },
       });
 
@@ -152,19 +158,19 @@ class GitHubService {
       if (error instanceof Error) {
         throw new GitHubApiError(
           `Failed to fetch signature: ${error.message}`,
-          error,
+          error
         );
       }
-      throw new GitHubApiError("Failed to fetch signature", error);
+      throw new GitHubApiError('Failed to fetch signature', error);
     }
   }
 
   private convertDataToString(data: unknown): string {
-    if (typeof data === "string") {
+    if (typeof data === 'string') {
       return data;
     }
     if (data instanceof ArrayBuffer) {
-      return Buffer.from(data).toString("utf-8");
+      return Buffer.from(data).toString('utf-8');
     }
     return String(data);
   }
@@ -181,15 +187,15 @@ class AssetProcessor {
 
   async processReleaseAssets(
     release: GitHubRelease,
-    targetPlatform: TauriTarget,
+    targetPlatform: TauriTarget
   ): Promise<ProcessedAsset[]> {
     const supportedExtensions = PLATFORM_FILE_EXTENSIONS[targetPlatform];
     const binaryAssets = this.findBinaryAssets(
       release.assets,
-      supportedExtensions,
+      supportedExtensions
     );
 
-    Logger.debug("Processing release assets", {
+    Logger.debug('Processing release assets', {
       platform: targetPlatform,
       totalAssets: release.assets.length,
       binaryAssets: binaryAssets.length,
@@ -205,7 +211,7 @@ class AssetProcessor {
     for (const binaryAsset of binaryAssets) {
       const signatureAsset = this.findSignatureAsset(
         release.assets,
-        binaryAsset.name,
+        binaryAsset.name
       );
 
       if (!signatureAsset) {
@@ -214,7 +220,7 @@ class AssetProcessor {
 
       try {
         const signature = await this.githubService.fetchSignatureContent(
-          signatureAsset.id,
+          signatureAsset.id
         );
 
         processedAssets.push({
@@ -223,7 +229,7 @@ class AssetProcessor {
           signature,
         });
       } catch (error) {
-        Logger.warn("Failed to fetch signature, using fallback", {
+        Logger.warn('Failed to fetch signature, using fallback', {
           asset: binaryAsset.name,
           error: error instanceof Error ? error.message : String(error),
         });
@@ -232,7 +238,7 @@ class AssetProcessor {
         processedAssets.push({
           platform: targetPlatform,
           url: binaryAsset.browser_download_url,
-          signature: "",
+          signature: '',
         });
       }
     }
@@ -242,16 +248,16 @@ class AssetProcessor {
 
   private findBinaryAssets(
     assets: ReleaseAsset[],
-    supportedExtensions: string[],
+    supportedExtensions: string[]
   ): ReleaseAsset[] {
     return assets.filter((asset) =>
-      supportedExtensions.some((ext) => asset.name.endsWith(ext)),
+      supportedExtensions.some((ext) => asset.name.endsWith(ext))
     );
   }
 
   private findSignatureAsset(
     assets: ReleaseAsset[],
-    binaryAssetName: string,
+    binaryAssetName: string
   ): ReleaseAsset | undefined {
     return assets.find((asset) => asset.name === `${binaryAssetName}.sig`);
   }
@@ -260,17 +266,17 @@ class AssetProcessor {
 class UpdaterService {
   constructor(
     private readonly githubService: GitHubService,
-    private readonly assetProcessor: AssetProcessor,
+    private readonly assetProcessor: AssetProcessor
   ) {}
 
   async checkForUpdate(
     targetPlatform: TauriTarget,
-    currentVersion: string,
+    currentVersion: string
   ): Promise<TauriUpdaterResponse | null> {
     const release = await this.githubService.getLatestRelease();
 
     if (!release) {
-      throw new NoReleaseFoundError("No releases found in repository");
+      throw new NoReleaseFoundError('No releases found in repository');
     }
 
     const normalizedReleaseVersion = VersionUtils.normalize(release.tag_name);
@@ -283,12 +289,12 @@ class UpdaterService {
 
     const processedAssets = await this.assetProcessor.processReleaseAssets(
       release,
-      targetPlatform,
+      targetPlatform
     );
 
     if (processedAssets.length === 0) {
       throw new NoReleaseFoundError(
-        `No compatible assets found for platform: ${targetPlatform}`,
+        `No compatible assets found for platform: ${targetPlatform}`
       );
     }
 
@@ -349,10 +355,10 @@ class CriticalUpdateDetector {
 
 class VersionUtils {
   static normalize(version: string): string {
-    if (version.startsWith("app-v")) {
+    if (version.startsWith('app-v')) {
       return version.slice(5);
     }
-    if (version.startsWith("v")) {
+    if (version.startsWith('v')) {
       return version.slice(1);
     }
     return version;
@@ -372,7 +378,7 @@ class PlatformUtils {
 class ResponseBuilder {
   static buildTauriResponse(
     release: GitHubRelease,
-    assets: ProcessedAsset[],
+    assets: ProcessedAsset[]
   ): TauriUpdaterResponse {
     const platforms: Record<string, { signature: string; url: string }> = {};
 
@@ -389,9 +395,9 @@ class ResponseBuilder {
     const isCritical = CriticalUpdateDetector.isCriticalUpdate(release);
 
     if (isCritical) {
-      Logger.info("Critical update detected", {
+      Logger.info('Critical update detected', {
         version: release.tag_name,
-        reason: "Release contains critical update indicators",
+        reason: 'Release contains critical update indicators',
       });
     }
 
@@ -413,16 +419,16 @@ class ResponseBuilder {
 
     return NextResponse.json(
       { success: false, error: errorPayload },
-      { status: error.httpStatus },
+      { status: error.httpStatus }
     );
   }
 }
 
 class ConfigurationValidator {
   static validate(): void {
-    if (!CONFIG.githubToken || !CONFIG.githubOwner || !CONFIG.githubRepo) {
+    if (!(CONFIG.githubToken && CONFIG.githubOwner && CONFIG.githubRepo)) {
       throw new ConfigurationError(
-        "Missing required environment variables: GITHUB_TOKEN, GITHUB_OWNER, GITHUB_REPO",
+        'Missing required environment variables: GITHUB_TOKEN, GITHUB_OWNER, GITHUB_REPO'
       );
     }
   }
@@ -436,7 +442,7 @@ class Logger {
   private static formatMessage(
     level: string,
     message: string,
-    context?: LogContext,
+    context?: LogContext
   ): string {
     const timestamp = new Date().toISOString();
     const prefix = `[${timestamp}] [Updater] [${level}]`;
@@ -446,20 +452,20 @@ class Logger {
   }
 
   static info(message: string, context?: LogContext): void {
-    console.log(this.formatMessage("INFO", message, context));
+    log.info(Logger.formatMessage('INFO', message, context));
   }
 
   static error(message: string, context?: LogContext): void {
-    console.error(this.formatMessage("ERROR", message, context));
+    log.error(Logger.formatMessage('ERROR', message, context));
   }
 
   static warn(message: string, context?: LogContext): void {
-    console.warn(this.formatMessage("WARN", message, context));
+    log.warn(Logger.formatMessage('WARN', message, context));
   }
 
   static debug(message: string, context?: LogContext): void {
-    if (env.NODE_ENV === "development") {
-      console.debug(this.formatMessage("DEBUG", message, context));
+    if (env.NODE_ENV === 'development') {
+      log.debug(Logger.formatMessage('DEBUG', message, context));
     }
   }
 }
@@ -468,7 +474,7 @@ class Logger {
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ target: string; version: string }> },
+  { params }: { params: Promise<{ target: string; version: string }> }
 ): Promise<NextResponse> {
   try {
     // Validate configuration
@@ -478,18 +484,18 @@ export async function GET(
     const resolvedParams = await params;
     const validatedParams = requestParamsSchema.parse(resolvedParams);
 
-    Logger.info("Processing update request", {
+    Logger.info('Processing update request', {
       target: validatedParams.target,
       currentVersion: validatedParams.version,
     });
 
     // Map platform to Tauri target
     const targetPlatform = PlatformUtils.mapToTauriTarget(
-      validatedParams.target,
+      validatedParams.target
     );
     if (!targetPlatform) {
       throw new InvalidPlatformError(
-        `Unsupported platform: ${validatedParams.target}. Supported platforms: ${PlatformUtils.getSupportedPlatforms().join(", ")}`,
+        `Unsupported platform: ${validatedParams.target}. Supported platforms: ${PlatformUtils.getSupportedPlatforms().join(', ')}`
       );
     }
 
@@ -501,16 +507,16 @@ export async function GET(
     // Check for updates
     const updateResponse = await updaterService.checkForUpdate(
       targetPlatform,
-      validatedParams.version,
+      validatedParams.version
     );
 
     // Return 204 if no update is available
     if (!updateResponse) {
-      Logger.info("No update available - client is up to date");
+      Logger.info('No update available - client is up to date');
       return new NextResponse(null, { status: 204 });
     }
 
-    Logger.info("Update available", {
+    Logger.info('Update available', {
       newVersion: updateResponse.version,
       platforms: Object.keys(updateResponse.platforms),
     });
@@ -518,7 +524,7 @@ export async function GET(
     return NextResponse.json(updateResponse);
   } catch (error) {
     if (error instanceof UpdaterServiceError) {
-      Logger.error("Updater service error", {
+      Logger.error('Updater service error', {
         code: error.code,
         message: error.message,
         details: error.details,
@@ -527,21 +533,21 @@ export async function GET(
     }
 
     if (error instanceof z.ZodError) {
-      Logger.error("Request validation failed", { errors: error.errors });
+      Logger.error('Request validation failed', { errors: error.errors });
       return ResponseBuilder.buildErrorResponse(
-        new InvalidPlatformError("Invalid request parameters", error.errors),
+        new InvalidPlatformError('Invalid request parameters', error.errors)
       );
     }
 
     // Handle unexpected errors
-    Logger.error("Unexpected error in updater", {
+    Logger.error('Unexpected error in updater', {
       message: error instanceof Error ? error.message : String(error),
       stack: error instanceof Error ? error.stack : undefined,
     });
 
     const unknownError = new GitHubApiError(
-      error instanceof Error ? error.message : "Unknown error occurred",
-      error,
+      error instanceof Error ? error.message : 'Unknown error occurred',
+      error
     );
 
     return ResponseBuilder.buildErrorResponse(unknownError);

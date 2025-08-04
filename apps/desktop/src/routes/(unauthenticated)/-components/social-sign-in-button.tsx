@@ -1,9 +1,8 @@
-import { Loader } from "lucide-react";
-import { AiFillDiscord } from "react-icons/ai";
+import { Button } from '@acme/ui/components/ui/button';
+import { Loader } from 'lucide-react';
+import { AiFillDiscord } from 'react-icons/ai';
 
-import { Button } from "@acme/ui/components/ui/button";
-
-import type { SocialProvider } from "../-hooks/use-social-auth";
+import type { SocialProvider } from '../-hooks/use-social-auth';
 
 interface SocialSignInButtonProps {
   provider: SocialProvider;
@@ -20,16 +19,16 @@ export function SocialSignInButton({
 }: SocialSignInButtonProps) {
   return (
     <Button
-      onClick={onClick}
-      disabled={disabled}
-      variant={"secondary"}
-      className="flex w-full items-center gap-2"
       aria-label={`Sign in with ${provider}`}
+      className="flex w-full items-center gap-2"
+      disabled={disabled}
+      onClick={onClick}
+      variant={'secondary'}
     >
       {isLoading ? (
         <Loader className="h-4 w-4 animate-spin" />
       ) : (
-        provider === "discord" && <AiFillDiscord className="h-5 w-5" />
+        provider === 'discord' && <AiFillDiscord className="h-5 w-5" />
       )}
       <span className="capitalize">{provider}</span>
     </Button>

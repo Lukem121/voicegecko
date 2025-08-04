@@ -1,7 +1,7 @@
-import { LazyStore } from "@tauri-apps/plugin-store";
-
-import type { MigrationResult, VersionedSettings } from "./types";
-import { CURRENT_SETTINGS_VERSION, getMigrationsToRun } from "./registry";
+import { log } from '@acme/observability';
+import { LazyStore } from '@tauri-apps/plugin-store';
+import { CURRENT_SETTINGS_VERSION, getMigrationsToRun } from './registry';
+import type { MigrationResult, VersionedSettings } from './types';
 
 export class SettingsMigrationManager {
   private static instance: SettingsMigrationManager;
@@ -18,13 +18,13 @@ export class SettingsMigrationManager {
    * Since we're at version 1 with no migrations, this just adds _meta if missing
    */
   async migrateSettings(): Promise<MigrationResult> {
-    const store = new LazyStore("settings.json");
+    const store = new LazyStore('settings.json');
 
     try {
       // Load settings
       const entries = await store.entries();
       const settings: VersionedSettings = Object.fromEntries(
-        entries,
+        entries
       ) as VersionedSettings;
 
       // Initialize _meta if it doesn't exist (new users)
@@ -35,11 +35,11 @@ export class SettingsMigrationManager {
         };
 
         // Save the updated settings with version info
-        await store.set("_meta", settings._meta);
+        await store.set('_meta', settings._meta);
         await store.save();
 
-        console.log(
-          `[Migration] Added versioning metadata (v${CURRENT_SETTINGS_VERSION})`,
+        log.info(
+          `[Migration] Added versioning metadata (v${CURRENT_SETTINGS_VERSION})`
         );
       }
 
@@ -47,8 +47,8 @@ export class SettingsMigrationManager {
 
       // Check if migration is needed
       if (currentVersion >= CURRENT_SETTINGS_VERSION) {
-        console.log(
-          `[Migration] Settings already up to date (v${currentVersion})`,
+        log.info(
+          `[Migration] Settings already up to date (v${currentVersion})`
         );
         return {
           success: true,
@@ -60,16 +60,16 @@ export class SettingsMigrationManager {
       // Get migrations to run (should be empty at version 1)
       const migrations = getMigrationsToRun(
         currentVersion,
-        CURRENT_SETTINGS_VERSION,
+        CURRENT_SETTINGS_VERSION
       );
 
       if (migrations.length > 0) {
-        console.log(`[Migration] Running ${migrations.length} migrations...`);
+        log.info(`[Migration] Running ${migrations.length} migrations...`);
 
         // Run migrations
         let migratedSettings = settings;
         for (const migration of migrations) {
-          console.log(`[Migration] Applying: ${migration.description}`);
+          log.info(`[Migration] Applying: ${migration.description}`);
           migratedSettings = migration.up(migratedSettings);
         }
 
@@ -78,7 +78,7 @@ export class SettingsMigrationManager {
           !migratedSettings._meta ||
           migratedSettings._meta.version !== CURRENT_SETTINGS_VERSION
         ) {
-          throw new Error("Migration failed to update version correctly");
+          throw new Error('Migration failed to update version correctly');
         }
 
         // Save migrated settings
@@ -88,8 +88,8 @@ export class SettingsMigrationManager {
         }
         await store.save();
 
-        console.log(
-          `[Migration] Successfully migrated to v${CURRENT_SETTINGS_VERSION}`,
+        log.info(
+          `[Migration] Successfully migrated to v${CURRENT_SETTINGS_VERSION}`
         );
 
         return {
@@ -106,7 +106,7 @@ export class SettingsMigrationManager {
         toVersion: CURRENT_SETTINGS_VERSION,
       };
     } catch (error) {
-      console.error("[Migration] Migration failed:", error);
+      log.error('[Migration] Migration failed:', error);
       return {
         success: false,
         fromVersion: 0,
@@ -121,8 +121,8 @@ export class SettingsMigrationManager {
    */
   async needsMigration(): Promise<boolean> {
     try {
-      const store = new LazyStore("settings.json");
-      const meta = await store.get<{ version: number }>("_meta");
+      const store = new LazyStore('settings.json');
+      const meta = await store.get<{ version: number }>('_meta');
       const version = meta?.version ?? 1;
       return version < CURRENT_SETTINGS_VERSION;
     } catch {

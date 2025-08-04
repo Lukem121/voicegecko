@@ -1,27 +1,28 @@
-import { toast } from "sonner";
-import { create } from "zustand";
-import { devtools } from "zustand/middleware";
+import { log } from '@acme/observability';
+import { toast } from 'sonner';
+import { create } from 'zustand';
+import { devtools } from 'zustand/middleware';
 
-import { isNetworkError } from "~/hooks/auth";
-import analytics from "~/lib/analytics/posthog-analytics";
-import { showNoInternetNotification } from "~/lib/gecko-bar-notifications";
-import { createTranscription } from "~/lib/transcription-mutations";
-import { transcriptionService } from "~/services/transcription.service";
-import { useConnectivityStore } from "~/stores/connectivity.store";
+import { isNetworkError } from '~/hooks/auth';
+import analytics from '~/lib/analytics/posthog-analytics';
+import { showNoInternetNotification } from '~/lib/gecko-bar-notifications';
+import { createTranscription } from '~/lib/transcription-mutations';
+import { transcriptionService } from '~/services/transcription.service';
+import { useConnectivityStore } from '~/stores/connectivity.store';
 
 export interface EventState {
   // Recording state
-  recordingStatus: "idle" | "recording" | "processing" | "error";
+  recordingStatus: 'idle' | 'recording' | 'processing' | 'error';
   recordingError: string | null;
 
   // Transcription state
   transcriptionStatus:
-    | "idle"
-    | "starting"
-    | "loading_model"
-    | "transcribing"
-    | "complete"
-    | "error";
+    | 'idle'
+    | 'starting'
+    | 'loading_model'
+    | 'transcribing'
+    | 'complete'
+    | 'error';
   transcript: string | null;
   transcriptionError: string | null;
   transcriptionMetadata: {
@@ -32,7 +33,7 @@ export interface EventState {
 
   // Actions (called by Tauri event handlers)
   setRecordingStatus: (
-    status: "idle" | "recording" | "processing" | "error",
+    status: 'idle' | 'recording' | 'processing' | 'error'
   ) => void;
   setRecordingError: (error: string) => void;
   setTranscriptionProgress: (
@@ -42,7 +43,7 @@ export interface EventState {
       duration_seconds?: number;
       model_used?: string;
       sample_rate?: number;
-    },
+    }
   ) => void;
   handleTranscriptionComplete: (
     transcript: string,
@@ -50,7 +51,7 @@ export interface EventState {
       duration_seconds?: number;
       model_used?: string;
       sample_rate?: number;
-    },
+    }
   ) => Promise<void>;
 
   // Reset functions
@@ -65,9 +66,9 @@ export const useEventStore = create<EventState>()(
   devtools(
     (set, get) => ({
       // Initial state
-      recordingStatus: "idle",
+      recordingStatus: 'idle',
       recordingError: null,
-      transcriptionStatus: "idle",
+      transcriptionStatus: 'idle',
       transcript: null,
       transcriptionError: null,
       transcriptionMetadata: null,
@@ -75,23 +76,23 @@ export const useEventStore = create<EventState>()(
       // Recording actions
       setRecordingStatus: (status) => {
         const currentStatus = get().recordingStatus;
-        console.log(
-          "[EventStore] 🎙️ Recording status changed:",
+        log.info(
+          '[EventStore] 🎙️ Recording status changed:',
           currentStatus,
-          "→",
-          status,
+          '→',
+          status
         );
         set({ recordingStatus: status });
 
         // Clear error when status changes successfully
-        if (status !== "error") {
+        if (status !== 'error') {
           set({ recordingError: null });
         }
 
         // Reset transcription state when starting a new recording
-        if (status === "recording") {
+        if (status === 'recording') {
           set({
-            transcriptionStatus: "idle",
+            transcriptionStatus: 'idle',
             transcript: null,
             transcriptionError: null,
             transcriptionMetadata: null,
@@ -100,50 +101,50 @@ export const useEventStore = create<EventState>()(
       },
 
       setRecordingError: (error) => {
-        console.log("[EventStore] ❌ Recording error:", error);
+        log.info('[EventStore] ❌ Recording error:', error);
         set({
-          recordingStatus: "error",
+          recordingStatus: 'error',
           recordingError: error,
         });
       },
 
       // Transcription actions
       setTranscriptionProgress: (status, data, metadata) => {
-        console.log(
-          "[EventStore] Transcription progress:",
+        log.info(
+          '[EventStore] Transcription progress:',
           status,
           data,
-          metadata,
+          metadata
         );
 
         switch (status) {
-          case "Starting":
-            set({ transcriptionStatus: "starting" });
+          case 'Starting':
+            set({ transcriptionStatus: 'starting' });
             break;
-          case "LoadingModel":
-            set({ transcriptionStatus: "loading_model" });
+          case 'LoadingModel':
+            set({ transcriptionStatus: 'loading_model' });
             break;
-          case "Transcribing":
-            set({ transcriptionStatus: "transcribing" });
+          case 'Transcribing':
+            set({ transcriptionStatus: 'transcribing' });
             break;
-          case "Complete":
+          case 'Complete':
             set({
-              transcriptionStatus: "complete",
+              transcriptionStatus: 'complete',
               transcript: data ?? null,
               transcriptionError: null,
               transcriptionMetadata: metadata ?? null,
               // Also set recording status to idle when transcription completes
-              recordingStatus: "idle",
+              recordingStatus: 'idle',
             });
             break;
-          case "Error":
+          case 'Error':
             set({
-              transcriptionStatus: "error",
+              transcriptionStatus: 'error',
               transcript: null,
-              transcriptionError: data ?? "Unknown error",
+              transcriptionError: data ?? 'Unknown error',
               transcriptionMetadata: null,
               // Also set recording status to idle on error
-              recordingStatus: "idle",
+              recordingStatus: 'idle',
             });
             break;
         }
@@ -158,9 +159,9 @@ export const useEventStore = create<EventState>()(
           await showNoInternetNotification();
 
           // Show toast notification
-          toast.error("No internet connection", {
+          toast.error('No internet connection', {
             description:
-              "Unable to save transcription. Please check your connection and try again.",
+              'Unable to save transcription. Please check your connection and try again.',
           });
 
           // Exit early - no save, no clipboard copy
@@ -169,12 +170,12 @@ export const useEventStore = create<EventState>()(
 
         // 2. Prepare transcription data
 
-        const status: "silent" | "normal" =
+        const status: 'silent' | 'normal' =
           !transcript.trim() ||
           (metadata?.duration_seconds && metadata.duration_seconds < 1)
-            ? "silent"
-            : "normal";
-        const content = status === "silent" ? "Audio is silent." : transcript;
+            ? 'silent'
+            : 'normal';
+        const content = status === 'silent' ? 'Audio is silent.' : transcript;
 
         const transcriptionData = {
           content,
@@ -196,7 +197,7 @@ export const useEventStore = create<EventState>()(
           await transcriptionService.handleCompletedTranscription(transcript);
           await transcriptionService.playEndSoundIfEnabled();
         } catch (error) {
-          console.error("[EventStore] Failed user feedback operations:", error);
+          log.error('[EventStore] Failed user feedback operations:', error);
           // Even if clipboard/sound fails, still proceed with background save
         }
 
@@ -209,25 +210,25 @@ export const useEventStore = create<EventState>()(
             // Handle different types of errors in background
             if (
               error instanceof Error &&
-              error.message.includes("limit exceeded")
+              error.message.includes('limit exceeded')
             ) {
               // Track usage limit exceeded
-              analytics.track("usage_limit_exceeded", {
-                limit_type: "transcription",
-                attempted_action: "save_transcription",
+              analytics.track('usage_limit_exceeded', {
+                limit_type: 'transcription',
+                attempted_action: 'save_transcription',
               });
 
               // Usage limit error - show notification but don't disrupt user
-              toast.error("Weekly usage limit reached", {
+              toast.error('Weekly usage limit reached', {
                 description:
-                  "Future transcriptions may be limited. Upgrade to Pro for unlimited access.",
+                  'Future transcriptions may be limited. Upgrade to Pro for unlimited access.',
               });
             } else if (isNetworkError(error)) {
               // Network connectivity error - refresh connectivity state for next transcription
               connectivityState.checkConnectivity();
             } else {
               // Other unexpected errors - log but don't disrupt user
-              console.error("Background save error:", error);
+              log.error('Background save error:', error);
             }
           });
 
@@ -236,9 +237,9 @@ export const useEventStore = create<EventState>()(
 
       // Reset functions
       resetTranscriptionState: () => {
-        console.log("[EventStore] 🔄 Resetting transcription state");
+        log.info('[EventStore] 🔄 Resetting transcription state');
         set({
-          transcriptionStatus: "idle",
+          transcriptionStatus: 'idle',
           transcript: null,
           transcriptionError: null,
           transcriptionMetadata: null,
@@ -246,14 +247,14 @@ export const useEventStore = create<EventState>()(
       },
 
       // Selectors
-      isRecording: () => get().recordingStatus === "recording",
+      isRecording: () => get().recordingStatus === 'recording',
       isTranscribing: () => {
         const status = get().transcriptionStatus;
-        return status === "loading_model" || status === "transcribing";
+        return status === 'loading_model' || status === 'transcribing';
       },
     }),
     {
-      name: "event-store",
-    },
-  ),
+      name: 'event-store',
+    }
+  )
 );

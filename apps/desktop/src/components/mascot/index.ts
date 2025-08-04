@@ -1,33 +1,30 @@
 // Mascot Chat System Components
-export {
-  MascotChatProvider,
-  useMascotChat,
-  type MascotMessage,
-  type MascotAnimation,
-  type MascotState,
-  type MascotChatContextValue,
-} from "./mascot-chat-provider";
-
-export { MascotChatBubble } from "./mascot-chat-bubble";
 
 export {
-  MascotCharacter,
   createMascotVariant,
-  mascotVariants,
+  MascotCharacter,
   type MascotComponentProps,
   type MascotVariant,
   type MascotVariantKey,
-} from "./mascot-character";
-
+  mascotVariants,
+} from './mascot-character';
 export {
+  HelpMascotChat,
   MascotChat,
   OnboardingMascotChat,
   SidebarMascotChat,
-  HelpMascotChat,
-} from "./mascot-chat";
-
+} from './mascot-chat';
+export { MascotChatBubble } from './mascot-chat-bubble';
 // Re-export common types for convenience
 export type {
-  MascotMessage as ChatMessage,
   MascotAnimation as ChatAnimation,
-} from "./mascot-chat-provider";
+  MascotMessage as ChatMessage,
+} from './mascot-chat-provider';
+export {
+  type MascotAnimation,
+  type MascotChatContextValue,
+  MascotChatProvider,
+  type MascotMessage,
+  type MascotState,
+  useMascotChat,
+} from './mascot-chat-provider';

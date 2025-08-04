@@ -4,4 +4,4 @@ export {
   type ErrorReport,
   type FeedbackReport,
   type UserSignup,
-} from "./discord-adapter";
+} from './discord-adapter';

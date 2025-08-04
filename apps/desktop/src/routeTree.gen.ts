@@ -8,214 +8,214 @@
 // You should NOT make any changes in this file as it will be overwritten.
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute } from '@tanstack/react-router';
 
-import { Route as rootRouteImport } from './routes/__root'
-import { Route as OnboardingRouteImport } from './routes/onboarding'
-import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
-import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
-import { Route as OnboardingPushToTalkTutorialRouteImport } from './routes/onboarding/push-to-talk-tutorial'
-import { Route as OnboardingMicrophoneSetupRouteImport } from './routes/onboarding/microphone-setup'
-import { Route as OnboardingCompletionRouteImport } from './routes/onboarding/completion'
-import { Route as AuthenticatedUsageRouteImport } from './routes/_authenticated/usage'
-import { Route as AuthenticatedTranscriptionsRouteImport } from './routes/_authenticated/transcriptions'
-import { Route as AuthenticatedDictionaryRouteImport } from './routes/_authenticated/dictionary'
-import { Route as unauthenticatedAuthRouteImport } from './routes/(unauthenticated)/_auth'
-import { Route as AuthenticatedSettingsIndexRouteImport } from './routes/_authenticated/settings/index'
-import { Route as AuthenticatedSettingsShortcutsRouteImport } from './routes/_authenticated/settings/shortcuts'
-import { Route as AuthenticatedSettingsModelsRouteImport } from './routes/_authenticated/settings/models'
-import { Route as unauthenticatedLegalTermsRouteImport } from './routes/(unauthenticated)/legal/terms'
-import { Route as unauthenticatedLegalPrivacyRouteImport } from './routes/(unauthenticated)/legal/privacy'
-import { Route as unauthenticatedAuthVerifySuccessRouteImport } from './routes/(unauthenticated)/_auth.verify-success'
-import { Route as unauthenticatedAuthVerifyEmailRouteImport } from './routes/(unauthenticated)/_auth.verify-email'
-import { Route as unauthenticatedAuthSignUpRouteImport } from './routes/(unauthenticated)/_auth.sign-up'
-import { Route as unauthenticatedAuthSignInRouteImport } from './routes/(unauthenticated)/_auth.sign-in'
-import { Route as unauthenticatedAuthAuthenticationErrorRouteImport } from './routes/(unauthenticated)/_auth.authentication-error'
+import { Route as rootRouteImport } from './routes/__root';
+import { Route as AuthenticatedRouteImport } from './routes/_authenticated';
+import { Route as AuthenticatedDictionaryRouteImport } from './routes/_authenticated/dictionary';
+import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index';
+import { Route as AuthenticatedSettingsIndexRouteImport } from './routes/_authenticated/settings/index';
+import { Route as AuthenticatedSettingsModelsRouteImport } from './routes/_authenticated/settings/models';
+import { Route as AuthenticatedSettingsShortcutsRouteImport } from './routes/_authenticated/settings/shortcuts';
+import { Route as AuthenticatedTranscriptionsRouteImport } from './routes/_authenticated/transcriptions';
+import { Route as AuthenticatedUsageRouteImport } from './routes/_authenticated/usage';
+import { Route as unauthenticatedAuthRouteImport } from './routes/(unauthenticated)/_auth';
+import { Route as unauthenticatedAuthAuthenticationErrorRouteImport } from './routes/(unauthenticated)/_auth.authentication-error';
+import { Route as unauthenticatedAuthSignInRouteImport } from './routes/(unauthenticated)/_auth.sign-in';
+import { Route as unauthenticatedAuthSignUpRouteImport } from './routes/(unauthenticated)/_auth.sign-up';
+import { Route as unauthenticatedAuthVerifyEmailRouteImport } from './routes/(unauthenticated)/_auth.verify-email';
+import { Route as unauthenticatedAuthVerifySuccessRouteImport } from './routes/(unauthenticated)/_auth.verify-success';
+import { Route as unauthenticatedLegalPrivacyRouteImport } from './routes/(unauthenticated)/legal/privacy';
+import { Route as unauthenticatedLegalTermsRouteImport } from './routes/(unauthenticated)/legal/terms';
+import { Route as OnboardingRouteImport } from './routes/onboarding';
+import { Route as OnboardingCompletionRouteImport } from './routes/onboarding/completion';
+import { Route as OnboardingMicrophoneSetupRouteImport } from './routes/onboarding/microphone-setup';
+import { Route as OnboardingPushToTalkTutorialRouteImport } from './routes/onboarding/push-to-talk-tutorial';
 
-const unauthenticatedRouteImport = createFileRoute('/(unauthenticated)')()
+const unauthenticatedRouteImport = createFileRoute('/(unauthenticated)')();
 
 const unauthenticatedRoute = unauthenticatedRouteImport.update({
   id: '/(unauthenticated)',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any);
 const OnboardingRoute = OnboardingRouteImport.update({
   id: '/onboarding',
   path: '/onboarding',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any);
 const AuthenticatedRoute = AuthenticatedRouteImport.update({
   id: '/_authenticated',
   getParentRoute: () => rootRouteImport,
-} as any)
+} as any);
 const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AuthenticatedRoute,
-} as any)
+} as any);
 const OnboardingPushToTalkTutorialRoute =
   OnboardingPushToTalkTutorialRouteImport.update({
     id: '/push-to-talk-tutorial',
     path: '/push-to-talk-tutorial',
     getParentRoute: () => OnboardingRoute,
-  } as any)
+  } as any);
 const OnboardingMicrophoneSetupRoute =
   OnboardingMicrophoneSetupRouteImport.update({
     id: '/microphone-setup',
     path: '/microphone-setup',
     getParentRoute: () => OnboardingRoute,
-  } as any)
+  } as any);
 const OnboardingCompletionRoute = OnboardingCompletionRouteImport.update({
   id: '/completion',
   path: '/completion',
   getParentRoute: () => OnboardingRoute,
-} as any)
+} as any);
 const AuthenticatedUsageRoute = AuthenticatedUsageRouteImport.update({
   id: '/usage',
   path: '/usage',
   getParentRoute: () => AuthenticatedRoute,
-} as any)
+} as any);
 const AuthenticatedTranscriptionsRoute =
   AuthenticatedTranscriptionsRouteImport.update({
     id: '/transcriptions',
     path: '/transcriptions',
     getParentRoute: () => AuthenticatedRoute,
-  } as any)
+  } as any);
 const AuthenticatedDictionaryRoute = AuthenticatedDictionaryRouteImport.update({
   id: '/dictionary',
   path: '/dictionary',
   getParentRoute: () => AuthenticatedRoute,
-} as any)
+} as any);
 const unauthenticatedAuthRoute = unauthenticatedAuthRouteImport.update({
   id: '/_auth',
   getParentRoute: () => unauthenticatedRoute,
-} as any)
+} as any);
 const AuthenticatedSettingsIndexRoute =
   AuthenticatedSettingsIndexRouteImport.update({
     id: '/settings/',
     path: '/settings/',
     getParentRoute: () => AuthenticatedRoute,
-  } as any)
+  } as any);
 const AuthenticatedSettingsShortcutsRoute =
   AuthenticatedSettingsShortcutsRouteImport.update({
     id: '/settings/shortcuts',
     path: '/settings/shortcuts',
     getParentRoute: () => AuthenticatedRoute,
-  } as any)
+  } as any);
 const AuthenticatedSettingsModelsRoute =
   AuthenticatedSettingsModelsRouteImport.update({
     id: '/settings/models',
     path: '/settings/models',
     getParentRoute: () => AuthenticatedRoute,
-  } as any)
+  } as any);
 const unauthenticatedLegalTermsRoute =
   unauthenticatedLegalTermsRouteImport.update({
     id: '/legal/terms',
     path: '/legal/terms',
     getParentRoute: () => unauthenticatedRoute,
-  } as any)
+  } as any);
 const unauthenticatedLegalPrivacyRoute =
   unauthenticatedLegalPrivacyRouteImport.update({
     id: '/legal/privacy',
     path: '/legal/privacy',
     getParentRoute: () => unauthenticatedRoute,
-  } as any)
+  } as any);
 const unauthenticatedAuthVerifySuccessRoute =
   unauthenticatedAuthVerifySuccessRouteImport.update({
     id: '/verify-success',
     path: '/verify-success',
     getParentRoute: () => unauthenticatedAuthRoute,
-  } as any)
+  } as any);
 const unauthenticatedAuthVerifyEmailRoute =
   unauthenticatedAuthVerifyEmailRouteImport.update({
     id: '/verify-email',
     path: '/verify-email',
     getParentRoute: () => unauthenticatedAuthRoute,
-  } as any)
+  } as any);
 const unauthenticatedAuthSignUpRoute =
   unauthenticatedAuthSignUpRouteImport.update({
     id: '/sign-up',
     path: '/sign-up',
     getParentRoute: () => unauthenticatedAuthRoute,
-  } as any)
+  } as any);
 const unauthenticatedAuthSignInRoute =
   unauthenticatedAuthSignInRouteImport.update({
     id: '/sign-in',
     path: '/sign-in',
     getParentRoute: () => unauthenticatedAuthRoute,
-  } as any)
+  } as any);
 const unauthenticatedAuthAuthenticationErrorRoute =
   unauthenticatedAuthAuthenticationErrorRouteImport.update({
     id: '/authentication-error',
     path: '/authentication-error',
     getParentRoute: () => unauthenticatedAuthRoute,
-  } as any)
+  } as any);
 
 export interface FileRoutesByFullPath {
-  '/onboarding': typeof OnboardingRouteWithChildren
-  '/': typeof AuthenticatedIndexRoute
-  '/dictionary': typeof AuthenticatedDictionaryRoute
-  '/transcriptions': typeof AuthenticatedTranscriptionsRoute
-  '/usage': typeof AuthenticatedUsageRoute
-  '/onboarding/completion': typeof OnboardingCompletionRoute
-  '/onboarding/microphone-setup': typeof OnboardingMicrophoneSetupRoute
-  '/onboarding/push-to-talk-tutorial': typeof OnboardingPushToTalkTutorialRoute
-  '/authentication-error': typeof unauthenticatedAuthAuthenticationErrorRoute
-  '/sign-in': typeof unauthenticatedAuthSignInRoute
-  '/sign-up': typeof unauthenticatedAuthSignUpRoute
-  '/verify-email': typeof unauthenticatedAuthVerifyEmailRoute
-  '/verify-success': typeof unauthenticatedAuthVerifySuccessRoute
-  '/legal/privacy': typeof unauthenticatedLegalPrivacyRoute
-  '/legal/terms': typeof unauthenticatedLegalTermsRoute
-  '/settings/models': typeof AuthenticatedSettingsModelsRoute
-  '/settings/shortcuts': typeof AuthenticatedSettingsShortcutsRoute
-  '/settings': typeof AuthenticatedSettingsIndexRoute
+  '/onboarding': typeof OnboardingRouteWithChildren;
+  '/': typeof AuthenticatedIndexRoute;
+  '/dictionary': typeof AuthenticatedDictionaryRoute;
+  '/transcriptions': typeof AuthenticatedTranscriptionsRoute;
+  '/usage': typeof AuthenticatedUsageRoute;
+  '/onboarding/completion': typeof OnboardingCompletionRoute;
+  '/onboarding/microphone-setup': typeof OnboardingMicrophoneSetupRoute;
+  '/onboarding/push-to-talk-tutorial': typeof OnboardingPushToTalkTutorialRoute;
+  '/authentication-error': typeof unauthenticatedAuthAuthenticationErrorRoute;
+  '/sign-in': typeof unauthenticatedAuthSignInRoute;
+  '/sign-up': typeof unauthenticatedAuthSignUpRoute;
+  '/verify-email': typeof unauthenticatedAuthVerifyEmailRoute;
+  '/verify-success': typeof unauthenticatedAuthVerifySuccessRoute;
+  '/legal/privacy': typeof unauthenticatedLegalPrivacyRoute;
+  '/legal/terms': typeof unauthenticatedLegalTermsRoute;
+  '/settings/models': typeof AuthenticatedSettingsModelsRoute;
+  '/settings/shortcuts': typeof AuthenticatedSettingsShortcutsRoute;
+  '/settings': typeof AuthenticatedSettingsIndexRoute;
 }
 export interface FileRoutesByTo {
-  '/onboarding': typeof OnboardingRouteWithChildren
-  '/': typeof AuthenticatedIndexRoute
-  '/dictionary': typeof AuthenticatedDictionaryRoute
-  '/transcriptions': typeof AuthenticatedTranscriptionsRoute
-  '/usage': typeof AuthenticatedUsageRoute
-  '/onboarding/completion': typeof OnboardingCompletionRoute
-  '/onboarding/microphone-setup': typeof OnboardingMicrophoneSetupRoute
-  '/onboarding/push-to-talk-tutorial': typeof OnboardingPushToTalkTutorialRoute
-  '/authentication-error': typeof unauthenticatedAuthAuthenticationErrorRoute
-  '/sign-in': typeof unauthenticatedAuthSignInRoute
-  '/sign-up': typeof unauthenticatedAuthSignUpRoute
-  '/verify-email': typeof unauthenticatedAuthVerifyEmailRoute
-  '/verify-success': typeof unauthenticatedAuthVerifySuccessRoute
-  '/legal/privacy': typeof unauthenticatedLegalPrivacyRoute
-  '/legal/terms': typeof unauthenticatedLegalTermsRoute
-  '/settings/models': typeof AuthenticatedSettingsModelsRoute
-  '/settings/shortcuts': typeof AuthenticatedSettingsShortcutsRoute
-  '/settings': typeof AuthenticatedSettingsIndexRoute
+  '/onboarding': typeof OnboardingRouteWithChildren;
+  '/': typeof AuthenticatedIndexRoute;
+  '/dictionary': typeof AuthenticatedDictionaryRoute;
+  '/transcriptions': typeof AuthenticatedTranscriptionsRoute;
+  '/usage': typeof AuthenticatedUsageRoute;
+  '/onboarding/completion': typeof OnboardingCompletionRoute;
+  '/onboarding/microphone-setup': typeof OnboardingMicrophoneSetupRoute;
+  '/onboarding/push-to-talk-tutorial': typeof OnboardingPushToTalkTutorialRoute;
+  '/authentication-error': typeof unauthenticatedAuthAuthenticationErrorRoute;
+  '/sign-in': typeof unauthenticatedAuthSignInRoute;
+  '/sign-up': typeof unauthenticatedAuthSignUpRoute;
+  '/verify-email': typeof unauthenticatedAuthVerifyEmailRoute;
+  '/verify-success': typeof unauthenticatedAuthVerifySuccessRoute;
+  '/legal/privacy': typeof unauthenticatedLegalPrivacyRoute;
+  '/legal/terms': typeof unauthenticatedLegalTermsRoute;
+  '/settings/models': typeof AuthenticatedSettingsModelsRoute;
+  '/settings/shortcuts': typeof AuthenticatedSettingsShortcutsRoute;
+  '/settings': typeof AuthenticatedSettingsIndexRoute;
 }
 export interface FileRoutesById {
-  __root__: typeof rootRouteImport
-  '/_authenticated': typeof AuthenticatedRouteWithChildren
-  '/onboarding': typeof OnboardingRouteWithChildren
-  '/(unauthenticated)': typeof unauthenticatedRouteWithChildren
-  '/(unauthenticated)/_auth': typeof unauthenticatedAuthRouteWithChildren
-  '/_authenticated/dictionary': typeof AuthenticatedDictionaryRoute
-  '/_authenticated/transcriptions': typeof AuthenticatedTranscriptionsRoute
-  '/_authenticated/usage': typeof AuthenticatedUsageRoute
-  '/onboarding/completion': typeof OnboardingCompletionRoute
-  '/onboarding/microphone-setup': typeof OnboardingMicrophoneSetupRoute
-  '/onboarding/push-to-talk-tutorial': typeof OnboardingPushToTalkTutorialRoute
-  '/_authenticated/': typeof AuthenticatedIndexRoute
-  '/(unauthenticated)/_auth/authentication-error': typeof unauthenticatedAuthAuthenticationErrorRoute
-  '/(unauthenticated)/_auth/sign-in': typeof unauthenticatedAuthSignInRoute
-  '/(unauthenticated)/_auth/sign-up': typeof unauthenticatedAuthSignUpRoute
-  '/(unauthenticated)/_auth/verify-email': typeof unauthenticatedAuthVerifyEmailRoute
-  '/(unauthenticated)/_auth/verify-success': typeof unauthenticatedAuthVerifySuccessRoute
-  '/(unauthenticated)/legal/privacy': typeof unauthenticatedLegalPrivacyRoute
-  '/(unauthenticated)/legal/terms': typeof unauthenticatedLegalTermsRoute
-  '/_authenticated/settings/models': typeof AuthenticatedSettingsModelsRoute
-  '/_authenticated/settings/shortcuts': typeof AuthenticatedSettingsShortcutsRoute
-  '/_authenticated/settings/': typeof AuthenticatedSettingsIndexRoute
+  __root__: typeof rootRouteImport;
+  '/_authenticated': typeof AuthenticatedRouteWithChildren;
+  '/onboarding': typeof OnboardingRouteWithChildren;
+  '/(unauthenticated)': typeof unauthenticatedRouteWithChildren;
+  '/(unauthenticated)/_auth': typeof unauthenticatedAuthRouteWithChildren;
+  '/_authenticated/dictionary': typeof AuthenticatedDictionaryRoute;
+  '/_authenticated/transcriptions': typeof AuthenticatedTranscriptionsRoute;
+  '/_authenticated/usage': typeof AuthenticatedUsageRoute;
+  '/onboarding/completion': typeof OnboardingCompletionRoute;
+  '/onboarding/microphone-setup': typeof OnboardingMicrophoneSetupRoute;
+  '/onboarding/push-to-talk-tutorial': typeof OnboardingPushToTalkTutorialRoute;
+  '/_authenticated/': typeof AuthenticatedIndexRoute;
+  '/(unauthenticated)/_auth/authentication-error': typeof unauthenticatedAuthAuthenticationErrorRoute;
+  '/(unauthenticated)/_auth/sign-in': typeof unauthenticatedAuthSignInRoute;
+  '/(unauthenticated)/_auth/sign-up': typeof unauthenticatedAuthSignUpRoute;
+  '/(unauthenticated)/_auth/verify-email': typeof unauthenticatedAuthVerifyEmailRoute;
+  '/(unauthenticated)/_auth/verify-success': typeof unauthenticatedAuthVerifySuccessRoute;
+  '/(unauthenticated)/legal/privacy': typeof unauthenticatedLegalPrivacyRoute;
+  '/(unauthenticated)/legal/terms': typeof unauthenticatedLegalTermsRoute;
+  '/_authenticated/settings/models': typeof AuthenticatedSettingsModelsRoute;
+  '/_authenticated/settings/shortcuts': typeof AuthenticatedSettingsShortcutsRoute;
+  '/_authenticated/settings/': typeof AuthenticatedSettingsIndexRoute;
 }
 export interface FileRouteTypes {
-  fileRoutesByFullPath: FileRoutesByFullPath
+  fileRoutesByFullPath: FileRoutesByFullPath;
   fullPaths:
     | '/onboarding'
     | '/'
@@ -234,8 +234,8 @@ export interface FileRouteTypes {
     | '/legal/terms'
     | '/settings/models'
     | '/settings/shortcuts'
-    | '/settings'
-  fileRoutesByTo: FileRoutesByTo
+    | '/settings';
+  fileRoutesByTo: FileRoutesByTo;
   to:
     | '/onboarding'
     | '/'
@@ -254,7 +254,7 @@ export interface FileRouteTypes {
     | '/legal/terms'
     | '/settings/models'
     | '/settings/shortcuts'
-    | '/settings'
+    | '/settings';
   id:
     | '__root__'
     | '/_authenticated'
@@ -277,248 +277,247 @@ export interface FileRouteTypes {
     | '/(unauthenticated)/legal/terms'
     | '/_authenticated/settings/models'
     | '/_authenticated/settings/shortcuts'
-    | '/_authenticated/settings/'
-  fileRoutesById: FileRoutesById
+    | '/_authenticated/settings/';
+  fileRoutesById: FileRoutesById;
 }
 export interface RootRouteChildren {
-  AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
-  OnboardingRoute: typeof OnboardingRouteWithChildren
-  unauthenticatedRoute: typeof unauthenticatedRouteWithChildren
+  AuthenticatedRoute: typeof AuthenticatedRouteWithChildren;
+  OnboardingRoute: typeof OnboardingRouteWithChildren;
+  unauthenticatedRoute: typeof unauthenticatedRouteWithChildren;
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
     '/(unauthenticated)': {
-      id: '/(unauthenticated)'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof unauthenticatedRouteImport
-      parentRoute: typeof rootRouteImport
-    }
+      id: '/(unauthenticated)';
+      path: '/';
+      fullPath: '/';
+      preLoaderRoute: typeof unauthenticatedRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
     '/onboarding': {
-      id: '/onboarding'
-      path: '/onboarding'
-      fullPath: '/onboarding'
-      preLoaderRoute: typeof OnboardingRouteImport
-      parentRoute: typeof rootRouteImport
-    }
+      id: '/onboarding';
+      path: '/onboarding';
+      fullPath: '/onboarding';
+      preLoaderRoute: typeof OnboardingRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
     '/_authenticated': {
-      id: '/_authenticated'
-      path: ''
-      fullPath: ''
-      preLoaderRoute: typeof AuthenticatedRouteImport
-      parentRoute: typeof rootRouteImport
-    }
+      id: '/_authenticated';
+      path: '';
+      fullPath: '';
+      preLoaderRoute: typeof AuthenticatedRouteImport;
+      parentRoute: typeof rootRouteImport;
+    };
     '/_authenticated/': {
-      id: '/_authenticated/'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof AuthenticatedIndexRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
+      id: '/_authenticated/';
+      path: '/';
+      fullPath: '/';
+      preLoaderRoute: typeof AuthenticatedIndexRouteImport;
+      parentRoute: typeof AuthenticatedRoute;
+    };
     '/onboarding/push-to-talk-tutorial': {
-      id: '/onboarding/push-to-talk-tutorial'
-      path: '/push-to-talk-tutorial'
-      fullPath: '/onboarding/push-to-talk-tutorial'
-      preLoaderRoute: typeof OnboardingPushToTalkTutorialRouteImport
-      parentRoute: typeof OnboardingRoute
-    }
+      id: '/onboarding/push-to-talk-tutorial';
+      path: '/push-to-talk-tutorial';
+      fullPath: '/onboarding/push-to-talk-tutorial';
+      preLoaderRoute: typeof OnboardingPushToTalkTutorialRouteImport;
+      parentRoute: typeof OnboardingRoute;
+    };
     '/onboarding/microphone-setup': {
-      id: '/onboarding/microphone-setup'
-      path: '/microphone-setup'
-      fullPath: '/onboarding/microphone-setup'
-      preLoaderRoute: typeof OnboardingMicrophoneSetupRouteImport
-      parentRoute: typeof OnboardingRoute
-    }
+      id: '/onboarding/microphone-setup';
+      path: '/microphone-setup';
+      fullPath: '/onboarding/microphone-setup';
+      preLoaderRoute: typeof OnboardingMicrophoneSetupRouteImport;
+      parentRoute: typeof OnboardingRoute;
+    };
     '/onboarding/completion': {
-      id: '/onboarding/completion'
-      path: '/completion'
-      fullPath: '/onboarding/completion'
-      preLoaderRoute: typeof OnboardingCompletionRouteImport
-      parentRoute: typeof OnboardingRoute
-    }
+      id: '/onboarding/completion';
+      path: '/completion';
+      fullPath: '/onboarding/completion';
+      preLoaderRoute: typeof OnboardingCompletionRouteImport;
+      parentRoute: typeof OnboardingRoute;
+    };
     '/_authenticated/usage': {
-      id: '/_authenticated/usage'
-      path: '/usage'
-      fullPath: '/usage'
-      preLoaderRoute: typeof AuthenticatedUsageRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
+      id: '/_authenticated/usage';
+      path: '/usage';
+      fullPath: '/usage';
+      preLoaderRoute: typeof AuthenticatedUsageRouteImport;
+      parentRoute: typeof AuthenticatedRoute;
+    };
     '/_authenticated/transcriptions': {
-      id: '/_authenticated/transcriptions'
-      path: '/transcriptions'
-      fullPath: '/transcriptions'
-      preLoaderRoute: typeof AuthenticatedTranscriptionsRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
+      id: '/_authenticated/transcriptions';
+      path: '/transcriptions';
+      fullPath: '/transcriptions';
+      preLoaderRoute: typeof AuthenticatedTranscriptionsRouteImport;
+      parentRoute: typeof AuthenticatedRoute;
+    };
     '/_authenticated/dictionary': {
-      id: '/_authenticated/dictionary'
-      path: '/dictionary'
-      fullPath: '/dictionary'
-      preLoaderRoute: typeof AuthenticatedDictionaryRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
+      id: '/_authenticated/dictionary';
+      path: '/dictionary';
+      fullPath: '/dictionary';
+      preLoaderRoute: typeof AuthenticatedDictionaryRouteImport;
+      parentRoute: typeof AuthenticatedRoute;
+    };
     '/(unauthenticated)/_auth': {
-      id: '/(unauthenticated)/_auth'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof unauthenticatedAuthRouteImport
-      parentRoute: typeof unauthenticatedRoute
-    }
+      id: '/(unauthenticated)/_auth';
+      path: '/';
+      fullPath: '/';
+      preLoaderRoute: typeof unauthenticatedAuthRouteImport;
+      parentRoute: typeof unauthenticatedRoute;
+    };
     '/_authenticated/settings/': {
-      id: '/_authenticated/settings/'
-      path: '/settings'
-      fullPath: '/settings'
-      preLoaderRoute: typeof AuthenticatedSettingsIndexRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
+      id: '/_authenticated/settings/';
+      path: '/settings';
+      fullPath: '/settings';
+      preLoaderRoute: typeof AuthenticatedSettingsIndexRouteImport;
+      parentRoute: typeof AuthenticatedRoute;
+    };
     '/_authenticated/settings/shortcuts': {
-      id: '/_authenticated/settings/shortcuts'
-      path: '/settings/shortcuts'
-      fullPath: '/settings/shortcuts'
-      preLoaderRoute: typeof AuthenticatedSettingsShortcutsRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
+      id: '/_authenticated/settings/shortcuts';
+      path: '/settings/shortcuts';
+      fullPath: '/settings/shortcuts';
+      preLoaderRoute: typeof AuthenticatedSettingsShortcutsRouteImport;
+      parentRoute: typeof AuthenticatedRoute;
+    };
     '/_authenticated/settings/models': {
-      id: '/_authenticated/settings/models'
-      path: '/settings/models'
-      fullPath: '/settings/models'
-      preLoaderRoute: typeof AuthenticatedSettingsModelsRouteImport
-      parentRoute: typeof AuthenticatedRoute
-    }
+      id: '/_authenticated/settings/models';
+      path: '/settings/models';
+      fullPath: '/settings/models';
+      preLoaderRoute: typeof AuthenticatedSettingsModelsRouteImport;
+      parentRoute: typeof AuthenticatedRoute;
+    };
     '/(unauthenticated)/legal/terms': {
-      id: '/(unauthenticated)/legal/terms'
-      path: '/legal/terms'
-      fullPath: '/legal/terms'
-      preLoaderRoute: typeof unauthenticatedLegalTermsRouteImport
-      parentRoute: typeof unauthenticatedRoute
-    }
+      id: '/(unauthenticated)/legal/terms';
+      path: '/legal/terms';
+      fullPath: '/legal/terms';
+      preLoaderRoute: typeof unauthenticatedLegalTermsRouteImport;
+      parentRoute: typeof unauthenticatedRoute;
+    };
     '/(unauthenticated)/legal/privacy': {
-      id: '/(unauthenticated)/legal/privacy'
-      path: '/legal/privacy'
-      fullPath: '/legal/privacy'
-      preLoaderRoute: typeof unauthenticatedLegalPrivacyRouteImport
-      parentRoute: typeof unauthenticatedRoute
-    }
+      id: '/(unauthenticated)/legal/privacy';
+      path: '/legal/privacy';
+      fullPath: '/legal/privacy';
+      preLoaderRoute: typeof unauthenticatedLegalPrivacyRouteImport;
+      parentRoute: typeof unauthenticatedRoute;
+    };
     '/(unauthenticated)/_auth/verify-success': {
-      id: '/(unauthenticated)/_auth/verify-success'
-      path: '/verify-success'
-      fullPath: '/verify-success'
-      preLoaderRoute: typeof unauthenticatedAuthVerifySuccessRouteImport
-      parentRoute: typeof unauthenticatedAuthRoute
-    }
+      id: '/(unauthenticated)/_auth/verify-success';
+      path: '/verify-success';
+      fullPath: '/verify-success';
+      preLoaderRoute: typeof unauthenticatedAuthVerifySuccessRouteImport;
+      parentRoute: typeof unauthenticatedAuthRoute;
+    };
     '/(unauthenticated)/_auth/verify-email': {
-      id: '/(unauthenticated)/_auth/verify-email'
-      path: '/verify-email'
-      fullPath: '/verify-email'
-      preLoaderRoute: typeof unauthenticatedAuthVerifyEmailRouteImport
-      parentRoute: typeof unauthenticatedAuthRoute
-    }
+      id: '/(unauthenticated)/_auth/verify-email';
+      path: '/verify-email';
+      fullPath: '/verify-email';
+      preLoaderRoute: typeof unauthenticatedAuthVerifyEmailRouteImport;
+      parentRoute: typeof unauthenticatedAuthRoute;
+    };
     '/(unauthenticated)/_auth/sign-up': {
-      id: '/(unauthenticated)/_auth/sign-up'
-      path: '/sign-up'
-      fullPath: '/sign-up'
-      preLoaderRoute: typeof unauthenticatedAuthSignUpRouteImport
-      parentRoute: typeof unauthenticatedAuthRoute
-    }
+      id: '/(unauthenticated)/_auth/sign-up';
+      path: '/sign-up';
+      fullPath: '/sign-up';
+      preLoaderRoute: typeof unauthenticatedAuthSignUpRouteImport;
+      parentRoute: typeof unauthenticatedAuthRoute;
+    };
     '/(unauthenticated)/_auth/sign-in': {
-      id: '/(unauthenticated)/_auth/sign-in'
-      path: '/sign-in'
-      fullPath: '/sign-in'
-      preLoaderRoute: typeof unauthenticatedAuthSignInRouteImport
-      parentRoute: typeof unauthenticatedAuthRoute
-    }
+      id: '/(unauthenticated)/_auth/sign-in';
+      path: '/sign-in';
+      fullPath: '/sign-in';
+      preLoaderRoute: typeof unauthenticatedAuthSignInRouteImport;
+      parentRoute: typeof unauthenticatedAuthRoute;
+    };
     '/(unauthenticated)/_auth/authentication-error': {
-      id: '/(unauthenticated)/_auth/authentication-error'
-      path: '/authentication-error'
-      fullPath: '/authentication-error'
-      preLoaderRoute: typeof unauthenticatedAuthAuthenticationErrorRouteImport
-      parentRoute: typeof unauthenticatedAuthRoute
-    }
+      id: '/(unauthenticated)/_auth/authentication-error';
+      path: '/authentication-error';
+      fullPath: '/authentication-error';
+      preLoaderRoute: typeof unauthenticatedAuthAuthenticationErrorRouteImport;
+      parentRoute: typeof unauthenticatedAuthRoute;
+    };
   }
 }
 
 interface AuthenticatedRouteChildren {
-  AuthenticatedDictionaryRoute: typeof AuthenticatedDictionaryRoute
-  AuthenticatedTranscriptionsRoute: typeof AuthenticatedTranscriptionsRoute
-  AuthenticatedUsageRoute: typeof AuthenticatedUsageRoute
-  AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
-  AuthenticatedSettingsModelsRoute: typeof AuthenticatedSettingsModelsRoute
-  AuthenticatedSettingsShortcutsRoute: typeof AuthenticatedSettingsShortcutsRoute
-  AuthenticatedSettingsIndexRoute: typeof AuthenticatedSettingsIndexRoute
+  AuthenticatedDictionaryRoute: typeof AuthenticatedDictionaryRoute;
+  AuthenticatedTranscriptionsRoute: typeof AuthenticatedTranscriptionsRoute;
+  AuthenticatedUsageRoute: typeof AuthenticatedUsageRoute;
+  AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute;
+  AuthenticatedSettingsModelsRoute: typeof AuthenticatedSettingsModelsRoute;
+  AuthenticatedSettingsShortcutsRoute: typeof AuthenticatedSettingsShortcutsRoute;
+  AuthenticatedSettingsIndexRoute: typeof AuthenticatedSettingsIndexRoute;
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
-  AuthenticatedDictionaryRoute: AuthenticatedDictionaryRoute,
-  AuthenticatedTranscriptionsRoute: AuthenticatedTranscriptionsRoute,
-  AuthenticatedUsageRoute: AuthenticatedUsageRoute,
-  AuthenticatedIndexRoute: AuthenticatedIndexRoute,
-  AuthenticatedSettingsModelsRoute: AuthenticatedSettingsModelsRoute,
-  AuthenticatedSettingsShortcutsRoute: AuthenticatedSettingsShortcutsRoute,
-  AuthenticatedSettingsIndexRoute: AuthenticatedSettingsIndexRoute,
-}
+  AuthenticatedDictionaryRoute,
+  AuthenticatedTranscriptionsRoute,
+  AuthenticatedUsageRoute,
+  AuthenticatedIndexRoute,
+  AuthenticatedSettingsModelsRoute,
+  AuthenticatedSettingsShortcutsRoute,
+  AuthenticatedSettingsIndexRoute,
+};
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
-  AuthenticatedRouteChildren,
-)
+  AuthenticatedRouteChildren
+);
 
 interface OnboardingRouteChildren {
-  OnboardingCompletionRoute: typeof OnboardingCompletionRoute
-  OnboardingMicrophoneSetupRoute: typeof OnboardingMicrophoneSetupRoute
-  OnboardingPushToTalkTutorialRoute: typeof OnboardingPushToTalkTutorialRoute
+  OnboardingCompletionRoute: typeof OnboardingCompletionRoute;
+  OnboardingMicrophoneSetupRoute: typeof OnboardingMicrophoneSetupRoute;
+  OnboardingPushToTalkTutorialRoute: typeof OnboardingPushToTalkTutorialRoute;
 }
 
 const OnboardingRouteChildren: OnboardingRouteChildren = {
-  OnboardingCompletionRoute: OnboardingCompletionRoute,
-  OnboardingMicrophoneSetupRoute: OnboardingMicrophoneSetupRoute,
-  OnboardingPushToTalkTutorialRoute: OnboardingPushToTalkTutorialRoute,
-}
+  OnboardingCompletionRoute,
+  OnboardingMicrophoneSetupRoute,
+  OnboardingPushToTalkTutorialRoute,
+};
 
 const OnboardingRouteWithChildren = OnboardingRoute._addFileChildren(
-  OnboardingRouteChildren,
-)
+  OnboardingRouteChildren
+);
 
 interface unauthenticatedAuthRouteChildren {
-  unauthenticatedAuthAuthenticationErrorRoute: typeof unauthenticatedAuthAuthenticationErrorRoute
-  unauthenticatedAuthSignInRoute: typeof unauthenticatedAuthSignInRoute
-  unauthenticatedAuthSignUpRoute: typeof unauthenticatedAuthSignUpRoute
-  unauthenticatedAuthVerifyEmailRoute: typeof unauthenticatedAuthVerifyEmailRoute
-  unauthenticatedAuthVerifySuccessRoute: typeof unauthenticatedAuthVerifySuccessRoute
+  unauthenticatedAuthAuthenticationErrorRoute: typeof unauthenticatedAuthAuthenticationErrorRoute;
+  unauthenticatedAuthSignInRoute: typeof unauthenticatedAuthSignInRoute;
+  unauthenticatedAuthSignUpRoute: typeof unauthenticatedAuthSignUpRoute;
+  unauthenticatedAuthVerifyEmailRoute: typeof unauthenticatedAuthVerifyEmailRoute;
+  unauthenticatedAuthVerifySuccessRoute: typeof unauthenticatedAuthVerifySuccessRoute;
 }
 
 const unauthenticatedAuthRouteChildren: unauthenticatedAuthRouteChildren = {
-  unauthenticatedAuthAuthenticationErrorRoute:
-    unauthenticatedAuthAuthenticationErrorRoute,
-  unauthenticatedAuthSignInRoute: unauthenticatedAuthSignInRoute,
-  unauthenticatedAuthSignUpRoute: unauthenticatedAuthSignUpRoute,
-  unauthenticatedAuthVerifyEmailRoute: unauthenticatedAuthVerifyEmailRoute,
-  unauthenticatedAuthVerifySuccessRoute: unauthenticatedAuthVerifySuccessRoute,
-}
+  unauthenticatedAuthAuthenticationErrorRoute,
+  unauthenticatedAuthSignInRoute,
+  unauthenticatedAuthSignUpRoute,
+  unauthenticatedAuthVerifyEmailRoute,
+  unauthenticatedAuthVerifySuccessRoute,
+};
 
 const unauthenticatedAuthRouteWithChildren =
-  unauthenticatedAuthRoute._addFileChildren(unauthenticatedAuthRouteChildren)
+  unauthenticatedAuthRoute._addFileChildren(unauthenticatedAuthRouteChildren);
 
 interface unauthenticatedRouteChildren {
-  unauthenticatedAuthRoute: typeof unauthenticatedAuthRouteWithChildren
-  unauthenticatedLegalPrivacyRoute: typeof unauthenticatedLegalPrivacyRoute
-  unauthenticatedLegalTermsRoute: typeof unauthenticatedLegalTermsRoute
+  unauthenticatedAuthRoute: typeof unauthenticatedAuthRouteWithChildren;
+  unauthenticatedLegalPrivacyRoute: typeof unauthenticatedLegalPrivacyRoute;
+  unauthenticatedLegalTermsRoute: typeof unauthenticatedLegalTermsRoute;
 }
 
 const unauthenticatedRouteChildren: unauthenticatedRouteChildren = {
   unauthenticatedAuthRoute: unauthenticatedAuthRouteWithChildren,
-  unauthenticatedLegalPrivacyRoute: unauthenticatedLegalPrivacyRoute,
-  unauthenticatedLegalTermsRoute: unauthenticatedLegalTermsRoute,
-}
+  unauthenticatedLegalPrivacyRoute,
+  unauthenticatedLegalTermsRoute,
+};
 
 const unauthenticatedRouteWithChildren = unauthenticatedRoute._addFileChildren(
-  unauthenticatedRouteChildren,
-)
+  unauthenticatedRouteChildren
+);
 
 const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
   OnboardingRoute: OnboardingRouteWithChildren,
   unauthenticatedRoute: unauthenticatedRouteWithChildren,
-}
+};
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
-  ._addFileTypes<FileRouteTypes>()
+  ._addFileTypes<FileRouteTypes>();

@@ -1,7 +1,7 @@
-import { create } from "zustand";
+import { create } from 'zustand';
 
-import type { ConnectivityState } from "~/lib/connectivity-manager";
-import { connectivityManager } from "~/lib/connectivity-manager";
+import type { ConnectivityState } from '~/lib/connectivity-manager';
+import { connectivityManager } from '~/lib/connectivity-manager';
 
 interface ConnectivityStore extends ConnectivityState {
   // Actions
@@ -26,10 +26,10 @@ export const useConnectivityStore = create<ConnectivityStore>((set, get) => {
   const unsubscribe = connectivityManager.subscribe((newState) => {
     set({
       ...newState,
-      hasConnectivityIssue: newState.diagnosis !== "healthy",
-      isApiUnavailable: newState.diagnosis === "api_down",
+      hasConnectivityIssue: newState.diagnosis !== 'healthy',
+      isApiUnavailable: newState.diagnosis === 'api_down',
       // Only allow transcriptions when we know API is healthy
-      canSaveTranscriptions: newState.diagnosis === "healthy",
+      canSaveTranscriptions: newState.diagnosis === 'healthy',
     });
   });
 
@@ -41,10 +41,10 @@ export const useConnectivityStore = create<ConnectivityStore>((set, get) => {
     ...initialState,
 
     // Computed values
-    hasConnectivityIssue: initialState.diagnosis !== "healthy",
-    isApiUnavailable: initialState.diagnosis === "api_down",
+    hasConnectivityIssue: initialState.diagnosis !== 'healthy',
+    isApiUnavailable: initialState.diagnosis === 'api_down',
     // Only allow transcriptions when we know API is healthy
-    canSaveTranscriptions: initialState.diagnosis === "healthy",
+    canSaveTranscriptions: initialState.diagnosis === 'healthy',
 
     // Actions
     activateMonitoring: () => {

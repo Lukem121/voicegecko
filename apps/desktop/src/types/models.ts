@@ -12,11 +12,11 @@ export interface HardwareInfo {
 }
 
 export type ModelTier =
-  | "cloud"
-  | "minimal"
-  | "balanced"
-  | "quality"
-  | "maximum";
+  | 'cloud'
+  | 'minimal'
+  | 'balanced'
+  | 'quality'
+  | 'maximum';
 
 export interface TierDisplayInfo {
   name: string;
@@ -28,41 +28,41 @@ export interface TierDisplayInfo {
 
 export const tierDisplayInfo: Record<ModelTier, TierDisplayInfo> = {
   cloud: {
-    name: "Cloud Provider",
+    name: 'Cloud Provider',
     description:
-      "Highest accuracy with our cloud infrastructure. Requires internet connection.",
-    icon: "☁️",
+      'Highest accuracy with our cloud infrastructure. Requires internet connection.',
+    icon: '☁️',
     min_ram_gb: 0,
     typical_model_size_mb: 0,
   },
   minimal: {
-    name: "Minimal",
+    name: 'Minimal',
     description:
-      "Fast and lightweight for quick notes and basic transcription.",
-    icon: "⚡",
+      'Fast and lightweight for quick notes and basic transcription.',
+    icon: '⚡',
     min_ram_gb: 2,
     typical_model_size_mb: 79,
   },
   balanced: {
-    name: "Balanced",
+    name: 'Balanced',
     description:
-      "Good accuracy for everyday use, meetings, and general dictation.",
-    icon: "⚖️",
+      'Good accuracy for everyday use, meetings, and general dictation.',
+    icon: '⚖️',
     min_ram_gb: 4,
     typical_model_size_mb: 181,
   },
   quality: {
-    name: "Quality",
+    name: 'Quality',
     description:
-      "Enhanced accuracy for professional needs, interviews, and complex audio.",
-    icon: "✨",
+      'Enhanced accuracy for professional needs, interviews, and complex audio.',
+    icon: '✨',
     min_ram_gb: 8,
     typical_model_size_mb: 466,
   },
   maximum: {
-    name: "Maximum",
-    description: "Best possible accuracy with advanced language understanding.",
-    icon: "🚀",
+    name: 'Maximum',
+    description: 'Best possible accuracy with advanced language understanding.',
+    icon: '🚀',
     min_ram_gb: 16,
     typical_model_size_mb: 547,
   },

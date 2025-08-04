@@ -1,22 +1,28 @@
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
-import { useSearchParams } from "next/navigation";
-import { CheckCircle2, ExternalLink, Loader2, RotateCcw } from "lucide-react";
-
-import VoiceGeckoLogo from "@acme/ui/components/logos/logo-full";
-import { Badge } from "@acme/ui/components/ui/badge";
-import { Button } from "@acme/ui/components/ui/button";
+import VoiceGeckoLogo from '@acme/ui/components/logos/logo-full';
+import { Badge } from '@acme/ui/components/ui/badge';
+import { Button } from '@acme/ui/components/ui/button';
 import {
-  Card,
+import
+{
+  log;
+}
+from;
+('@acme/observability');
+Card,
   CardContent,
   CardDescription,
   CardHeader,
-} from "@acme/ui/components/ui/card";
+} from '@acme/ui/components/ui/card'
+
+import { CheckCircle2, ExternalLink, Loader2, RotateCcw } from 'lucide-react';
+import { useSearchParams } from 'next/navigation';
+import { useEffect, useState } from 'react';
 
 export default function AuthSuccessPage() {
   const searchParams = useSearchParams();
-  const tauriRedirect = searchParams.get("tauriRedirect");
+  const tauriRedirect = searchParams.get('tauriRedirect');
   const [redirectAttempted, setRedirectAttempted] = useState(false);
   const [isRedirecting, setIsRedirecting] = useState(false);
   const [redirectFailed, setRedirectFailed] = useState(false);
@@ -46,13 +52,13 @@ export default function AuthSuccessPage() {
       // Use window.location.assign for better compatibility with deep links
       window.location.assign(decodedUrl);
     } catch (error) {
-      console.error("Direct redirect failed:", error);
+      log.error('Direct redirect failed:', error);
 
       // Fallback: try opening in a new tab/window
       try {
-        window.open(decodedUrl, "_self");
+        window.open(decodedUrl, '_self');
       } catch (fallbackError) {
-        console.error("Fallback redirect failed:", fallbackError);
+        log.error('Fallback redirect failed:', fallbackError);
         clearTimeout(redirectTimeout);
         setTimeoutId(null);
         setRedirectFailed(true);
@@ -68,7 +74,7 @@ export default function AuthSuccessPage() {
     if (tauriRedirect && !redirectAttempted) {
       setRedirectAttempted(true);
       const decodedUrl = decodeURIComponent(tauriRedirect);
-      console.log("Attempting to redirect to Tauri app:", decodedUrl);
+      log.info('Attempting to redirect to Tauri app:', decodedUrl);
 
       attemptRedirect(decodedUrl);
     }
@@ -87,7 +93,7 @@ export default function AuthSuccessPage() {
   useEffect(() => {
     if (isRedirecting) {
       const safetyTimeout = setTimeout(() => {
-        console.warn("Safety timeout triggered - forcing button to re-enable");
+        log.warn('Safety timeout triggered - forcing button to re-enable');
         setIsRedirecting(false);
         setRedirectFailed(true);
       }, 5000); // 5 second safety net
@@ -136,19 +142,19 @@ export default function AuthSuccessPage() {
         <Card className="w-full max-w-sm shadow-lg">
           <CardHeader className="space-y-4">
             <VoiceGeckoLogo
-              className="mx-auto h-10"
               aria-label="VoiceGecko Logo"
+              className="mx-auto h-10"
             />
 
             <div className="flex flex-col items-center space-y-4">
               <CheckCircle2 className="h-8 w-8 text-green-500" />
               <div className="space-y-2 text-center">
-                <CardDescription className="text-lg font-semibold">
+                <CardDescription className="font-semibold text-lg">
                   Authentication Successful!
                 </CardDescription>
-                <Badge variant="secondary" className="text-xs">
-                  Welcome to{" "}
-                  <span className="font-mono font-bold">VoiceGecko</span>
+                <Badge className="text-xs" variant="secondary">
+                  Welcome to{' '}
+                  <span className="font-bold font-mono">VoiceGecko</span>
                 </Badge>
               </div>
             </div>
@@ -158,21 +164,21 @@ export default function AuthSuccessPage() {
             {tauriRedirect && (
               <div className="space-y-4">
                 <Button
-                  onClick={handleManualRedirect}
                   className="w-full"
                   disabled={isRedirecting}
+                  onClick={handleManualRedirect}
                   size="lg"
-                  variant={redirectFailed ? "outline" : "default"}
+                  variant={redirectFailed ? 'outline' : 'default'}
                 >
                   {getButtonContent()}
                 </Button>
 
                 <div className="space-y-3 text-center">
                   <details className="group">
-                    <summary className="text-muted-foreground hover:text-foreground cursor-pointer text-xs transition-colors">
+                    <summary className="cursor-pointer text-muted-foreground text-xs transition-colors hover:text-foreground">
                       Need help?
                     </summary>
-                    <div className="text-muted-foreground mt-3 space-y-2 text-xs">
+                    <div className="mt-3 space-y-2 text-muted-foreground text-xs">
                       <p>If the button doesn't work:</p>
                       <p>• Check that your desktop app is open</p>
                       <p>• Try restarting the desktop app</p>

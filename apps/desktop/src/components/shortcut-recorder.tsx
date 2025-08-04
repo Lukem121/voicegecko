@@ -1,8 +1,5 @@
-import { useCallback, useEffect, useState } from "react";
-import { Keyboard } from "lucide-react";
-
-import { Badge } from "@acme/ui/components/ui/badge";
-import { Button } from "@acme/ui/components/ui/button";
+import { Badge } from '@acme/ui/components/ui/badge';
+import { Button } from '@acme/ui/components/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -10,10 +7,12 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@acme/ui/components/ui/dialog";
+} from '@acme/ui/components/ui/dialog';
+import { Keyboard } from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
 
-import { analytics } from "~/lib/analytics/posthog-analytics";
-import { isValidShortcut, normalizeKeys } from "~/lib/shortcuts/utils";
+import { analytics } from '~/lib/analytics/posthog-analytics';
+import { isValidShortcut, normalizeKeys } from '~/lib/shortcuts/utils';
 
 interface ShortcutRecorderProps {
   isOpen: boolean;
@@ -37,17 +36,17 @@ export function ShortcutRecorder({
 
     const keys: string[] = [];
 
-    if (metaKey) keys.push("Command");
-    if (ctrlKey) keys.push("Control");
-    if (altKey) keys.push("Alt");
-    if (shiftKey) keys.push("Shift");
+    if (metaKey) keys.push('Command');
+    if (ctrlKey) keys.push('Control');
+    if (altKey) keys.push('Alt');
+    if (shiftKey) keys.push('Shift');
 
     const keyName = key.toLowerCase();
-    if (!["control", "alt", "shift", "meta"].includes(keyName)) {
+    if (!['control', 'alt', 'shift', 'meta'].includes(keyName)) {
       // Handle special keys
-      if (keyName === " ") {
-        keys.push("Space");
-      } else if (keyName.startsWith("arrow")) {
+      if (keyName === ' ') {
+        keys.push('Space');
+      } else if (keyName.startsWith('arrow')) {
         keys.push(key); // Keep arrow keys as-is
       } else {
         keys.push(key.toUpperCase());
@@ -60,7 +59,7 @@ export function ShortcutRecorder({
     // Validate the shortcut
     if (keys.length > 0 && !isValidShortcut(normalizedKeys)) {
       setError(
-        "Please include at least one modifier key (Ctrl, Alt, Shift, Cmd)",
+        'Please include at least one modifier key (Ctrl, Alt, Shift, Cmd)'
       );
     } else {
       setError(null);
@@ -71,26 +70,26 @@ export function ShortcutRecorder({
     if (isOpen) {
       setRecordedKeys([]);
       setError(null);
-      document.addEventListener("keydown", handleKeyDown);
+      document.addEventListener('keydown', handleKeyDown);
     } else {
-      document.removeEventListener("keydown", handleKeyDown);
+      document.removeEventListener('keydown', handleKeyDown);
     }
     return () => {
-      document.removeEventListener("keydown", handleKeyDown);
+      document.removeEventListener('keydown', handleKeyDown);
     };
   }, [isOpen, handleKeyDown]);
 
   const handleSave = () => {
     if (isValidShortcut(recordedKeys)) {
       // Track shortcut configuration
-      analytics.track("settings_changed", {
-        category: "shortcuts",
+      analytics.track('settings_changed', {
+        category: 'shortcuts',
         setting_key: actionName,
-        old_value: "previous", // Could be enhanced to track actual old value
-        new_value: recordedKeys.join("+"),
+        old_value: 'previous', // Could be enhanced to track actual old value
+        new_value: recordedKeys.join('+'),
       });
 
-      analytics.trackFeatureFirstUse("custom_shortcut");
+      analytics.trackFeatureFirstUse('custom_shortcut');
 
       onSave(recordedKeys);
       onClose();
@@ -103,7 +102,7 @@ export function ShortcutRecorder({
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog onOpenChange={onClose} open={isOpen}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Record Shortcut for "{actionName}"</DialogTitle>
@@ -112,36 +111,36 @@ export function ShortcutRecorder({
             displayed below.
           </DialogDescription>
         </DialogHeader>
-        <div className="bg-muted flex min-h-[100px] items-center justify-center rounded-lg border-2 border-dashed">
+        <div className="flex min-h-[100px] items-center justify-center rounded-lg border-2 border-dashed bg-muted">
           {recordedKeys.length > 0 ? (
             <div className="flex flex-col items-center gap-2">
               <div className="flex items-center gap-2">
                 {recordedKeys.map((key, index) => (
                   <Badge
+                    className="px-3 py-2 text-lg"
                     key={index}
                     variant="outline"
-                    className="px-3 py-2 text-lg"
                   >
                     {key}
                   </Badge>
                 ))}
               </div>
-              {error && <p className="text-sm text-red-500">{error}</p>}
+              {error && <p className="text-red-500 text-sm">{error}</p>}
             </div>
           ) : (
-            <div className="text-muted-foreground flex flex-col items-center gap-2">
+            <div className="flex flex-col items-center gap-2 text-muted-foreground">
               <Keyboard className="h-8 w-8" />
               <span>Waiting for input...</span>
             </div>
           )}
         </div>
         <DialogFooter className="gap-2">
-          <Button variant="outline" onClick={handleClear}>
+          <Button onClick={handleClear} variant="outline">
             Clear
           </Button>
           <Button
-            onClick={handleSave}
             disabled={recordedKeys.length === 0 || !!error}
+            onClick={handleSave}
           >
             Save
           </Button>

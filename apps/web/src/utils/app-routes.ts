@@ -1,30 +1,30 @@
 // URL configuration constants
 export const APP_ROUTES = {
-  HOME: "/",
+  HOME: '/',
   AUTH: {
-    SIGN_IN: "/sign-in",
-    SIGN_UP: "/sign-up",
-    FORGOT_PASSWORD: "/forgot-password",
-    RESET_PASSWORD: "/reset-password",
-    VERIFY_EMAIL: "/verify-email",
-    ERROR: "/authentication-error",
+    SIGN_IN: '/sign-in',
+    SIGN_UP: '/sign-up',
+    FORGOT_PASSWORD: '/forgot-password',
+    RESET_PASSWORD: '/reset-password',
+    VERIFY_EMAIL: '/verify-email',
+    ERROR: '/authentication-error',
   },
   SETTINGS: {
-    ROOT: "/settings/profile",
-    ACCOUNT: "/settings/account",
-    SECURITY: "/settings/security",
-    APPEARANCE: "/settings/appearance",
+    ROOT: '/settings/profile',
+    ACCOUNT: '/settings/account',
+    SECURITY: '/settings/security',
+    APPEARANCE: '/settings/appearance',
   },
   LEGAL: {
-    TERMS: "/legal/terms",
-    PRIVACY: "/legal/privacy",
+    TERMS: '/legal/terms',
+    PRIVACY: '/legal/privacy',
   },
 } as const;
 
 // Type-safe URL parameter builder
 export function buildUrl(
   base: string,
-  params?: Record<string, string | number>,
+  params?: Record<string, string | number>
 ): string {
   if (!params) {
     return base;
@@ -41,11 +41,11 @@ export function buildUrl(
 // Type-safe dynamic route builder
 export function buildDynamicRoute(
   pattern: string,
-  params: Record<string, string | number>,
+  params: Record<string, string | number>
 ): string {
   return Object.entries(params).reduce(
     (path, [key, value]) => path.replace(`[${key}]`, String(value)),
-    pattern,
+    pattern
   );
 }
 

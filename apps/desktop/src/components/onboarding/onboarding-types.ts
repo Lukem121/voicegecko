@@ -1,4 +1,4 @@
-export type OnboardingStep = "microphone" | "tutorial" | "completion";
+export type OnboardingStep = 'microphone' | 'tutorial' | 'completion';
 
 export interface OnboardingStepProps {
   onNext: () => void;

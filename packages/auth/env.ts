@@ -1,5 +1,5 @@
-import { createEnv } from "@t3-oss/env-nextjs";
-import { z } from "zod/v4";
+import { createEnv } from '@t3-oss/env-nextjs';
+import { z } from 'zod/v4';
 
 export function authEnv() {
   return createEnv({
@@ -7,10 +7,10 @@ export function authEnv() {
       AUTH_DISCORD_ID: z.string().min(1),
       AUTH_DISCORD_SECRET: z.string().min(1),
       AUTH_SECRET:
-        process.env.NODE_ENV === "production"
+        process.env.NODE_ENV === 'production'
           ? z.string().min(1)
           : z.string().min(1).optional(),
-      NODE_ENV: z.enum(["development", "production"]).optional(),
+      NODE_ENV: z.enum(['development', 'production']).optional(),
       STRIPE_WEBHOOK_SECRET: z.string().min(1),
       STRIPE_SECRET_KEY: z.string().min(1),
       STRIPE_PRICE_ID_PRO_MONTHLY: z.string().min(1),
@@ -25,6 +25,6 @@ export function authEnv() {
       NEXT_PUBLIC_VOICEGECKO_URL: process.env.NEXT_PUBLIC_VOICEGECKO_URL,
     },
     skipValidation:
-      !!process.env.CI || process.env.npm_lifecycle_event === "lint",
+      !!process.env.CI || process.env.npm_lifecycle_event === 'lint',
   });
 }

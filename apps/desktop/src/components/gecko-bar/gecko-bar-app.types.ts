@@ -1,4 +1,4 @@
-import type { AudioLevelEvent } from "~/types/events";
+import type { AudioLevelEvent } from '~/types/events';
 
 // Timeout management types
 export interface TimeoutState {
@@ -15,7 +15,7 @@ export interface TimeoutManager {
   setTimeout: (
     type: keyof TimeoutState,
     callback: () => void,
-    delay: number,
+    delay: number
   ) => void;
 }
 
@@ -95,7 +95,7 @@ export interface GeckoBarTooltipProps {
 }
 
 export interface GeckoBarButtonProps {
-  type: "cancel" | "finish";
+  type: 'cancel' | 'finish';
   state: ButtonState;
   onClick: (e: React.MouseEvent<HTMLButtonElement>) => Promise<void>;
   className?: string;

@@ -1,29 +1,31 @@
+import { log } from '@acme/observability';
+
 // Centralized event bus for cross-feature communication
 // This provides a typed, decoupled way for different parts of the app to communicate
 
 interface EventMap {
   // App lifecycle events
-  "app:ready": void;
-  "app:error": Error;
+  'app:ready': void;
+  'app:error': Error;
 
   // Settings events
-  "settings:changed": { key: string; value: unknown };
-  "settings:reset": void;
+  'settings:changed': { key: string; value: unknown };
+  'settings:reset': void;
 
   // Model events
-  "model:download:start": { modelId: string };
-  "model:download:progress": { modelId: string; progress: number };
-  "model:download:complete": { modelId: string };
-  "model:download:error": { modelId: string; error: string };
+  'model:download:start': { modelId: string };
+  'model:download:progress': { modelId: string; progress: number };
+  'model:download:complete': { modelId: string };
+  'model:download:error': { modelId: string; error: string };
 
   // Recording events
-  "recording:started": void;
-  "recording:stopped": void;
-  "recording:error": Error;
+  'recording:started': void;
+  'recording:stopped': void;
+  'recording:error': Error;
 
   // Transcription events
-  "transcription:complete": { text: string };
-  "transcription:error": Error;
+  'transcription:complete': { text: string };
+  'transcription:error': Error;
 }
 
 type EventListener<T> = (data: T) => void;
@@ -41,7 +43,7 @@ class EventBus {
 
   on<K extends keyof EventMap>(
     event: K,
-    listener: EventListener<EventMap[K]>,
+    listener: EventListener<EventMap[K]>
   ): () => void {
     if (!this.listeners.has(event)) {
       this.listeners.set(event, new Set());
@@ -57,7 +59,7 @@ class EventBus {
 
   once<K extends keyof EventMap>(
     event: K,
-    listener: EventListener<EventMap[K]>,
+    listener: EventListener<EventMap[K]>
   ): () => void {
     const unsubscribe = this.on(event, (data) => {
       unsubscribe();
@@ -67,12 +69,12 @@ class EventBus {
   }
 
   emit<K extends keyof EventMap>(event: K, data: EventMap[K]): void {
-    console.log(`[EventBus] Emitting ${event}`, data);
+    log.info(`[EventBus] Emitting ${event}`, data);
     this.listeners.get(event)?.forEach((listener) => {
       try {
         listener(data);
       } catch (error) {
-        console.error(`[EventBus] Error in listener for ${event}:`, error);
+        log.error(`[EventBus] Error in listener for ${event}:`, error);
       }
     });
   }

@@ -1,19 +1,19 @@
-import { useEffect, useRef, useState } from "react";
-import { motion } from "motion/react";
+import { motion } from 'motion/react';
+import { useEffect, useRef, useState } from 'react';
 
-import type { AudioLevelEvent } from "~/types/events";
+import type { AudioLevelEvent } from '~/types/events';
 
 export type VisualizationMode =
-  | "waveform"
-  | "spectrum"
-  | "circular"
-  | "voice-reactive";
+  | 'waveform'
+  | 'spectrum'
+  | 'circular'
+  | 'voice-reactive';
 
 interface AudioVisualizerProps {
   audioLevel: AudioLevelEvent;
   isRecording: boolean;
   mode?: VisualizationMode;
-  size?: "small" | "medium" | "large";
+  size?: 'small' | 'medium' | 'large';
   className?: string;
 }
 
@@ -27,9 +27,9 @@ interface SmoothedAudioData {
 export function AudioVisualizer({
   audioLevel,
   isRecording,
-  mode = "voice-reactive",
-  size = "small",
-  className = "",
+  mode = 'voice-reactive',
+  size = 'small',
+  className = '',
 }: AudioVisualizerProps) {
   const smoothedDataRef = useRef<SmoothedAudioData>({
     levels: new Array(10).fill(0),
@@ -66,7 +66,7 @@ export function AudioVisualizer({
         // Update smoothed levels
         for (let i = 0; i < config.dotCount; i++) {
           if (
-            mode === "spectrum" &&
+            mode === 'spectrum' &&
             audioLevel.frequency_bands?.[i] !== undefined
           ) {
             // Use frequency bands for spectrum mode
@@ -81,7 +81,7 @@ export function AudioVisualizer({
             const waveMultiplier = Math.sin(wavePhase) * 0.3 + 0.7;
             const targetLevel = Math.max(
               0,
-              audioLevel.level * waveMultiplier * 3,
+              audioLevel.level * waveMultiplier * 3
             ); // Amplify for visibility
             smoothedData.levels[i] =
               (smoothedData.levels[i] || 0) * SMOOTHING_FACTOR +
@@ -92,7 +92,7 @@ export function AudioVisualizer({
           const currentLevel = smoothedData.levels[i] || 0;
           smoothedData.peaks[i] = Math.max(
             (smoothedData.peaks[i] || 0) * PEAK_DECAY,
-            currentLevel,
+            currentLevel
           );
         }
       } else {
@@ -125,37 +125,39 @@ export function AudioVisualizer({
   const [forceUpdate, setForceUpdate] = useState(0);
 
   const getVisualizationColor = (level: number, index: number) => {
-    if (!isRecording) return "bg-muted-foreground/50";
+    if (!isRecording) return 'bg-muted-foreground/50';
 
-    if (mode === "voice-reactive" && audioLevel) {
+    if (mode === 'voice-reactive' && audioLevel) {
       // Voice-reactive coloring
-      if (audioLevel.is_silence) return "bg-gray-400";
-      if (!audioLevel.is_voice_detected) return "bg-blue-400";
+      if (audioLevel.is_silence) return 'bg-gray-400';
+      if (!audioLevel.is_voice_detected) return 'bg-blue-400';
 
       // Voice detected - use intensity-based coloring
       const intensity = Math.min(level * 2, 1);
-      if (intensity > 0.7) return "bg-red-500";
-      if (intensity > 0.3) return "bg-yellow-500";
-      return "bg-green-500";
-    } else if (mode === "spectrum") {
+      if (intensity > 0.7) return 'bg-red-500';
+      if (intensity > 0.3) return 'bg-yellow-500';
+      return 'bg-green-500';
+    }
+    if (mode === 'spectrum') {
       // Frequency-based coloring
       const hue = (index / config.dotCount) * 240; // Red to Blue spectrum
       const saturation = Math.min(level * 100, 80);
       const lightness = 40 + Math.min(level * 30, 30);
       return `hsl(${hue}, ${saturation}%, ${lightness}%)`;
-    } else if (mode === "circular") {
+    }
+    if (mode === 'circular') {
       // Circular mode - same as voice-reactive for now
       const intensity = Math.min(level * 2, 1);
-      if (intensity > 0.7) return "bg-purple-500";
-      if (intensity > 0.3) return "bg-blue-500";
-      return "bg-cyan-500";
+      if (intensity > 0.7) return 'bg-purple-500';
+      if (intensity > 0.3) return 'bg-blue-500';
+      return 'bg-cyan-500';
     }
 
     // Default waveform coloring
     const intensity = Math.min(level * 2, 1);
-    if (intensity > 0.7) return "bg-red-500";
-    if (intensity > 0.3) return "bg-yellow-500";
-    return "bg-green-500";
+    if (intensity > 0.7) return 'bg-red-500';
+    if (intensity > 0.3) return 'bg-yellow-500';
+    return 'bg-green-500';
   };
 
   const renderWaveform = () => {
@@ -175,7 +177,7 @@ export function AudioVisualizer({
             const maxHeight = config.maxHeight;
 
             let height = baseSize;
-            let colorClass = "bg-muted-foreground/50";
+            let colorClass = 'bg-muted-foreground/50';
 
             if (isRecording && audioLevel) {
               // Add subtle wave effect that travels across the dots
@@ -190,30 +192,30 @@ export function AudioVisualizer({
 
               // Clean white color scheme for audio waves
               if (audioLevel.level > 0.05) {
-                colorClass = "bg-white";
+                colorClass = 'bg-white';
               } else if (audioLevel.level > 0.01) {
-                colorClass = "bg-white/80";
+                colorClass = 'bg-white/80';
               } else {
-                colorClass = "bg-muted-foreground/70";
+                colorClass = 'bg-muted-foreground/70';
               }
             } else if (isRecording) {
               // Still recording but no audio level - maintain a baseline active state
               const wavePhase = (Date.now() / 150 + i * 0.5) % (Math.PI * 2);
               const waveMultiplier = Math.sin(wavePhase) * 0.1 + 0.9; // Subtle baseline animation
               height = baseSize + (maxHeight - baseSize) * 0.2 * waveMultiplier; // 20% baseline height
-              colorClass = "bg-muted-foreground/70";
+              colorClass = 'bg-muted-foreground/70';
             }
 
             return (
               <motion.div
-                key={i}
-                className={`rounded-full transition-colors duration-150 ${colorClass}`}
                 animate={{
                   width: baseSize,
-                  height: height,
+                  height,
                 }}
+                className={`rounded-full transition-colors duration-150 ${colorClass}`}
+                key={i}
                 transition={{
-                  type: "spring",
+                  type: 'spring',
                   stiffness: 300,
                   damping: 20,
                   mass: 0.5,
@@ -240,19 +242,19 @@ export function AudioVisualizer({
 
             return (
               <motion.div
-                key={i}
+                animate={{
+                  width: Math.max(config.baseSize, 4),
+                  height,
+                }}
                 className="rounded-t-sm"
+                key={i}
                 style={
-                  typeof colorClass === "string" && colorClass.startsWith("hsl")
+                  typeof colorClass === 'string' && colorClass.startsWith('hsl')
                     ? { backgroundColor: colorClass }
                     : {}
                 }
-                animate={{
-                  width: Math.max(config.baseSize, 4),
-                  height: height,
-                }}
                 transition={{
-                  type: "spring",
+                  type: 'spring',
                   stiffness: 400,
                   damping: 25,
                   mass: 0.3,
@@ -287,25 +289,25 @@ export function AudioVisualizer({
 
           return (
             <motion.div
-              key={i}
-              className={`absolute rounded-full ${
-                typeof colorClass === "string" && colorClass.startsWith("bg-")
-                  ? colorClass
-                  : "bg-muted-foreground/50"
-              }`}
-              style={
-                typeof colorClass === "string" && colorClass.startsWith("hsl")
-                  ? { backgroundColor: colorClass }
-                  : {}
-              }
               animate={{
                 x: x - size / 2,
                 y: y - size / 2,
                 width: size,
                 height: size,
               }}
+              className={`absolute rounded-full ${
+                typeof colorClass === 'string' && colorClass.startsWith('bg-')
+                  ? colorClass
+                  : 'bg-muted-foreground/50'
+              }`}
+              key={i}
+              style={
+                typeof colorClass === 'string' && colorClass.startsWith('hsl')
+                  ? { backgroundColor: colorClass }
+                  : {}
+              }
               transition={{
-                type: "spring",
+                type: 'spring',
                 stiffness: 300,
                 damping: 20,
                 mass: 0.5,
@@ -319,12 +321,12 @@ export function AudioVisualizer({
 
   const renderVisualization = () => {
     switch (mode) {
-      case "spectrum":
+      case 'spectrum':
         return renderSpectrum();
-      case "circular":
+      case 'circular':
         return renderCircular();
-      case "waveform":
-      case "voice-reactive":
+      case 'waveform':
+      case 'voice-reactive':
       default:
         return renderWaveform();
     }
@@ -334,10 +336,10 @@ export function AudioVisualizer({
     <div
       className={`audio-visualizer ${className}`}
       style={{
-        width: size === "small" ? "60px" : size === "medium" ? "72px" : "90px",
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
+        width: size === 'small' ? '60px' : size === 'medium' ? '72px' : '90px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
       }}
     >
       {renderVisualization()}

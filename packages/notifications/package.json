@@ -11,7 +11,8 @@
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch",
-    "lint": "eslint",
+    "lint": "ultracite lint",
+    "format": "ultracite format",
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
@@ -19,13 +20,9 @@
     "zod": "catalog:"
   },
   "devDependencies": {
-    "@acme/eslint-config": "workspace:*",
-    "@acme/prettier-config": "workspace:*",
     "@acme/tsconfig": "workspace:*",
+    "@biomejs/biome": "catalog:",
     "@types/minimatch": "^5.1.2",
-    "eslint": "catalog:",
-    "prettier": "catalog:",
     "typescript": "catalog:"
-  },
-  "prettier": "@acme/prettier-config"
+  }
 }

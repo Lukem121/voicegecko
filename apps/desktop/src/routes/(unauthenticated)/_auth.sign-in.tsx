@@ -1,19 +1,12 @@
-import { useState } from "react";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation } from "@tanstack/react-query";
-import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
-import { openUrl } from "@tauri-apps/plugin-opener";
-import { Loader } from "lucide-react";
-
-import { SignInSchema } from "@acme/auth/schemas";
-import LogoFull from "@acme/ui/components/logos/logo-full";
-import { Button } from "@acme/ui/components/ui/button";
+import { SignInSchema } from '@acme/auth/schemas';
+import LogoFull from '@acme/ui/components/logos/logo-full';
+import { Button } from '@acme/ui/components/ui/button';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
-} from "@acme/ui/components/ui/card";
+} from '@acme/ui/components/ui/card';
 import {
   Form,
   FormControl,
@@ -22,19 +15,25 @@ import {
   FormLabel,
   FormMessage,
   useForm,
-} from "@acme/ui/components/ui/form";
-import { Input } from "@acme/ui/components/ui/input";
+} from '@acme/ui/components/ui/form';
+import { Input } from '@acme/ui/components/ui/input';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useMutation } from '@tanstack/react-query';
+import { createFileRoute, Link, useRouter } from '@tanstack/react-router';
+import { openUrl } from '@tauri-apps/plugin-opener';
+import { Loader } from 'lucide-react';
+import { useState } from 'react';
 
-import { analytics } from "~/lib/analytics/posthog-analytics";
-import { authClient } from "~/lib/client";
-import { trpc } from "~/trpc";
-import { getClientAuthErrorMessage } from "~/utils/client-error-messages";
-import { countdown } from "../../utils/countdown";
-import { SocialSignInButton } from "./-components/social-sign-in-button";
-import TermsAndPrivacyNotice from "./-components/terms-and-privacy-notice";
-import { useSocialAuth } from "./-hooks/use-social-auth";
+import { analytics } from '~/lib/analytics/posthog-analytics';
+import { authClient } from '~/lib/client';
+import { trpc } from '~/trpc';
+import { getClientAuthErrorMessage } from '~/utils/client-error-messages';
+import { countdown } from '../../utils/countdown';
+import { SocialSignInButton } from './-components/social-sign-in-button';
+import TermsAndPrivacyNotice from './-components/terms-and-privacy-notice';
+import { useSocialAuth } from './-hooks/use-social-auth';
 
-export const Route = createFileRoute("/(unauthenticated)/_auth/sign-in")({
+export const Route = createFileRoute('/(unauthenticated)/_auth/sign-in')({
   validateSearch: (search: Record<string, unknown>) => {
     return {
       redirect: (search.redirect as string | undefined) ?? null,
@@ -56,7 +55,7 @@ interface LoadingState {
 function SignIn() {
   const router = useRouter();
   const search = Route.useSearch();
-  const callbackURL = search.redirect ?? "/";
+  const callbackURL = search.redirect ?? '/';
 
   const getBanStatus = useMutation(trpc.auth.getBanStatus.mutationOptions());
 
@@ -77,8 +76,8 @@ function SignIn() {
   const form = useForm({
     resolver: zodResolver(SignInSchema),
     defaultValues: {
-      email: "",
-      password: "",
+      email: '',
+      password: '',
     },
   });
 
@@ -100,11 +99,11 @@ function SignIn() {
 
     setIsLoading((prev) => ({ ...prev, email: false }));
 
-    if (error.code === "FAILED_TO_CREATE_SESSION") {
+    if (error.code === 'FAILED_TO_CREATE_SESSION') {
       const status = await getBanStatus.mutateAsync(values.email);
 
       if (!status) {
-        setError("An unexpected error occurred.");
+        setError('An unexpected error occurred.');
         return;
       }
 
@@ -115,11 +114,11 @@ function SignIn() {
     }
 
     if (error.code) {
-      setError(getClientAuthErrorMessage(error.code, "en"));
+      setError(getClientAuthErrorMessage(error.code, 'en'));
       return;
     }
 
-    setError("An unexpected error occurred.");
+    setError('An unexpected error occurred.');
   };
 
   return (
@@ -127,18 +126,18 @@ function SignIn() {
       <div className="flex flex-col gap-6">
         <Card className="shadow-lg">
           <CardHeader className="space-y-3">
-            <LogoFull className="mx-auto h-10" aria-label="VoiceGecko Logo" />
+            <LogoFull aria-label="VoiceGecko Logo" className="mx-auto h-10" />
             <CardDescription className="text-center">
-              Sign in to continue to{" "}
-              <span className="font-mono font-bold">VoiceGecko</span>
+              Sign in to continue to{' '}
+              <span className="font-bold font-mono">VoiceGecko</span>
               <Link to="/">Test</Link>
             </CardDescription>
           </CardHeader>
           <CardContent>
             <Form {...form}>
               <form
-                onSubmit={form.handleSubmit(handleSubmit)}
                 className="space-y-6"
+                onSubmit={form.handleSubmit(handleSubmit)}
               >
                 <div className="space-y-4">
                   <FormField
@@ -149,13 +148,13 @@ function SignIn() {
                         <FormLabel htmlFor="email">Email address</FormLabel>
                         <FormControl>
                           <Input
-                            id="email"
-                            type="email"
-                            inputMode="email"
-                            placeholder="you@example.com"
+                            aria-describedby="email-error"
                             autoComplete="email"
                             disabled={loading}
-                            aria-describedby="email-error"
+                            id="email"
+                            inputMode="email"
+                            placeholder="you@example.com"
+                            type="email"
                             {...field}
                           />
                         </FormControl>
@@ -172,23 +171,23 @@ function SignIn() {
                         <div className="flex items-center justify-between">
                           <FormLabel htmlFor="password">Password</FormLabel>
                           <a
+                            className="cursor-pointer text-primary text-xs hover:underline focus:outline-none focus:ring-2 focus:ring-primary sm:text-sm"
                             onClick={() => {
-                              void openUrl(
-                                `${import.meta.env.VITE_PUBLIC_VOICEGECKO_URL}/auth/forgot-password`,
+                              openUrl(
+                                `${import.meta.env.VITE_PUBLIC_VOICEGECKO_URL}/auth/forgot-password`
                               );
                             }}
-                            className="text-primary focus:ring-primary cursor-pointer text-xs hover:underline focus:ring-2 focus:outline-none sm:text-sm"
                           >
                             Forgot password?
                           </a>
                         </div>
                         <FormControl>
                           <Input
-                            id="password"
-                            type="password"
+                            aria-describedby="password-error"
                             autoComplete="current-password"
                             disabled={loading}
-                            aria-describedby="password-error"
+                            id="password"
+                            type="password"
                             {...field}
                           />
                         </FormControl>
@@ -199,7 +198,7 @@ function SignIn() {
 
                   {error && (
                     <div
-                      className="bg-destructive/10 rounded-md p-3 text-sm text-red-500"
+                      className="rounded-md bg-destructive/10 p-3 text-red-500 text-sm"
                       role="alert"
                     >
                       {error}
@@ -207,25 +206,25 @@ function SignIn() {
                   )}
 
                   <Button
-                    type="submit"
+                    aria-label={isLoading.email ? 'Signing in...' : 'Sign in'}
                     className="w-full"
                     disabled={loading}
-                    aria-label={isLoading.email ? "Signing in..." : "Sign in"}
+                    type="submit"
                   >
                     {isLoading.email ? (
                       <Loader className="h-4 w-4 animate-spin" />
                     ) : (
-                      "Sign in"
+                      'Sign in'
                     )}
                   </Button>
                 </div>
 
                 <div className="relative">
                   <div className="absolute inset-0 flex items-center">
-                    <div className="border-border w-full border-t" />
+                    <div className="w-full border-border border-t" />
                   </div>
                   <div className="relative flex justify-center text-xs uppercase">
-                    <span className="bg-card text-muted-foreground px-2">
+                    <span className="bg-card px-2 text-muted-foreground">
                       Or continue with
                     </span>
                   </div>
@@ -233,15 +232,15 @@ function SignIn() {
 
                 <div className="space-y-4">
                   <SocialSignInButton
-                    provider="discord"
-                    isLoading={socialLoading.discord}
-                    onClick={() => handleSocialSignIn("discord")}
                     disabled={loading}
+                    isLoading={socialLoading.discord}
+                    onClick={() => handleSocialSignIn('discord')}
+                    provider="discord"
                   />
 
                   {providerError && (
                     <div
-                      className="text-destructive text-center text-sm"
+                      className="text-center text-destructive text-sm"
                       role="alert"
                     >
                       {providerError}
@@ -249,11 +248,11 @@ function SignIn() {
                   )}
 
                   <div className="text-center text-sm">
-                    Don&apos;t have an account?{" "}
+                    Don&apos;t have an account?{' '}
                     <Link
-                      to="/sign-up"
+                      className="text-primary hover:underline focus:outline-none focus:ring-2 focus:ring-primary"
                       search={{ redirect: callbackURL }}
-                      className="text-primary focus:ring-primary hover:underline focus:ring-2 focus:outline-none"
+                      to="/sign-up"
                     >
                       Sign up
                     </Link>
@@ -270,7 +269,7 @@ function SignIn() {
 }
 
 const formatBanMessage = (reason: string | null, expires: Date | null) => {
-  let errorMessage = "You have been banned.";
+  let errorMessage = 'You have been banned.';
   if (reason && expires) {
     errorMessage = `You have been banned for ${reason}, expires in ${countdown(expires)}.`;
   } else if (reason) {

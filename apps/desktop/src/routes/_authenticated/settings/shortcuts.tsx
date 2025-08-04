@@ -1,4 +1,19 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { Badge } from '@acme/ui/components/ui/badge';
+import { Button } from '@acme/ui/components/ui/button';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@acme/ui/components/ui/card';
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@acme/ui/components/ui/tooltip';
+import { createFileRoute } from '@tanstack/react-router';
 import {
   Command,
   Keyboard,
@@ -6,30 +21,14 @@ import {
   RotateCcw,
   Settings2,
   Zap,
-} from "lucide-react";
+} from 'lucide-react';
 
-import { Badge } from "@acme/ui/components/ui/badge";
-import { Button } from "@acme/ui/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@acme/ui/components/ui/card";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@acme/ui/components/ui/tooltip";
+import { ShortcutRecorder } from '~/components/shortcut-recorder';
+import { useShortcuts } from '~/hooks/use-shortcuts';
+import { analytics } from '~/lib/analytics/posthog-analytics';
+import { formatKeysForDisplay, getOS } from '~/lib/shortcuts/utils';
 
-import { ShortcutRecorder } from "~/components/shortcut-recorder";
-import { useShortcuts } from "~/hooks/use-shortcuts";
-import { analytics } from "~/lib/analytics/posthog-analytics";
-import { formatKeysForDisplay, getOS } from "~/lib/shortcuts/utils";
-
-export const Route = createFileRoute("/_authenticated/settings/shortcuts")({
+export const Route = createFileRoute('/_authenticated/settings/shortcuts')({
   component: ShortcutsPage,
 });
 
@@ -48,33 +47,33 @@ function ShortcutsPage() {
   const os = getOS();
 
   const handleResetShortcuts = () => {
-    analytics.track("settings_changed", {
-      category: "shortcuts",
-      setting_key: "reset_all",
-      old_value: "custom",
-      new_value: "default",
+    analytics.track('settings_changed', {
+      category: 'shortcuts',
+      setting_key: 'reset_all',
+      old_value: 'custom',
+      new_value: 'default',
     });
 
-    analytics.trackFeatureFirstUse("reset_shortcuts");
-    void resetShortcuts();
+    analytics.trackFeatureFirstUse('reset_shortcuts');
+    resetShortcuts();
   };
 
   const handleSaveShortcut = (keys: string[]) => {
     if (recordingActionId) {
-      void updateShortcut(recordingActionId, keys);
+      updateShortcut(recordingActionId, keys);
     }
     stopRecording();
   };
 
   const handleCancelRecording = () => {
-    void cancelRecording();
+    cancelRecording();
   };
 
   if (isLoading) {
     return (
       <div className="flex h-[400px] items-center justify-center">
         <div className="flex flex-col items-center gap-2">
-          <Loader2 className="text-muted-foreground h-8 w-8 animate-spin" />
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
           <p className="text-muted-foreground text-sm">Loading shortcuts...</p>
         </div>
       </div>
@@ -84,20 +83,20 @@ function ShortcutsPage() {
   return (
     <TooltipProvider>
       <ShortcutRecorder
-        isOpen={isRecording}
-        onClose={handleCancelRecording}
-        onSave={handleSaveShortcut}
         actionName={
           shortcutCategories
             .flatMap((c) => c.shortcuts)
-            .find((s) => s.id === recordingActionId)?.name ?? ""
+            .find((s) => s.id === recordingActionId)?.name ?? ''
         }
+        isOpen={isRecording}
+        onClose={handleCancelRecording}
+        onSave={handleSaveShortcut}
       />
       <div className="flex flex-1 flex-col gap-4">
         {/* Header with future configuration option */}
         <div className="flex items-center justify-between">
           <div className="flex-1">
-            <h2 className="text-2xl font-semibold">Keyboard Shortcuts</h2>
+            <h2 className="font-semibold text-2xl">Keyboard Shortcuts</h2>
             <div className="flex items-center justify-between">
               <p className="text-muted-foreground text-sm">
                 Learn the shortcuts to speed up your workflow
@@ -105,10 +104,10 @@ function ShortcutsPage() {
               <Tooltip>
                 <TooltipTrigger asChild>
                   <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleResetShortcuts}
                     className="ml-4"
+                    onClick={handleResetShortcuts}
+                    size="sm"
+                    variant="outline"
                   >
                     <RotateCcw className="mr-2 h-4 w-4" />
                     Reset to Defaults
@@ -136,8 +135,8 @@ function ShortcutsPage() {
                 <div className="space-y-3">
                   {category.shortcuts.map((shortcut) => (
                     <div
-                      key={shortcut.id}
                       className="flex items-center justify-between border-b py-2 last:border-b-0"
+                      key={shortcut.id}
                     >
                       <span className="text-sm">{shortcut.name}</span>
                       <div className="flex items-center gap-3">
@@ -145,14 +144,14 @@ function ShortcutsPage() {
                           {formatKeysForDisplay(shortcut.keys, os).map(
                             (key, keyIndex) => (
                               <div
-                                key={keyIndex}
                                 className="flex items-center gap-1"
+                                key={keyIndex}
                               >
                                 <Badge
-                                  variant="outline"
                                   className="px-2 py-1 font-mono text-xs"
+                                  variant="outline"
                                 >
-                                  {key === "⌘" ? (
+                                  {key === '⌘' ? (
                                     <div className="flex items-center gap-1">
                                       <Command className="h-3 w-3" />
                                       <span>{key}</span>
@@ -167,16 +166,16 @@ function ShortcutsPage() {
                                   </span>
                                 )}
                               </div>
-                            ),
+                            )
                           )}
                         </div>
                         <Tooltip>
                           <TooltipTrigger asChild>
                             <Button
-                              variant="ghost"
-                              size="sm"
                               className="h-8 w-8 p-0"
                               onClick={() => startRecording(shortcut.id)}
+                              size="sm"
+                              variant="ghost"
                             >
                               <Settings2 className="h-3 w-3" />
                               <span className="sr-only">Edit shortcut</span>

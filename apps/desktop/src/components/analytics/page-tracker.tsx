@@ -5,10 +5,11 @@
  * using TanStack Router's hooks
  */
 
-import React, { useEffect } from "react";
-import { useRouterState } from "@tanstack/react-router";
+import { log } from '@acme/observability';
+import { useRouterState } from '@tanstack/react-router';
+import React, { useEffect } from 'react';
 
-import { analytics } from "~/lib/analytics/posthog-analytics";
+import { analytics } from '~/lib/analytics/posthog-analytics';
 
 export function PageTracker() {
   const router = useRouterState();
@@ -26,7 +27,7 @@ export function PageTracker() {
       // Track page view
       analytics.trackPageView(pageName, pagePath);
 
-      console.log(`[Analytics] Page viewed: ${pageName} (${pagePath})`);
+      log.info(`[Analytics] Page viewed: ${pageName} (${pagePath})`);
     }
   }, [router.location.pathname]);
 
@@ -53,7 +54,7 @@ export function usePageTracking() {
         analytics.trackPageView(pageName, pagePath);
       }
     },
-    [router.location, router.matches],
+    [router.location, router.matches]
   );
 
   return { trackPage };

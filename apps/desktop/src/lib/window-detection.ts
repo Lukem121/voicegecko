@@ -1,21 +1,22 @@
-import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
+import { log } from '@acme/observability';
+import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow';
 
 export function getCurrentWindowLabel() {
   try {
     const window = getCurrentWebviewWindow();
     return window.label;
   } catch (error) {
-    console.error("Failed to get current window label:", error);
-    return "main"; // Default fallback
+    log.error('Failed to get current window label:', error);
+    return 'main'; // Default fallback
   }
 }
 
 export function isGeckoBarWindow() {
   const label = getCurrentWindowLabel();
-  return label === "gecko-bar";
+  return label === 'gecko-bar';
 }
 
 export function isMainWindow() {
   const label = getCurrentWindowLabel();
-  return label === "main";
+  return label === 'main';
 }

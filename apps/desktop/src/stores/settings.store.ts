@@ -1,20 +1,28 @@
-import type { Store } from "@tauri-apps/plugin-store";
-import { invoke } from "@tauri-apps/api/core";
-import { listen } from "@tauri-apps/api/event";
-import { LazyStore, load } from "@tauri-apps/plugin-store";
-import { create } from "zustand";
-import { devtools } from "zustand/middleware";
-
-import type { HardwareInfo } from "~/types/models";
+import { invoke } from '@tauri-apps/api/core';
+import { listen } from '@tauri-apps/api/event';
+import type { Store } from '@tauri-apps/plugin-store';
+import { LazyStore, load } from '@tauri-apps/plugin-store';
+import { create } from 'zustand';
+import { devtools } from 'zustand/middleware';
+import { analytics } from '~/lib/analytics/posthog-analytics';
+import { CURRENT_SETTINGS_VERSION } from '~/lib/settings/migrations/registry';
+import { recordingService } from '~/services/recording.service';
+import { transcriptionService } from '~/services/transcription.service';
+import type { HardwareInfo } from '~/types/models';
 import type {
-  AudioDevice,
+import
+{
+  log;
+}
+
+import { log } from '@acme/observability';
+
+from;
+('@acme/observability');
+AudioDevice,
   NotificationSound,
   NotificationTiming,
-} from "~/types/settings";
-import { analytics } from "~/lib/analytics/posthog-analytics";
-import { CURRENT_SETTINGS_VERSION } from "~/lib/settings/migrations/registry";
-import { recordingService } from "~/services/recording.service";
-import { transcriptionService } from "~/services/transcription.service";
+} from '~/types/settings'
 
 // Settings types
 interface AudioSettings {
@@ -49,9 +57,9 @@ export interface OnboardingSettings {
 
 // Model types
 export type ModelStatus =
-  | "NotDownloaded"
+  | 'NotDownloaded'
   | { Downloading: number }
-  | "Downloaded";
+  | 'Downloaded';
 
 export interface Model {
   name: string;
@@ -99,11 +107,11 @@ interface SettingsState {
   updateHideGeckoOnFullscreen: (enabled: boolean) => Promise<void>;
   updatePrivacySetting: (
     key: keyof PrivacySettings,
-    value: boolean,
+    value: boolean
   ) => Promise<void>;
   updatePersonalizationSetting: (
     key: keyof PersonalizationSettings,
-    value: boolean,
+    value: boolean
   ) => Promise<void>;
   refreshAudioDevices: () => Promise<void>;
 
@@ -113,8 +121,8 @@ interface SettingsState {
   updateModelStatus: (modelId: string, status: ModelStatus) => void;
   getModelsForTier: (tier: string) => Model[];
   getTierDownloadStatus: (
-    tier: string,
-  ) => "none" | "partial" | "complete" | "downloading";
+    tier: string
+  ) => 'none' | 'partial' | 'complete' | 'downloading';
 
   // Test sound
   playTestSound: () => Promise<void>;
@@ -123,14 +131,14 @@ interface SettingsState {
   updateOnboardingCompleted: (completed: boolean) => Promise<void>;
 }
 
-const settingsStore = new LazyStore("settings.json");
+const settingsStore = new LazyStore('settings.json');
 
 // Default settings
 const defaultSettings: AppSettings = {
   audio: {
     selectedDevice: null,
-    selectedSound: "chime",
-    notificationTiming: "start_completion",
+    selectedSound: 'chime',
+    notificationTiming: 'start_completion',
     notificationVolume: 1.0,
     muteSystemAudio: true,
   },
@@ -150,7 +158,7 @@ const defaultSettings: AppSettings = {
     autoPasteOnCompletion: true,
   },
   models: {
-    selectedTier: "cloud",
+    selectedTier: 'cloud',
     availableModels: {},
   },
   onboarding: {
@@ -187,26 +195,26 @@ export const useSettingsStore = create<SettingsState>()(
           ] = await Promise.all([
             loadAudioSettings(),
             invoke<{ enabled: boolean; hideOnFullscreen?: boolean }>(
-              "get_gecko_bar_config",
+              'get_gecko_bar_config'
             ),
-            invoke<{ enabled: boolean }>("get_autostart_config"),
-            invoke<AudioDevice[]>("list_audio_devices"),
+            invoke<{ enabled: boolean }>('get_autostart_config'),
+            invoke<AudioDevice[]>('list_audio_devices'),
             loadPrivacySettings(),
             loadPersonalizationSettings(),
-            invoke<Record<string, Model>>("list_models"),
-            invoke<string | null>("get_selected_tier"),
-            invoke<HardwareInfo>("get_hardware_info"),
+            invoke<Record<string, Model>>('list_models'),
+            invoke<string | null>('get_selected_tier'),
+            invoke<HardwareInfo>('get_hardware_info'),
           ]);
 
           // Find selected device from saved settings
           const selectedDevice =
             audioDevices.find(
-              (d) => d.name === audioSettings.selectedDevice?.name,
+              (d) => d.name === audioSettings.selectedDevice?.name
             ) ?? null;
 
           // Load onboarding settings
           const onboardingCompleted =
-            (await settingsStore.get<boolean>("onboarding.completed")) ?? false;
+            (await settingsStore.get<boolean>('onboarding.completed')) ?? false;
 
           set({
             settings: {
@@ -222,7 +230,7 @@ export const useSettingsStore = create<SettingsState>()(
               privacy: privacySettings,
               personalization: personalizationSettings,
               models: {
-                selectedTier: selectedTier ?? "cloud",
+                selectedTier: selectedTier ?? 'cloud',
                 availableModels: models,
               },
               onboarding: {
@@ -237,7 +245,7 @@ export const useSettingsStore = create<SettingsState>()(
 
           // Set initial volume
           if (audioSettings.notificationVolume) {
-            await invoke("set_volume", {
+            await invoke('set_volume', {
               volume: audioSettings.notificationVolume,
             });
           }
@@ -245,7 +253,7 @@ export const useSettingsStore = create<SettingsState>()(
           // Refresh models again to ensure we have the latest status after synchronization
           // This is important for detecting bundled models
           const refreshedModels =
-            await invoke<Record<string, Model>>("list_models");
+            await invoke<Record<string, Model>>('list_models');
           set((state) => ({
             settings: {
               ...state.settings,
@@ -258,16 +266,16 @@ export const useSettingsStore = create<SettingsState>()(
 
           // Set up listeners for model download events
           // This ensures the store is updated even when downloads happen in the background
-          void listen<[string, number]>("model-download-progress", (event) => {
+          listen<[string, number]>('model-download-progress', (event) => {
             const [modelId, progress] = event.payload;
             get().updateModelStatus(modelId, { Downloading: progress });
           });
 
-          void listen<string>("model-download-complete", () => {
-            void get().refreshModels();
+          listen<string>('model-download-complete', () => {
+            get().refreshModels();
           });
         } catch (error) {
-          console.error("[Settings] Failed to initialize:", error);
+          log.error('[Settings] Failed to initialize:', error);
           set({ isLoading: false });
           throw error;
         }
@@ -282,22 +290,22 @@ export const useSettingsStore = create<SettingsState>()(
         };
 
         // Track audio device change
-        analytics.track("settings_changed", {
-          category: "audio",
-          setting_key: "selectedDevice",
+        analytics.track('settings_changed', {
+          category: 'audio',
+          setting_key: 'selectedDevice',
           old_value: oldDevice?.name ?? null,
           new_value: device?.name ?? null,
         });
 
         if (device) {
-          analytics.track("audio_device_changed", {
+          analytics.track('audio_device_changed', {
             device_name: device.name,
-            device_type: device.name ? "custom" : "default",
+            device_type: device.name ? 'custom' : 'default',
           });
         }
 
         set({ settings: newSettings });
-        await saveWithMeta(settingsStore, "selectedDevice", device);
+        await saveWithMeta(settingsStore, 'selectedDevice', device);
       },
 
       updateNotificationSound: async (sound) => {
@@ -309,15 +317,15 @@ export const useSettingsStore = create<SettingsState>()(
         };
 
         // Track notification sound change
-        analytics.track("settings_changed", {
-          category: "audio",
-          setting_key: "selectedSound",
+        analytics.track('settings_changed', {
+          category: 'audio',
+          setting_key: 'selectedSound',
           old_value: oldSound,
           new_value: sound,
         });
 
         set({ settings: newSettings });
-        await saveWithMeta(settingsStore, "selectedSound", sound);
+        await saveWithMeta(settingsStore, 'selectedSound', sound);
       },
 
       updateNotificationTiming: async (timing) => {
@@ -327,7 +335,7 @@ export const useSettingsStore = create<SettingsState>()(
           audio: { ...settings.audio, notificationTiming: timing },
         };
         set({ settings: newSettings });
-        await saveWithMeta(settingsStore, "notificationTiming", timing);
+        await saveWithMeta(settingsStore, 'notificationTiming', timing);
       },
 
       updateNotificationVolume: async (volume) => {
@@ -337,8 +345,8 @@ export const useSettingsStore = create<SettingsState>()(
           audio: { ...settings.audio, notificationVolume: volume },
         };
         set({ settings: newSettings });
-        await saveWithMeta(settingsStore, "notificationVolume", volume);
-        await invoke("set_volume", { volume });
+        await saveWithMeta(settingsStore, 'notificationVolume', volume);
+        await invoke('set_volume', { volume });
       },
 
       updateMuteSystemAudio: async (mute) => {
@@ -348,7 +356,7 @@ export const useSettingsStore = create<SettingsState>()(
           audio: { ...settings.audio, muteSystemAudio: mute },
         };
         set({ settings: newSettings });
-        await saveWithMeta(settingsStore, "muteSystemAudio", mute);
+        await saveWithMeta(settingsStore, 'muteSystemAudio', mute);
       },
 
       updateLaunchOnStartup: async (enabled) => {
@@ -358,7 +366,7 @@ export const useSettingsStore = create<SettingsState>()(
           general: { ...settings.general, launchOnStartup: enabled },
         };
         set({ settings: newSettings });
-        await invoke("set_autostart_config", { config: { enabled } });
+        await invoke('set_autostart_config', { config: { enabled } });
       },
 
       updateShowGeckoBar: async (enabled) => {
@@ -373,12 +381,12 @@ export const useSettingsStore = create<SettingsState>()(
           enabled,
           hideOnFullscreen: settings.general.hideGeckoOnFullscreen,
         };
-        await invoke("set_gecko_bar_config", { config });
+        await invoke('set_gecko_bar_config', { config });
 
         if (enabled) {
-          await invoke("show_gecko_bar");
+          await invoke('show_gecko_bar');
         } else {
-          await invoke("hide_gecko_bar");
+          await invoke('hide_gecko_bar');
         }
       },
 
@@ -394,7 +402,7 @@ export const useSettingsStore = create<SettingsState>()(
           enabled: settings.general.showGeckoBar,
           hideOnFullscreen: enabled,
         };
-        await invoke("set_gecko_bar_config", { config });
+        await invoke('set_gecko_bar_config', { config });
       },
 
       updatePrivacySetting: async (key, value) => {
@@ -406,8 +414,8 @@ export const useSettingsStore = create<SettingsState>()(
         };
 
         // Track privacy setting change
-        analytics.track("settings_changed", {
-          category: "privacy",
+        analytics.track('settings_changed', {
+          category: 'privacy',
           setting_key: key,
           old_value: oldValue,
           new_value: value,
@@ -426,8 +434,8 @@ export const useSettingsStore = create<SettingsState>()(
         };
 
         // Track personalization setting change
-        analytics.track("settings_changed", {
-          category: "personalization",
+        analytics.track('settings_changed', {
+          category: 'personalization',
           setting_key: key,
           old_value: oldValue,
           new_value: value,
@@ -440,10 +448,10 @@ export const useSettingsStore = create<SettingsState>()(
       refreshAudioDevices: async () => {
         try {
           const audioDevices =
-            await invoke<AudioDevice[]>("list_audio_devices");
+            await invoke<AudioDevice[]>('list_audio_devices');
           set({ audioDevices });
         } catch (error) {
-          console.error("Failed to refresh audio devices:", error);
+          log.error('Failed to refresh audio devices:', error);
         }
       },
 
@@ -457,27 +465,27 @@ export const useSettingsStore = create<SettingsState>()(
         };
 
         // Track model tier change
-        analytics.track("settings_changed", {
-          category: "models",
-          setting_key: "selectedTier",
+        analytics.track('settings_changed', {
+          category: 'models',
+          setting_key: 'selectedTier',
           old_value: oldTier,
           new_value: tier,
         });
 
-        analytics.track("model_tier_changed", {
+        analytics.track('model_tier_changed', {
           old_tier: oldTier,
           new_tier: tier,
         });
 
         set({ settings: newSettings });
-        await invoke("set_selected_tier", { tier });
+        await invoke('set_selected_tier', { tier });
       },
 
       refreshModels: async () => {
         try {
           const [models, selectedTier] = await Promise.all([
-            invoke<Record<string, Model>>("list_models"),
-            invoke<string | null>("get_selected_tier"),
+            invoke<Record<string, Model>>('list_models'),
+            invoke<string | null>('get_selected_tier'),
           ]);
 
           set((state) => ({
@@ -492,7 +500,7 @@ export const useSettingsStore = create<SettingsState>()(
             },
           }));
         } catch (error) {
-          console.error("[Store] Failed to refresh models:", error);
+          log.error('[Store] Failed to refresh models:', error);
         }
       },
 
@@ -527,11 +535,11 @@ export const useSettingsStore = create<SettingsState>()(
           (model) => {
             // Convert tier enum to lowercase string for comparison
             const modelTier =
-              typeof model.tier === "string"
+              typeof model.tier === 'string'
                 ? model.tier.toLowerCase()
                 : model.tier;
             return modelTier === tier.toLowerCase();
-          },
+          }
         );
       },
 
@@ -541,57 +549,57 @@ export const useSettingsStore = create<SettingsState>()(
         const tierModels = models.filter((model) => {
           // Handle case-insensitive comparison
           const modelTier =
-            typeof model.tier === "string"
+            typeof model.tier === 'string'
               ? model.tier.toLowerCase()
               : model.tier;
           return modelTier === tier.toLowerCase();
         });
 
         if (tierModels.length === 0) {
-          return "none";
+          return 'none';
         }
 
         const downloading = tierModels.some(
           (model) =>
-            typeof model.status === "object" && "Downloading" in model.status,
+            typeof model.status === 'object' && 'Downloading' in model.status
         );
 
         // If any model in the tier is downloaded, the tier is complete
         // Users only need one model per tier to use that quality level
         const anyDownloaded = tierModels.some(
-          (model) => model.status === "Downloaded",
+          (model) => model.status === 'Downloaded'
         );
 
         if (downloading) {
-          return "downloading";
+          return 'downloading';
         }
 
         if (anyDownloaded) {
-          return "complete";
+          return 'complete';
         }
 
-        return "none";
+        return 'none';
       },
 
       playTestSound: async () => {
         const { settings } = get();
 
         // Track notification sound test
-        analytics.track("notification_sound_tested", {
+        analytics.track('notification_sound_tested', {
           sound_name: settings.audio.selectedSound,
           volume: settings.audio.notificationVolume,
         });
 
         // Check if interaction sounds are enabled
         if (!settings.personalization.interactionSounds) {
-          console.log(
-            "[Settings] Test sound disabled - interaction sounds are off",
+          log.info(
+            '[Settings] Test sound disabled - interaction sounds are off'
           );
           return;
         }
 
-        if (settings.audio.notificationTiming !== "disabled") {
-          await recordingService.playNotificationSound("Start");
+        if (settings.audio.notificationTiming !== 'disabled') {
+          await recordingService.playNotificationSound('Start');
           await new Promise((resolve) => setTimeout(resolve, 700));
           await transcriptionService.playEndSoundIfEnabled();
         }
@@ -605,13 +613,13 @@ export const useSettingsStore = create<SettingsState>()(
           onboarding: { ...settings.onboarding, completed },
         };
         set({ settings: newSettings });
-        await saveWithMeta(settingsStore, "onboarding.completed", completed);
+        await saveWithMeta(settingsStore, 'onboarding.completed', completed);
       },
     }),
     {
-      name: "settings-store",
-    },
-  ),
+      name: 'settings-store',
+    }
+  )
 );
 
 // Custom hooks for specific data
@@ -623,43 +631,43 @@ async function loadAudioSettings(): Promise<AudioSettings> {
   // Load settings without migration - that's handled by the migration manager
   return {
     selectedDevice:
-      (await settingsStore.get<AudioDevice>("selectedDevice")) ?? null,
+      (await settingsStore.get<AudioDevice>('selectedDevice')) ?? null,
     selectedSound:
-      (await settingsStore.get<NotificationSound>("selectedSound")) ?? "chime",
+      (await settingsStore.get<NotificationSound>('selectedSound')) ?? 'chime',
     notificationTiming:
-      (await settingsStore.get<NotificationTiming>("notificationTiming")) ??
-      "start_completion",
+      (await settingsStore.get<NotificationTiming>('notificationTiming')) ??
+      'start_completion',
     notificationVolume:
-      (await settingsStore.get<number>("notificationVolume")) ?? 1.0,
+      (await settingsStore.get<number>('notificationVolume')) ?? 1.0,
     muteSystemAudio:
-      (await settingsStore.get<boolean>("muteSystemAudio")) ?? true,
+      (await settingsStore.get<boolean>('muteSystemAudio')) ?? true,
   };
 }
 
 async function loadPrivacySettings(): Promise<PrivacySettings> {
   return {
     usageAnalytics:
-      (await settingsStore.get<boolean>("privacy.usageAnalytics")) ?? true,
+      (await settingsStore.get<boolean>('privacy.usageAnalytics')) ?? true,
     crashReports:
-      (await settingsStore.get<boolean>("privacy.crashReports")) ?? true,
+      (await settingsStore.get<boolean>('privacy.crashReports')) ?? true,
   };
 }
 
 async function loadPersonalizationSettings(): Promise<PersonalizationSettings> {
   return {
     interactionSounds:
-      (await settingsStore.get<boolean>("personalization.interactionSounds")) ??
+      (await settingsStore.get<boolean>('personalization.interactionSounds')) ??
       true,
     smartFormatting:
-      (await settingsStore.get<boolean>("personalization.smartFormatting")) ??
+      (await settingsStore.get<boolean>('personalization.smartFormatting')) ??
       true,
     autoAddToDictionary:
       (await settingsStore.get<boolean>(
-        "personalization.autoAddToDictionary",
+        'personalization.autoAddToDictionary'
       )) ?? true,
     autoPasteOnCompletion:
       (await settingsStore.get<boolean>(
-        "personalization.autoPasteOnCompletion",
+        'personalization.autoPasteOnCompletion'
       )) ?? true,
   };
 }
@@ -670,13 +678,13 @@ async function loadPersonalizationSettings(): Promise<PersonalizationSettings> {
 async function saveWithMeta(
   store: LazyStore,
   key: string,
-  value: unknown,
+  value: unknown
 ): Promise<void> {
   await store.set(key, value);
 
   // Update metadata timestamp whenever we save
-  const currentMeta = (await store.get<unknown>("_meta")) ?? {};
-  await store.set("_meta", {
+  const currentMeta = (await store.get<unknown>('_meta')) ?? {};
+  await store.set('_meta', {
     ...currentMeta,
     version: CURRENT_SETTINGS_VERSION,
     timestamp: Date.now(),

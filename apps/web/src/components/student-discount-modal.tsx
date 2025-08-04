@@ -1,19 +1,13 @@
-"use client";
+'use client';
 
-import { useEffect, useState } from "react";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import { toast } from "sonner";
-import { z } from "zod/v4";
-
-import { Button } from "@acme/ui/components/ui/button";
+import { Button } from '@acme/ui/components/ui/button';
 import {
   Dialog,
   DialogContent,
   DialogDescription,
   DialogHeader,
   DialogTitle,
-} from "@acme/ui/components/ui/dialog";
+} from '@acme/ui/components/ui/dialog';
 import {
   Form,
   FormControl,
@@ -21,17 +15,22 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from "@acme/ui/components/ui/form";
-import { Input } from "@acme/ui/components/ui/input";
+} from '@acme/ui/components/ui/form';
+import { Input } from '@acme/ui/components/ui/input';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useEffect, useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { toast } from 'sonner';
+import { z } from 'zod/v4';
 
-import { useStudentDiscount } from "~/hooks/use-student-discount";
-import { isEducationalEmail } from "~/utils/educational-domains";
+import { useStudentDiscount } from '~/hooks/use-student-discount';
+import { isEducationalEmail } from '~/utils/educational-domains';
 
 const StudentDiscountSchema = z.object({
   email: z
-    .email("Please enter a valid email address")
+    .email('Please enter a valid email address')
     .refine(isEducationalEmail, {
-      message: "Please use your educational email address (.edu, .ac.uk, etc.)",
+      message: 'Please use your educational email address (.edu, .ac.uk, etc.)',
     }),
 });
 
@@ -53,7 +52,7 @@ export function StudentDiscountModal({
   const form = useForm<StudentDiscountFormData>({
     resolver: zodResolver(StudentDiscountSchema),
     defaultValues: {
-      email: "",
+      email: '',
     },
   });
 
@@ -71,7 +70,7 @@ export function StudentDiscountModal({
         setIsSuccessful(true);
       } else {
         setFormError(
-          result.error?.message ?? "Failed to send student discount.",
+          result.error?.message ?? 'Failed to send student discount.'
         );
       }
     }
@@ -90,7 +89,7 @@ export function StudentDiscountModal({
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={handleClose}>
+    <Dialog onOpenChange={handleClose} open={isOpen}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Student Discount</DialogTitle>
@@ -101,7 +100,7 @@ export function StudentDiscountModal({
         </DialogHeader>
 
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form className="space-y-4" onSubmit={form.handleSubmit(onSubmit)}>
             <FormField
               control={form.control}
               name="email"
@@ -111,14 +110,14 @@ export function StudentDiscountModal({
                   <FormControl>
                     <Input
                       {...field}
-                      type="email"
-                      placeholder="student@university.edu"
                       disabled={isRequesting || isSuccessful}
+                      placeholder="student@university.edu"
+                      type="email"
                     />
                   </FormControl>
                   <FormMessage />
                   {isSuccessful && (
-                    <div className="rounded-md bg-green-50 p-3 text-sm text-green-600">
+                    <div className="rounded-md bg-green-50 p-3 text-green-600 text-sm">
                       Discount code is on its way to your inbox. Be sure to
                       check your spam folder if you don't see it.
                     </div>
@@ -128,28 +127,28 @@ export function StudentDiscountModal({
             />
 
             {formError && (
-              <div className="rounded-md bg-red-50 p-3 text-sm text-red-600">
+              <div className="rounded-md bg-red-50 p-3 text-red-600 text-sm">
                 {formError}
               </div>
             )}
 
             <div className="flex justify-end space-x-2 pt-4">
               {isSuccessful ? (
-                <Button type="button" onClick={handleClose}>
+                <Button onClick={handleClose} type="button">
                   Close
                 </Button>
               ) : (
                 <>
                   <Button
+                    disabled={isRequesting}
+                    onClick={handleClose}
                     type="button"
                     variant="outline"
-                    onClick={handleClose}
-                    disabled={isRequesting}
                   >
                     Cancel
                   </Button>
-                  <Button type="submit" disabled={isRequesting}>
-                    {isRequesting ? "Sending..." : "Request Coupon"}
+                  <Button disabled={isRequesting} type="submit">
+                    {isRequesting ? 'Sending...' : 'Request Coupon'}
                   </Button>
                 </>
               )}

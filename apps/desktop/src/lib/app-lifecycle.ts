@@ -1,13 +1,14 @@
-import { invoke } from "@tauri-apps/api/core";
-import { exit } from "@tauri-apps/plugin-process";
+import { log } from '@acme/observability';
+import { invoke } from '@tauri-apps/api/core';
+import { exit } from '@tauri-apps/plugin-process';
 
-import { storeRegistry } from "~/stores/store-registry";
+import { storeRegistry } from '~/stores/store-registry';
 
 export enum AppState {
-  INITIALIZING = "initializing",
-  READY = "ready",
-  SHUTTING_DOWN = "shutting_down",
-  ERROR = "error",
+  INITIALIZING = 'initializing',
+  READY = 'ready',
+  SHUTTING_DOWN = 'shutting_down',
+  ERROR = 'error',
 }
 
 class AppLifecycleManager {
@@ -47,7 +48,7 @@ class AppLifecycleManager {
 
       this.setState(AppState.READY);
     } catch (error) {
-      console.error("[AppLifecycle] Startup failed:", error);
+      log.error('[AppLifecycle] Startup failed:', error);
       this.setState(AppState.ERROR);
       throw error;
     }
@@ -65,7 +66,7 @@ class AppLifecycleManager {
 
       await exit(0);
     } catch (error) {
-      console.error("[AppLifecycle] Shutdown error:", error);
+      log.error('[AppLifecycle] Shutdown error:', error);
       throw error;
     }
   }

@@ -1,10 +1,10 @@
-import type { Subscription } from "@better-auth/stripe";
-import type { Stripe } from "stripe";
+import { sendPaymentFailedEmail } from '@acme/email';
+import { log } from '@acme/observability';
+import type { Subscription } from '@better-auth/stripe';
+import type { Stripe } from 'stripe';
 
-import { sendPaymentFailedEmail } from "@acme/email";
-
-import { paymentEnv } from "../../env";
-import { getUserForEmail } from "./user-lookup";
+import { paymentEnv } from '../../env';
+import { getUserForEmail } from './user-lookup';
 
 interface SubscriptionUpdateParams {
   event: Stripe.Event;
@@ -15,7 +15,7 @@ export const onSubscriptionUpdate = async ({
   event,
   subscription,
 }: SubscriptionUpdateParams) => {
-  console.log(`[Subscription] Subscription updated:`, {
+  log.info('[Subscription] Subscription updated:', {
     subscriptionId: subscription.id,
     userId: subscription.referenceId,
     plan: subscription.plan,
@@ -26,11 +26,11 @@ export const onSubscriptionUpdate = async ({
 
   // Check if this update indicates a payment failure
   const isPaymentFailure =
-    subscription.status === "past_due" || subscription.status === "unpaid";
+    subscription.status === 'past_due' || subscription.status === 'unpaid';
 
   if (isPaymentFailure) {
-    console.log(
-      `[Subscription] Payment failure detected for subscription ${subscription.id} with status: ${subscription.status}`,
+    log.info(
+      `[Subscription] Payment failure detected for subscription ${subscription.id} with status: ${subscription.status}`
     );
 
     // Send payment failed email to the user
@@ -38,28 +38,25 @@ export const onSubscriptionUpdate = async ({
       const user = await getUserForEmail(subscription.referenceId);
       if (user) {
         // Create retry payment URL - user can manage subscription through billing portal
-        const retryPaymentUrl = `${paymentEnv().NEXT_PUBLIC_VOICEGECKO_URL || "https://voicegecko.io"}/app/billing`;
+        const retryPaymentUrl = `${paymentEnv().NEXT_PUBLIC_VOICEGECKO_URL || 'https://voicegecko.io'}/app/billing`;
         const accountUrl = retryPaymentUrl; // Same URL for account management
 
         await sendPaymentFailedEmail({
           user,
-          planName: subscription.plan || "VoiceGecko Pro",
+          planName: subscription.plan || 'VoiceGecko Pro',
           retryPaymentUrl,
           accountUrl,
         });
-        console.log(
-          `[Subscription] Payment failed email sent to user ${subscription.referenceId} for plan ${subscription.plan}`,
+        log.info(
+          `[Subscription] Payment failed email sent to user ${subscription.referenceId} for plan ${subscription.plan}`
         );
       } else {
-        console.error(
-          `[Subscription] Could not find user ${subscription.referenceId} to send payment failed email`,
+        log.error(
+          `[Subscription] Could not find user ${subscription.referenceId} to send payment failed email`
         );
       }
     } catch (error) {
-      console.error(
-        `[Subscription] Error sending payment failed email:`,
-        error,
-      );
+      log.error('[Subscription] Error sending payment failed email:', error);
     }
   }
 

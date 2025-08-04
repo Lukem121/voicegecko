@@ -1,6 +1,6 @@
-import { useMutation } from "@tanstack/react-query";
+import { useMutation } from '@tanstack/react-query';
 
-import { trpc } from "~/trpc";
+import { trpc } from '~/trpc';
 
 export const useCreateTranscription = () => {
   const options = trpc.transcription.create.mutationOptions();

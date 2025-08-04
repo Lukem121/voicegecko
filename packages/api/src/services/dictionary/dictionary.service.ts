@@ -1,13 +1,13 @@
-import { dictionaryRepository } from "../../repository/dictionary.repository";
+import { dictionaryRepository } from '../../repository/dictionary.repository';
 
 export const dictionaryService = {
   async getUserDictionaryPrompt(userId: string): Promise<string> {
     const entries = await dictionaryRepository.getAllByUser(userId, {
-      sortBy: "alphabetical",
+      sortBy: 'alphabetical',
     });
 
     if (entries.length === 0) {
-      return "";
+      return '';
     }
 
     const words = entries.map((entry) => entry.word);
@@ -19,7 +19,7 @@ export const dictionaryService = {
    * Simply repeat each word 3 times for better recognition without triggering repetition detection
    */
   optimizePromptForTokenLimit(words: string[]): string {
-    if (words.length === 0) return "";
+    if (words.length === 0) return '';
 
     const repeatedWords: string[] = [];
 
@@ -27,6 +27,6 @@ export const dictionaryService = {
       repeatedWords.push(word, word, word);
     });
 
-    return repeatedWords.join(", ");
+    return repeatedWords.join(', ');
   },
 };

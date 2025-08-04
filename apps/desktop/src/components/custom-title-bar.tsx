@@ -1,18 +1,17 @@
-import { useEffect, useState } from "react";
-import { getCurrentWindow } from "@tauri-apps/api/window";
-import { Clock, FileText, Gauge, PanelLeftIcon } from "lucide-react";
-import { AnimatePresence, motion } from "motion/react";
-
-import GeckoFullBody from "@acme/ui/components/geckos/gecko-full-body";
-import LogoText from "@acme/ui/components/logos/logo-text";
-import { useSidebar } from "@acme/ui/components/ui/sidebar";
+import GeckoFullBody from '@acme/ui/components/geckos/gecko-full-body';
+import LogoText from '@acme/ui/components/logos/logo-text';
+import { useSidebar } from '@acme/ui/components/ui/sidebar';
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
-} from "@acme/ui/components/ui/tooltip";
+} from '@acme/ui/components/ui/tooltip';
+import { getCurrentWindow } from '@tauri-apps/api/window';
+import { Clock, FileText, Gauge, PanelLeftIcon } from 'lucide-react';
+import { AnimatePresence, motion } from 'motion/react';
+import { useEffect, useState } from 'react';
 
-import { useUsageStats } from "~/hooks/use-usage-stats";
+import { useUsageStats } from '~/hooks/use-usage-stats';
 
 const appWindow = getCurrentWindow();
 
@@ -20,13 +19,13 @@ const appWindow = getCurrentWindow();
 function StatSkeleton() {
   return (
     <motion.div
-      className="bg-muted h-3 w-8 animate-pulse rounded"
-      initial={{ opacity: 0.6 }}
       animate={{ opacity: [0.6, 1, 0.6] }}
+      className="h-3 w-8 animate-pulse rounded bg-muted"
+      initial={{ opacity: 0.6 }}
       transition={{
         duration: 1.5,
-        repeat: Infinity,
-        ease: "easeInOut",
+        repeat: Number.POSITIVE_INFINITY,
+        ease: 'easeInOut',
       }}
     />
   );
@@ -45,26 +44,26 @@ function StatValue({
       <AnimatePresence mode="wait">
         {isLoading ? (
           <motion.div
-            key="skeleton"
-            initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
             className="absolute inset-0"
+            exit={{ opacity: 0 }}
+            initial={{ opacity: 0 }}
+            key="skeleton"
+            transition={{ duration: 0.2 }}
           >
             <StatSkeleton />
           </motion.div>
         ) : (
           <motion.span
-            key="value"
-            initial={{ opacity: 0, y: 2 }}
             animate={{ opacity: 1, y: 0 }}
+            className="absolute inset-0 flex items-center font-medium text-foreground text-xs"
             exit={{ opacity: 0, y: -2 }}
+            initial={{ opacity: 0, y: 2 }}
+            key="value"
             transition={{
               duration: 0.3,
               ease: [0.4, 0.0, 0.2, 1],
             }}
-            className="text-foreground absolute inset-0 flex items-center text-xs font-medium"
           >
             {value}
           </motion.span>
@@ -86,45 +85,45 @@ export function TitleBar() {
       setIsMaximized(maximized);
     };
 
-    void checkMaximized();
+    checkMaximized();
 
     // Listen for resize events to update maximize state
     const unlistenResize = appWindow.onResized(() => {
-      void checkMaximized();
+      checkMaximized();
     });
 
     return () => {
-      void unlistenResize.then((fn) => fn());
+      unlistenResize.then((fn) => fn());
     };
   }, []);
 
   const handleMinimize = () => {
-    void appWindow.minimize();
+    appWindow.minimize();
   };
 
   const handleMaximize = () => {
-    void appWindow.toggleMaximize();
+    appWindow.toggleMaximize();
   };
 
   const handleClose = () => {
-    void appWindow.close();
+    appWindow.close();
   };
 
   return (
-    <div className="bg-background border-border fixed top-0 right-0 left-0 z-[9999] flex h-12 border-b select-none">
-      <div data-tauri-drag-region className="h-full flex-1" />
+    <div className="fixed top-0 right-0 left-0 z-[9999] flex h-12 select-none border-border border-b bg-background">
+      <div className="h-full flex-1" data-tauri-drag-region />
       <div className="pointer-events-none absolute top-0 right-0 left-2 flex h-full items-center justify-between">
         <div className="flex items-center gap-2">
-          <GeckoFullBody className="pointer-events-auto -mb-[10px] h-9 origin-bottom cursor-pointer transition-transform duration-150 hover:-rotate-3" />
+          <GeckoFullBody className="-mb-[10px] hover:-rotate-3 pointer-events-auto h-9 origin-bottom cursor-pointer transition-transform duration-150" />
           <LogoText className="h-7 pt-1.5 pl-1" />
         </div>
 
         <div className="flex items-center gap-3">
           {/* Usage Stats */}
           <motion.div
+            animate={{ opacity: 1 }}
             className="pointer-events-auto flex items-center gap-4"
             initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
             transition={{ duration: 0.5 }}
           >
             <Tooltip>
@@ -137,19 +136,21 @@ export function TitleBar() {
                     }}
                     transition={{
                       duration: usageStats.isLoading ? 2 : 0.3,
-                      repeat: usageStats.isLoading ? Infinity : 0,
-                      ease: "easeInOut",
+                      repeat: usageStats.isLoading
+                        ? Number.POSITIVE_INFINITY
+                        : 0,
+                      ease: 'easeInOut',
                     }}
                   >
-                    <FileText className="text-muted-foreground h-3 w-3" />
+                    <FileText className="h-3 w-3 text-muted-foreground" />
                   </motion.div>
                   <StatValue
-                    value={usageStats.wordsProcessed}
                     isLoading={usageStats.isLoading}
+                    value={usageStats.wordsProcessed}
                   />
                 </div>
               </TooltipTrigger>
-              <TooltipContent side="bottom" className="z-[10000]">
+              <TooltipContent className="z-[10000]" side="bottom">
                 <p>Total words processed across all transcriptions</p>
               </TooltipContent>
             </Tooltip>
@@ -164,20 +165,22 @@ export function TitleBar() {
                     }}
                     transition={{
                       duration: usageStats.isLoading ? 2 : 0.3,
-                      repeat: usageStats.isLoading ? Infinity : 0,
-                      ease: "easeInOut",
+                      repeat: usageStats.isLoading
+                        ? Number.POSITIVE_INFINITY
+                        : 0,
+                      ease: 'easeInOut',
                       delay: 0.2,
                     }}
                   >
-                    <Clock className="text-muted-foreground h-3 w-3" />
+                    <Clock className="h-3 w-3 text-muted-foreground" />
                   </motion.div>
                   <StatValue
-                    value={usageStats.timeSaved}
                     isLoading={usageStats.isLoading}
+                    value={usageStats.timeSaved}
                   />
                 </div>
               </TooltipTrigger>
-              <TooltipContent side="bottom" className="z-[10000]">
+              <TooltipContent className="z-[10000]" side="bottom">
                 <p>Estimated time saved through transcription</p>
               </TooltipContent>
             </Tooltip>
@@ -192,92 +195,102 @@ export function TitleBar() {
                     }}
                     transition={{
                       duration: usageStats.isLoading ? 2 : 0.3,
-                      repeat: usageStats.isLoading ? Infinity : 0,
-                      ease: "easeInOut",
+                      repeat: usageStats.isLoading
+                        ? Number.POSITIVE_INFINITY
+                        : 0,
+                      ease: 'easeInOut',
                       delay: 0.4,
                     }}
                   >
-                    <Gauge className="text-muted-foreground h-3 w-3" />
+                    <Gauge className="h-3 w-3 text-muted-foreground" />
                   </motion.div>
                   <StatValue
-                    value={usageStats.wordsPerMinute}
                     isLoading={usageStats.isLoading}
+                    value={usageStats.wordsPerMinute}
                   />
                 </div>
               </TooltipTrigger>
-              <TooltipContent side="bottom" className="z-[10000]">
+              <TooltipContent className="z-[10000]" side="bottom">
                 <p>Average words per minute transcription speed</p>
               </TooltipContent>
             </Tooltip>
           </motion.div>
 
-          <div className="bg-border h-4 w-px" />
+          <div className="h-4 w-px bg-border" />
 
           <div className="pointer-events-auto flex">
             <button
-              className="text-foreground hover:bg-accent active:bg-accent/80 flex h-8 w-8 cursor-pointer items-center justify-center border-none bg-transparent transition-colors duration-150"
+              className="flex h-8 w-8 cursor-pointer items-center justify-center border-none bg-transparent text-foreground transition-colors duration-150 hover:bg-accent active:bg-accent/80"
               onClick={toggleSidebar}
               title="Minimize"
+              type="button"
             >
               <PanelLeftIcon className="h-3 w-3" />
             </button>
             <button
-              className="text-foreground hover:bg-accent active:bg-accent/80 flex h-8 w-8 cursor-pointer items-center justify-center border-none bg-transparent transition-colors duration-150"
+              className="flex h-8 w-8 cursor-pointer items-center justify-center border-none bg-transparent text-foreground transition-colors duration-150 hover:bg-accent active:bg-accent/80"
               onClick={handleMinimize}
               title="Minimize"
+              type="button"
             >
-              <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+              <svg fill="none" height="12" viewBox="0 0 12 12" width="12">
+                <title>Minimize</title>
                 <path
                   d="M2 6h8"
                   stroke="currentColor"
-                  strokeWidth="1.5"
                   strokeLinecap="round"
+                  strokeWidth="1.5"
                 />
               </svg>
             </button>
             <button
-              className="text-foreground hover:bg-accent active:bg-accent/80 flex h-8 w-8 cursor-pointer items-center justify-center border-none bg-transparent transition-colors duration-150"
+              className="flex h-8 w-8 cursor-pointer items-center justify-center border-none bg-transparent text-foreground transition-colors duration-150 hover:bg-accent active:bg-accent/80"
               onClick={handleMaximize}
-              title={isMaximized ? "Restore" : "Maximize"}
+              title={isMaximized ? 'Restore' : 'Maximize'}
+              type="button"
             >
               {isMaximized ? (
-                <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                <svg fill="none" height="12" viewBox="0 0 12 12" width="12">
+                  <title>Restore</title>
                   <path
                     d="M3 4.5h6v6H3V4.5zM4.5 3V1.5h6v6H9"
-                    stroke="currentColor"
-                    strokeWidth="1.5"
                     fill="none"
+                    stroke="currentColor"
                     strokeLinecap="round"
                     strokeLinejoin="round"
+                    strokeWidth="1.5"
                   />
                 </svg>
               ) : (
-                <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                <svg fill="none" height="12" viewBox="0 0 12 12" width="12">
+                  <title>Maximize</title>
                   <rect
-                    x="2"
-                    y="2"
-                    width="8"
+                    fill="none"
                     height="8"
                     stroke="currentColor"
-                    strokeWidth="1.5"
-                    fill="none"
                     strokeLinecap="round"
                     strokeLinejoin="round"
+                    strokeWidth="1.5"
+                    width="8"
+                    x="2"
+                    y="2"
                   />
                 </svg>
               )}
             </button>
             <button
-              className="text-foreground flex h-8 w-8 cursor-pointer items-center justify-center border-none bg-transparent transition-colors duration-150 hover:bg-red-500 hover:text-white active:bg-red-600 active:text-white"
+              className="flex h-8 w-8 cursor-pointer items-center justify-center border-none bg-transparent text-foreground transition-colors duration-150 hover:bg-red-500 hover:text-white active:bg-red-600 active:text-white"
               onClick={handleClose}
               title="Close"
+              type="button"
             >
-              <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+              <svg fill="none" height="12" viewBox="0 0 12 12" width="12">
+                <title>Close</title>
                 <path
                   d="M3 3l6 6m0-6l-6 6"
                   stroke="currentColor"
-                  strokeWidth="1.5"
                   strokeLinecap="round"
+                  strokeWidth="1.5"
                 />
               </svg>
             </button>

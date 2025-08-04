@@ -1,7 +1,6 @@
-import { create } from "zustand";
-
-import type { ShortcutCategory, ShortcutId } from "~/lib/shortcuts/types";
-import { DEFAULT_SHORTCUTS } from "~/lib/shortcuts/constants";
+import { create } from 'zustand';
+import { DEFAULT_SHORTCUTS } from '~/lib/shortcuts/constants';
+import type { ShortcutCategory, ShortcutId } from '~/lib/shortcuts/types';
 
 interface ShortcutStoreState {
   categories: ShortcutCategory[];
@@ -28,7 +27,7 @@ export const useShortcutStore = create<ShortcutStoreState>((set, get) => ({
       shortcuts: category.shortcuts.map((shortcut) => {
         // Clear shortcut if another action has these keys
         if (
-          shortcut.keys.join("+") === keys.join("+") &&
+          shortcut.keys.join('+') === keys.join('+') &&
           shortcut.id !== actionId
         ) {
           return { ...shortcut, keys: [] };

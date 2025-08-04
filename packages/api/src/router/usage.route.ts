@@ -1,7 +1,7 @@
-import type { TRPCRouterRecord } from "@trpc/server";
+import type { TRPCRouterRecord } from '@trpc/server';
 
-import { usageService } from "../services/usage/usage.service";
-import { protectedProcedure } from "../trpc";
+import { usageService } from '../services/usage/usage.service';
+import { protectedProcedure } from '../trpc';
 
 export const usageRouter = {
   getStatus: protectedProcedure.query(async ({ ctx }) => {
