@@ -30,7 +30,7 @@ export const useInfiniteScroll = ({
 
   useEffect(() => {
     const element = loadMoreRef.current;
-    if (!element) return;
+    if (!element) { return; }
 
     const observer = new IntersectionObserver(handleIntersection, {
       rootMargin,
@@ -47,7 +47,7 @@ export const useInfiniteScroll = ({
   // Alternative scroll-based approach as fallback
   useEffect(() => {
     const handleScroll = () => {
-      if (!hasNextPage || isFetchingNextPage || !window.scrollY) return;
+      if (!hasNextPage || isFetchingNextPage || !window.scrollY) { return; }
 
       const { scrollTop, scrollHeight, clientHeight } =
         document.documentElement;

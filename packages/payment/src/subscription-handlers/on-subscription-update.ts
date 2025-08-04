@@ -12,7 +12,6 @@ interface SubscriptionUpdateParams {
 }
 
 export const onSubscriptionUpdate = async ({
-  event,
   subscription,
 }: SubscriptionUpdateParams) => {
   log.info('[Subscription] Subscription updated:', {

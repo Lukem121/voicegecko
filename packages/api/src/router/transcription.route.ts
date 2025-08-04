@@ -75,7 +75,7 @@ export const transcriptionRouter = {
     .query(async ({ ctx, input }) => {
       const userId = ctx.session.user.id;
       const params = input ?? { limit: 50 };
-      return transcriptionService.getUserTranscriptions(userId, params);
+      return await transcriptionService.getUserTranscriptions(userId, params);
     }),
 
   delete: protectedProcedure
@@ -86,7 +86,7 @@ export const transcriptionRouter = {
     )
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.session.user.id;
-      return transcriptionService.deleteTranscription(input.id, userId);
+      return await transcriptionService.deleteTranscription(input.id, userId);
     }),
 
   cloudTranscribe: protectedProcedure

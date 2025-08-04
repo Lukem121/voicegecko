@@ -75,7 +75,7 @@ export class TranscriptionService {
 
     // Determine next cursor (ID of the last item)
     const nextCursor =
-      hasNextPage && items.length > 0 ? items[items.length - 1]!.id : undefined;
+      hasNextPage && items.length > 0 ? items.at(-1)?.id : undefined;
 
     return {
       groups: grouped,
@@ -148,7 +148,11 @@ export class TranscriptionService {
         });
       }
 
-      const group = groups.get(dateLabel)!;
+      const group = groups.get(dateLabel);
+      if (!group) {
+        continue;
+      }
+
       group.items.push({
         id: transcription.id,
         timestamp: date.toLocaleTimeString('en-US', {
@@ -166,10 +170,18 @@ export class TranscriptionService {
 
     // Custom sort to ensure TODAY is first, YESTERDAY second, then others
     result.sort((a, b) => {
-      if (a.date === 'TODAY') return -1;
-      if (b.date === 'TODAY') return 1;
-      if (a.date === 'YESTERDAY') return -1;
-      if (b.date === 'YESTERDAY') return 1;
+      if (a.date === 'TODAY') {
+        return -1;
+      }
+      if (b.date === 'TODAY') {
+        return 1;
+      }
+      if (a.date === 'YESTERDAY') {
+        return -1;
+      }
+      if (b.date === 'YESTERDAY') {
+        return 1;
+      }
       return 0;
     });
 

@@ -39,7 +39,7 @@ export class RecordingService {
    * Toggle recording on/off
    */
   async toggleRecording(options: RecordingOptions = {}): Promise<void> {
-    if (this.isToggling) return;
+    if (this.isToggling) { return; }
 
     this.isToggling = true;
 
@@ -67,7 +67,7 @@ export class RecordingService {
    * Start push-to-talk recording
    */
   async startPushToTalk(options: RecordingOptions = {}): Promise<void> {
-    if (this.isPushToTalkActive) return;
+    if (this.isPushToTalkActive) { return; }
 
     this.isPushToTalkActive = true;
     const { recordingStatus } = useEventStore.getState();
@@ -81,7 +81,7 @@ export class RecordingService {
    * Stop push-to-talk recording
    */
   async stopPushToTalk(options: RecordingOptions = {}): Promise<void> {
-    if (!this.isPushToTalkActive) return;
+    if (!this.isPushToTalkActive) { return; }
 
     this.isPushToTalkActive = false;
     const { recordingStatus } = useEventStore.getState();
@@ -95,7 +95,7 @@ export class RecordingService {
    * Release push-to-talk recording
    */
   async releasePushToTalk(options: RecordingOptions = {}): Promise<void> {
-    if (!this.isPushToTalkActive) return;
+    if (!this.isPushToTalkActive) { return; }
 
     this.isPushToTalkActive = false;
     const { recordingStatus } = useEventStore.getState();
@@ -244,7 +244,7 @@ export class RecordingService {
   /**
    * Cancel recording without transcription - discards audio completely
    */
-  async cancelRecording(options: RecordingOptions = {}): Promise<void> {
+  async cancelRecording(_options: RecordingOptions = {}): Promise<void> {
     try {
       log.info('[RecordingService] Canceling recording...');
 

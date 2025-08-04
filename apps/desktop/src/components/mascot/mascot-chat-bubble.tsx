@@ -4,7 +4,6 @@ import { log } from '@acme/observability';
 import TextType from '@acme/ui/components/text-type';
 import { cn } from '@acme/ui/lib/utils';
 import { AnimatePresence, motion } from 'motion/react';
-import React from 'react';
 
 import type { MascotMessage } from './mascot-chat-provider';
 

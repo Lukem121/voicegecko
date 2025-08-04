@@ -29,7 +29,7 @@ export function PageTracker() {
 
       log.info(`[Analytics] Page viewed: ${pageName} (${pagePath})`);
     }
-  }, [router.location.pathname]);
+  }, [router.location.pathname, router.matches.length, router.location, router.matches?.[router.matches.length - 1]]);
 
   // This component doesn't render anything
   return null;

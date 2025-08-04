@@ -162,7 +162,7 @@ const data: NavigationData = {
 const isDev = import.meta.env.DEV;
 
 if (isDev) {
-  data.navSecondary[2]!.items?.push({
+  data.navSecondary[2]?.items?.push({
     title: 'Quality',
     url: '/settings/models',
   });

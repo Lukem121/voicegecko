@@ -1,5 +1,4 @@
 import { log } from '@acme/observability';
-import { invoke } from '@tauri-apps/api/core';
 import { exit } from '@tauri-apps/plugin-process';
 
 import { storeRegistry } from '~/stores/store-registry';

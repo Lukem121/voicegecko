@@ -3,9 +3,7 @@ import {
   ChevronLeft,
   ChevronRight,
   ChevronsRight,
-  SkipForward,
 } from 'lucide-react';
-import React from 'react';
 
 import { useOnboarding } from './onboarding-provider';
 

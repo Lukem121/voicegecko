@@ -20,6 +20,7 @@ pub struct GeckoBarNotification {
 }
 
 impl GeckoBarNotification {
+    #[allow(dead_code)]
     pub fn new(message: impl Into<String>) -> Self {
         Self {
             message: message.into(),
@@ -28,11 +29,13 @@ impl GeckoBarNotification {
         }
     }
 
+    #[allow(dead_code)]
     pub fn with_duration(mut self, duration: u32) -> Self {
         self.duration = Some(duration);
         self
     }
 
+    #[allow(dead_code)]
     pub fn with_priority(mut self, priority: &str) -> Self {
         self.priority = Some(priority.to_string());
         self

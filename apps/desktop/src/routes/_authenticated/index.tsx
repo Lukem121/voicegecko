@@ -1,17 +1,12 @@
+import { log } from '@acme/observability';
 import { Button } from '@acme/ui/components/ui/button';
 import { Card, CardContent } from '@acme/ui/components/ui/card';
 import {
-import
-{
-  log;
-}
-from;
-('@acme/observability');
-DropdownMenu,
+  DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@acme/ui/components/ui/dropdown-menu'
+} from '@acme/ui/components/ui/dropdown-menu';
 
 import { Input } from '@acme/ui/components/ui/input';
 import { Textarea } from '@acme/ui/components/ui/textarea';
@@ -41,11 +36,10 @@ import { useState } from 'react';
 
 import { useDeleteTranscription } from '~/features/transcription/use-delete-transcription';
 import { useGetTranscriptions } from '~/features/transcription/use-get-transcriptions';
-import { useUser } from '~/hooks/auth';
 import { useDebouncedSearch } from '~/hooks/use-debounced-search';
 import { recordingService } from '~/services/recording.service';
 import { useEventStore } from '~/stores/event.store';
-import { queryClient, trpc } from '~/trpc';
+import { trpc } from '~/trpc';
 
 export const Route = createFileRoute('/_authenticated/')({
   component: RecordingPage,

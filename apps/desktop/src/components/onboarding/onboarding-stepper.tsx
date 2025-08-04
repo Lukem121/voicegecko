@@ -6,7 +6,6 @@ import {
   StepperTitle,
   StepperTrigger,
 } from '@acme/ui/components/stepper';
-import React from 'react';
 
 import { useOnboarding } from './onboarding-provider';
 

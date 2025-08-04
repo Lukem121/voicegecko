@@ -15,14 +15,9 @@ import {
   DropdownMenuTrigger,
 } from '@acme/ui/components/ui/dropdown-menu';
 import {
-  Bell,
   ChevronDown,
-  CreditCard,
   LogOut,
-  Settings2,
-  User2,
 } from 'lucide-react';
-import Link from 'next/link';
 
 import { useSignOut, useUser } from '~/hooks/auth';
 

@@ -1,13 +1,8 @@
 'use client';
 
 import { Button } from '@acme/ui/components/ui/button';
+import { log } from '@acme/observability';
 import {
-import
-{
-  log;
-}
-from;
-('@acme/observability');
 Tooltip,
   TooltipContent,
   TooltipProvider,

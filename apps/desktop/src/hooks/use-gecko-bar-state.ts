@@ -1,16 +1,10 @@
+import { log } from '@acme/observability';
 import { useCallback, useEffect, useState } from 'react';
 import { TIMINGS } from '~/components/gecko-bar/gecko-bar-app.constants';
 import type {
-import
-{
-  log;
-}
-from;
-('@acme/observability');
-GeckoBarEventHandlers,
+  GeckoBarEventHandlers,
   UseGeckoBarStateReturn,
-} from '~/components/gecko-bar/gecko-bar-app.types'
-
+} from '~/components/gecko-bar/gecko-bar-app.types';
 import { isSafeToCollapse } from '~/components/gecko-bar/gecko-bar-app.utils';
 import { initializeGeckoBarEvents } from '~/lib/gecko-bar-events';
 import { initializeTauriEvents } from '~/lib/tauri-events';
@@ -28,9 +22,15 @@ export function useGeckoBarState(): UseGeckoBarStateReturn {
   const [wasRecentlyRecording, setWasRecentlyRecording] = useState(false);
 
   // External state from main event store
-  const recordingStatus = useEventStore((state) => state.recordingStatus);
-  const isRecording = useEventStore((state) => state.isRecording());
-  const isTranscribing = useEventStore((state) => state.isTranscribing());
+  const recordingStatus = useEventStore(
+    (recordingState) => recordingState.recordingStatus
+  );
+  const isRecording = useEventStore((recordingState) =>
+    recordingState.isRecording()
+  );
+  const isTranscribing = useEventStore((recordingState) =>
+    recordingState.isTranscribing()
+  );
 
   // Centralized display state machine (single source of truth)
   const { displayState } = useGeckoBarDisplayState(isHovered, isLoading);
@@ -132,7 +132,9 @@ export function useGeckoBarState(): UseGeckoBarStateReturn {
     if (eventState.recordingStatus === 'idle' && !eventState.isRecording()) {
       recordingService
         .toggleRecording({ isKeyboardShortcut: false })
-        .catch(console.error);
+        .catch((error) => {
+          log.error('Failed to toggle recording:', error);
+        });
     }
   }, []);
 
@@ -140,7 +142,9 @@ export function useGeckoBarState(): UseGeckoBarStateReturn {
   const handleCancel = useCallback(
     async (e: React.MouseEvent<HTMLButtonElement>) => {
       e.stopPropagation();
-      if (isLoading || !isRecording) return;
+      if (isLoading || !isRecording) {
+        return;
+      }
 
       setIsLoading(true);
       setIsTransitioning(false);
@@ -159,7 +163,9 @@ export function useGeckoBarState(): UseGeckoBarStateReturn {
   const handleFinish = useCallback(
     async (e: React.MouseEvent<HTMLButtonElement>) => {
       e.stopPropagation();
-      if (isLoading || !isRecording) return;
+      if (isLoading || !isRecording) {
+        return;
+      }
 
       setIsTransitioning(true);
       setIsLoading(true);

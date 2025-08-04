@@ -18,7 +18,7 @@ interface ConnectivityStore extends ConnectivityState {
  * Zustand store that wraps the ConnectivityManager singleton
  * Provides reactive state management for connectivity monitoring
  */
-export const useConnectivityStore = create<ConnectivityStore>((set, get) => {
+export const useConnectivityStore = create<ConnectivityStore>((set, _get) => {
   // Initialize with current connectivity manager state
   const initialState = connectivityManager.getState();
 

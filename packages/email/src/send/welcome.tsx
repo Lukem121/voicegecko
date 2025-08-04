@@ -6,13 +6,7 @@ type UserWithEmail = {
   name?: string;
 };
 
-export const sendWelcomeEmail = async ({
-  user,
-  downloadUrl,
-}: {
-  user: UserWithEmail;
-  downloadUrl?: string;
-}) => {
+export const sendWelcomeEmail = async ({ user }: { user: UserWithEmail }) => {
   await sendEmail({
     to: {
       email: user.email,
@@ -24,6 +18,6 @@ export const sendWelcomeEmail = async ({
     },
     categories: ['welcome'],
     subject: 'Welcome to VoiceGecko - Your voice-to-text journey begins now!',
-    react: <WelcomeTemplate downloadUrl={downloadUrl} name={user.name} />,
+    react: <WelcomeTemplate name={user.name} />,
   });
 };

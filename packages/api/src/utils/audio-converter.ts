@@ -9,9 +9,9 @@ export function convertFloat32ToWav(
   const buffer = Buffer.alloc(44 + length * 2); // WAV header is 44 bytes
 
   // WAV header
-  const writeString = (offset: number, string: string) => {
+  const writeString = (offsetNumber: number, string: string) => {
     for (let i = 0; i < string.length; i++) {
-      buffer.writeUInt8(string.charCodeAt(i), offset + i);
+      buffer.writeUInt8(string.charCodeAt(i), offsetNumber + i);
     }
   };
 

@@ -33,7 +33,7 @@ export const dictionaryRepository = {
       query = query.orderBy(asc(DictionaryTable.word));
     }
 
-    return query;
+    return await query;
   },
 
   async create(

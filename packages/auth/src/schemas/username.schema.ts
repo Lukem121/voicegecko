@@ -13,6 +13,11 @@ const restrictedUsernamesByCategory = {
   offensive: ['abuse', 'spam', 'scam'],
 };
 
+const VALID_CHARACTER_PATTERN = /^[a-z0-9_]+$/;
+const REPEATED_CHAR_PATTERN = /(.)\1{4,}/;
+const NUMBERS_ONLY_PATTERN = /^\d+$/;
+const LETTERS_ONLY_PATTERN = /[a-z]/;
+
 // Flatten for checking
 const restrictedUsernames = Object.values(restrictedUsernamesByCategory).flat();
 
@@ -49,8 +54,7 @@ export const usernameSchema = z
       });
     }
 
-    const repeatedCharRegex = /(.)\1{4,}/;
-    if (repeatedCharRegex.test(username)) {
+    if (REPEATED_CHAR_PATTERN.test(username)) {
       ctx.issues.push({
         input: username,
         code: 'custom',
@@ -59,7 +63,7 @@ export const usernameSchema = z
       });
     }
 
-    if (/^\d+$/.test(username)) {
+    if (NUMBERS_ONLY_PATTERN.test(username)) {
       ctx.issues.push({
         input: username,
         code: 'custom',
@@ -67,7 +71,7 @@ export const usernameSchema = z
       });
     }
 
-    if (!/[a-z]/.test(username)) {
+    if (!LETTERS_ONLY_PATTERN.test(username)) {
       ctx.issues.push({
         input: username,
         code: 'custom',
@@ -103,7 +107,6 @@ export const usernameSchema = z
   });
 
 export type Username = z.infer<typeof usernameSchema>;
-
 export const usernameValidator = (_username: string) => {
   // If no username provided or not a string, reject
   if (!_username || typeof _username !== 'string') {
@@ -118,8 +121,8 @@ export const usernameValidator = (_username: string) => {
   }
 
   // Only allow alphanumeric characters and underscores
-  const validCharacterPattern = /^[a-z0-9_]+$/;
-  if (!validCharacterPattern.test(username)) {
+
+  if (!VALID_CHARACTER_PATTERN.test(username)) {
     return false;
   }
 

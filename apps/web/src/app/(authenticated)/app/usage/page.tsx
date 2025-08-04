@@ -11,10 +11,10 @@ import { caller } from '~/trpc/server';
 // Format numbers to compact notation (12k, 1.2M, etc.)
 const formatCompactNumber = (num: number): string => {
   if (num >= 1_000_000) {
-    return (num / 1_000_000).toFixed(1).replace(/\.0$/, '') + 'M';
+    return `${(num / 1_000_000).toFixed(1).replace(/\.0$/, '')}M`;
   }
   if (num >= 1000) {
-    return (num / 1000).toFixed(1).replace(/\.0$/, '') + 'k';
+    return `${(num / 1000).toFixed(1).replace(/\.0$/, '')}k`;
   }
   return num.toString();
 };
@@ -38,7 +38,7 @@ export default async function UsagePage() {
         : stats.current.transcriptionCount,
       limit: stats.current.isUnlimited
         ? 'Unlimited'
-        : stats.current.wordsLimit + ' words',
+        : `${stats.current.wordsLimit} words`,
     },
     wordsProcessed: stats.monthly.words,
     timeSaved: stats.monthly.timeSaved,

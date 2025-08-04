@@ -54,10 +54,23 @@ export async function GET() {
 
     // Process each release to show platform compatibility
     const processedReleases = releases.map((release) => {
-      const platforms: Record<string, any> = {};
+      const platforms: Record<
+        string,
+        {
+          compatible: boolean;
+          assets: Array<{
+            name: string;
+            size: number;
+            download_url: string;
+            has_signature: boolean;
+            signature_url?: string;
+          }>;
+          missing_signatures: number;
+        }
+      > = {};
 
       // Check each supported platform
-      Object.keys(PLATFORM_FILE_EXTENSIONS).forEach((platform) => {
+      for (const platform of Object.keys(PLATFORM_FILE_EXTENSIONS)) {
         const supportedExtensions =
           PLATFORM_FILE_EXTENSIONS[platform as TauriTarget];
 
@@ -88,7 +101,7 @@ export async function GET() {
             (asset) => !asset.has_signature
           ).length,
         };
-      });
+      }
 
       return {
         tag_name: release.tag_name,
@@ -114,7 +127,7 @@ export async function GET() {
       platforms_summary: Object.keys(PLATFORM_FILE_EXTENSIONS).reduce(
         (acc, platform) => {
           const compatibleReleases = processedReleases.filter(
-            (release) => release.platforms[platform].compatible
+            (release) => release.platforms[platform]?.compatible
           ).length;
           acc[platform] = {
             compatible_releases: compatibleReleases,
@@ -176,12 +189,17 @@ async function fetchAllReleases(): Promise<GitHubRelease[] | null> {
     });
 
     return releases as GitHubRelease[];
-  } catch (error: any) {
-    if (error.status === 404) {
+  } catch (error) {
+    if (
+      error &&
+      typeof error === 'object' &&
+      'status' in error &&
+      error.status === 404
+    ) {
       return null;
     }
     throw new Error(
-      `GitHub API error: ${error.status} ${error.message || 'Unknown error'}`
+      `GitHub API error: ${error && typeof error === 'object' && 'status' in error ? error.status : 'Unknown'} ${error && typeof error === 'object' && 'message' in error ? error.message : 'Unknown error'}`
     );
   }
 }
