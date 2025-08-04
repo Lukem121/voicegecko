@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
-import { useEffect, useReducer } from 'react';
+import { useCallback, useEffect, useReducer } from 'react';
 
 import { useEventStore } from '~/stores/event.store';
 import { useGeckoBarNotificationStore } from '~/stores/gecko-bar-notification.store';
@@ -31,6 +31,50 @@ type DisplayAction =
   | { type: 'TRANSCRIBING_END' }
   | { type: 'FORCE_IDLE' };
 
+// Helper functions for state transitions
+const createIdleState = (): GeckoBarDisplayState => ({
+  mode: 'idle',
+  isExpanded: false,
+  showTooltip: false,
+  tooltipMessage: '',
+});
+
+const createNotificationState = (message: string): GeckoBarDisplayState => ({
+  mode: 'notification',
+  isExpanded: true,
+  showTooltip: true,
+  tooltipMessage: message,
+});
+
+const createRecordingState = (): GeckoBarDisplayState => ({
+  mode: 'recording',
+  isExpanded: true,
+  showTooltip: false,
+  tooltipMessage: '',
+});
+
+const createTranscribingState = (): GeckoBarDisplayState => ({
+  mode: 'transcribing',
+  isExpanded: true,
+  showTooltip: false,
+  tooltipMessage: '',
+});
+
+const createHoverState = (canTranscribe: boolean): GeckoBarDisplayState => ({
+  mode: 'hover',
+  isExpanded: true,
+  showTooltip: true,
+  tooltipMessage: canTranscribe
+    ? 'Click to start dictating'
+    : 'Usage limit reached',
+});
+
+const isHighPriorityState = (mode: GeckoBarDisplayMode): boolean => {
+  return (
+    mode === 'notification' || mode === 'recording' || mode === 'transcribing'
+  );
+};
+
 // State machine reducer with clear priorities
 function displayReducer(
   state: GeckoBarDisplayState,
@@ -38,104 +82,33 @@ function displayReducer(
 ): GeckoBarDisplayState {
   switch (action.type) {
     case 'NOTIFICATION_START':
-      return {
-        mode: 'notification',
-        isExpanded: true,
-        showTooltip: true,
-        tooltipMessage: action.message,
-      };
+      return createNotificationState(action.message);
 
     case 'RECORDING_START':
-      // Recording overrides everything except active notifications
-      if (state.mode === 'notification') {
-        return state; // Keep notification visible during recording
-      }
-      return {
-        mode: 'recording',
-        isExpanded: true,
-        showTooltip: false,
-        tooltipMessage: '',
-      };
+      return state.mode === 'notification' ? state : createRecordingState();
 
     case 'TRANSCRIBING_START':
-      // Transcribing overrides everything except active notifications
-      if (state.mode === 'notification') {
-        return state; // Keep notification visible during transcribing
-      }
-      return {
-        mode: 'transcribing',
-        isExpanded: true,
-        showTooltip: false,
-        tooltipMessage: '',
-      };
+      return state.mode === 'notification' ? state : createTranscribingState();
 
-    case 'HOVER_START': {
-      // Hover only works if not in a high-priority state
-      if (
-        state.mode === 'notification' ||
-        state.mode === 'recording' ||
-        state.mode === 'transcribing'
-      ) {
-        return state;
-      }
-
-      const message = action.canTranscribe
-        ? 'Click to start dictating'
-        : 'Usage limit reached';
-      return {
-        mode: 'hover',
-        isExpanded: true,
-        showTooltip: true,
-        tooltipMessage: message,
-      };
-    }
+    case 'HOVER_START':
+      return isHighPriorityState(state.mode)
+        ? state
+        : createHoverState(action.canTranscribe);
 
     case 'HOVER_END':
-      // Only transition from hover to idle
-      if (state.mode === 'hover') {
-        return {
-          mode: 'idle',
-          isExpanded: false,
-          showTooltip: false,
-          tooltipMessage: '',
-        };
-      }
-      return state;
+      return state.mode === 'hover' ? createIdleState() : state;
 
     case 'NOTIFICATION_END':
-      // When notification ends, determine next state based on current conditions
-      if (state.mode === 'notification') {
-        // Note: We'll need to re-evaluate the current state
-        // This will be handled by the useEffect that calls this
-        return {
-          mode: 'idle',
-          isExpanded: false,
-          showTooltip: false,
-          tooltipMessage: '',
-        };
-      }
-      return state;
+      return state.mode === 'notification' ? createIdleState() : state;
 
     case 'RECORDING_END':
     case 'TRANSCRIBING_END':
-      // Only transition if we're actually in that mode
-      if (state.mode === 'recording' || state.mode === 'transcribing') {
-        return {
-          mode: 'idle',
-          isExpanded: false,
-          showTooltip: false,
-          tooltipMessage: '',
-        };
-      }
-      return state;
+      return state.mode === 'recording' || state.mode === 'transcribing'
+        ? createIdleState()
+        : state;
 
     case 'FORCE_IDLE':
-      return {
-        mode: 'idle',
-        isExpanded: false,
-        showTooltip: false,
-        tooltipMessage: '',
-      };
+      return createIdleState();
 
     default:
       return state;
@@ -157,10 +130,12 @@ export function useGeckoBarDisplayState(
 
   // External state
   const notification = useGeckoBarNotificationStore(
-    (state) => state.notification
+    (notificationState) => notificationState.notification
   );
-  const isRecording = useEventStore((state) => state.isRecording());
-  const isTranscribing = useEventStore((state) => state.isTranscribing());
+  const isRecording = useEventStore((eventState) => eventState.isRecording());
+  const isTranscribing = useEventStore((eventState) =>
+    eventState.isTranscribing()
+  );
 
   // Usage status
   const { data: usageStatus } = useQuery({
@@ -170,32 +145,32 @@ export function useGeckoBarDisplayState(
 
   const canTranscribe = !usageStatus || usageStatus.canTranscribe;
 
-  // Single effect to manage all state transitions
-  useEffect(() => {
-    // Priority 1: Notifications (highest)
+  // Helper functions for state management
+  const handleHighPriorityStates = useCallback((): boolean => {
     if (notification) {
       dispatch({ type: 'NOTIFICATION_START', message: notification.message });
-      return;
+      return true;
     }
-
-    // Priority 2: Recording states
     if (isRecording) {
       dispatch({ type: 'RECORDING_START' });
-      return;
+      return true;
     }
-
     if (isTranscribing) {
       dispatch({ type: 'TRANSCRIBING_START' });
-      return;
+      return true;
     }
+    return false;
+  }, [notification, isRecording, isTranscribing]);
 
-    // Priority 3: Hover state
+  const handleHoverState = useCallback((): boolean => {
     if (isHovered && !isLoading) {
       dispatch({ type: 'HOVER_START', canTranscribe });
-      return;
+      return true;
     }
+    return false;
+  }, [isHovered, isLoading, canTranscribe]);
 
-    // Priority 4: Clean up based on what was previous state
+  const handleStateCleanup = useCallback((): void => {
     if (state.mode === 'notification' && !notification) {
       dispatch({ type: 'NOTIFICATION_END' });
     } else if (state.mode === 'recording' && !isRecording) {
@@ -205,15 +180,23 @@ export function useGeckoBarDisplayState(
     } else if (state.mode === 'hover' && !isHovered) {
       dispatch({ type: 'HOVER_END' });
     }
-  }, [
-    notification,
-    isRecording,
-    isTranscribing,
-    isHovered,
-    isLoading,
-    canTranscribe,
-    state.mode,
-  ]);
+  }, [state.mode, notification, isRecording, isTranscribing, isHovered]);
+
+  // Single effect to manage all state transitions
+  useEffect(() => {
+    // Handle high-priority states first
+    if (handleHighPriorityStates()) {
+      return;
+    }
+
+    // Handle hover state
+    if (handleHoverState()) {
+      return;
+    }
+
+    // Clean up based on previous state
+    handleStateCleanup();
+  }, [handleHighPriorityStates, handleHoverState, handleStateCleanup]);
 
   return {
     displayState: state,

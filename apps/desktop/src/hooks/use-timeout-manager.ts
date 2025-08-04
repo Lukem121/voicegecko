@@ -22,9 +22,9 @@ export function useTimeoutManager(): UseTimeoutManagerReturn {
   }, []);
 
   const clearAllTimeouts = useCallback(() => {
-    Object.keys(timeoutsRef.current).forEach((key) => {
+    for (const key of Object.keys(timeoutsRef.current)) {
       clearTimeout(key as keyof TimeoutState);
-    });
+    }
   }, [clearTimeout]);
 
   const setTimeout = useCallback(

@@ -1,21 +1,16 @@
+import { log } from '@acme/observability';
 import { listen } from '@tauri-apps/api/event';
 import { toast } from 'sonner';
 import { transcriptionService } from '~/services/transcription.service';
 import { useEventStore } from '~/stores/event.store';
 import { queryClient, trpcClient } from '~/trpc';
 import type {
-import
-{
-  log;
-}
-from;
-('@acme/observability');
-AudioData,
+  AudioData,
   AudioLevelEvent,
   RecordingErrorEvent,
   RecordingStateChangedEvent,
   TranscriptionProgressEvent,
-} from '~/types/events'
+} from '~/types/events';
 
 import { TranscriptionTracker } from './analytics/posthog-analytics';
 
@@ -24,6 +19,103 @@ let initializationId: string | null = null;
 
 interface InitializeOptions {
   isGeckoBar?: boolean;
+}
+
+// Helper function to process cloud transcription
+async function processCloudTranscription(
+  audioData: AudioData,
+  options: InitializeOptions
+): Promise<void> {
+  // Initialize transcription tracker for cloud transcription
+  const audioDuration = audioData.samples.length / audioData.sample_rate;
+  const transcriptionTracker = new TranscriptionTracker(
+    'cloud',
+    audioDuration,
+    'whisper-1'
+  );
+  log.info('[TauriEvents] ☁️ Cloud transcription requested', {
+    samplesLength: audioData.samples.length,
+    sampleRate: audioData.sample_rate,
+  });
+
+  try {
+    // Update UI to show transcribing state
+    const store = useEventStore.getState();
+    store.setTranscriptionProgress('Transcribing');
+
+    // Call the cloud transcription API
+    const result = await trpcClient.transcription.cloudTranscribe.mutate({
+      audioData: Array.from(audioData.samples),
+      sampleRate: audioData.sample_rate,
+    });
+
+    // Directly update the store instead of emitting an event that we'll catch ourselves
+    const metadata = {
+      duration_seconds: audioData.samples.length / audioData.sample_rate,
+      model_used: result.modelUsed,
+      sample_rate: audioData.sample_rate,
+    };
+
+    // Update transcription progress to complete
+    store.setTranscriptionProgress('Complete', result.transcript, metadata);
+
+    // Handle completion business logic only if not in gecko bar
+    if (!options.isGeckoBar && result.transcript) {
+      await handleTranscriptionCompletion(result.transcript);
+    }
+  } catch (error) {
+    handleTranscriptionError(error, transcriptionTracker);
+  }
+}
+
+// Helper function to handle transcription completion
+async function handleTranscriptionCompletion(
+  transcript: string
+): Promise<void> {
+  // For cloud transcriptions, the backend already saved the transcription
+  // So we only need to handle clipboard and play notification sound
+  await transcriptionService.handleCompletedTranscription(transcript);
+  await transcriptionService.playEndSoundIfEnabled();
+
+  // Invalidate queries to update UI
+  log.info(
+    '[TauriEvents] 🔄 Invalidating queries after cloud transcription...'
+  );
+
+  await queryClient.invalidateQueries({
+    queryKey: ['transcription'],
+  });
+
+  await queryClient.invalidateQueries({
+    queryKey: ['usage'],
+  });
+
+  log.info('[TauriEvents] ✅ Cache invalidation completed');
+}
+
+// Helper function to handle transcription errors
+function handleTranscriptionError(
+  error: unknown,
+  transcriptionTracker: TranscriptionTracker
+): void {
+  log.error('[TauriEvents] Cloud transcription error:', error);
+
+  // Track transcription failure
+  transcriptionTracker.trackFailed(
+    'cloud_api_error',
+    error instanceof Error ? error.message : 'Unknown error'
+  );
+
+  // Update error state directly
+  const store = useEventStore.getState();
+  store.setTranscriptionProgress(
+    'Error',
+    error instanceof Error ? error.message : 'Cloud transcription failed'
+  );
+
+  toast.error('Cloud transcription failed', {
+    description: error instanceof Error ? error.message : 'Unknown error',
+  });
 }
 
 /**
@@ -83,94 +175,15 @@ export async function initializeTauriEvents(
 
     // Listen for cloud transcription requests
     await listen('cloud-transcription-requested', (event) => {
-      void (async () => {
+      const handleCloudTranscription = async () => {
         const audioData = event.payload as AudioData;
+        await processCloudTranscription(audioData, options);
+      };
 
-        // Initialize transcription tracker for cloud transcription
-        const audioDuration = audioData.samples.length / audioData.sample_rate;
-        const transcriptionTracker = new TranscriptionTracker(
-          'cloud',
-          audioDuration,
-          'whisper-1'
-        );
-        log.info('[TauriEvents] ☁️ Cloud transcription requested', {
-          samplesLength: audioData.samples.length,
-          sampleRate: audioData.sample_rate,
-        });
-
-        try {
-          // Update UI to show transcribing state
-          const store = useEventStore.getState();
-          store.setTranscriptionProgress('Transcribing');
-
-          // Call the cloud transcription API
-          const result = await trpcClient.transcription.cloudTranscribe.mutate({
-            audioData: Array.from(audioData.samples),
-            sampleRate: audioData.sample_rate,
-          });
-
-          // Directly update the store instead of emitting an event that we'll catch ourselves
-          const metadata = {
-            duration_seconds: audioData.samples.length / audioData.sample_rate,
-            model_used: result.modelUsed,
-            sample_rate: audioData.sample_rate,
-          };
-
-          // Update transcription progress to complete
-          store.setTranscriptionProgress(
-            'Complete',
-            result.transcript,
-            metadata
-          );
-
-          // Handle completion business logic only if not in gecko bar
-          if (!options.isGeckoBar && result.transcript) {
-            // For cloud transcriptions, the backend already saved the transcription
-            // So we only need to handle clipboard and play notification sound
-            await transcriptionService.handleCompletedTranscription(
-              result.transcript
-            );
-            await transcriptionService.playEndSoundIfEnabled();
-
-            // Invalidate queries to update UI
-            log.info(
-              '[TauriEvents] 🔄 Invalidating queries after cloud transcription...'
-            );
-
-            await queryClient.invalidateQueries({
-              queryKey: ['transcription'],
-            });
-
-            await queryClient.invalidateQueries({
-              queryKey: ['usage'],
-            });
-
-            log.info('[TauriEvents] ✅ Cache invalidation completed');
-          }
-        } catch (error) {
-          log.error('[TauriEvents] Cloud transcription error:', error);
-
-          // Track transcription failure
-          transcriptionTracker.trackFailed(
-            'cloud_api_error',
-            error instanceof Error ? error.message : 'Unknown error'
-          );
-
-          // Update error state directly
-          const store = useEventStore.getState();
-          store.setTranscriptionProgress(
-            'Error',
-            error instanceof Error
-              ? error.message
-              : 'Cloud transcription failed'
-          );
-
-          toast.error('Cloud transcription failed', {
-            description:
-              error instanceof Error ? error.message : 'Unknown error',
-          });
-        }
-      })();
+      // Execute without awaiting to avoid blocking the event listener
+      handleCloudTranscription().catch((error) => {
+        log.error('[TauriEvents] Unhandled cloud transcription error:', error);
+      });
     });
 
     // Listen for recording errors

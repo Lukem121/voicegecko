@@ -12,6 +12,12 @@ import React from 'react';
 import { useSettingsStore } from '~/stores/settings.store';
 
 // =============================================================================
+// CONSTANTS
+// =============================================================================
+
+const WORD_SPLIT_REGEX = /\s+/;
+
+// =============================================================================
 // EVENT TYPES & INTERFACES
 // =============================================================================
 
@@ -300,7 +306,10 @@ type EventProperties<T extends EventName> = AllEvents[T] & BaseEventProperties;
 class PostHogAnalyticsService {
   private posthog: ReturnType<typeof usePostHog> | null = null;
   private isInitialized = false;
-  private queuedEvents: { event: EventName; properties: any }[] = [];
+  private queuedEvents: {
+    event: EventName;
+    properties: AllEvents[EventName] & BaseEventProperties;
+  }[] = [];
 
   /**
    * Initialize the analytics service with PostHog instance
@@ -310,9 +319,9 @@ class PostHogAnalyticsService {
     this.isInitialized = true;
 
     // Process any queued events
-    this.queuedEvents.forEach(({ event, properties }) => {
-      this.track(event as any, properties);
-    });
+    for (const { event, properties } of this.queuedEvents) {
+      this.track(event, properties);
+    }
     this.queuedEvents = [];
   }
 
@@ -370,7 +379,7 @@ class PostHogAnalyticsService {
   /**
    * Identify a user with PostHog
    */
-  identify(userId: string, properties?: Record<string, any>) {
+  identify(userId: string, properties?: Record<string, unknown>) {
     if (!(this.isAnalyticsEnabled() && this.posthog)) {
       return;
     }
@@ -386,7 +395,7 @@ class PostHogAnalyticsService {
   /**
    * Set user properties
    */
-  setUserProperties(properties: Record<string, any>) {
+  setUserProperties(properties: Record<string, unknown>) {
     if (!(this.isAnalyticsEnabled() && this.posthog)) {
       return;
     }
@@ -609,7 +618,7 @@ export class TranscriptionTracker {
     confidenceScore?: number
   ) {
     const processingTime = (Date.now() - this.startTime) / 1000;
-    const wordCount = transcript.trim().split(/\s+/).length;
+    const wordCount = transcript.trim().split(WORD_SPLIT_REGEX).length;
 
     analytics.track('transcription_completed', {
       model_type: this.modelType,

@@ -3,12 +3,14 @@ import { exit } from '@tauri-apps/plugin-process';
 
 import { storeRegistry } from '~/stores/store-registry';
 
-export enum AppState {
-  INITIALIZING = 'initializing',
-  READY = 'ready',
-  SHUTTING_DOWN = 'shutting_down',
-  ERROR = 'error',
-}
+export type AppState = 'initializing' | 'ready' | 'shutting_down' | 'error';
+
+export const AppState = {
+  INITIALIZING: 'initializing' as const,
+  READY: 'ready' as const,
+  SHUTTING_DOWN: 'shutting_down' as const,
+  ERROR: 'error' as const,
+} as const;
 
 class AppLifecycleManager {
   private static instance: AppLifecycleManager;
@@ -33,7 +35,9 @@ class AppLifecycleManager {
 
   private setState(state: AppState): void {
     this.state = state;
-    this.listeners.forEach((listener) => listener(state));
+    for (const listener of this.listeners) {
+      listener(state);
+    }
   }
 
   async startup(): Promise<void> {

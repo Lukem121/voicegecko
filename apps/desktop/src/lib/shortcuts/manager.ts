@@ -14,7 +14,7 @@ import {
   SHORTCUTS_SETTINGS_FILE,
   SHORTCUTS_STORE_KEY,
 } from './constants';
-import type { ShortcutCategory } from './types';
+import type { Shortcut, ShortcutCategory } from './types';
 import { acceleratorFromKeys, normalizeKeys } from './utils';
 
 class ShortcutManager {
@@ -26,11 +26,11 @@ class ShortcutManager {
     this.store = new LazyStore(SHORTCUTS_SETTINGS_FILE);
   }
 
-  public getStore() {
+  getStore() {
     return this.store;
   }
 
-  public static getInstance(): ShortcutManager {
+  static getInstance(): ShortcutManager {
     ShortcutManager.instance ??= new ShortcutManager();
     return ShortcutManager.instance;
   }
@@ -54,6 +54,34 @@ class ShortcutManager {
     await this.registerAllShortcuts(categories);
   }
 
+  // Helper function to register a single shortcut
+  private async registerSingleShortcut(
+    shortcut: Shortcut,
+    accelerator: string
+  ): Promise<void> {
+    if (shortcut.id === 'push-to-talk') {
+      await register(accelerator, (event: ShortcutEvent) => {
+        if (event.state === 'Pressed') {
+          this.handlePushToTalkDown();
+        } else if (event.state === 'Released') {
+          this.handlePushToTalkUp();
+        }
+      });
+      log.info(`Successfully registered push-to-talk: ${accelerator}`);
+    } else if (shortcut.id in shortcutActions) {
+      await register(accelerator, () => {
+        const action =
+          shortcutActions[shortcut.id as keyof typeof shortcutActions];
+        if (action) {
+          action();
+        }
+      });
+      log.info(
+        `Successfully registered shortcut: ${accelerator} for ${shortcut.id}`
+      );
+    }
+  }
+
   async registerAllShortcuts(categories: ShortcutCategory[]) {
     try {
       await unregisterAll();
@@ -67,27 +95,8 @@ class ShortcutManager {
           const normalizedKeys = normalizeKeys(shortcut.keys);
           const accelerator = acceleratorFromKeys(normalizedKeys);
           try {
-            if (shortcut.id === 'push-to-talk') {
-              await register(accelerator, (event: ShortcutEvent) => {
-                if (event.state === 'Pressed') {
-                  this.handlePushToTalkDown();
-                } else if (event.state === 'Released') {
-                  this.handlePushToTalkUp();
-                }
-              });
-              log.info(`Successfully registered push-to-talk: ${accelerator}`);
-            } else if (shortcut.id in shortcutActions) {
-              await register(accelerator, () => {
-                const action =
-                  shortcutActions[shortcut.id as keyof typeof shortcutActions];
-                if (action) {
-                  action();
-                }
-              });
-              log.info(
-                `Successfully registered shortcut: ${accelerator} for ${shortcut.id}`
-              );
-            }
+            // biome-ignore lint/nursery/noAwaitInLoop: Sequential registration prevents shortcut conflicts
+            await this.registerSingleShortcut(shortcut, accelerator);
           } catch (error) {
             log.error(
               `Failed to register shortcut ${accelerator} for ${shortcut.id}:`,

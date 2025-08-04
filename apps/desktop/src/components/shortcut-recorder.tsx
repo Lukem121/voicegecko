@@ -30,41 +30,76 @@ export function ShortcutRecorder({
   const [recordedKeys, setRecordedKeys] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
 
-  const handleKeyDown = useCallback((event: KeyboardEvent) => {
-    event.preventDefault();
-    const { key, ctrlKey, altKey, shiftKey, metaKey } = event;
-
+  // Helper function to extract modifier keys
+  const getModifierKeys = useCallback((event: KeyboardEvent): string[] => {
     const keys: string[] = [];
-
-    if (metaKey) { keys.push('Command'); }
-    if (ctrlKey) { keys.push('Control'); }
-    if (altKey) { keys.push('Alt'); }
-    if (shiftKey) { keys.push('Shift'); }
-
-    const keyName = key.toLowerCase();
-    if (!['control', 'alt', 'shift', 'meta'].includes(keyName)) {
-      // Handle special keys
-      if (keyName === ' ') {
-        keys.push('Space');
-      } else if (keyName.startsWith('arrow')) {
-        keys.push(key); // Keep arrow keys as-is
-      } else {
-        keys.push(key.toUpperCase());
-      }
+    if (event.metaKey) {
+      keys.push('Command');
     }
-
-    const normalizedKeys = normalizeKeys(keys);
-    setRecordedKeys(normalizedKeys);
-
-    // Validate the shortcut
-    if (keys.length > 0 && !isValidShortcut(normalizedKeys)) {
-      setError(
-        'Please include at least one modifier key (Ctrl, Alt, Shift, Cmd)'
-      );
-    } else {
-      setError(null);
+    if (event.ctrlKey) {
+      keys.push('Control');
     }
+    if (event.altKey) {
+      keys.push('Alt');
+    }
+    if (event.shiftKey) {
+      keys.push('Shift');
+    }
+    return keys;
   }, []);
+
+  // Helper function to process the main key
+  const processMainKey = useCallback((key: string): string | null => {
+    const keyName = key.toLowerCase();
+
+    // Skip modifier keys
+    if (['control', 'alt', 'shift', 'meta'].includes(keyName)) {
+      return null;
+    }
+
+    // Handle special keys
+    if (keyName === ' ') {
+      return 'Space';
+    }
+    if (keyName.startsWith('arrow')) {
+      return key; // Keep arrow keys as-is
+    }
+    return key.toUpperCase();
+  }, []);
+
+  // Helper function to validate and set error state
+  const validateAndSetKeys = useCallback(
+    (keys: string[], normalizedKeys: string[]) => {
+      setRecordedKeys(normalizedKeys);
+
+      if (keys.length > 0 && !isValidShortcut(normalizedKeys)) {
+        setError(
+          'Please include at least one modifier key (Ctrl, Alt, Shift, Cmd)'
+        );
+      } else {
+        setError(null);
+      }
+    },
+    []
+  );
+
+  const handleKeyDown = useCallback(
+    (event: KeyboardEvent) => {
+      event.preventDefault();
+
+      const modifierKeys = getModifierKeys(event);
+      const mainKey = processMainKey(event.key);
+
+      const allKeys = [...modifierKeys];
+      if (mainKey) {
+        allKeys.push(mainKey);
+      }
+
+      const normalizedKeys = normalizeKeys(allKeys);
+      validateAndSetKeys(allKeys, normalizedKeys);
+    },
+    [getModifierKeys, processMainKey, validateAndSetKeys]
+  );
 
   useEffect(() => {
     if (isOpen) {
@@ -115,10 +150,10 @@ export function ShortcutRecorder({
           {recordedKeys.length > 0 ? (
             <div className="flex flex-col items-center gap-2">
               <div className="flex items-center gap-2">
-                {recordedKeys.map((key, index) => (
+                {recordedKeys.map((key, _) => (
                   <Badge
                     className="px-3 py-2 text-lg"
-                    key={index}
+                    key={key}
                     variant="outline"
                   >
                     {key}

@@ -27,10 +27,22 @@ interface FeedbackModalProps {
 // Character limit for feedback (matching backend constraint)
 const MAX_FEEDBACK_LENGTH = 1000;
 
+// Helper function to determine text color based on feedback length
+function getFeedbackLengthColor(length: number): string {
+  if (length > MAX_FEEDBACK_LENGTH) {
+    return 'text-red-500';
+  }
+  if (length > MAX_FEEDBACK_LENGTH * 0.9) {
+    return 'text-yellow-500';
+  }
+  return 'text-muted-foreground';
+}
+
 export function FeedbackModal({
   isOpen,
   onClose,
   transcriptionId,
+  // biome-ignore lint: transcriptionContent may be used in future to show original content
   transcriptionContent,
 }: FeedbackModalProps) {
   const [feedback, setFeedback] = useState('');
@@ -118,13 +130,7 @@ export function FeedbackModal({
                 What did you expect instead?
               </label>
               <span
-                className={`text-xs ${
-                  feedback.length > MAX_FEEDBACK_LENGTH
-                    ? 'text-red-500'
-                    : feedback.length > MAX_FEEDBACK_LENGTH * 0.9
-                      ? 'text-yellow-500'
-                      : 'text-muted-foreground'
-                }`}
+                className={`text-xs ${getFeedbackLengthColor(feedback.length)}`}
               >
                 {feedback.length}/{MAX_FEEDBACK_LENGTH}
               </span>
@@ -138,6 +144,7 @@ export function FeedbackModal({
               maxLength={MAX_FEEDBACK_LENGTH + 50}
               onChange={(e) => setFeedback(e.target.value)}
               placeholder="Describe what you expected instead..."
+              // biome-ignore lint/suspicious/noExplicitAny: fieldSizing is a newer CSS property not fully typed in React
               style={{ fieldSizing: 'fixed' } as any} // Allow a bit over for better UX
               value={feedback} // Override field-sizing-content from base component
             />

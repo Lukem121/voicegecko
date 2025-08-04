@@ -42,12 +42,16 @@ export function useTrayManager() {
 
   // Debounced tray update function
   const updateTrayStats = useCallback(
-    async (wordsCount: string, timeSaved: string, wordsPerMinute: string) => {
+    async (
+      wordsCount: string,
+      timeSavedParam: string,
+      wordsPerMinuteParam: string
+    ) => {
       try {
         await invoke('update_tray_stats', {
           wordsCount,
-          timeSaved,
-          wordsPerMinute,
+          timeSaved: timeSavedParam,
+          wordsPerMinute: wordsPerMinuteParam,
         });
       } catch (error) {
         log.error('Failed to update tray stats:', error);
@@ -58,12 +62,16 @@ export function useTrayManager() {
 
   // Debounced update to prevent excessive calls
   const debouncedUpdate = useCallback(
-    (wordsCount: string, timeSaved: string, wordsPerMinute: string) => {
+    (
+      wordsCount: string,
+      timeSavedParam: string,
+      wordsPerMinuteParam: string
+    ) => {
       if (updateRef.current !== null) {
         clearTimeout(updateRef.current);
       }
       updateRef.current = setTimeout(() => {
-        updateTrayStats(wordsCount, timeSaved, wordsPerMinute);
+        updateTrayStats(wordsCount, timeSavedParam, wordsPerMinuteParam);
       }, 500); // 500ms debounce
     },
     [updateTrayStats]

@@ -1,5 +1,5 @@
 import { Toaster } from '@acme/ui/components/ui/sonner';
-import { ThemeProvider, } from '@acme/ui/components/ui/theme';
+import { ThemeProvider, ThemeToggle } from '@acme/ui/components/ui/theme';
 import { cn } from '@acme/ui/lib/utils';
 import type { Metadata, Viewport } from 'next';
 import { Geist, Geist_Mono, Plus_Jakarta_Sans } from 'next/font/google';
@@ -61,6 +61,9 @@ export default function RootLayout(props: { children: React.ReactNode }) {
           <NuqsAdapter>
             <TRPCReactProvider>{props.children}</TRPCReactProvider>
             <Toaster />
+            <div className="absolute top-4 right-4 z-50">
+              <ThemeToggle />
+            </div>
           </NuqsAdapter>
         </ThemeProvider>
       </body>
