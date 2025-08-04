@@ -1,7 +1,7 @@
 use futures_util::StreamExt;
 use serde::{Deserialize, Serialize};
 use serde_json::json;
-use sha1::{Digest, Sha1};
+
 use std::collections::HashMap;
 use std::fs;
 use std::io::Write;
@@ -9,17 +9,19 @@ use tauri::{AppHandle, Emitter, Manager, Wry};
 use tauri_plugin_store::{Store, StoreExt};
 use thiserror::Error;
 
-use crate::modules::hardware_info::{detect_hardware, ModelTier};
+use crate::modules::hardware_info::ModelTier;
 
 #[derive(Debug, Error, Serialize)]
 pub enum ModelManagerError {
     #[error("Model not found: {0}")]
     ModelNotFound(String),
     #[error("Download failed: {0}")]
+    #[allow(dead_code)]
     DownloadFailed(String),
     #[error("Filesystem error: {0}")]
     FileSystemError(String),
     #[error("Verification failed: {0}")]
+    #[allow(dead_code)]
     VerificationFailed(String),
     #[error("Store error: {0}")]
     StoreError(String),
@@ -430,7 +432,7 @@ pub fn set_selected_tier(app: AppHandle, tier: String) -> Result<(), ModelManage
 
     // When a tier is selected, try to select the best available model for that tier
     if let Some(model_tier) = ModelTier::from_string(&tier) {
-        if let Ok(model_id) = get_best_model_for_tier(app.clone(), model_tier) {
+        if let Ok(_model_id) = get_best_model_for_tier(app.clone(), model_tier) {
             // set_selected_model(app, model_id)?; // This function is removed
         }
     }
@@ -821,7 +823,7 @@ pub async fn download_model(app: AppHandle, model_id: String) -> Result<(), Mode
     // On Windows, we need to be extra careful with file operations
     match std::fs::rename(&temp_file_path, &file_path) {
         Ok(_) => {}
-        Err(e) => {
+        Err(_e) => {
             // If rename fails, try a copy + delete approach
             // First remove destination if it exists
             if file_path.exists() {

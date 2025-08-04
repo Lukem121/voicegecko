@@ -1,18 +1,13 @@
+import { log } from '@acme/observability';
 import { Alert, AlertDescription } from '@acme/ui/components/ui/alert';
 import { Button } from '@acme/ui/components/ui/button';
 import {
-import
-{
-  log;
-}
-from;
-('@acme/observability');
-Card,
+  Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@acme/ui/components/ui/card'
+} from '@acme/ui/components/ui/card';
 
 import {
   Dialog,
@@ -28,7 +23,6 @@ import { AlertCircle, Mic, MicOff } from 'lucide-react';
 import { motion } from 'motion/react';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useOnboarding } from '~/components/onboarding/onboarding-provider';
-import { analytics } from '~/lib/analytics/posthog-analytics';
 import { useSettingsStore } from '~/stores/settings.store';
 import type { AudioLevelEvent } from '~/types/events';
 import type { AudioDevice } from '~/types/settings';
@@ -107,7 +101,9 @@ function MicrophoneSetupStep() {
 
   // Load audio devices and start testing on mount
   useEffect(() => {
-    if (initialActionsPerformed.current) return;
+    if (initialActionsPerformed.current) {
+      return;
+    }
     initialActionsPerformed.current = true;
 
     refreshAudioDevices();
@@ -149,14 +145,16 @@ function MicrophoneSetupStep() {
         microphoneTestUnlistenRef.current();
       }
       // Stop any ongoing microphone test
-      invoke('stop_microphone_test').catch(console.error);
+      invoke('stop_microphone_test').catch(log.error);
     };
   }, []);
 
   const handleDeviceChange = useCallback(
     async (deviceName: string) => {
       const device = audioDevices.find((d) => d.name === deviceName) ?? null;
-      if (!device) return;
+      if (!device) {
+        return;
+      }
 
       setSelectedDevice(device);
       await updateAudioDevice(device);
@@ -185,7 +183,9 @@ function MicrophoneSetupStep() {
   );
 
   const handleConfirmMicrophone = useCallback(() => {
-    if (!selectedDevice || isConfirming) return;
+    if (!selectedDevice || isConfirming) {
+      return;
+    }
 
     // Set confirming state immediately for UI feedback
     setIsConfirming(true);
@@ -204,7 +204,9 @@ function MicrophoneSetupStep() {
   ]);
 
   const handleChangeMicrophone = useCallback(() => {
-    if (isConfirming) return;
+    if (isConfirming) {
+      return;
+    }
     setShowDeviceSelector(true);
   }, [isConfirming]);
 
@@ -285,7 +287,7 @@ function MicrophoneSetupStep() {
                             ? 'bg-primary'
                             : 'bg-gray-200 dark:bg-gray-700'
                         }`}
-                        key={i}
+                        key={`${i}-${isActive}`}
                       />
                     );
                   })}

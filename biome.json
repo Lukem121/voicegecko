@@ -7,6 +7,6 @@
     "useIgnoreFile": true
   },
   "files": {
-    "includes": ["**", "!scripts/**"]
+    "includes": ["**", "!scripts/**", "!packages/ui/**"]
   }
 }

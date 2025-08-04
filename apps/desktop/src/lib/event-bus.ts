@@ -5,12 +5,12 @@ import { log } from '@acme/observability';
 
 interface EventMap {
   // App lifecycle events
-  'app:ready': void;
+  'app:ready': undefined;
   'app:error': Error;
 
   // Settings events
   'settings:changed': { key: string; value: unknown };
-  'settings:reset': void;
+  'settings:reset': undefined;
 
   // Model events
   'model:download:start': { modelId: string };
@@ -19,8 +19,8 @@ interface EventMap {
   'model:download:error': { modelId: string; error: string };
 
   // Recording events
-  'recording:started': void;
-  'recording:stopped': void;
+  'recording:started': undefined;
+  'recording:stopped': undefined;
   'recording:error': Error;
 
   // Transcription events
@@ -49,7 +49,7 @@ class EventBus {
       this.listeners.set(event, new Set());
     }
 
-    this.listeners.get(event)!.add(listener);
+    this.listeners.get(event)?.add(listener);
 
     // Return unsubscribe function
     return () => {

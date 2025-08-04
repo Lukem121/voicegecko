@@ -84,7 +84,7 @@ function DictionaryPage() {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
   const handleAddWord = async () => {
-    if (!newWord.trim()) return;
+    if (!newWord.trim()) { return; }
 
     setAddError(null);
 
@@ -102,7 +102,7 @@ function DictionaryPage() {
   };
 
   const handleUpdateWord = async () => {
-    if (!editingEntry?.word.trim()) return;
+    if (!editingEntry?.word.trim()) { return; }
 
     setEditError(null);
 
@@ -123,7 +123,7 @@ function DictionaryPage() {
   };
 
   const handleDeleteWord = async () => {
-    if (!deletingEntry) return;
+    if (!deletingEntry) { return; }
 
     try {
       await deleteWord({ id: deletingEntry.id });
@@ -333,7 +333,8 @@ function DictionaryPage() {
                 maxLength={60}
                 onChange={(e) => {
                   setNewWord(e.target.value);
-                  if (addError) setAddError(null); // Clear error when user types
+                  if (addError) { setAddError(null); // Clear error when user types
+}
                 }}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' && !isAdding) {
@@ -388,7 +389,8 @@ function DictionaryPage() {
                       ? { ...editingEntry, word: e.target.value }
                       : null
                   );
-                  if (editError) setEditError(null); // Clear error when user types
+                  if (editError) { setEditError(null); // Clear error when user types
+}
                 }}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' && !isUpdating) {

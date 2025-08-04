@@ -3,7 +3,6 @@ import { log } from '@acme/observability';
 import type { StripePlan, Subscription } from '@better-auth/stripe';
 import type { Stripe } from 'stripe';
 
-import { paymentEnv } from '../../env';
 import { getUserForEmail } from './user-lookup';
 
 interface SubscriptionCompleteParams {
@@ -14,9 +13,7 @@ interface SubscriptionCompleteParams {
 }
 
 export const onSubscriptionComplete = async ({
-  event,
   subscription,
-  stripeSubscription,
   plan,
 }: SubscriptionCompleteParams) => {
   log.info('[Subscription] New subscription created:', {

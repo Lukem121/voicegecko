@@ -1,19 +1,14 @@
 'use client';
 
+import { log } from '@acme/observability';
 import type React from 'react';
 import {
-import
-{
-  log;
-}
-from;
-('@acme/observability');
-createContext,
+  createContext,
   useCallback,
   useContext,
   useEffect,
   useReducer,
-} from 'react'
+} from 'react';
 
 // Types for the chat system
 export interface MascotMessage {
@@ -222,7 +217,9 @@ export function MascotChatProvider({
 
   // Auto-process message queue
   useEffect(() => {
-    if (!autoProcessQueue) return;
+    if (!autoProcessQueue) {
+      return;
+    }
 
     let timeoutId: NodeJS.Timeout;
 
@@ -238,13 +235,17 @@ export function MascotChatProvider({
     }
 
     return () => {
-      if (timeoutId) clearTimeout(timeoutId);
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
     };
   }, [state.currentMessage, state.messageQueue.length, autoProcessQueue]);
 
   // Auto-clear typing animation
   useEffect(() => {
-    if (!state.isTyping) return;
+    if (!state.isTyping) {
+      return;
+    }
 
     // If no current message, clear typing immediately
     if (!state.currentMessage) {
@@ -265,7 +266,9 @@ export function MascotChatProvider({
 
   // Auto-reset animations
   useEffect(() => {
-    if (state.currentAnimation.type === 'idle') return;
+    if (state.currentAnimation.type === 'idle') {
+      return;
+    }
 
     const duration = state.currentAnimation.duration ?? 3000;
     const timeoutId = setTimeout(() => {

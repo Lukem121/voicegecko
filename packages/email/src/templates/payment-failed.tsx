@@ -1,10 +1,8 @@
 import {
   Body,
   Container,
-  Head,
   Heading,
   Html,
-  Img,
   Link,
   Preview,
   Section,
@@ -24,7 +22,6 @@ interface PaymentFailedEmailProps {
 }
 
 export const PaymentFailedTemplate = ({
-  name,
   planName,
   retryPaymentUrl,
   accountUrl,

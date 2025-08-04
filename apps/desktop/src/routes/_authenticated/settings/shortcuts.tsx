@@ -3,7 +3,6 @@ import { Button } from '@acme/ui/components/ui/button';
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from '@acme/ui/components/ui/card';
@@ -20,7 +19,6 @@ import {
   Loader2,
   RotateCcw,
   Settings2,
-  Zap,
 } from 'lucide-react';
 
 import { ShortcutRecorder } from '~/components/shortcut-recorder';

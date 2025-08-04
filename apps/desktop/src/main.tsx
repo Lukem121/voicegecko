@@ -137,7 +137,7 @@ function App() {
 // Render the app
 const rootElement = document.getElementById('root');
 
-if (!rootElement) throw new Error('Root not in body');
+if (!rootElement) { throw new Error('Root not in body'); }
 
 if (!rootElement.innerHTML) {
   const root = ReactDOM.createRoot(rootElement);

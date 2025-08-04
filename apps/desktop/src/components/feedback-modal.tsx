@@ -1,18 +1,13 @@
+import { log } from '@acme/observability';
 import { Button } from '@acme/ui/components/ui/button';
 import {
-import
-{
-  log;
-}
-from;
-('@acme/observability');
-Dialog,
+  Dialog,
   DialogContent,
   DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@acme/ui/components/ui/dialog'
+} from '@acme/ui/components/ui/dialog';
 
 import { Textarea } from '@acme/ui/components/ui/textarea';
 import { Loader2, MessageSquare } from 'lucide-react';

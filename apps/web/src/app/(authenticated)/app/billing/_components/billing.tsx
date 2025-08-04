@@ -1,17 +1,12 @@
 'use client';
 
 import type { PriceWithMetadata } from '@acme/api/src/router/stripe.route';
+import { log } from '@acme/observability';
 import {
-import
-{
-  log;
-}
-from;
-('@acme/observability');
-Alert,
+  Alert,
   AlertDescription,
   AlertTitle,
-} from '@acme/ui/components/ui/alert'
+} from '@acme/ui/components/ui/alert';
 
 import { Badge } from '@acme/ui/components/ui/badge';
 import { Button } from '@acme/ui/components/ui/button';
@@ -24,7 +19,7 @@ import {
 } from '@acme/ui/components/ui/card';
 import type { Subscription } from '@better-auth/stripe';
 import { useMutation } from '@tanstack/react-query';
-import { AlertTriangle, Calendar, Loader2, RefreshCw, X } from 'lucide-react';
+import { AlertTriangle, Loader2, RefreshCw, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
@@ -113,8 +108,9 @@ export default function Billing({ prices, subscription, error }: BillingProps) {
 
   // Determine the current subscription interval
   const getSubscriptionInterval = (): 'monthly' | 'yearly' => {
-    if (!(subscription?.periodStart && subscription.periodEnd))
+    if (!(subscription?.periodStart && subscription.periodEnd)) {
       return 'monthly';
+    }
 
     const start = new Date(subscription.periodStart);
     const end = new Date(subscription.periodEnd);
@@ -126,12 +122,16 @@ export default function Billing({ prices, subscription, error }: BillingProps) {
 
   // Get the display price for the current subscription
   const getCurrentSubscriptionPrice = () => {
-    if (!subscription) return 'N/A';
+    if (!subscription) {
+      return 'N/A';
+    }
 
     const interval = getSubscriptionInterval();
     const price = findPriceForPlan(subscription.plan, interval);
 
-    if (!price) return 'Price unavailable';
+    if (!price) {
+      return 'Price unavailable';
+    }
 
     return `${formatPrice(price)}/${interval === 'yearly' ? 'year' : 'month'}`;
   };
@@ -200,7 +200,9 @@ export default function Billing({ prices, subscription, error }: BillingProps) {
   };
 
   const handleRestoreSubscription = async () => {
-    if (!subscription?.stripeSubscriptionId) return;
+    if (!subscription?.stripeSubscriptionId) {
+      return;
+    }
 
     try {
       setIsRestoring(true);
@@ -231,7 +233,9 @@ export default function Billing({ prices, subscription, error }: BillingProps) {
   };
 
   const formatDate = (date: Date | string | undefined) => {
-    if (!date) return 'N/A';
+    if (!date) {
+      return 'N/A';
+    }
     const dateObj = typeof date === 'string' ? new Date(date) : date;
     return dateObj.toLocaleDateString('en-US', {
       year: 'numeric',

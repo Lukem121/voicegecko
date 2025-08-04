@@ -1,19 +1,12 @@
+import { log, log } from '@acme/observability';
 import { Button } from '@acme/ui/components/ui/button';
 import {
-import
-{
-  log;
-}
-from;
-('@acme/observability');
-Card,
+  Card,
   CardContent,
   CardFooter,
   CardHeader,
   CardTitle,
-} from '@acme/ui/components/ui/card'
-
-import { log } from '@acme/observability';
+} from '@acme/ui/components/ui/card';
 import { createFileRoute } from '@tanstack/react-router';
 import { openUrl } from '@tauri-apps/plugin-opener';
 import {
@@ -39,7 +32,9 @@ function CompletionStep() {
 
   useEffect(() => {
     // Prevent running multiple times
-    if (completionActionsPerformed.current) return;
+    if (completionActionsPerformed.current) {
+      return;
+    }
     completionActionsPerformed.current = true;
 
     // Send completion message

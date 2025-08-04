@@ -1,7 +1,7 @@
+import { log } from '@acme/observability';
 import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
-import type { Store } from '@tauri-apps/plugin-store';
-import { LazyStore, load } from '@tauri-apps/plugin-store';
+import { LazyStore } from '@tauri-apps/plugin-store';
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import { analytics } from '~/lib/analytics/posthog-analytics';
@@ -9,20 +9,12 @@ import { CURRENT_SETTINGS_VERSION } from '~/lib/settings/migrations/registry';
 import { recordingService } from '~/services/recording.service';
 import { transcriptionService } from '~/services/transcription.service';
 import type { HardwareInfo } from '~/types/models';
+
 import type {
-import
-{
-  log;
-}
-
-import { log } from '@acme/observability';
-
-from;
-('@acme/observability');
-AudioDevice,
+  AudioDevice,
   NotificationSound,
   NotificationTiming,
-} from '~/types/settings'
+} from '~/types/settings';
 
 // Settings types
 interface AudioSettings {
@@ -176,7 +168,9 @@ export const useSettingsStore = create<SettingsState>()(
       isLoading: false,
 
       initialize: async () => {
-        if (get().isInitialized) return;
+        if (get().isInitialized) {
+          return;
+        }
 
         set({ isLoading: true });
 

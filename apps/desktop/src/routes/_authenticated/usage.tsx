@@ -12,10 +12,8 @@ import { createFileRoute } from '@tanstack/react-router';
 import { open } from '@tauri-apps/plugin-shell';
 import {
   BarChart,
-  Calendar,
   Clock,
   CreditCard,
-  Download,
   ExternalLink,
   FileText,
   TrendingUp,
@@ -280,7 +278,7 @@ function UsagePageSkeleton() {
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {[...Array(4)].map((_, i) => (
+        {[...new Array(4)].map((_, i) => (
           <Card key={i}>
             <CardHeader className="pb-3">
               <Skeleton className="h-4 w-24" />
@@ -294,13 +292,13 @@ function UsagePageSkeleton() {
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">
-        {[...Array(2)].map((_, i) => (
+        {[...new Array(2)].map((_, i) => (
           <Card key={i}>
             <CardHeader>
               <Skeleton className="h-5 w-32" />
             </CardHeader>
             <CardContent className="space-y-4">
-              {[...Array(3)].map((_, j) => (
+              {[...new Array(3)].map((_, j) => (
                 <div className="flex items-center justify-between" key={j}>
                   <Skeleton className="h-4 w-24" />
                   <Skeleton className="h-4 w-16" />

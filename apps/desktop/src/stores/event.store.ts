@@ -147,6 +147,8 @@ export const useEventStore = create<EventState>()(
               recordingStatus: 'idle',
             });
             break;
+          default:
+            break;
         }
       },
 

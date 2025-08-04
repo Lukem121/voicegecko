@@ -1,18 +1,13 @@
+import { log } from '@acme/observability';
 import { Badge } from '@acme/ui/components/ui/badge';
 import { Button } from '@acme/ui/components/ui/button';
 import {
-import
-{
-  log;
-}
-from;
-('@acme/observability');
-Card,
+  Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from '@acme/ui/components/ui/card'
+} from '@acme/ui/components/ui/card';
 
 import { Progress } from '@acme/ui/components/ui/progress';
 import { RadioGroup, RadioGroupItem } from '@acme/ui/components/ui/radio-group';
@@ -28,9 +23,8 @@ import {
 } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
-import { analytics } from '~/lib/analytics/posthog-analytics';
 import { useHardwareInfo, useSettingsStore } from '~/stores/settings.store';
-import type { HardwareInfo, ModelTier } from '~/types/models';
+import type { ModelTier } from '~/types/models';
 import { tierDisplayInfo } from '~/types/models';
 
 export const Route = createFileRoute('/_authenticated/settings/models')({
@@ -266,6 +260,8 @@ function SettingsModelsPage() {
     updateModelStatus,
     getModelsForTier,
     settings.models.availableModels,
+    hardwareInfo,
+    updateSelectedTier,
   ]);
 
   const handleTierChange = async (tier: string) => {
@@ -365,7 +361,9 @@ function SettingsModelsPage() {
   };
 
   const isRecommended = (tier: ModelTier): boolean => {
-    if (!hardwareInfo) return false;
+    if (!hardwareInfo) {
+      return false;
+    }
     // Convert enum to string for comparison since Rust sends it as a string
     const recommendedTierStr =
       typeof hardwareInfo.recommended_tier === 'string'
@@ -512,9 +510,7 @@ function SettingsModelsPage() {
                         </p>
                         <div className="mt-2 flex items-center gap-4 text-muted-foreground text-xs">
                           {tier === 'cloud' ? (
-                            <>
-                              <span>Internet required</span>
-                            </>
+                            <span>Internet required</span>
                           ) : (
                             <>
                               <span>Min RAM: {info.min_ram_gb} GB</span>

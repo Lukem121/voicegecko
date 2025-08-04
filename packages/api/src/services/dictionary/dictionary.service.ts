@@ -19,13 +19,15 @@ export const dictionaryService = {
    * Simply repeat each word 3 times for better recognition without triggering repetition detection
    */
   optimizePromptForTokenLimit(words: string[]): string {
-    if (words.length === 0) return '';
+    if (words.length === 0) {
+      return '';
+    }
 
     const repeatedWords: string[] = [];
 
-    words.forEach((word) => {
+    for (const word of words) {
       repeatedWords.push(word, word, word);
-    });
+    }
 
     return repeatedWords.join(', ');
   },

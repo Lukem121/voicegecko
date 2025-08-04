@@ -2,7 +2,6 @@
 
 import { cn } from '@acme/ui/lib/utils';
 import { AnimatePresence, motion } from 'motion/react';
-import React from 'react';
 
 import type { MascotVariant } from './mascot-character';
 import { MascotCharacter } from './mascot-character';

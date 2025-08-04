@@ -21,9 +21,9 @@ module.exports = config;
  * @param {import('expo/metro-config').MetroConfig} config
  * @returns {import('expo/metro-config').MetroConfig}
  */
-function withTurborepoManagedCache(config) {
-  config.cacheStores = [
+function withTurborepoManagedCache(configExpo) {
+  configExpo.cacheStores = [
     new FileStore({ root: path.join(__dirname, '.cache/metro') }),
   ];
-  return config;
+  return configExpo;
 }

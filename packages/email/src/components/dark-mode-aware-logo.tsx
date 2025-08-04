@@ -1,4 +1,4 @@
-import { Head, Img } from '@react-email/components';
+import { Img } from '@react-email/components';
 
 interface DarkModeAwareLogoProps {
   height?: string;

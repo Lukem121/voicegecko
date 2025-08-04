@@ -1,7 +1,5 @@
 use serde::{Deserialize, Serialize};
-use std::sync::Arc;
-use sysinfo::{CpuRefreshKind, RefreshKind, System};
-use tauri::AppHandle;
+use sysinfo::System;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct HardwareInfo {
@@ -71,6 +69,7 @@ impl ModelTier {
         self.get_model_ids()[0]
     }
 
+    #[allow(dead_code)]
     pub fn get_display_info(&self) -> TierDisplayInfo {
         match self {
             ModelTier::Cloud => TierDisplayInfo {
@@ -125,7 +124,7 @@ pub struct TierDisplayInfo {
 
 pub fn detect_hardware() -> HardwareInfo {
     // Create a new System instance and refresh everything
-    let mut sys = System::new_all();
+    let sys = System::new_all();
 
     // Get CPU information
     let cpus = sys.cpus();

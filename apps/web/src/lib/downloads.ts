@@ -16,6 +16,52 @@ const octokit = new Octokit({
 });
 
 /**
+ * Handle 404 error by fetching from all releases
+ */
+async function fetchFromAllReleases(): Promise<GitHubRelease | null> {
+  try {
+    const { data: releases } = await octokit.rest.repos.listReleases({
+      owner: RELEASES_GITHUB_OWNER,
+      repo: RELEASES_GITHUB_REPO,
+      per_page: 1,
+    });
+
+    return releases.length > 0 ? (releases[0] as GitHubRelease) : null;
+  } catch (listError) {
+    log.error('Error fetching releases list:', listError);
+    return null;
+  }
+}
+
+/**
+ * Check if error is a 404 status error
+ */
+function isNotFoundError(error: unknown): error is { status: number } {
+  return (
+    error !== null &&
+    typeof error === 'object' &&
+    'status' in error &&
+    (error as { status: unknown }).status === 404
+  );
+}
+
+/**
+ * Format error for throwing
+ */
+function formatApiError(error: unknown): string {
+  const errorMessage =
+    error && typeof error === 'object' && 'message' in error
+      ? String(error.message)
+      : 'Unknown error';
+  const errorStatus =
+    error && typeof error === 'object' && 'status' in error
+      ? String(error.status)
+      : 'Unknown';
+
+  return `GitHub API error: ${errorStatus} ${errorMessage}`;
+}
+
+/**
  * Fetch the latest release from the public releases repository
  */
 async function fetchLatestRelease(): Promise<GitHubRelease | null> {
@@ -26,26 +72,12 @@ async function fetchLatestRelease(): Promise<GitHubRelease | null> {
     });
 
     return data as GitHubRelease;
-  } catch (error: any) {
-    if (error.status === 404) {
-      // No published releases found, check all releases
-      try {
-        const { data: releases } = await octokit.rest.repos.listReleases({
-          owner: RELEASES_GITHUB_OWNER,
-          repo: RELEASES_GITHUB_REPO,
-          per_page: 1,
-        });
-
-        return releases.length > 0 ? (releases[0] as GitHubRelease) : null;
-      } catch (listError) {
-        log.error('Error fetching releases list:', listError);
-        return null;
-      }
+  } catch (error) {
+    if (isNotFoundError(error)) {
+      return await fetchFromAllReleases();
     }
 
-    throw new Error(
-      `GitHub API error: ${error.status} ${error.message || 'Unknown error'}`
-    );
+    throw new Error(formatApiError(error));
   }
 }
 

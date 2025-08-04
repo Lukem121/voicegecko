@@ -1,19 +1,16 @@
 'use client';
 
+import { log } from '@acme/observability';
 import { useNavigate } from '@tanstack/react-router';
-import React, {
-import
-{
-  log;
-}
-from;
-('@acme/observability');
-createContext,
+import {
+  createContext,
   useCallback,
   useContext,
   useEffect,
+  useMemo,
   useReducer,
-} from 'react'
+  useRef,
+} from 'react';
 
 import type { MascotMessage } from '~/components/mascot';
 import { useMascotChat } from '~/components/mascot';
@@ -42,7 +39,7 @@ export interface OnboardingStepConfig {
 export interface OnboardingEvent {
   type: string;
   stepId: string;
-  data?: Record<string, any>;
+  data?: Record<string, unknown>;
   timestamp: number;
 }
 
@@ -75,11 +72,20 @@ export interface OnboardingContextValue {
   setCanProceed: (canProceed: boolean) => void;
 
   // Event system (simplified)
-  emitEvent: (type: string, data?: Record<string, any>) => void;
+  emitEvent: (type: string, data?: Record<string, unknown>) => void;
 
   // Mascot integration
   sendMascotMessage: (message: Omit<MascotMessage, 'id'>) => void;
-  triggerMascotAnimation: (animation: string) => void;
+  triggerMascotAnimation: (
+    animation:
+      | 'idle'
+      | 'listening'
+      | 'thinking'
+      | 'celebrating'
+      | 'welcoming'
+      | 'processing'
+      | 'dancing'
+  ) => void;
 
   // Utilities
   canAdvanceToStep: (stepId: string) => boolean;
@@ -212,11 +218,13 @@ export function OnboardingProvider({
   const mascotChat = useMascotChat();
 
   // Initialize only once
-  const isInitializedRef = React.useRef(false);
-  const onboardingStartTimeRef = React.useRef<number>(Date.now());
+  const isInitializedRef = useRef(false);
+  const onboardingStartTimeRef = useRef<number>(Date.now());
 
   useEffect(() => {
-    if (isInitializedRef.current) return;
+    if (isInitializedRef.current) {
+      return;
+    }
     isInitializedRef.current = true;
     onboardingStartTimeRef.current = Date.now();
 
@@ -242,7 +250,7 @@ export function OnboardingProvider({
   );
 
   const canAdvanceToStep = useCallback(
-    (stepId: string, assumeCompleted?: string) => {
+    (stepId: string, _assumeCompleted?: string) => {
       const step = steps.find((s) => s.id === stepId);
       if (!step) {
         return false;
@@ -278,10 +286,14 @@ export function OnboardingProvider({
   );
 
   const getPreviousStepId = useCallback(() => {
-    if (!state.currentStepId) return null;
+    if (!state.currentStepId) {
+      return null;
+    }
 
     const currentIndex = getStepIndex(state.currentStepId);
-    if (currentIndex <= 0) return null;
+    if (currentIndex <= 0) {
+      return null;
+    }
 
     const prevStep = steps[currentIndex - 1];
     return prevStep ? prevStep.id : null;
@@ -289,7 +301,7 @@ export function OnboardingProvider({
 
   // Event system (simplified)
   const emitEvent = useCallback(
-    (type: string, data?: Record<string, any>) => {
+    (type: string, data?: Record<string, unknown>) => {
       const event: OnboardingEvent = {
         type,
         stepId: state.currentStepId || '',
@@ -321,20 +333,6 @@ export function OnboardingProvider({
       emitEvent('step_changed', { from: state.currentStepId, to: stepId });
     },
     [steps, canAdvanceToStep, navigate, state.currentStepId, emitEvent]
-  );
-
-  const nextStep = useCallback(
-    async (assumeCompleted?: string) => {
-      const nextStepId = getNextStepId(assumeCompleted);
-
-      if (nextStepId) {
-        await goToStep(nextStepId, assumeCompleted);
-      } else {
-        // No more steps - complete onboarding
-        await completeOnboarding();
-      }
-    },
-    [getNextStepId, goToStep]
   );
 
   const previousStep = useCallback(async () => {
@@ -399,7 +397,7 @@ export function OnboardingProvider({
   ]);
 
   // Step management with timing tracking
-  const stepStartTimesRef = React.useRef<Record<string, number>>({});
+  const stepStartTimesRef = useRef<Record<string, number>>({});
 
   // Track step start times
   useEffect(() => {
@@ -410,6 +408,70 @@ export function OnboardingProvider({
       stepStartTimesRef.current[state.currentStepId] = Date.now();
     }
   }, [state.currentStepId]);
+
+  const setStepProgress = useCallback(
+    (stepId: string, progress: number) => {
+      dispatch({ type: 'SET_STEP_PROGRESS', payload: { stepId, progress } });
+      emitEvent('step_progress', { stepId, progress });
+    },
+    [emitEvent]
+  );
+
+  const setCanProceed = useCallback((canProceed: boolean) => {
+    dispatch({ type: 'SET_CAN_PROCEED', payload: canProceed });
+  }, []);
+
+  // Mascot integration
+  const sendMascotMessage = useCallback(
+    (message: Omit<MascotMessage, 'id'>) => {
+      mascotChat.sendMessage(message);
+    },
+    [mascotChat]
+  );
+
+  const triggerMascotAnimation = useCallback(
+    (
+      animation:
+        | 'idle'
+        | 'listening'
+        | 'thinking'
+        | 'celebrating'
+        | 'welcoming'
+        | 'processing'
+        | 'dancing'
+    ) => {
+      const validAnimations = [
+        'idle',
+        'listening',
+        'thinking',
+        'celebrating',
+        'welcoming',
+        'processing',
+        'dancing',
+      ];
+      if (validAnimations.includes(animation)) {
+        mascotChat.setAnimation({
+          type: animation,
+          duration: 3000,
+        });
+      }
+    },
+    [mascotChat]
+  );
+
+  const nextStep = useCallback(
+    async (assumeCompleted?: string) => {
+      const nextStepId = getNextStepId(assumeCompleted);
+
+      if (nextStepId) {
+        await goToStep(nextStepId, assumeCompleted);
+      } else {
+        // No more steps - complete onboarding
+        await completeOnboarding();
+      }
+    },
+    [getNextStepId, goToStep, completeOnboarding]
+  );
 
   const markStepCompleted = useCallback(
     (stepId: string, progress = 100) => {
@@ -439,50 +501,9 @@ export function OnboardingProvider({
     [steps, state.currentStepId, emitEvent, nextStep]
   );
 
-  const setStepProgress = useCallback(
-    (stepId: string, progress: number) => {
-      dispatch({ type: 'SET_STEP_PROGRESS', payload: { stepId, progress } });
-      emitEvent('step_progress', { stepId, progress });
-    },
-    [emitEvent]
-  );
-
-  const setCanProceed = useCallback((canProceed: boolean) => {
-    dispatch({ type: 'SET_CAN_PROCEED', payload: canProceed });
-  }, []);
-
-  // Mascot integration
-  const sendMascotMessage = useCallback(
-    (message: Omit<MascotMessage, 'id'>) => {
-      mascotChat.sendMessage(message);
-    },
-    [mascotChat]
-  );
-
-  const triggerMascotAnimation = useCallback(
-    (animation: string) => {
-      const validAnimations = [
-        'idle',
-        'listening',
-        'thinking',
-        'celebrating',
-        'welcoming',
-        'processing',
-        'dancing',
-      ];
-      if (validAnimations.includes(animation)) {
-        mascotChat.setAnimation({
-          type: animation as any,
-          duration: 3000,
-        });
-      }
-    },
-    [mascotChat]
-  );
-
   // Update mascot animation when step changes (simplified)
-  const prevStepIdRef = React.useRef<string | null>(null);
-  const lastSetAnimationRef = React.useRef<string | null>(null);
+  const prevStepIdRef = useRef<string | null>(null);
+  const lastSetAnimationRef = useRef<string | null>(null);
 
   useEffect(() => {
     // If tutorial is completed, show dancing animation only once
@@ -517,7 +538,7 @@ export function OnboardingProvider({
   ]);
 
   // Build context value with stable reference
-  const contextValue = React.useMemo<OnboardingContextValue>(
+  const contextValue = useMemo<OnboardingContextValue>(
     () => ({
       state,
       steps,

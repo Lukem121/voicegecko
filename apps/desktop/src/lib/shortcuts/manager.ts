@@ -1,15 +1,10 @@
+import { log } from '@acme/observability';
 import type { ShortcutEvent } from '@tauri-apps/plugin-global-shortcut';
 import {
-import
-{
-  log;
-}
-from;
-('@acme/observability');
-register,
+  register,
   unregister,
   unregisterAll,
-} from '@tauri-apps/plugin-global-shortcut'
+} from '@tauri-apps/plugin-global-shortcut';
 
 import { LazyStore } from '@tauri-apps/plugin-store';
 import { recordingService } from '~/services/recording.service';

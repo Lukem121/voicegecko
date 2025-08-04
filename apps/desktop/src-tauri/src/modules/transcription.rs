@@ -11,6 +11,7 @@ pub enum TranscriptionError {
     #[error("Model load failed: {0}")]
     ModelLoad(String),
     #[error("Audio processing failed: {0}")]
+    #[allow(dead_code)]
     AudioProcessing(String),
     #[error("Transcription failed: {0}")]
     Transcription(String),

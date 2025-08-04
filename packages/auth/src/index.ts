@@ -15,7 +15,6 @@ import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { nextCookies } from 'better-auth/next-js';
 import {
   admin as adminPlugin,
-  createAuthMiddleware,
   oAuthProxy,
   phoneNumber,
   twoFactor,
@@ -114,30 +113,6 @@ export const serverAuth = betterAuth({
   ],
   hooks: {
     after: handleAfterHook,
-    before: createAuthMiddleware(async (ctx) => {
-      const allowedEmails = [
-        'lukeask@hotmail.co.uk',
-        'pepperglazedluke@gmail.com',
-      ];
-
-      if (ctx.path !== '/sign-up/email' && ctx.path !== '/sign-in/discord') {
-        return;
-      }
-
-      const email = ctx.body?.email;
-      if (!email) {
-        throw new Error('Email is required');
-      }
-
-      // Extract base email (remove + extension if present)
-      const [localPart, domain] = email.split('@');
-      const baseLocalPart = localPart.split('+')[0];
-      const baseEmail = `${baseLocalPart}@${domain}`;
-
-      if (!allowedEmails.includes(baseEmail)) {
-        throw new Error('Email must be in the allowed list');
-      }
-    }),
   },
   databaseHooks: {
     user: {

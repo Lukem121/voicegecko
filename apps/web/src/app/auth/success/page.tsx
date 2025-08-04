@@ -1,20 +1,15 @@
 'use client';
 
+import { log } from '@acme/observability';
 import VoiceGeckoLogo from '@acme/ui/components/logos/logo-full';
 import { Badge } from '@acme/ui/components/ui/badge';
 import { Button } from '@acme/ui/components/ui/button';
 import {
-import
-{
-  log;
-}
-from;
-('@acme/observability');
-Card,
+  Card,
   CardContent,
   CardDescription,
   CardHeader,
-} from '@acme/ui/components/ui/card'
+} from '@acme/ui/components/ui/card';
 
 import { CheckCircle2, ExternalLink, Loader2, RotateCcw } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
@@ -70,6 +65,7 @@ export default function AuthSuccessPage() {
     return redirectTimeout;
   };
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: attemptRedirect changes on every render
   useEffect(() => {
     if (tauriRedirect && !redirectAttempted) {
       setRedirectAttempted(true);
@@ -103,7 +99,9 @@ export default function AuthSuccessPage() {
   }, [isRedirecting]);
 
   const handleManualRedirect = () => {
-    if (!tauriRedirect) return;
+    if (!tauriRedirect) {
+      return;
+    }
 
     const decodedUrl = decodeURIComponent(tauriRedirect);
     attemptRedirect(decodedUrl);

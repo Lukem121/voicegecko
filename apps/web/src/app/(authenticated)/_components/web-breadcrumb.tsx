@@ -17,7 +17,7 @@ export function AppBreadcrumb() {
 
   // Generate breadcrumb items
   const breadcrumbItems = pathSegments.map((segment, index) => {
-    const path = '/' + pathSegments.slice(0, index + 1).join('/');
+    const path = `/${pathSegments.slice(0, index + 1).join('/')}`;
     const isLast = index === pathSegments.length - 1;
 
     // Convert segment to readable format

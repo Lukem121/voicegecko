@@ -22,7 +22,6 @@ import { createFileRoute, Link, useRouter } from '@tanstack/react-router';
 import { Loader } from 'lucide-react';
 import type { z } from 'zod/v4';
 
-import { analytics } from '~/lib/analytics/posthog-analytics';
 import { SocialSignInButton } from './-components/social-sign-in-button';
 import TermsAndPrivacyNotice from './-components/terms-and-privacy-notice';
 import { useEmailSignup } from './-hooks/use-email-signup';

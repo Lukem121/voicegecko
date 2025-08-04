@@ -100,7 +100,7 @@ export function AppLauncher({ onReady }: { onReady: () => void }) {
             className="sm:-top-80 pointer-events-none absolute inset-x-0 transform-gpu overflow-hidden blur-[120px]"
           >
             <div
-              className="-translate-x-1/2 relative left-[calc(50%)] aspect-[1155/678] w-[36.125rem] rotate-[45deg] bg-gradient-to-tr from-[#6E9C4A] via-[#6E9C4A]/60 via-[#6E9C4A]/80 to-[#6E9C4A]/40 to-primary-muted opacity-25 sm:left-[calc(50%-30rem)] sm:w-[72.1875rem]"
+              className="-translate-x-1/2 relative left-[calc(50%)] aspect-[1155/678] w-[36.125rem] rotate-[45deg] bg-gradient-to-tr from-[#6E9C4A] via-[#6E9C4A]/70 to-[#6E9C4A]/40 to-primary-muted opacity-25 sm:left-[calc(50%-30rem)] sm:w-[72.1875rem]"
               style={{
                 clipPath: 'polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%)',
               }}

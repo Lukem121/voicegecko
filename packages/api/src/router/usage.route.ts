@@ -12,6 +12,6 @@ export const usageRouter = {
 
   getStats: protectedProcedure.query(async ({ ctx }) => {
     const userId = ctx.session.user.id;
-    return usageService.getUserUsageStats(userId);
+    return await usageService.getUserUsageStats(userId);
   }),
 } satisfies TRPCRouterRecord;

@@ -124,8 +124,6 @@ const getAnimationConfig = (animation: MascotAnimation) => {
           repeatType: 'loop' as const,
         },
       };
-
-    case 'idle':
     default:
       return {
         animate: {
@@ -144,7 +142,7 @@ const getAnimationConfig = (animation: MascotAnimation) => {
 
 // Additional floating animation for idle states
 const getFloatingAnimation = (isEnabled: boolean) => {
-  if (!isEnabled) return {};
+  if (!isEnabled) { return {}; }
 
   return {
     y: [0, -3, 0],
@@ -158,8 +156,8 @@ const getFloatingAnimation = (isEnabled: boolean) => {
 };
 
 // Hover effects for interactive mascots
-const getHoverEffects = (enableHover: boolean) => {
-  if (!enableHover) return {};
+const _getHoverEffects = (enableHover: boolean) => {
+  if (!enableHover) { return {}; }
 
   return {
     whileHover: {

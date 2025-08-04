@@ -42,7 +42,7 @@ class TranscriptionRepository {
   }
 
   async findByUserId(userId: string, limit = 100) {
-    return db
+    return await db
       .select({
         id: TranscriptionTable.id,
         content: TranscriptionTable.content,
