@@ -12,14 +12,18 @@ import { queryClient, trpc } from '~/trpc';
  * Utility function to check if an error is likely network-related
  */
 export function isNetworkError(error: unknown): boolean {
-  if (!error) { return false; }
+  if (!error) {
+    return false;
+  }
 
-  const errorMessage =
-    error instanceof Error
-      ? error.message.toLowerCase()
-      : typeof error === 'string'
-        ? error.toLowerCase()
-        : JSON.stringify(error).toLowerCase();
+  let errorMessage: string;
+  if (error instanceof Error) {
+    errorMessage = error.message.toLowerCase();
+  } else if (typeof error === 'string') {
+    errorMessage = error.toLowerCase();
+  } else {
+    errorMessage = JSON.stringify(error).toLowerCase();
+  }
 
   return (
     errorMessage.includes('network') ||

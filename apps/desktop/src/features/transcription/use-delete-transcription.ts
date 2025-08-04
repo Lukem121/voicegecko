@@ -13,7 +13,7 @@ export const useDeleteTranscription = () => {
           method: 'user_action',
         });
 
-        void queryClient.invalidateQueries({
+        queryClient.invalidateQueries({
           queryKey: trpc.transcription.getAll.queryKey(),
         });
       },

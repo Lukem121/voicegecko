@@ -18,11 +18,13 @@ export function GeckoBarButton({
     }
 
     // Finish button
-    return state.isEnabled
-      ? 'bg-red-400 hover:bg-red-500'
-      : state.isLoading
-        ? 'bg-gray-500'
-        : 'cursor-not-allowed bg-red-300/50';
+    if (state.isEnabled) {
+      return 'bg-red-400 hover:bg-red-500';
+    }
+    if (state.isLoading) {
+      return 'bg-gray-500';
+    }
+    return 'cursor-not-allowed bg-red-300/50';
   };
 
   const getIconColor = () => {

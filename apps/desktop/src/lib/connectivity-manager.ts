@@ -60,7 +60,9 @@ class ConnectivityManager {
    * Activate connectivity monitoring (force immediate check)
    */
   activate(): void {
-    if (this.isActive) { return; }
+    if (this.isActive) {
+      return;
+    }
 
     log.info('🔄 [ConnectivityManager] Activating connectivity monitoring');
     this.isActive = true;
@@ -85,7 +87,9 @@ class ConnectivityManager {
    * Deactivate connectivity monitoring (when issue is resolved)
    */
   private deactivate(): void {
-    if (!this.isActive) { return; }
+    if (!this.isActive) {
+      return;
+    }
 
     log.info('✅ [ConnectivityManager] Deactivating connectivity monitoring');
     this.isActive = false;
@@ -244,7 +248,9 @@ class ConnectivityManager {
   private updateState(newState: Partial<ConnectivityState>): void {
     this.state = { ...this.state, ...newState };
     // Notify all listeners
-    this.listeners.forEach((listener) => listener(this.state));
+    for (const listener of this.listeners) {
+      listener(this.state);
+    }
   }
 
   private handleOnline = (): void => {

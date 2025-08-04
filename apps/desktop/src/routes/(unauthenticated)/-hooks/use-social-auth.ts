@@ -38,19 +38,19 @@ export function useSocialAuth(): UseSocialAuthReturn {
       returning_user: true, // Could be enhanced with proper detection
     });
 
-    const { error } = await signInSocial({
+    const { error: signInError } = await signInSocial({
       authClient,
       provider,
       errorCallbackURL: '/authentication-error',
       fetchOptions: {
-        onError: ({ error }) => setError(error.message),
+        onError: ({ error: callbackError }) => setError(callbackError.message),
       },
     });
 
-    if (error) {
-      log.error('use-social-auth', { error });
+    if (signInError) {
+      log.error('use-social-auth', { error: signInError });
       setIsLoading((prev) => ({ ...prev, [provider]: false }));
-      setError(error.message ?? 'An unexpected error occurred.');
+      setError(signInError.message ?? 'An unexpected error occurred.');
       return;
     }
   };

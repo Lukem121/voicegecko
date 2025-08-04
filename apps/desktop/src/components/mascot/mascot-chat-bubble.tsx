@@ -162,30 +162,38 @@ export function MascotChatBubble({
               message ? getBubbleStyles(message.type) : getBubbleStyles('info')
             )}
           >
-            {isTyping && !message ? (
-              // Show typing indicator when waiting for message
-              <div className="flex items-center space-x-2">
-                <TypingDots />
-                <span className="text-muted-foreground text-sm">
-                  Thinking...
-                </span>
-              </div>
-            ) : message ? (
-              // Show message content
-              <div>
-                <p className="font-medium text-sm leading-relaxed">
-                  <TextType
-                    as="span"
-                    className="inline"
-                    loop={false}
-                    showCursor={false}
-                    startOnVisible={true}
-                    text={message.content}
-                    typingSpeed={10}
-                  />
-                </p>
-              </div>
-            ) : null}
+            {(() => {
+              if (isTyping && !message) {
+                // Show typing indicator when waiting for message
+                return (
+                  <div className="flex items-center space-x-2">
+                    <TypingDots />
+                    <span className="text-muted-foreground text-sm">
+                      Thinking...
+                    </span>
+                  </div>
+                );
+              }
+              if (message) {
+                // Show message content
+                return (
+                  <div>
+                    <p className="font-medium text-sm leading-relaxed">
+                      <TextType
+                        as="span"
+                        className="inline"
+                        loop={false}
+                        showCursor={false}
+                        startOnVisible={true}
+                        text={message.content}
+                        typingSpeed={10}
+                      />
+                    </p>
+                  </div>
+                );
+              }
+              return null;
+            })()}
           </div>
         </motion.div>
       )}

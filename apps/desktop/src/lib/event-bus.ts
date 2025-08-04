@@ -30,9 +30,12 @@ interface EventMap {
 
 type EventListener<T> = (data: T) => void;
 
+// Union type for all possible event listeners
+type AnyEventListener = EventListener<EventMap[keyof EventMap]>;
+
 class EventBus {
   private static instance: EventBus;
-  private listeners = new Map<keyof EventMap, Set<EventListener<any>>>();
+  private listeners = new Map<keyof EventMap, Set<AnyEventListener>>();
 
   private constructor() {}
 
@@ -70,13 +73,16 @@ class EventBus {
 
   emit<K extends keyof EventMap>(event: K, data: EventMap[K]): void {
     log.info(`[EventBus] Emitting ${event}`, data);
-    this.listeners.get(event)?.forEach((listener) => {
-      try {
-        listener(data);
-      } catch (error) {
-        log.error(`[EventBus] Error in listener for ${event}:`, error);
+    const eventListeners = this.listeners.get(event);
+    if (eventListeners) {
+      for (const listener of eventListeners) {
+        try {
+          listener(data);
+        } catch (error) {
+          log.error(`[EventBus] Error in listener for ${event}:`, error);
+        }
       }
-    });
+    }
   }
 
   clear(): void {

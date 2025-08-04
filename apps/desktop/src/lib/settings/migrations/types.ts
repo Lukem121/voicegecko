@@ -13,7 +13,7 @@ export interface VersionedSettings {
 }
 
 // Migration interface (for future use when you have users)
-export interface Migration<TFrom = any, TTo = any> {
+export interface Migration<TFrom = VersionedSettings, TTo = VersionedSettings> {
   version: number;
   description: string;
   up: (settings: TFrom) => TTo;

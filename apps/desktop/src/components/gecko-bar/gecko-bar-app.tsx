@@ -1,6 +1,6 @@
 import { cn } from '@acme/ui/lib/utils';
 import { motion } from 'motion/react';
-import { useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 
 import { useGeckoBarState } from '~/hooks/use-gecko-bar-state';
 import { analytics } from '~/lib/analytics/posthog-analytics';
@@ -19,9 +19,13 @@ import { GeckoBarTooltip } from './gecko-bar-tooltip';
 export function GeckoBarApp() {
   const { state, handlers } = useGeckoBarState();
   // External state for button logic from main event store
-  const recordingStatus = useEventStore((state) => state.recordingStatus);
-  const isRecording = useEventStore((state) => state.isRecording());
-  const isTranscribing = useEventStore((state) => state.isTranscribing());
+  const recordingStatus = useEventStore(
+    (eventState) => eventState.recordingStatus
+  );
+  const isRecording = useEventStore((eventState) => eventState.isRecording());
+  const isTranscribing = useEventStore((eventState) =>
+    eventState.isTranscribing()
+  );
 
   // Memoize derived state for performance
   const showActiveState = useMemo(
@@ -83,21 +87,44 @@ export function GeckoBarApp() {
     ]
   );
 
+  // Helper functions for state and dimensions
+  const getBarState = useCallback(() => {
+    if (showActiveState) {
+      return 'recording';
+    }
+    if (state.isExpanded) {
+      return 'expanded';
+    }
+    return 'collapsed';
+  }, [showActiveState, state.isExpanded]);
+
+  const getBarWidth = useCallback(() => {
+    if (showActiveState) {
+      return DIMENSIONS.BAR.EXPANDED_WIDTH;
+    }
+    if (state.isExpanded) {
+      return DIMENSIONS.BAR.HOVER_WIDTH;
+    }
+    return DIMENSIONS.BAR.COLLAPSED_WIDTH;
+  }, [showActiveState, state.isExpanded]);
+
+  const getBarHeight = useCallback(() => {
+    if (showActiveState) {
+      return DIMENSIONS.BAR.EXPANDED_HEIGHT;
+    }
+    if (state.isExpanded) {
+      return DIMENSIONS.BAR.HOVER_HEIGHT;
+    }
+    return DIMENSIONS.BAR.COLLAPSED_HEIGHT;
+  }, [showActiveState, state.isExpanded]);
+
   // Memoize animation dimensions
   const animationDimensions = useMemo(
     () => ({
-      width: showActiveState
-        ? DIMENSIONS.BAR.EXPANDED_WIDTH
-        : state.isExpanded
-          ? DIMENSIONS.BAR.HOVER_WIDTH
-          : DIMENSIONS.BAR.COLLAPSED_WIDTH,
-      height: showActiveState
-        ? DIMENSIONS.BAR.EXPANDED_HEIGHT
-        : state.isExpanded
-          ? DIMENSIONS.BAR.HOVER_HEIGHT
-          : DIMENSIONS.BAR.COLLAPSED_HEIGHT,
+      width: getBarWidth(),
+      height: getBarHeight(),
     }),
-    [showActiveState, state.isExpanded]
+    [getBarWidth, getBarHeight]
   );
 
   // Memoize background pattern style
@@ -113,18 +140,14 @@ export function GeckoBarApp() {
 
   return (
     <div className="dark">
-      <div
+      <button
         className="-translate-x-1/2 fixed bottom-2.5 left-1/2 z-50"
         onMouseEnter={() => {
           handlers.onMouseEnter();
           // Track hover interaction
           analytics.track('gecko_bar_interaction', {
             action: 'hover',
-            state: showActiveState
-              ? 'recording'
-              : state.isExpanded
-                ? 'expanded'
-                : 'collapsed',
+            state: getBarState(),
           });
         }}
         onMouseLeave={handlers.onMouseLeave}
@@ -135,6 +158,7 @@ export function GeckoBarApp() {
           alignItems: 'flex-end',
           justifyContent: 'center',
         }}
+        type="button"
       >
         {/* Tooltip */}
         <GeckoBarTooltip
@@ -158,11 +182,7 @@ export function GeckoBarApp() {
             // Track click interaction
             analytics.track('gecko_bar_interaction', {
               action: 'click',
-              state: showActiveState
-                ? 'recording'
-                : state.isExpanded
-                  ? 'expanded'
-                  : 'collapsed',
+              state: getBarState(),
             });
           }}
           transition={{
@@ -218,7 +238,7 @@ export function GeckoBarApp() {
             />
           </div>
         </motion.div>
-      </div>
+      </button>
     </div>
   );
 }

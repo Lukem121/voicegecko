@@ -4,13 +4,16 @@ import React from 'react';
 import { analytics } from '~/lib/analytics/posthog-analytics';
 import { trpc } from '~/trpc';
 
+// Regex pattern for removing trailing .0 from formatted numbers
+const TRAILING_ZERO_REGEX = /\.0$/;
+
 // Format numbers to compact notation (12k, 1.2M, etc.)
 const formatCompactNumber = (num: number): string => {
   if (num >= 1_000_000) {
-    return `${(num / 1_000_000).toFixed(1).replace(/\.0$/, '')}M`;
+    return `${(num / 1_000_000).toFixed(1).replace(TRAILING_ZERO_REGEX, '')}M`;
   }
   if (num >= 1000) {
-    return `${(num / 1000).toFixed(1).replace(/\.0$/, '')}k`;
+    return `${(num / 1000).toFixed(1).replace(TRAILING_ZERO_REGEX, '')}k`;
   }
   return num.toString();
 };
@@ -21,7 +24,7 @@ const formatTime = (minutes: number): string => {
     return `${Math.round(minutes)}min`;
   }
   const hours = minutes / 60;
-  return `${hours.toFixed(1).replace(/\.0$/, '')}h`;
+  return `${hours.toFixed(1).replace(TRAILING_ZERO_REGEX, '')}h`;
 };
 
 interface UsageStatsData {

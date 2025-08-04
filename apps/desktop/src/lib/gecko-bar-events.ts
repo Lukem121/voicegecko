@@ -1,15 +1,11 @@
+import { log } from '@acme/observability';
 import { listen } from '@tauri-apps/api/event';
+
 import { useGeckoBarNotificationStore } from '~/stores/gecko-bar-notification.store';
 import type {
-import
-{
-  log;
-}
-from;
-('@acme/observability');
-AudioLevelEvent,
+  AudioLevelEvent,
   GeckoBarNotificationEvent,
-} from '~/types/events'
+} from '~/types/events';
 
 let initialized = false;
 

@@ -84,6 +84,7 @@ export class SettingsMigrationManager {
         // Save migrated settings
         await store.clear();
         for (const [key, value] of Object.entries(migratedSettings)) {
+          // biome-ignore lint/nursery/noAwaitInLoop: Sequential processing ensures data integrity for settings
           await store.set(key, value);
         }
         await store.save();
