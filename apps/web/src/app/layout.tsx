@@ -2,7 +2,7 @@ import { Toaster } from '@acme/ui/components/ui/sonner';
 import { ThemeProvider, ThemeToggle } from '@acme/ui/components/ui/theme';
 import { cn } from '@acme/ui/lib/utils';
 import type { Metadata, Viewport } from 'next';
-import { Geist, Geist_Mono, Plus_Jakarta_Sans } from 'next/font/google';
+import { Geist, Geist_Mono, Inter, Plus_Jakarta_Sans } from 'next/font/google';
 import { NuqsAdapter } from 'nuqs/adapters/next/app';
 
 import { TRPCReactProvider } from '~/trpc/react';
@@ -45,6 +45,10 @@ const plusJakartaSans = Plus_Jakarta_Sans({
   subsets: ['latin'],
   variable: '--font-plus-jakarta-sans',
 });
+const interVariable = Inter({
+  subsets: ['latin'],
+  variable: '--font-inter',
+});
 
 export default function RootLayout(props: { children: React.ReactNode }) {
   return (
@@ -54,7 +58,8 @@ export default function RootLayout(props: { children: React.ReactNode }) {
           'min-h-screen bg-background font-sans text-foreground antialiased',
           geistSans.variable,
           geistMono.variable,
-          plusJakartaSans.variable
+          plusJakartaSans.variable,
+          interVariable.variable
         )}
       >
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>

@@ -378,15 +378,13 @@ export default function LandingPageClient({
           <div className="flex items-center justify-center">
             {/* Hero content */}
             <div className="max-w-4xl text-center">
-              <h1 className="mt-6 text-balance font-black text-5xl tracking-tight md:text-6xl">
+              <h1 className="mt-6 text-balance font-extrabold font-hero text-5xl">
                 Stop Typing.{' '}
                 <span className="text-primary">Start Talking.</span> Perfect
                 Transcripts.
               </h1>
-              <p className="mt-4 max-w-2xl text-pretty font-medium text-lg text-muted-foreground leading-tight md:text-xl">
-                Stop wrestling with your keyboard. Speak naturally and get
-                perfect text on your clipboard instantly. 4x faster than typing,
-                100x less frustrating.
+              <p className="mx-auto mt-4 max-w-2xl text-pretty text-center font-medium text-muted-foreground leading-tight md:text-xl">
+                Dictate Anywhere 4× Faster Than Typing
               </p>
 
               <div className="mt-6">
@@ -979,7 +977,7 @@ export default function LandingPageClient({
 
       <section className="py-16">
         <div className="mx-auto max-w-5xl px-6 text-center">
-          <h3 className="text-balance font-black text-3xl text-foreground tracking-tight md:text-4xl">
+          <h3 className="text-balance font-black font-hero text-3xl text-foreground tracking-tight md:text-4xl">
             Say it. See it. Send it.
           </h3>
           <p className="mx-auto mt-3 max-w-2xl text-muted-foreground">
