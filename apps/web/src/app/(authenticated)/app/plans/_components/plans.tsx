@@ -88,7 +88,10 @@ const ComparisonTable = ({ firstColumnHeader, data }: ComparisonTableProps) => {
           </thead>
           <tbody>
             {data.map((row, index) => (
-              <tr className="border-gray-100 border-b" key={index}>
+              <tr
+                className="border-gray-100 border-b"
+                key={`${row.feature}-${index}`}
+              >
                 <td className="w-1/3 px-4 py-3 text-sm">{row.feature}</td>
                 <td className="w-1/3 px-4 py-3">{renderCell(row.basic)}</td>
                 <td className="w-1/3 px-4 py-3">{renderCell(row.pro)}</td>
@@ -115,6 +118,7 @@ const Toggle = ({
         <button
           className={cn('relative z-0 px-4 py-2', isYearly ? 'z-1' : 'z-0')}
           onClick={() => setSelected('annual')}
+          type="button"
         >
           {isYearly && (
             <motion.div
@@ -141,6 +145,7 @@ const Toggle = ({
         <button
           className={cn('relative z-0 px-4 py-2', isYearly ? 'z-0' : 'z-1')}
           onClick={() => setSelected('monthly')}
+          type="button"
         >
           {!isYearly && (
             <motion.div
@@ -364,6 +369,7 @@ export default function Plans({ prices, subscription, error }: PlansProps) {
     },
   ];
 
+  // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: This is a complex function
   const handlePlanClick = async (plan: (typeof plans)[0]) => {
     if (!session?.user) {
       router.push('/sign-in');
@@ -387,7 +393,7 @@ export default function Plans({ prices, subscription, error }: PlansProps) {
 
       // If it's a paid plan
       if (plan.stripeId) {
-        const { error } = await authClient.subscription.upgrade({
+        const { error: upgradeError } = await authClient.subscription.upgrade({
           plan: plan.stripeId,
           successUrl: '/app/plans',
           cancelUrl: '/app/plans',
@@ -398,16 +404,16 @@ export default function Plans({ prices, subscription, error }: PlansProps) {
           }),
         });
 
-        if (error) {
-          log.error('Subscription error:', error);
+        if (upgradeError) {
+          log.error('Subscription error:', upgradeError);
           showAlert(
             'Subscription Error',
-            error.message ?? 'Failed to process subscription'
+            upgradeError.message ?? 'Failed to process subscription'
           );
         }
       }
-    } catch (error) {
-      log.error('Error handling plan:', error);
+    } catch (unknownError) {
+      log.error('Error handling plan:', unknownError);
       showAlert('Error', 'An error occurred. Please try again.');
     } finally {
       setLoadingPlan(null);
@@ -565,8 +571,11 @@ export default function Plans({ prices, subscription, error }: PlansProps) {
 
               <CardContent className="flex-grow py-3">
                 <ul className="grid grid-cols-2 gap-x-3 gap-y-2">
-                  {plan.features.map((feature, index) => (
-                    <li className="flex items-start gap-2" key={index}>
+                  {plan.features.map((feature) => (
+                    <li
+                      className="flex items-start gap-2"
+                      key={`${feature}-${plan.id}`}
+                    >
                       <Check className="mt-0.5 h-3 w-3 flex-shrink-0 text-muted-foreground" />
                       <span className="text-xs">{feature}</span>
                     </li>

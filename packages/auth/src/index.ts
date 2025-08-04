@@ -7,7 +7,6 @@ import {
   onSubscriptionDeleted,
   onSubscriptionUpdate,
 } from '@acme/payment/subscription-handlers';
-import { expo } from '@better-auth/expo';
 import { stripe } from '@better-auth/stripe';
 import { tauri } from '@daveyplate/better-auth-tauri/plugin';
 import { betterAuth } from 'better-auth';
@@ -98,7 +97,6 @@ export const serverAuth = betterAuth({
       currentURL: authEnv().NEXT_PUBLIC_VOICEGECKO_URL,
       productionURL: authEnv().NEXT_PUBLIC_VOICEGECKO_URL,
     }),
-    expo(),
     tauri({
       scheme: 'voicegecko',
       debugLogs: true,
@@ -145,7 +143,6 @@ export const serverAuth = betterAuth({
     },
   },
   trustedOrigins: [
-    'expo://',
     'voicegecko://',
 
     'http://localhost:3000', // Next.js app
