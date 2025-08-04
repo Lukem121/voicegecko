@@ -142,7 +142,9 @@ const getAnimationConfig = (animation: MascotAnimation) => {
 
 // Additional floating animation for idle states
 const getFloatingAnimation = (isEnabled: boolean) => {
-  if (!isEnabled) { return {}; }
+  if (!isEnabled) {
+    return {};
+  }
 
   return {
     y: [0, -3, 0],
@@ -157,7 +159,9 @@ const getFloatingAnimation = (isEnabled: boolean) => {
 
 // Hover effects for interactive mascots
 const _getHoverEffects = (enableHover: boolean) => {
-  if (!enableHover) { return {}; }
+  if (!enableHover) {
+    return {};
+  }
 
   return {
     whileHover: {
@@ -315,6 +319,7 @@ export const mascotVariants = {
   // Gecko with microphone for audio setup steps
   withMicrophone: createMascotVariant(
     ({ className, style }: MascotComponentProps) => (
+      // biome-ignore lint: desktop app using static assets
       <img
         alt="Voice Gecko on laptop with microphone"
         className={className}
@@ -328,6 +333,7 @@ export const mascotVariants = {
 
   withWelcomeSign: createMascotVariant(
     ({ className, style }: MascotComponentProps) => (
+      // biome-ignore lint: desktop app using static assets
       <img
         alt="Voice Gecko on welcome sign"
         className={className}
@@ -343,6 +349,7 @@ export const mascotVariants = {
     ({ className, style }: MascotComponentProps) => (
       <div className={className} style={style}>
         {/* Static confetti background */}
+        {/* biome-ignore lint: desktop app using static assets */}
         <img
           alt="Confetti background"
           className="pointer-events-none absolute inset-0 h-full w-full object-contain"
@@ -350,6 +357,7 @@ export const mascotVariants = {
           style={{ zIndex: 1 }}
         />
         {/* Animated dancing gecko */}
+        {/* biome-ignore lint: desktop app using static assets */}
         <motion.img
           alt="Dancing Voice Gecko"
           animate={{

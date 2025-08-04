@@ -79,6 +79,15 @@ const getLayoutClasses = (layout: MascotChatLayout, spacing: string) => {
         mascotOrder: '',
         bubblePosition: 'top' as const,
       };
+
+    default:
+      // Fallback to bubble-top layout for unexpected values
+      return {
+        container: cn('flex flex-col items-center', spacing),
+        bubbleOrder: 'order-first',
+        mascotOrder: 'order-last',
+        bubblePosition: 'bottom' as const,
+      };
   }
 };
 
@@ -89,6 +98,7 @@ export function MascotChat({
   className,
   chatBubbleClassName,
   mascotClassName,
+  // biome-ignore lint: parameter available for future use but not currently implemented
   enableMascotHover = true,
   enableMascotFloating = true,
   onMascotClick,

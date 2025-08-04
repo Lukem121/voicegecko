@@ -26,6 +26,64 @@ interface ConnectivityErrorProps {
   className?: string;
 }
 
+// Helper function to get server status display text and styling
+const getServerStatusDisplay = (isApiReachable: boolean, isOnline: boolean) => {
+  if (isApiReachable) {
+    return { text: 'Reachable', className: 'text-green-600' };
+  }
+  if (isOnline) {
+    return { text: 'Unreachable', className: 'text-red-600' };
+  }
+  return { text: 'Not checked', className: 'text-gray-500' };
+};
+
+// Helper function to get troubleshooting content based on diagnosis
+const getTroubleshootingContent = (
+  diagnosis: string,
+  isUserIssue: boolean | null
+) => {
+  let title: string;
+  if (isUserIssue === true) {
+    title = 'How to fix this:';
+  } else if (isUserIssue === false) {
+    title = "What we're doing:";
+  } else {
+    title = 'Troubleshooting:';
+  }
+
+  let content: JSX.Element;
+  if (diagnosis === 'no_internet') {
+    content = (
+      <>
+        <li>• Check your WiFi or ethernet connection</li>
+        <li>• Try opening a website in your browser</li>
+        <li>• Restart your router if needed</li>
+        <li>• Contact your internet provider if the issue persists</li>
+      </>
+    );
+  } else if (diagnosis === 'api_down') {
+    content = (
+      <>
+        <li>• Our team has been automatically notified</li>
+        <li>• We're working to restore service as quickly as possible</li>
+        <li>• Check our status page for updates</li>
+        <li>• Try again in a few minutes</li>
+      </>
+    );
+  } else {
+    content = (
+      <>
+        <li>• Check your internet connection first</li>
+        <li>• Voice Gecko servers may be experiencing issues</li>
+        <li>• Check if your firewall is blocking the app</li>
+        <li>• Try again in a few minutes</li>
+      </>
+    );
+  }
+
+  return { title, content };
+};
+
 export function ConnectivityError({
   isOnline,
   isApiReachable,
@@ -118,15 +176,24 @@ export function ConnectivityError({
   };
 
   const status = getStatusInfo();
+  const serverStatus = getServerStatusDisplay(isApiReachable, isOnline);
+  const troubleshooting = getTroubleshootingContent(
+    diagnosis,
+    status.isUserIssue
+  );
 
   const formatLastSuccessful = (date: Date | null) => {
-    if (!date) { return 'Never'; }
+    if (!date) {
+      return 'Never';
+    }
 
     const now = new Date();
     const diffMs = now.getTime() - date.getTime();
     const diffMins = Math.floor(diffMs / 60_000);
 
-    if (diffMins < 1) { return 'Just now'; }
+    if (diffMins < 1) {
+      return 'Just now';
+    }
     if (diffMins < 60) {
       return `${diffMins} minute${diffMins !== 1 ? 's' : ''} ago`;
     }
@@ -151,6 +218,7 @@ export function ConnectivityError({
         <Card className="relative w-full">
           {/* Gecko Mascot - positioned at bottom-left corner of card */}
           <div className="-bottom-2 -left-2 absolute z-10 hidden sm:block">
+            {/* biome-ignore lint: desktop app using static assets */}
             <img
               alt="Voice Gecko construction worker"
               className="hover:-rotate-[5deg] h-16 w-16 origin-bottom cursor-pointer object-contain transition-transform duration-300 ease-in-out"
@@ -188,21 +256,8 @@ export function ConnectivityError({
                   <Server className="h-4 w-4" />
                   <span>Voice Gecko Servers</span>
                 </div>
-                <span
-                  className={cn(
-                    'font-medium',
-                    isApiReachable
-                      ? 'text-green-600'
-                      : isOnline
-                        ? 'text-red-600'
-                        : 'text-gray-500'
-                  )}
-                >
-                  {isApiReachable
-                    ? 'Reachable'
-                    : isOnline
-                      ? 'Unreachable'
-                      : 'Not checked'}
+                <span className={cn('font-medium', serverStatus.className)}>
+                  {serverStatus.text}
                 </span>
               </div>
             </div>
@@ -256,42 +311,10 @@ export function ConnectivityError({
 
                 <div className="space-y-2 text-muted-foreground text-xs">
                   <p className="text-left font-medium">
-                    {status.isUserIssue === true
-                      ? 'How to fix this:'
-                      : status.isUserIssue === false
-                        ? "What we're doing:"
-                        : 'Troubleshooting:'}
+                    {troubleshooting.title}
                   </p>
                   <ul className="space-y-1 text-left">
-                    {diagnosis === 'no_internet' ? (
-                      <>
-                        <li>• Check your WiFi or ethernet connection</li>
-                        <li>• Try opening a website in your browser</li>
-                        <li>• Restart your router if needed</li>
-                        <li>
-                          • Contact your internet provider if the issue persists
-                        </li>
-                      </>
-                    ) : diagnosis === 'api_down' ? (
-                      <>
-                        <li>• Our team has been automatically notified</li>
-                        <li>
-                          • We're working to restore service as quickly as
-                          possible
-                        </li>
-                        <li>• Check our status page for updates</li>
-                        <li>• Try again in a few minutes</li>
-                      </>
-                    ) : (
-                      <>
-                        <li>• Check your internet connection first</li>
-                        <li>
-                          • Voice Gecko servers may be experiencing issues
-                        </li>
-                        <li>• Check if your firewall is blocking the app</li>
-                        <li>• Try again in a few minutes</li>
-                      </>
-                    )}
+                    {troubleshooting.content}
                   </ul>
                 </div>
               </>
@@ -302,6 +325,7 @@ export function ConnectivityError({
         {/* Mobile gecko - positioned below card on mobile */}
         <div className="mt-4 flex justify-center sm:hidden">
           <div className="relative">
+            {/* biome-ignore lint: desktop app using static assets */}
             <img
               alt="Voice Gecko construction worker"
               className="hover:-rotate-[5deg] h-12 w-12 origin-bottom cursor-pointer object-contain opacity-60 transition-transform duration-300 ease-in-out"
@@ -327,7 +351,9 @@ interface ConnectivityIndicatorProps {
 }
 
 export function ConnectivityIndicator({
+  // biome-ignore lint: parameter required by interface but not used in this component
   isOnline,
+  // biome-ignore lint: parameter required by interface but not used in this component
   isApiReachable,
   isChecking,
   diagnosis,

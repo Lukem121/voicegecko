@@ -14,6 +14,7 @@ export function TranscriptionSkeleton() {
               className={`flex items-start justify-between p-3 ${
                 index < 2 ? 'border-border border-b' : ''
               }`}
+              // biome-ignore lint/suspicious/noArrayIndexKey: skeleton components with static content can safely use index as key
               key={index}
             >
               <div className="flex min-w-0 flex-1 items-start gap-3">
@@ -51,6 +52,7 @@ export function TranscriptionSkeleton() {
               className={`flex items-start justify-between p-3 ${
                 index < 1 ? 'border-border border-b' : ''
               }`}
+              // biome-ignore lint/suspicious/noArrayIndexKey: skeleton components with static content can safely use index as key
               key={index}
             >
               <div className="flex min-w-0 flex-1 items-start gap-3">

@@ -1,7 +1,7 @@
 import type { Migration } from './types';
 
 // Registry of all migrations in order
-export const MIGRATIONS: Migration<any, any>[] = [
+export const MIGRATIONS: Migration[] = [
   // Future migrations will be added here
 ];
 
@@ -12,7 +12,7 @@ export const CURRENT_SETTINGS_VERSION = 1;
 export function getMigrationsToRun(
   fromVersion: number,
   toVersion: number
-): Migration<any, any>[] {
+): Migration[] {
   return MIGRATIONS.filter(
     (m) => m.version > fromVersion && m.version <= toVersion
   );

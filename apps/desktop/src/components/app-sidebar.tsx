@@ -187,6 +187,7 @@ function CircularProgress({
   return (
     <div className="relative flex items-center justify-center">
       <svg className="-rotate-90 transform" height={size} width={size}>
+        <title>Progress indicator showing {percentage}% completion</title>
         {/* Background circle */}
         <circle
           className="text-muted-foreground/20"
@@ -424,6 +425,7 @@ export function AppSidebar() {
                               'https://www.voicegecko.io';
                             await open(`${websiteUrl}/app/plans`);
                           }}
+                          type="button"
                         >
                           Upgrade to Pro.
                         </button>
@@ -546,7 +548,7 @@ export function AppSidebar() {
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
-              <label className="font-medium text-sm">Email Support</label>
+              <div className="font-medium text-sm">Email Support</div>
               <div className="flex items-center space-x-2">
                 <div className="flex-1 rounded bg-muted p-2 font-mono text-sm">
                   support@voicegecko.io
@@ -556,7 +558,7 @@ export function AppSidebar() {
             </div>
             {user?.id && (
               <div className="space-y-2">
-                <label className="font-medium text-sm">Your User ID</label>
+                <div className="font-medium text-sm">Your User ID</div>
                 <div className="flex items-center space-x-2">
                   <div className="flex-1 rounded bg-muted p-2 font-mono text-sm">
                     {user.id}
