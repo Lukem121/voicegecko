@@ -51,6 +51,7 @@ pnpm version:check
 ```
 
 **Or specify version directly:**
+
 ```bash
 pnpm version:bump 0.0.8
 ```
@@ -169,9 +170,9 @@ grep -r "0\.0\.7" . --exclude-dir=node_modules --exclude-dir=target --exclude=Ca
 
 ## 🛠️ Available Scripts
 
-| Script             | Command                       | Description                                      |
-| ------------------ | ----------------------------- | ------------------------------------------------ |
-| **Version Check**  | `pnpm version:check`          | Verify all files have consistent versions        |
-| **Version Bump**   | `pnpm version:bump` | Interactive version selection and update all 4 files |
-| **Pre-release**    | `pnpm pre-release`            | Run linting, type checking, and build validation |
-| **Release Helper** | `pnpm release`                | Interactive guided release process               |
+| Script             | Command              | Description                                          |
+| ------------------ | -------------------- | ---------------------------------------------------- |
+| **Version Check**  | `pnpm version:check` | Verify all files have consistent versions            |
+| **Version Bump**   | `pnpm version:bump`  | Interactive version selection and update all 4 files |
+| **Pre-release**    | `pnpm pre-release`   | Run linting, type checking, and build validation     |
+| **Release Helper** | `pnpm release`       | Interactive guided release process                   |
