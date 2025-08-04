@@ -11,7 +11,6 @@ import {
   Text,
 } from '@react-email/components';
 
-import { DarkModeAwareLogo } from '../components/dark-mode-aware-logo';
 import { DarkModeAwareLogoFull } from '../components/dark-mode-aware-logo-full';
 import { DarkModeEmailHead } from '../components/dark-mode-email-head';
 import { EmailFooter } from '../components/email-footer';

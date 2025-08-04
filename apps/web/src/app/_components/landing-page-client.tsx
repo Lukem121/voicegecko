@@ -1,21 +1,16 @@
 'use client';
 
+import { log } from '@acme/observability';
 import VoiceGeckoLogoText from '@acme/ui/components/logos/logo-text';
 import { buttonVariants } from '@acme/ui/components/ui/button';
 import {
-import
-{
-  log;
-}
-from;
-('@acme/observability');
-NavigationMenu,
+  NavigationMenu,
   NavigationMenuContent,
   NavigationMenuItem,
   NavigationMenuLink,
   NavigationMenuList,
   NavigationMenuTrigger,
-} from '@acme/ui/components/ui/navigation-menu'
+} from '@acme/ui/components/ui/navigation-menu';
 
 import { cn } from '@acme/ui/lib/utils';
 import { AnimatePresence, motion } from 'motion/react';
@@ -136,6 +131,7 @@ function RiveGeckoPlaceholder({
         'relative grid place-items-center rounded-xl border border-green-300/70 border-dashed bg-green-50/50 text-green-800 dark:border-green-600/50 dark:bg-green-900/20 dark:text-green-200',
         className
       )}
+      role="img"
     >
       <div className="-z-10 pointer-events-none absolute inset-0 bg-[radial-gradient(400px_120px_at_50%_10%,rgba(16,185,129,0.10),transparent)]" />
       <div className="flex flex-col items-center p-3">
@@ -164,766 +160,759 @@ export default function LandingPageClient({
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
-    <>
-      <div className="relative">
-        <nav className="relative z-50 w-full px-6 py-6 lg:px-12">
-          <div className="mx-auto flex max-w-7xl items-center justify-between">
-            <Link href="/">
-              <VoiceGeckoLogoText className="w-32" />
-            </Link>
+    <div className="relative">
+      <nav className="relative z-50 w-full px-6 py-6 lg:px-12">
+        <div className="mx-auto flex max-w-7xl items-center justify-between">
+          <Link href="/">
+            <VoiceGeckoLogoText className="w-32" />
+          </Link>
 
-            <div>
-              {/* Desktop Navigation & CTA */}
-              <div className="hidden items-center gap-8 lg:flex">
-                <NavigationMenu>
-                  <NavigationMenuList>
-                    <NavigationMenuItem>
-                      <NavigationMenuTrigger className="bg-transparent font-medium text-neutral-700 tracking-tight hover:text-green-700 dark:text-neutral-300 dark:hover:text-green-400">
-                        Product
-                      </NavigationMenuTrigger>
-                      <NavigationMenuContent>
-                        <ProductContent />
-                      </NavigationMenuContent>
-                    </NavigationMenuItem>
-                    <NavigationMenuItem>
-                      <NavigationMenuTrigger className="bg-transparent font-medium text-neutral-700 tracking-tight hover:text-green-700 dark:text-neutral-300 dark:hover:text-green-400">
-                        Solutions
-                      </NavigationMenuTrigger>
-                      <NavigationMenuContent>
-                        <IndividualsContent />
-                      </NavigationMenuContent>
-                    </NavigationMenuItem>
+          <div>
+            {/* Desktop Navigation & CTA */}
+            <div className="hidden items-center gap-8 lg:flex">
+              <NavigationMenu>
+                <NavigationMenuList>
+                  <NavigationMenuItem>
+                    <NavigationMenuTrigger className="bg-transparent font-medium text-neutral-700 tracking-tight hover:text-green-700 dark:text-neutral-300 dark:hover:text-green-400">
+                      Product
+                    </NavigationMenuTrigger>
+                    <NavigationMenuContent>
+                      <ProductContent />
+                    </NavigationMenuContent>
+                  </NavigationMenuItem>
+                  <NavigationMenuItem>
+                    <NavigationMenuTrigger className="bg-transparent font-medium text-neutral-700 tracking-tight hover:text-green-700 dark:text-neutral-300 dark:hover:text-green-400">
+                      Solutions
+                    </NavigationMenuTrigger>
+                    <NavigationMenuContent>
+                      <IndividualsContent />
+                    </NavigationMenuContent>
+                  </NavigationMenuItem>
 
-                    <NavigationMenuItem>
-                      <NavigationMenuTrigger className="bg-transparent font-medium text-neutral-700 tracking-tight hover:text-green-700 dark:text-neutral-300 dark:hover:text-green-400">
-                        About
-                      </NavigationMenuTrigger>
-                      <NavigationMenuContent>
-                        <AboutContent />
-                      </NavigationMenuContent>
-                    </NavigationMenuItem>
-                    <NavigationMenuItem>
-                      <NavigationMenuLink
-                        className="h-9 px-4 py-2 font-medium text-neutral-700 tracking-tight hover:text-green-700 dark:text-neutral-300 dark:hover:text-green-400"
-                        href="/pricing"
-                      >
-                        Pricing
-                      </NavigationMenuLink>
-                    </NavigationMenuItem>
-                  </NavigationMenuList>
-                </NavigationMenu>
+                  <NavigationMenuItem>
+                    <NavigationMenuTrigger className="bg-transparent font-medium text-neutral-700 tracking-tight hover:text-green-700 dark:text-neutral-300 dark:hover:text-green-400">
+                      About
+                    </NavigationMenuTrigger>
+                    <NavigationMenuContent>
+                      <AboutContent />
+                    </NavigationMenuContent>
+                  </NavigationMenuItem>
+                  <NavigationMenuItem>
+                    <NavigationMenuLink
+                      className="h-9 px-4 py-2 font-medium text-neutral-700 tracking-tight hover:text-green-700 dark:text-neutral-300 dark:hover:text-green-400"
+                      href="/pricing"
+                    >
+                      Pricing
+                    </NavigationMenuLink>
+                  </NavigationMenuItem>
+                </NavigationMenuList>
+              </NavigationMenu>
+              <WindowsDownloadButton
+                downloadError={downloadError}
+                downloadsData={downloadsData}
+              />
+            </div>
+
+            {/* Mobile Menu Button */}
+            <div className="block lg:hidden">
+              <button
+                className="block text-3xl"
+                onClick={() => setMobileMenuOpen(true)}
+                type="button"
+              >
+                <HiMenu />
+              </button>
+            </div>
+          </div>
+        </div>
+      </nav>
+
+      {/* Mobile Menu */}
+      <AnimatePresence>
+        {mobileMenuOpen && (
+          <motion.nav
+            animate={{ x: 0 }}
+            className="fixed top-0 left-0 z-50 flex h-screen w-full flex-col bg-white dark:bg-gray-900"
+            exit={{ x: '100vw' }}
+            initial={{ x: '100vw' }}
+            transition={{ duration: 0.15, ease: 'easeOut' }}
+          >
+            <div className="flex items-center justify-between p-6">
+              <Link className="flex items-center" href="/">
+                <VoiceGeckoLogoText className="w-32" />
+              </Link>
+              <button onClick={() => setMobileMenuOpen(false)} type="button">
+                <HiX className="text-3xl text-neutral-950" />
+              </button>
+            </div>
+            <div className="h-screen overflow-y-scroll p-6">
+              <MobileMenuLink
+                FoldContent={ProductContent}
+                href="/product"
+                setMenuOpen={setMobileMenuOpen}
+              >
+                Product
+              </MobileMenuLink>
+              <MobileMenuLink
+                FoldContent={IndividualsContent}
+                href="/solutions"
+                setMenuOpen={setMobileMenuOpen}
+              >
+                Solutions
+              </MobileMenuLink>
+              <MobileMenuLink href="/pricing" setMenuOpen={setMobileMenuOpen}>
+                Pricing
+              </MobileMenuLink>
+              <MobileMenuLink
+                FoldContent={AboutContent}
+                href="/about"
+                setMenuOpen={setMobileMenuOpen}
+              >
+                About
+              </MobileMenuLink>
+            </div>
+            <div className="p-6">
+              <div className="w-full">
                 <WindowsDownloadButton
+                  className="w-full rounded-lg bg-green-700 px-5 py-2.5 text-center font-medium text-white transition-colors hover:bg-green-600"
+                  downloadError={downloadError}
+                  downloadsData={downloadsData}
+                />
+              </div>
+            </div>
+          </motion.nav>
+        )}
+      </AnimatePresence>
+
+      {/* ===== HERO SECTION ===== */}
+      <div className="relative overflow-hidden">
+        {/* Brand atmospherics */}
+        <div className="-z-10 pointer-events-none absolute inset-0">
+          <div className="-top-[30%] absolute right-[-10%] h-[50rem] w-[50rem] rounded-[50%] bg-[radial-gradient(closest-side,rgba(16,185,129,0.15),transparent)] blur-3xl" />
+          <div className="-left-24 absolute top-[30%] h-[18rem] w-[18rem] rounded-[40%] bg-emerald-200/30 blur-3xl" />
+        </div>
+
+        <div className="relative z-10 mx-auto max-w-6xl px-6 pt-8 md:pt-12">
+          <div className="flex items-center justify-start">
+            {/* Hero content */}
+            <div className="max-w-4xl text-left">
+              <div className="inline-flex items-center gap-2 rounded-full border border-neutral-200 bg-white/70 px-3 py-1.5 font-medium text-neutral-700 text-xs backdrop-blur dark:border-neutral-700 dark:bg-gray-800/70 dark:text-neutral-300">
+                <span className="inline-block h-1.5 w-1.5 rounded-full bg-green-600" />
+                Meet Voice Gecko
+              </div>
+
+              <h1 className="mt-6 text-balance font-black text-5xl text-gray-900 tracking-tight md:text-6xl dark:text-white">
+                Talk, don't type.
+              </h1>
+              <p className="mt-4 max-w-2xl text-pretty font-medium text-lg text-neutral-700 leading-tight md:text-xl dark:text-neutral-300">
+                Stop wrestling with your keyboard. Speak naturally and get
+                perfect text on your clipboard instantly. 4x faster than typing,
+                100x less frustrating.
+              </p>
+
+              <div className="mt-6">
+                <WindowsDownloadStrip
                   downloadError={downloadError}
                   downloadsData={downloadsData}
                 />
               </div>
 
-              {/* Mobile Menu Button */}
-              <div className="block lg:hidden">
-                <button
-                  className="block text-3xl"
-                  onClick={() => setMobileMenuOpen(true)}
-                >
-                  <HiMenu />
-                </button>
+              <div className="mt-5 flex flex-wrap items-center justify-start gap-4 text-neutral-600 text-xs">
+                <span>Loved by 5,000+ users</span>
+                <span className="hidden h-1 w-1 rounded-full bg-neutral-300 sm:block" />
+                <span>10,000+ hours transcribed</span>
               </div>
-            </div>
-          </div>
-        </nav>
-
-        {/* Mobile Menu */}
-        <AnimatePresence>
-          {mobileMenuOpen && (
-            <motion.nav
-              animate={{ x: 0 }}
-              className="fixed top-0 left-0 z-50 flex h-screen w-full flex-col bg-white dark:bg-gray-900"
-              exit={{ x: '100vw' }}
-              initial={{ x: '100vw' }}
-              transition={{ duration: 0.15, ease: 'easeOut' }}
-            >
-              <div className="flex items-center justify-between p-6">
-                <Link className="flex items-center" href="/">
-                  <VoiceGeckoLogoText className="w-32" />
-                </Link>
-                <button onClick={() => setMobileMenuOpen(false)}>
-                  <HiX className="text-3xl text-neutral-950" />
-                </button>
-              </div>
-              <div className="h-screen overflow-y-scroll p-6">
-                <MobileMenuLink
-                  FoldContent={ProductContent}
-                  href="/product"
-                  setMenuOpen={setMobileMenuOpen}
-                >
-                  Product
-                </MobileMenuLink>
-                <MobileMenuLink
-                  FoldContent={IndividualsContent}
-                  href="/solutions"
-                  setMenuOpen={setMobileMenuOpen}
-                >
-                  Solutions
-                </MobileMenuLink>
-                <MobileMenuLink href="/pricing" setMenuOpen={setMobileMenuOpen}>
-                  Pricing
-                </MobileMenuLink>
-                <MobileMenuLink
-                  FoldContent={AboutContent}
-                  href="/about"
-                  setMenuOpen={setMobileMenuOpen}
-                >
-                  About
-                </MobileMenuLink>
-              </div>
-              <div className="p-6">
-                <div className="w-full">
-                  <WindowsDownloadButton
-                    className="w-full rounded-lg bg-green-700 px-5 py-2.5 text-center font-medium text-white transition-colors hover:bg-green-600"
-                    downloadError={downloadError}
-                    downloadsData={downloadsData}
-                  />
-                </div>
-              </div>
-            </motion.nav>
-          )}
-        </AnimatePresence>
-
-        {/* ===== HERO SECTION ===== */}
-        <div className="relative overflow-hidden">
-          {/* Brand atmospherics */}
-          <div className="-z-10 pointer-events-none absolute inset-0">
-            <div className="-top-[30%] absolute right-[-10%] h-[50rem] w-[50rem] rounded-[50%] bg-[radial-gradient(closest-side,rgba(16,185,129,0.15),transparent)] blur-3xl" />
-            <div className="-left-24 absolute top-[30%] h-[18rem] w-[18rem] rounded-[40%] bg-emerald-200/30 blur-3xl" />
-          </div>
-
-          <div className="relative z-10 mx-auto max-w-6xl px-6 pt-8 md:pt-12">
-            <div className="flex items-center justify-start">
-              {/* Hero content */}
-              <div className="max-w-4xl text-left">
-                <div className="inline-flex items-center gap-2 rounded-full border border-neutral-200 bg-white/70 px-3 py-1.5 font-medium text-neutral-700 text-xs backdrop-blur dark:border-neutral-700 dark:bg-gray-800/70 dark:text-neutral-300">
-                  <span className="inline-block h-1.5 w-1.5 rounded-full bg-green-600" />
-                  Meet Voice Gecko
-                </div>
-
-                <h1 className="mt-6 text-balance font-black text-5xl text-gray-900 tracking-tight md:text-6xl dark:text-white">
-                  Talk, don't type.
-                </h1>
-                <p className="mt-4 max-w-2xl text-pretty font-medium text-lg text-neutral-700 leading-tight md:text-xl dark:text-neutral-300">
-                  Stop wrestling with your keyboard. Speak naturally and get
-                  perfect text on your clipboard instantly. 4x faster than
-                  typing, 100x less frustrating.
-                </p>
-
-                <div className="mt-6">
-                  <WindowsDownloadStrip
-                    downloadError={downloadError}
-                    downloadsData={downloadsData}
-                  />
-                </div>
-
-                <div className="mt-5 flex flex-wrap items-center justify-start gap-4 text-neutral-600 text-xs">
-                  <span>Loved by 5,000+ users</span>
-                  <span className="hidden h-1 w-1 rounded-full bg-neutral-300 sm:block" />
-                  <span>10,000+ hours transcribed</span>
-                </div>
-                <div className="mt-5 flex flex-wrap items-center justify-start gap-4 text-neutral-600 text-xs">
-                  <span className="inline-flex items-center gap-1">
-                    <FaWindows className="h-3.5 w-3.5" /> Windows available now
-                  </span>
-                  <span className="rounded-full bg-green-100 px-2 py-1 font-semibold text-green-800">
-                    Free plan included
-                  </span>
-                </div>
+              <div className="mt-5 flex flex-wrap items-center justify-start gap-4 text-neutral-600 text-xs">
+                <span className="inline-flex items-center gap-1">
+                  <FaWindows className="h-3.5 w-3.5" /> Windows available now
+                </span>
+                <span className="rounded-full bg-green-100 px-2 py-1 font-semibold text-green-800">
+                  Free plan included
+                </span>
               </div>
             </div>
           </div>
         </div>
+      </div>
 
-        {/* ===== WHY VOICE GECKO (Differentiation) ===== */}
-        <section className="mx-auto max-w-6xl px-6 py-16">
+      {/* ===== WHY VOICE GECKO (Differentiation) ===== */}
+      <section className="mx-auto max-w-6xl px-6 py-16">
+        <h2 className="text-center font-bold text-2xl text-gray-900 tracking-tight md:text-3xl dark:text-white">
+          Why Voice Gecko?
+        </h2>
+        <p className="mx-auto mt-2 max-w-2xl text-center text-neutral-600 text-sm dark:text-neutral-400">
+          Built for speed and flow: English-only MVP that gets out of your way
+          and onto your clipboard.
+        </p>
+
+        <div className="mt-8 grid gap-6 md:grid-cols-3">
+          <WhyCard
+            body="Most transcriptions land on your clipboard in 1–2 seconds."
+            tag="Speed"
+            title="Blazing fast"
+          />
+          <WhyCard
+            body="Skip exports and menus—your text is ready where you need it."
+            tag="Flow"
+            title="Clipboard‑first"
+          />
+          <WhyCard
+            body="One shortcut, clean output, minimal UI. Get in, get out."
+            tag="Simplicity"
+            title="Simple by design"
+          />
+        </div>
+      </section>
+
+      {/* ===== USE CASES BY OUTCOME ===== */}
+      <section className="bg-neutral-50 py-20 dark:bg-gray-800">
+        <div className="mx-auto max-w-6xl px-6">
           <h2 className="text-center font-bold text-2xl text-gray-900 tracking-tight md:text-3xl dark:text-white">
-            Why Voice Gecko?
+            Get more done by talking first
           </h2>
           <p className="mx-auto mt-2 max-w-2xl text-center text-neutral-600 text-sm dark:text-neutral-400">
-            Built for speed and flow: English-only MVP that gets out of your way
-            and onto your clipboard.
+            Outcomes across roles—draft faster, document decisions, never lose
+            ideas, and respond quickly.
+          </p>
+          <div className="mt-8 grid gap-6 md:grid-cols-4">
+            <OutcomeCard
+              bullets={[
+                'Blog outlines without the blank page',
+                'Ticket descriptions while you think',
+                'Emails in minutes, not half an hour',
+              ]}
+              pose="point"
+              title="Draft faster"
+            />
+            <OutcomeCard
+              bullets={[
+                'Summarize meetings as they end',
+                'Paste action items instantly',
+                'Keep momentum with clear next steps',
+              ]}
+              pose="peek"
+              title="Document decisions"
+            />
+            <OutcomeCard
+              bullets={[
+                'Capture sparks mid‑flow',
+                'Turn thoughts into bullet points',
+                'Keep context with zero friction',
+              ]}
+              pose="float"
+              title="Never lose ideas"
+            />
+            <OutcomeCard
+              bullets={[
+                'Draft replies on the go',
+                'Drop into chat, docs, or tickets',
+                'Move work forward faster',
+              ]}
+              pose="run"
+              title="Respond quickly"
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* ===== HOW IT WORKS + SHORTCUT PLAYGROUND ===== */}
+      <section className="bg-white py-20 dark:bg-gray-900">
+        <div className="mx-auto max-w-6xl px-6">
+          <div className="grid items-start gap-10 md:grid-cols-3">
+            <HowItWorksItem
+              body="Hit the shortcut and brain‑dump. No rituals, no clutter."
+              icon={<HiMicrophone className="h-5 w-5" />}
+              title="Just talk"
+            />
+            <HowItWorksItem
+              body="Most clips are transcribed in under two seconds."
+              icon={<HiLightningBolt className="h-5 w-5" />}
+              title="Fast turnaround"
+            />
+            <HowItWorksItem
+              body="Clean text lands on your clipboard automatically."
+              icon={<TbSparkles className="h-5 w-5" />}
+              title="Ready to paste"
+            />
+          </div>
+
+          <div className="mt-10 grid gap-6 md:grid-cols-[1.2fr_.8fr]">
+            <motion.div
+              className="rounded-2xl border border-neutral-200 bg-white p-6 dark:border-neutral-700 dark:bg-gray-800"
+              initial={{ opacity: 0, y: 8 }}
+              transition={{ duration: 0.35 }}
+              viewport={{ once: true }}
+              whileInView={{ opacity: 1, y: 0 }}
+            >
+              <h3 className="font-semibold text-gray-900 text-lg tracking-tight dark:text-white">
+                Three steps to your first transcription
+              </h3>
+              <ol className="mt-3 space-y-3 text-neutral-700 text-sm dark:text-neutral-300">
+                <li className="flex items-start gap-2">
+                  <span className="mt-0.5 inline-grid h-5 w-5 place-items-center rounded-full bg-green-100 font-bold text-green-800 text-xs dark:bg-green-800 dark:text-green-200">
+                    1
+                  </span>
+                  Download and install for Windows.
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="mt-0.5 inline-grid h-5 w-5 place-items-center rounded-full bg-green-100 font-bold text-green-800 text-xs dark:bg-green-800 dark:text-green-200">
+                    2
+                  </span>
+                  Grant microphone permission.
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="mt-0.5 inline-grid h-5 w-5 place-items-center rounded-full bg-green-100 font-bold text-green-800 text-xs dark:bg-green-800 dark:text-green-200">
+                    3
+                  </span>
+                  Press the shortcut and speak—your text is clipboard‑ready.
+                </li>
+              </ol>
+              <div className="mt-4 rounded-lg border border-neutral-200 bg-neutral-50 p-3 text-neutral-600 text-xs dark:border-neutral-600 dark:bg-gray-700 dark:text-neutral-400">
+                Note: MVP focuses on fast, reliable English transcription.
+              </div>
+
+              <div className="mt-6 grid gap-3 md:grid-cols-2">
+                <div className="rounded-lg border border-neutral-200 bg-neutral-50 p-3 dark:border-neutral-600 dark:bg-gray-700">
+                  <p className="font-semibold text-[12px] text-neutral-700 dark:text-neutral-300">
+                    Your Voice
+                  </p>
+                  <p className="mt-1 text-[12px] text-neutral-700 dark:text-neutral-300">
+                    "Draft a recap for our sprint review, note blockers, and
+                    assign owners."
+                  </p>
+                </div>
+                <div className="rounded-lg border border-green-200 bg-green-50 p-3 dark:border-green-600 dark:bg-green-900/20">
+                  <p className="font-semibold text-[12px] text-green-900 dark:text-green-200">
+                    Clipboard Output
+                  </p>
+                  <ul className="mt-1 list-disc pl-4 text-[12px] text-green-900 dark:text-green-200">
+                    <li>Summary of sprint</li>
+                    <li>Blockers highlighted</li>
+                    <li>Owners assigned with next steps</li>
+                  </ul>
+                </div>
+              </div>
+            </motion.div>
+
+            <ShortcutPlayground />
+          </div>
+        </div>
+      </section>
+
+      {/* ===== WORKS EVERYWHERE ===== */}
+      <section className="bg-white py-16 dark:bg-gray-900">
+        <div className="mx-auto max-w-6xl px-6">
+          <h2 className="text-center font-bold text-2xl text-gray-900 tracking-tight md:text-3xl dark:text-white">
+            Works everywhere you work
+          </h2>
+          <p className="mx-auto mt-3 max-w-2xl text-center text-neutral-600 text-sm dark:text-neutral-400">
+            Paste into any app—or let Voice Gecko type for you.
           </p>
 
+          <PasteAutoTypeToggle />
+
+          <div className="mt-8">
+            <Marquee
+              autoFill={true}
+              gradient={true}
+              gradientColor="#ffffff"
+              gradientWidth={100}
+              pauseOnHover={true}
+              speed={48}
+            >
+              <div className="mr-3">
+                <LogoPill icon={<HiCode className="h-4 w-4" />}>
+                  VS Code
+                </LogoPill>
+              </div>
+              <div className="mr-3">
+                <LogoPill icon={<SiGoogledocs className="h-4 w-4" />}>
+                  Google Docs
+                </LogoPill>
+              </div>
+              <div className="mr-3">
+                <LogoPill icon={<SiNotion className="h-4 w-4" />}>
+                  Notion
+                </LogoPill>
+              </div>
+              <div className="mr-3">
+                <LogoPill icon={<SiGmail className="h-4 w-4" />}>
+                  Gmail
+                </LogoPill>
+              </div>
+              <div className="mr-3">
+                <LogoPill icon={<SiSlack className="h-4 w-4" />}>
+                  Slack
+                </LogoPill>
+              </div>
+              <div className="mr-3">
+                <LogoPill icon={<SiJira className="h-4 w-4" />}>Jira</LogoPill>
+              </div>
+              <div className="mr-3">
+                <LogoPill icon={<SiLinear className="h-4 w-4" />}>
+                  Linear
+                </LogoPill>
+              </div>
+              <div className="mr-3">
+                <LogoPill icon={<SiObsidian className="h-4 w-4" />}>
+                  Obsidian
+                </LogoPill>
+              </div>
+              <div className="mr-3">
+                <LogoPill icon={<HiDocumentText className="h-4 w-4" />}>
+                  Word
+                </LogoPill>
+              </div>
+              <div className="mr-3">
+                <LogoPill icon={<SiTrello className="h-4 w-4" />}>
+                  Trello
+                </LogoPill>
+              </div>
+            </Marquee>
+          </div>
+        </div>
+      </section>
+
+      {/* ===== SYSTEM UI SNAPSHOT: Tray + States ===== */}
+      <section className="bg-neutral-50 py-20 dark:bg-gray-800">
+        <div className="mx-auto max-w-6xl px-6">
+          <h2 className="text-center font-bold text-2xl text-gray-900 tracking-tight md:text-3xl dark:text-white">
+            Lightweight desktop UI
+          </h2>
+          <p className="mx-auto mt-2 max-w-2xl text-center text-neutral-600 text-sm dark:text-neutral-400">
+            Stays out of your way. Access from the system tray, speak, paste,
+            and carry on.
+          </p>
           <div className="mt-8 grid gap-6 md:grid-cols-3">
-            <WhyCard
-              body="Most transcriptions land on your clipboard in 1–2 seconds."
-              tag="Speed"
-              title="Blazing fast"
+            <UiTile
+              body="One click to open the recorder and see status."
+              pose="peek"
+              title="Tray icon"
             />
-            <WhyCard
-              body="Skip exports and menus—your text is ready where you need it."
-              tag="Flow"
-              title="Clipboard‑first"
+            <UiTile
+              body="Press the shortcut—watch the meter, say your piece."
+              pose="run"
+              title="Listening"
             />
-            <WhyCard
-              body="One shortcut, clean output, minimal UI. Get in, get out."
-              tag="Simplicity"
-              title="Simple by design"
+            <UiTile
+              body="In a blink, text is cleaned and copied to your clipboard."
+              pose="float"
+              title="Processing"
             />
           </div>
-        </section>
+        </div>
+      </section>
 
-        {/* ===== USE CASES BY OUTCOME ===== */}
-        <section className="bg-neutral-50 py-20 dark:bg-gray-800">
-          <div className="mx-auto max-w-6xl px-6">
-            <h2 className="text-center font-bold text-2xl text-gray-900 tracking-tight md:text-3xl dark:text-white">
-              Get more done by talking first
-            </h2>
-            <p className="mx-auto mt-2 max-w-2xl text-center text-neutral-600 text-sm dark:text-neutral-400">
-              Outcomes across roles—draft faster, document decisions, never lose
-              ideas, and respond quickly.
-            </p>
-            <div className="mt-8 grid gap-6 md:grid-cols-4">
-              <OutcomeCard
-                bullets={[
-                  'Blog outlines without the blank page',
-                  'Ticket descriptions while you think',
-                  'Emails in minutes, not half an hour',
-                ]}
-                pose="point"
-                title="Draft faster"
-              />
-              <OutcomeCard
-                bullets={[
-                  'Summarize meetings as they end',
-                  'Paste action items instantly',
-                  'Keep momentum with clear next steps',
-                ]}
-                pose="peek"
-                title="Document decisions"
-              />
-              <OutcomeCard
-                bullets={[
-                  'Capture sparks mid‑flow',
-                  'Turn thoughts into bullet points',
-                  'Keep context with zero friction',
-                ]}
-                pose="float"
-                title="Never lose ideas"
-              />
-              <OutcomeCard
-                bullets={[
-                  'Draft replies on the go',
-                  'Drop into chat, docs, or tickets',
-                  'Move work forward faster',
-                ]}
-                pose="run"
-                title="Respond quickly"
-              />
-            </div>
-          </div>
-        </section>
-
-        {/* ===== HOW IT WORKS + SHORTCUT PLAYGROUND ===== */}
-        <section className="bg-white py-20 dark:bg-gray-900">
-          <div className="mx-auto max-w-6xl px-6">
-            <div className="grid items-start gap-10 md:grid-cols-3">
-              <HowItWorksItem
-                body="Hit the shortcut and brain‑dump. No rituals, no clutter."
-                icon={<HiMicrophone className="h-5 w-5" />}
-                title="Just talk"
-              />
-              <HowItWorksItem
-                body="Most clips are transcribed in under two seconds."
-                icon={<HiLightningBolt className="h-5 w-5" />}
-                title="Fast turnaround"
-              />
-              <HowItWorksItem
-                body="Clean text lands on your clipboard automatically."
-                icon={<TbSparkles className="h-5 w-5" />}
-                title="Ready to paste"
-              />
-            </div>
-
-            <div className="mt-10 grid gap-6 md:grid-cols-[1.2fr_.8fr]">
-              <motion.div
-                className="rounded-2xl border border-neutral-200 bg-white p-6 dark:border-neutral-700 dark:bg-gray-800"
-                initial={{ opacity: 0, y: 8 }}
-                transition={{ duration: 0.35 }}
-                viewport={{ once: true }}
-                whileInView={{ opacity: 1, y: 0 }}
-              >
-                <h3 className="font-semibold text-gray-900 text-lg tracking-tight dark:text-white">
-                  Three steps to your first transcription
-                </h3>
-                <ol className="mt-3 space-y-3 text-neutral-700 text-sm dark:text-neutral-300">
-                  <li className="flex items-start gap-2">
-                    <span className="mt-0.5 inline-grid h-5 w-5 place-items-center rounded-full bg-green-100 font-bold text-green-800 text-xs dark:bg-green-800 dark:text-green-200">
-                      1
-                    </span>
-                    Download and install for Windows.
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="mt-0.5 inline-grid h-5 w-5 place-items-center rounded-full bg-green-100 font-bold text-green-800 text-xs dark:bg-green-800 dark:text-green-200">
-                      2
-                    </span>
-                    Grant microphone permission.
-                  </li>
-                  <li className="flex items-start gap-2">
-                    <span className="mt-0.5 inline-grid h-5 w-5 place-items-center rounded-full bg-green-100 font-bold text-green-800 text-xs dark:bg-green-800 dark:text-green-200">
-                      3
-                    </span>
-                    Press the shortcut and speak—your text is clipboard‑ready.
-                  </li>
-                </ol>
-                <div className="mt-4 rounded-lg border border-neutral-200 bg-neutral-50 p-3 text-neutral-600 text-xs dark:border-neutral-600 dark:bg-gray-700 dark:text-neutral-400">
-                  Note: MVP focuses on fast, reliable English transcription.
-                </div>
-
-                <div className="mt-6 grid gap-3 md:grid-cols-2">
-                  <div className="rounded-lg border border-neutral-200 bg-neutral-50 p-3 dark:border-neutral-600 dark:bg-gray-700">
-                    <p className="font-semibold text-[12px] text-neutral-700 dark:text-neutral-300">
-                      Your Voice
-                    </p>
-                    <p className="mt-1 text-[12px] text-neutral-700 dark:text-neutral-300">
-                      "Draft a recap for our sprint review, note blockers, and
-                      assign owners."
-                    </p>
-                  </div>
-                  <div className="rounded-lg border border-green-200 bg-green-50 p-3 dark:border-green-600 dark:bg-green-900/20">
-                    <p className="font-semibold text-[12px] text-green-900 dark:text-green-200">
-                      Clipboard Output
-                    </p>
-                    <ul className="mt-1 list-disc pl-4 text-[12px] text-green-900 dark:text-green-200">
-                      <li>Summary of sprint</li>
-                      <li>Blockers highlighted</li>
-                      <li>Owners assigned with next steps</li>
-                    </ul>
-                  </div>
-                </div>
-              </motion.div>
-
-              <ShortcutPlayground />
-            </div>
-          </div>
-        </section>
-
-        {/* ===== WORKS EVERYWHERE ===== */}
-        <section className="bg-white py-16 dark:bg-gray-900">
-          <div className="mx-auto max-w-6xl px-6">
-            <h2 className="text-center font-bold text-2xl text-gray-900 tracking-tight md:text-3xl dark:text-white">
-              Works everywhere you work
-            </h2>
-            <p className="mx-auto mt-3 max-w-2xl text-center text-neutral-600 text-sm dark:text-neutral-400">
-              Paste into any app—or let Voice Gecko type for you.
-            </p>
-
-            <PasteAutoTypeToggle />
-
-            <div className="mt-8">
-              <Marquee
-                autoFill={true}
-                gradient={true}
-                gradientColor="#ffffff"
-                gradientWidth={100}
-                pauseOnHover={true}
-                speed={48}
-              >
-                <div className="mr-3">
-                  <LogoPill icon={<HiCode className="h-4 w-4" />}>
-                    VS Code
-                  </LogoPill>
-                </div>
-                <div className="mr-3">
-                  <LogoPill icon={<SiGoogledocs className="h-4 w-4" />}>
-                    Google Docs
-                  </LogoPill>
-                </div>
-                <div className="mr-3">
-                  <LogoPill icon={<SiNotion className="h-4 w-4" />}>
-                    Notion
-                  </LogoPill>
-                </div>
-                <div className="mr-3">
-                  <LogoPill icon={<SiGmail className="h-4 w-4" />}>
-                    Gmail
-                  </LogoPill>
-                </div>
-                <div className="mr-3">
-                  <LogoPill icon={<SiSlack className="h-4 w-4" />}>
-                    Slack
-                  </LogoPill>
-                </div>
-                <div className="mr-3">
-                  <LogoPill icon={<SiJira className="h-4 w-4" />}>
-                    Jira
-                  </LogoPill>
-                </div>
-                <div className="mr-3">
-                  <LogoPill icon={<SiLinear className="h-4 w-4" />}>
-                    Linear
-                  </LogoPill>
-                </div>
-                <div className="mr-3">
-                  <LogoPill icon={<SiObsidian className="h-4 w-4" />}>
-                    Obsidian
-                  </LogoPill>
-                </div>
-                <div className="mr-3">
-                  <LogoPill icon={<HiDocumentText className="h-4 w-4" />}>
-                    Word
-                  </LogoPill>
-                </div>
-                <div className="mr-3">
-                  <LogoPill icon={<SiTrello className="h-4 w-4" />}>
-                    Trello
-                  </LogoPill>
-                </div>
-              </Marquee>
-            </div>
-          </div>
-        </section>
-
-        {/* ===== SYSTEM UI SNAPSHOT: Tray + States ===== */}
-        <section className="bg-neutral-50 py-20 dark:bg-gray-800">
-          <div className="mx-auto max-w-6xl px-6">
-            <h2 className="text-center font-bold text-2xl text-gray-900 tracking-tight md:text-3xl dark:text-white">
-              Lightweight desktop UI
-            </h2>
-            <p className="mx-auto mt-2 max-w-2xl text-center text-neutral-600 text-sm dark:text-neutral-400">
-              Stays out of your way. Access from the system tray, speak, paste,
-              and carry on.
-            </p>
-            <div className="mt-8 grid gap-6 md:grid-cols-3">
-              <UiTile
-                body="One click to open the recorder and see status."
-                pose="peek"
-                title="Tray icon"
-              />
-              <UiTile
-                body="Press the shortcut—watch the meter, say your piece."
-                pose="run"
-                title="Listening"
-              />
-              <UiTile
-                body="In a blink, text is cleaned and copied to your clipboard."
-                pose="float"
-                title="Processing"
-              />
-            </div>
-          </div>
-        </section>
-
-        {/* ===== TRUST / STATS + TESTIMONIALS ===== */}
-        <section className="bg-white py-20 dark:bg-gray-900">
-          <div className="mx-auto max-w-6xl px-6">
-            <div className="grid gap-8 md:grid-cols-[.9fr_1.1fr] md:items-center">
-              {/* Stats block */}
-              <div className="rounded-2xl border border-neutral-200 bg-white p-6 dark:border-neutral-700 dark:bg-gray-800">
-                <h3 className="font-semibold text-gray-900 text-lg tracking-tight dark:text-white">
-                  Trusted by people who move fast
-                </h3>
-                <div className="mt-4 grid grid-cols-3 gap-4">
-                  <StatBlock label="Hours recorded" value="10k+" />
-                  <StatBlock label="Free words" value="2k/wk" />
-                  <StatBlock label="Average rating" value="4.9/5" />
-                </div>
-                <div className="mt-4 flex flex-wrap gap-2 text-neutral-600 text-xs dark:text-neutral-400">
-                  <Avatar initial="SC" />
-                  <Avatar initial="MR" />
-                  <Avatar initial="EW" />
-                  <Avatar initial="DL" />
-                  <Avatar initial="AK" />
-                  <span className="rounded-full border border-neutral-200 bg-neutral-50 px-2 py-1 text-neutral-700 dark:border-neutral-600 dark:bg-gray-700 dark:text-neutral-300">
-                    2,000+ users
-                  </span>
-                </div>
+      {/* ===== TRUST / STATS + TESTIMONIALS ===== */}
+      <section className="bg-white py-20 dark:bg-gray-900">
+        <div className="mx-auto max-w-6xl px-6">
+          <div className="grid gap-8 md:grid-cols-[.9fr_1.1fr] md:items-center">
+            {/* Stats block */}
+            <div className="rounded-2xl border border-neutral-200 bg-white p-6 dark:border-neutral-700 dark:bg-gray-800">
+              <h3 className="font-semibold text-gray-900 text-lg tracking-tight dark:text-white">
+                Trusted by people who move fast
+              </h3>
+              <div className="mt-4 grid grid-cols-3 gap-4">
+                <StatBlock label="Hours recorded" value="10k+" />
+                <StatBlock label="Free words" value="2k/wk" />
+                <StatBlock label="Average rating" value="4.9/5" />
               </div>
-              {/* Testimonials carousel-ish grid */}
-              <div className="grid gap-6 md:grid-cols-2">
-                <TestimonialCard
-                  author="Marcus Rodriguez"
-                  avatar="MR"
-                  company="InnovateAI"
-                  quote="Saved me ~45 minutes a day on documentation. I just talk through changes and paste."
-                  role="Software Engineer"
-                />
-                <TestimonialCard
-                  author="Sarah Chen"
-                  avatar="SC"
-                  company="TechFlow"
-                  quote="Brainstorm, outline, draft—all by voice. I move so much faster."
-                  role="Content Manager"
-                />
-                <TestimonialCard
-                  author="Emily Watson"
-                  avatar="EW"
-                  company="DataSync"
-                  quote="Meetings end with clear notes and owners. It keeps us in motion."
-                  role="Product Lead"
-                />
-                <TestimonialCard
-                  author="Alex Kim"
-                  avatar="AK"
-                  company="SprintOps"
-                  quote="Prompts, emails, and tickets—talk first, paste, ship."
-                  role="Founder"
-                />
+              <div className="mt-4 flex flex-wrap gap-2 text-neutral-600 text-xs dark:text-neutral-400">
+                <Avatar initial="SC" />
+                <Avatar initial="MR" />
+                <Avatar initial="EW" />
+                <Avatar initial="DL" />
+                <Avatar initial="AK" />
+                <span className="rounded-full border border-neutral-200 bg-neutral-50 px-2 py-1 text-neutral-700 dark:border-neutral-600 dark:bg-gray-700 dark:text-neutral-300">
+                  2,000+ users
+                </span>
               </div>
             </div>
-          </div>
-        </section>
-
-        {/* ===== PRICING ===== */}
-        <section className="bg-neutral-50 py-20 dark:bg-gray-800" id="pricing">
-          <div className="mx-auto max-w-6xl px-6">
-            <h2 className="text-center font-bold text-2xl text-gray-900 tracking-tight md:text-3xl dark:text-white">
-              Simple, fair pricing
-            </h2>
-            <p className="mx-auto mt-2 max-w-2xl text-center text-neutral-600 text-sm dark:text-neutral-400">
-              Start free. Upgrade for unlimited transcription whenever you're
-              ready. English‑only for now.
-            </p>
-
-            <BillingToggle />
-
-            <div className="mt-6 grid gap-4 md:grid-cols-2">
-              <PriceCard
-                cta="Download"
-                features={[
-                  '2,000 words/week',
-                  'Instant clipboard',
-                  'Global shortcut',
-                ]}
-                highlight
-                name="Free"
-                price="$0"
+            {/* Testimonials carousel-ish grid */}
+            <div className="grid gap-6 md:grid-cols-2">
+              <TestimonialCard
+                author="Marcus Rodriguez"
+                avatar="MR"
+                company="InnovateAI"
+                jobRole="Senior Developer"
+                quote="Saved me ~45 minutes a day on documentation. I just talk through changes and paste."
               />
-              <PriceCard
-                cta="See Plans"
-                features={[
-                  'Unlimited words',
-                  'Priority processing',
-                  'Early features',
-                ]}
-                name="Unlimited"
-                price="$—/mo"
+              <TestimonialCard
+                author="Sarah Chen"
+                avatar="SC"
+                company="TechFlow"
+                jobRole="Product Manager"
+                quote="Brainstorm, outline, draft—all by voice. I move so much faster."
+              />
+              <TestimonialCard
+                author="Emily Watson"
+                avatar="EW"
+                company="DataSync"
+                jobRole="Team Lead"
+                quote="Meetings end with clear notes and owners. It keeps us in motion."
+              />
+              <TestimonialCard
+                author="Alex Kim"
+                avatar="AK"
+                company="SprintOps"
+                jobRole="Engineering Manager"
+                quote="Prompts, emails, and tickets—talk first, paste, ship."
               />
             </div>
-            <p className="mt-4 text-center text-neutral-600 text-xs dark:text-neutral-400">
-              "Most clips finish in 1–2 seconds." Prices are placeholders. See
-              the{' '}
-              <Link className="underline dark:text-neutral-300" href="/pricing">
-                pricing page
-              </Link>{' '}
-              for live updates.
-            </p>
           </div>
-        </section>
+        </div>
+      </section>
 
-        {/* ===== FAQ ===== */}
-        <section className="bg-white py-20 dark:bg-gray-900">
-          <div className="mx-auto max-w-4xl px-6">
-            <h2 className="text-center font-bold text-2xl text-gray-900 tracking-tight md:text-3xl dark:text-white">
-              FAQs
-            </h2>
-            <div className="mt-6 divide-y divide-neutral-200 rounded-2xl border border-neutral-200 bg-white dark:divide-neutral-700 dark:border-neutral-700 dark:bg-gray-800">
-              {[
-                {
-                  q: 'Which platforms are supported?',
-                  a: 'Windows is available now. macOS is on the roadmap and coming next.',
-                },
-                {
-                  q: 'How fast is transcription?',
-                  a: 'Most recordings are transcribed in 1–2 seconds.',
-                },
-                {
-                  q: 'Do you support multiple languages or offline mode?',
-                  a: 'Not yet. The current MVP focuses on fast, reliable English transcription.',
-                },
-                {
-                  q: 'Do I need an account?',
-                  a: 'You can use the free plan right away. An account may be required for paid features.',
-                },
-                {
-                  q: 'What happens with my audio?',
-                  a: "We focus on fast clipboard delivery. We won't retain audio beyond what's required for processing. Full details in our Privacy Policy.",
-                },
-                {
-                  q: 'When is macOS support coming?',
-                  a: "macOS is next on the roadmap. You'll be able to opt-in for a launch reminder soon.",
-                },
-                {
-                  q: 'Can it auto-type instead of paste?',
-                  a: 'Yes—Voice Gecko can paste or auto-type depending on your preference.',
-                },
-              ].map((item, idx) => (
-                <FaqItem answer={item.a} key={idx} question={item.q} />
-              ))}
-            </div>
-          </div>
-        </section>
+      {/* ===== PRICING ===== */}
+      <section className="bg-neutral-50 py-20 dark:bg-gray-800" id="pricing">
+        <div className="mx-auto max-w-6xl px-6">
+          <h2 className="text-center font-bold text-2xl text-gray-900 tracking-tight md:text-3xl dark:text-white">
+            Simple, fair pricing
+          </h2>
+          <p className="mx-auto mt-2 max-w-2xl text-center text-neutral-600 text-sm dark:text-neutral-400">
+            Start free. Upgrade for unlimited transcription whenever you're
+            ready. English‑only for now.
+          </p>
 
-        {/* ===== FINAL CTA ===== */}
-        <section className="bg-gradient-to-b from-white to-[#e6f9ef] py-16 dark:from-gray-900 dark:to-gray-800">
-          <div className="mx-auto max-w-5xl px-6 text-center">
-            <h3 className="text-balance font-black text-3xl text-gray-900 tracking-tight md:text-4xl dark:text-white">
-              Say it. See it. Send it.
-            </h3>
-            <p className="mx-auto mt-3 max-w-2xl text-neutral-700 dark:text-neutral-300">
-              Download Voice Gecko and speak your work into existence.
-            </p>
-            <div className="mt-6 flex flex-col items-center justify-center gap-4 sm:flex-row">
-              <WindowsDownloadButton
-                className={cn(
-                  buttonVariants({ variant: 'default', size: 'xl' }),
-                  '!border-black rounded-lg border-2 bg-primary/80 font-semibold text-sm tracking-tight transition-all will-change-transform hover:scale-[1.02]'
-                )}
-                downloadError={downloadError}
-                downloadsData={downloadsData}
-                text="Download for Windows"
-              />
-              <Link
-                className={cn(
-                  buttonVariants({ variant: 'default', size: 'xl' }),
-                  '!border-black rounded-lg border-2 bg-transparent font-semibold text-sm tracking-tight transition-all will-change-transform hover:scale-[1.02] hover:bg-transparent'
-                )}
-                href="/use-cases"
-              >
-                Explore Use Cases
-              </Link>
-            </div>
-            <div className="pointer-events-none mx-auto mt-6 w-40">
-              <RiveGeckoPlaceholder className="h-24 w-full" pose="wave" />
-            </div>
-          </div>
-        </section>
+          <BillingToggle />
 
-        {/* ===== FOOTER ===== */}
-        <footer className="border-neutral-200 border-t bg-white dark:border-neutral-700 dark:bg-gray-900">
-          <div className="mx-auto grid max-w-6xl grid-cols-2 gap-8 px-6 py-12 md:grid-cols-4">
-            <div>
-              <h4 className="font-semibold text-neutral-900 text-sm dark:text-white">
-                Product
-              </h4>
-              <ul className="mt-3 space-y-2 text-neutral-600 text-sm dark:text-neutral-400">
-                <li>
-                  <Link className="hover:underline" href="/pricing">
-                    Pricing
-                  </Link>
-                </li>
-                <li>
-                  <Link className="hover:underline" href="/use-cases">
-                    Use Cases
-                  </Link>
-                </li>
-                <li>
-                  <Link className="hover:underline" href="/changelog">
-                    Changelog
-                  </Link>
-                </li>
-                <li>
-                  <Link className="hover:underline" href="/roadmap">
-                    Roadmap
-                  </Link>
-                </li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-semibold text-neutral-900 text-sm dark:text-white">
-                Company
-              </h4>
-              <ul className="mt-3 space-y-2 text-neutral-600 text-sm dark:text-neutral-400">
-                <li>
-                  <Link className="hover:underline" href="/company">
-                    Company
-                  </Link>
-                </li>
-                <li>
-                  <Link className="hover:underline" href="/careers">
-                    Careers
-                  </Link>
-                </li>
-                <li>
-                  <Link className="hover:underline" href="/press">
-                    Press Kit
-                  </Link>
-                </li>
-                <li>
-                  <Link className="hover:underline" href="/contact">
-                    Contact
-                  </Link>
-                </li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-semibold text-neutral-900 text-sm dark:text-white">
-                Resources
-              </h4>
-              <ul className="mt-3 space-y-2 text-neutral-600 text-sm dark:text-neutral-400">
-                <li>
-                  <Link className="hover:underline" href="/support">
-                    Support
-                  </Link>
-                </li>
-                <li>
-                  <Link className="hover:underline" href="/user-guides">
-                    User Guides
-                  </Link>
-                </li>
-                <li>
-                  <Link className="hover:underline" href="/workflows">
-                    Workflows
-                  </Link>
-                </li>
-                <li>
-                  <Link className="hover:underline" href="/security">
-                    Security
-                  </Link>
-                </li>
-              </ul>
-            </div>
-            <div>
-              <h4 className="font-semibold text-neutral-900 text-sm dark:text-white">
-                Legal
-              </h4>
-              <ul className="mt-3 space-y-2 text-neutral-600 text-sm dark:text-neutral-400">
-                <li>
-                  <Link className="hover:underline" href="/privacy">
-                    Privacy
-                  </Link>
-                </li>
-                <li>
-                  <Link className="hover:underline" href="/terms">
-                    Terms
-                  </Link>
-                </li>
-                <li>
-                  <Link className="hover:underline" href="/eula">
-                    EULA
-                  </Link>
-                </li>
-                <li>
-                  <Link className="hover:underline" href="/cookies">
-                    Cookie Policy
-                  </Link>
-                </li>
-              </ul>
-            </div>
+          <div className="mt-6 grid gap-4 md:grid-cols-2">
+            <PriceCard
+              cta="Download"
+              features={[
+                '2,000 words/week',
+                'Instant clipboard',
+                'Global shortcut',
+              ]}
+              highlight
+              name="Free"
+              price="$0"
+            />
+            <PriceCard
+              cta="See Plans"
+              features={[
+                'Unlimited words',
+                'Priority processing',
+                'Early features',
+              ]}
+              name="Unlimited"
+              price="$—/mo"
+            />
           </div>
-          <div className="border-neutral-200 border-t dark:border-neutral-700">
-            <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-6 text-neutral-600 text-xs dark:text-neutral-400">
-              <div className="flex items-center gap-2">
-                <VoiceGeckoLogoText className="w-24 opacity-80" />
-                <span>© {new Date().getFullYear()} Voice Gecko</span>
-              </div>
-              <span>English only • Windows now • macOS next</span>
-            </div>
-          </div>
-        </footer>
+          <p className="mt-4 text-center text-neutral-600 text-xs dark:text-neutral-400">
+            "Most clips finish in 1–2 seconds." Prices are placeholders. See the{' '}
+            <Link className="underline dark:text-neutral-300" href="/pricing">
+              pricing page
+            </Link>{' '}
+            for live updates.
+          </p>
+        </div>
+      </section>
 
-        {/* ===== STICKY CTA RIBBON ===== */}
-        <StickyCta
-          downloadError={downloadError}
-          downloadsData={downloadsData}
-        />
-      </div>
-    </>
+      {/* ===== FAQ ===== */}
+      <section className="bg-white py-20 dark:bg-gray-900">
+        <div className="mx-auto max-w-4xl px-6">
+          <h2 className="text-center font-bold text-2xl text-gray-900 tracking-tight md:text-3xl dark:text-white">
+            FAQs
+          </h2>
+          <div className="mt-6 divide-y divide-neutral-200 rounded-2xl border border-neutral-200 bg-white dark:divide-neutral-700 dark:border-neutral-700 dark:bg-gray-800">
+            {[
+              {
+                q: 'Which platforms are supported?',
+                a: 'Windows is available now. macOS is on the roadmap and coming next.',
+              },
+              {
+                q: 'How fast is transcription?',
+                a: 'Most recordings are transcribed in 1–2 seconds.',
+              },
+              {
+                q: 'Do you support multiple languages or offline mode?',
+                a: 'Not yet. The current MVP focuses on fast, reliable English transcription.',
+              },
+              {
+                q: 'Do I need an account?',
+                a: 'You can use the free plan right away. An account may be required for paid features.',
+              },
+              {
+                q: 'What happens with my audio?',
+                a: "We focus on fast clipboard delivery. We won't retain audio beyond what's required for processing. Full details in our Privacy Policy.",
+              },
+              {
+                q: 'When is macOS support coming?',
+                a: "macOS is next on the roadmap. You'll be able to opt-in for a launch reminder soon.",
+              },
+              {
+                q: 'Can it auto-type instead of paste?',
+                a: 'Yes—Voice Gecko can paste or auto-type depending on your preference.',
+              },
+            ].map((item) => (
+              <FaqItem answer={item.a} key={item.q} question={item.q} />
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ===== FINAL CTA ===== */}
+      <section className="bg-gradient-to-b from-white to-[#e6f9ef] py-16 dark:from-gray-900 dark:to-gray-800">
+        <div className="mx-auto max-w-5xl px-6 text-center">
+          <h3 className="text-balance font-black text-3xl text-gray-900 tracking-tight md:text-4xl dark:text-white">
+            Say it. See it. Send it.
+          </h3>
+          <p className="mx-auto mt-3 max-w-2xl text-neutral-700 dark:text-neutral-300">
+            Download Voice Gecko and speak your work into existence.
+          </p>
+          <div className="mt-6 flex flex-col items-center justify-center gap-4 sm:flex-row">
+            <WindowsDownloadButton
+              className={cn(
+                buttonVariants({ variant: 'default', size: 'xl' }),
+                '!border-black rounded-lg border-2 bg-primary/80 font-semibold text-sm tracking-tight transition-all will-change-transform hover:scale-[1.02]'
+              )}
+              downloadError={downloadError}
+              downloadsData={downloadsData}
+              text="Download for Windows"
+            />
+            <Link
+              className={cn(
+                buttonVariants({ variant: 'default', size: 'xl' }),
+                '!border-black rounded-lg border-2 bg-transparent font-semibold text-sm tracking-tight transition-all will-change-transform hover:scale-[1.02] hover:bg-transparent'
+              )}
+              href="/use-cases"
+            >
+              Explore Use Cases
+            </Link>
+          </div>
+          <div className="pointer-events-none mx-auto mt-6 w-40">
+            <RiveGeckoPlaceholder className="h-24 w-full" pose="wave" />
+          </div>
+        </div>
+      </section>
+
+      {/* ===== FOOTER ===== */}
+      <footer className="border-neutral-200 border-t bg-white dark:border-neutral-700 dark:bg-gray-900">
+        <div className="mx-auto grid max-w-6xl grid-cols-2 gap-8 px-6 py-12 md:grid-cols-4">
+          <div>
+            <h4 className="font-semibold text-neutral-900 text-sm dark:text-white">
+              Product
+            </h4>
+            <ul className="mt-3 space-y-2 text-neutral-600 text-sm dark:text-neutral-400">
+              <li>
+                <Link className="hover:underline" href="/pricing">
+                  Pricing
+                </Link>
+              </li>
+              <li>
+                <Link className="hover:underline" href="/use-cases">
+                  Use Cases
+                </Link>
+              </li>
+              <li>
+                <Link className="hover:underline" href="/changelog">
+                  Changelog
+                </Link>
+              </li>
+              <li>
+                <Link className="hover:underline" href="/roadmap">
+                  Roadmap
+                </Link>
+              </li>
+            </ul>
+          </div>
+          <div>
+            <h4 className="font-semibold text-neutral-900 text-sm dark:text-white">
+              Company
+            </h4>
+            <ul className="mt-3 space-y-2 text-neutral-600 text-sm dark:text-neutral-400">
+              <li>
+                <Link className="hover:underline" href="/company">
+                  Company
+                </Link>
+              </li>
+              <li>
+                <Link className="hover:underline" href="/careers">
+                  Careers
+                </Link>
+              </li>
+              <li>
+                <Link className="hover:underline" href="/press">
+                  Press Kit
+                </Link>
+              </li>
+              <li>
+                <Link className="hover:underline" href="/contact">
+                  Contact
+                </Link>
+              </li>
+            </ul>
+          </div>
+          <div>
+            <h4 className="font-semibold text-neutral-900 text-sm dark:text-white">
+              Resources
+            </h4>
+            <ul className="mt-3 space-y-2 text-neutral-600 text-sm dark:text-neutral-400">
+              <li>
+                <Link className="hover:underline" href="/support">
+                  Support
+                </Link>
+              </li>
+              <li>
+                <Link className="hover:underline" href="/user-guides">
+                  User Guides
+                </Link>
+              </li>
+              <li>
+                <Link className="hover:underline" href="/workflows">
+                  Workflows
+                </Link>
+              </li>
+              <li>
+                <Link className="hover:underline" href="/security">
+                  Security
+                </Link>
+              </li>
+            </ul>
+          </div>
+          <div>
+            <h4 className="font-semibold text-neutral-900 text-sm dark:text-white">
+              Legal
+            </h4>
+            <ul className="mt-3 space-y-2 text-neutral-600 text-sm dark:text-neutral-400">
+              <li>
+                <Link className="hover:underline" href="/privacy">
+                  Privacy
+                </Link>
+              </li>
+              <li>
+                <Link className="hover:underline" href="/terms">
+                  Terms
+                </Link>
+              </li>
+              <li>
+                <Link className="hover:underline" href="/eula">
+                  EULA
+                </Link>
+              </li>
+              <li>
+                <Link className="hover:underline" href="/cookies">
+                  Cookie Policy
+                </Link>
+              </li>
+            </ul>
+          </div>
+        </div>
+        <div className="border-neutral-200 border-t dark:border-neutral-700">
+          <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-6 text-neutral-600 text-xs dark:text-neutral-400">
+            <div className="flex items-center gap-2">
+              <VoiceGeckoLogoText className="w-24 opacity-80" />
+              <span>© {new Date().getFullYear()} Voice Gecko</span>
+            </div>
+            <span>English only • Windows now • macOS next</span>
+          </div>
+        </div>
+      </footer>
+
+      {/* ===== STICKY CTA RIBBON ===== */}
+      <StickyCta downloadError={downloadError} downloadsData={downloadsData} />
+    </div>
   );
 }
 
@@ -948,9 +937,17 @@ const MobileMenuLink = ({
   return (
     <div className="relative text-neutral-950">
       {FoldContent ? (
-        <div
+        <button
           className="flex w-full cursor-pointer items-center justify-between border-neutral-300 border-b py-6 text-start font-semibold text-2xl"
           onClick={() => setOpen((pv) => !pv)}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              setOpen((pv) => !pv);
+            }
+          }}
+          tabIndex={0}
+          type="button"
         >
           <Link
             href={href}
@@ -970,7 +967,7 @@ const MobileMenuLink = ({
           >
             <HiChevronDown />
           </motion.div>
-        </div>
+        </button>
       ) : (
         <Link
           className="flex w-full cursor-pointer items-center justify-between border-neutral-300 border-b py-6 text-start font-semibold text-2xl"
@@ -1332,6 +1329,7 @@ const WindowsDownloadButton = ({
       )}
       disabled={!isAvailable}
       onClick={handleDownload}
+      type="button"
     >
       <FaWindows className="h-4 w-4" />
       {isAvailable ? text : 'Download Unavailable'}
@@ -1367,7 +1365,7 @@ const WindowsDownloadStrip = ({
   );
 };
 
-const Check = () => (
+const _Check = () => (
   <span className="inline-flex items-center gap-1 text-green-700">
     <HiCheck className="h-4 w-4" /> Yes
   </span>
@@ -1413,7 +1411,7 @@ const OutcomeCard = ({
     </div>
     <ul className="mt-3 list-disc space-y-1 pl-5 text-neutral-700 text-sm dark:text-neutral-300">
       {bullets.map((b, i) => (
-        <li key={i}>{b}</li>
+        <li key={`${b.slice(0, 20)}-${i}`}>{b}</li>
       ))}
     </ul>
   </div>
@@ -1531,7 +1529,7 @@ const PriceCard = ({
     </p>
     <ul className="mt-3 space-y-1 text-neutral-700 text-sm dark:text-neutral-300">
       {features.map((f, i) => (
-        <li key={i}>• {f}</li>
+        <li key={`${f.slice(0, 20)}-${i}`}>• {f}</li>
       ))}
     </ul>
     <div className="mt-4 text-center">
@@ -1540,13 +1538,7 @@ const PriceCard = ({
           buttonVariants({ variant: 'default', size: 'lg' }),
           '!border-black inline-flex rounded-lg border-2 bg-primary/80 font-semibold text-xs tracking-tight hover:scale-[1.01]'
         )}
-        href={
-          name === 'Free'
-            ? '/pricing'
-            : name === 'Unlimited'
-              ? '/pricing'
-              : '/pricing'
-        }
+        href="/pricing"
       >
         {cta}
       </Link>
@@ -1567,6 +1559,7 @@ const FaqItem = ({
       <button
         className="flex w-full items-center justify-between gap-4 text-left"
         onClick={() => setOpen((o) => !o)}
+        type="button"
       >
         <span className="font-semibold text-neutral-900 text-sm dark:text-white">
           {question}
@@ -1594,13 +1587,13 @@ const FaqItem = ({
 const TestimonialCard = ({
   quote,
   author,
-  role,
+  jobRole,
   company,
   avatar,
 }: {
   quote: string;
   author: string;
-  role: string;
+  jobRole: string;
   company: string;
   avatar: string;
 }) => (
@@ -1617,7 +1610,7 @@ const TestimonialCard = ({
           {author}
         </p>
         <p className="text-neutral-600 text-xs dark:text-neutral-400">
-          {role} at {company}
+          {jobRole} at {company}
         </p>
       </div>
     </div>
@@ -1757,19 +1750,27 @@ const ShortcutPlayground = () => {
             <span
               className={cn(
                 'inline-block h-2 w-2 rounded-full',
-                phase === 'idle'
-                  ? 'bg-neutral-300 dark:bg-neutral-600'
-                  : phase === 'listening'
-                    ? 'bg-green-500'
-                    : 'bg-green-700 dark:bg-green-600'
+                (() => {
+                  if (phase === 'idle') {
+                    return 'bg-neutral-300 dark:bg-neutral-600';
+                  }
+                  if (phase === 'listening') {
+                    return 'bg-green-500';
+                  }
+                  return 'bg-green-700 dark:bg-green-600';
+                })()
               )}
             />
             <span className="font-medium text-gray-900 dark:text-white">
-              {phase === 'idle'
-                ? 'Idle'
-                : phase === 'listening'
-                  ? 'Listening'
-                  : 'Transcribed'}
+              {(() => {
+                if (phase === 'idle') {
+                  return 'Idle';
+                }
+                if (phase === 'listening') {
+                  return 'Listening';
+                }
+                return 'Transcribed';
+              })()}
             </span>
           </div>
           <div className="mt-3 rounded-md border border-neutral-300 border-dashed bg-white p-2 text-[12px] text-neutral-600 dark:border-neutral-600 dark:bg-gray-800 dark:text-neutral-400">
@@ -1823,6 +1824,7 @@ const PasteAutoTypeToggle = () => {
               : 'text-neutral-600 dark:text-neutral-400'
           )}
           onClick={() => setMode('paste')}
+          type="button"
         >
           Paste
         </button>
@@ -1834,6 +1836,7 @@ const PasteAutoTypeToggle = () => {
               : 'text-neutral-600 dark:text-neutral-400'
           )}
           onClick={() => setMode('type')}
+          type="button"
         >
           Auto‑type
         </button>
@@ -1863,6 +1866,7 @@ const BillingToggle = () => {
             : 'border-neutral-200 bg-white text-neutral-700 dark:border-neutral-700 dark:bg-gray-800 dark:text-neutral-300'
         )}
         onClick={() => setPeriod('monthly')}
+        type="button"
       >
         Monthly
       </button>
@@ -1874,6 +1878,7 @@ const BillingToggle = () => {
             : 'border-neutral-200 bg-white text-neutral-700 dark:border-neutral-700 dark:bg-gray-800 dark:text-neutral-300'
         )}
         onClick={() => setPeriod('yearly')}
+        type="button"
       >
         Yearly
       </button>

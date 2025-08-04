@@ -40,7 +40,7 @@ export const Route = createFileRoute('/_authenticated')({
       }
 
       settingsInitialized = true;
-    } catch (error) {
+    } catch (_error) {
       // If settings initialization fails, continue to main app
       return;
     }
@@ -94,8 +94,7 @@ function AuthenticatedLayout() {
 
   // Render the authenticated content with sidebar
   return (
-    <>
-      <SidebarProvider>
+    <SidebarProvider>
         <TitleBar />
         <AppSidebar />
         <SidebarInset className="!ml-0 !shadow-none pt-8">
@@ -114,6 +113,5 @@ function AuthenticatedLayout() {
           </div>
         </SidebarInset>
       </SidebarProvider>
-    </>
   );
 }

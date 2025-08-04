@@ -24,7 +24,6 @@ import { openUrl } from '@tauri-apps/plugin-opener';
 import { Loader } from 'lucide-react';
 import { useState } from 'react';
 
-import { analytics } from '~/lib/analytics/posthog-analytics';
 import { authClient } from '~/lib/client';
 import { trpc } from '~/trpc';
 import { getClientAuthErrorMessage } from '~/utils/client-error-messages';

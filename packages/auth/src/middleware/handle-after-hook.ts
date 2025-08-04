@@ -1,10 +1,9 @@
-import { sendWelcomeEmail } from '@acme/email';
 import { DiscordAdapter } from '@acme/notifications';
 import { createAuthMiddleware } from 'better-auth/plugins';
 
 import { isObjectWithBody } from '../utils/is-object-with-body';
 
-const discordAdapter = new DiscordAdapter();
+const _discordAdapter = new DiscordAdapter();
 
 interface BannedUserError {
   code: 'BANNED_USER';
@@ -22,6 +21,7 @@ function isBannedUserError(value: unknown): value is BannedUserError {
 }
 
 export const handleAfterHook = createAuthMiddleware(async (ctx) => {
+  await Promise.resolve();
   if (ctx.path.startsWith('/callback')) {
     const returned = ctx.context.returned;
     if (

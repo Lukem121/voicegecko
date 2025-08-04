@@ -6,7 +6,7 @@ import { queryClient, trpc } from '~/trpc';
 export const useDeleteTranscription = () => {
   const mutation = useMutation(
     trpc.transcription.delete.mutationOptions({
-      onSuccess: (data, variables) => {
+      onSuccess: (_data, variables) => {
         // Track transcription deletion
         analytics.track('transcription_deleted', {
           transcription_id: variables.id,

@@ -1,17 +1,12 @@
+import { log } from '@acme/observability';
 import { CopyButton } from '@acme/ui/components/copy';
 import { Button } from '@acme/ui/components/ui/button';
 import {
-import
-{
-  log;
-}
-from;
-('@acme/observability');
-DropdownMenu,
+  DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from '@acme/ui/components/ui/dropdown-menu'
+} from '@acme/ui/components/ui/dropdown-menu';
 
 import { Input } from '@acme/ui/components/ui/input';
 import {

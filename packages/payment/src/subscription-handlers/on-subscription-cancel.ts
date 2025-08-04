@@ -14,9 +14,7 @@ interface SubscriptionCancelParams {
 }
 
 export const onSubscriptionCancel = async ({
-  event,
   subscription,
-  stripeSubscription,
   cancellationDetails,
 }: SubscriptionCancelParams) => {
   log.info('[Subscription] Subscription cancelled:', {

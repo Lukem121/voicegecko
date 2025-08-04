@@ -6,10 +6,10 @@ import { trpc } from '~/utils/api';
 
 export default function Post() {
   const { id } = useGlobalSearchParams();
-  if (!id || typeof id !== 'string') throw new Error('unreachable');
+  if (!id || typeof id !== 'string') { throw new Error('unreachable'); }
   const { data } = useQuery(trpc.post.byId.queryOptions({ id }));
 
-  if (!data) return null;
+  if (!data) { return null; }
 
   return (
     <SafeAreaView className="bg-background">

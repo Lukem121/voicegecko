@@ -122,20 +122,20 @@ export function AudioVisualizer({
     };
   }, [audioLevel, isRecording, mode, config.dotCount]);
 
-  const [forceUpdate, setForceUpdate] = useState(0);
+  const [_forceUpdate, setForceUpdate] = useState(0);
 
   const getVisualizationColor = (level: number, index: number) => {
-    if (!isRecording) return 'bg-muted-foreground/50';
+    if (!isRecording) { return 'bg-muted-foreground/50'; }
 
     if (mode === 'voice-reactive' && audioLevel) {
       // Voice-reactive coloring
-      if (audioLevel.is_silence) return 'bg-gray-400';
-      if (!audioLevel.is_voice_detected) return 'bg-blue-400';
+      if (audioLevel.is_silence) { return 'bg-gray-400'; }
+      if (!audioLevel.is_voice_detected) { return 'bg-blue-400'; }
 
       // Voice detected - use intensity-based coloring
       const intensity = Math.min(level * 2, 1);
-      if (intensity > 0.7) return 'bg-red-500';
-      if (intensity > 0.3) return 'bg-yellow-500';
+      if (intensity > 0.7) { return 'bg-red-500'; }
+      if (intensity > 0.3) { return 'bg-yellow-500'; }
       return 'bg-green-500';
     }
     if (mode === 'spectrum') {
@@ -148,15 +148,15 @@ export function AudioVisualizer({
     if (mode === 'circular') {
       // Circular mode - same as voice-reactive for now
       const intensity = Math.min(level * 2, 1);
-      if (intensity > 0.7) return 'bg-purple-500';
-      if (intensity > 0.3) return 'bg-blue-500';
+      if (intensity > 0.7) { return 'bg-purple-500'; }
+      if (intensity > 0.3) { return 'bg-blue-500'; }
       return 'bg-cyan-500';
     }
 
     // Default waveform coloring
     const intensity = Math.min(level * 2, 1);
-    if (intensity > 0.7) return 'bg-red-500';
-    if (intensity > 0.3) return 'bg-yellow-500';
+    if (intensity > 0.7) { return 'bg-red-500'; }
+    if (intensity > 0.3) { return 'bg-yellow-500'; }
     return 'bg-green-500';
   };
 
@@ -325,8 +325,6 @@ export function AudioVisualizer({
         return renderSpectrum();
       case 'circular':
         return renderCircular();
-      case 'waveform':
-      case 'voice-reactive':
       default:
         return renderWaveform();
     }

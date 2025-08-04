@@ -16,7 +16,7 @@ export const authRouter = {
         message: z.string(),
       })
     )
-    .mutation(({ input }) => {
+    .mutation(() => {
       return 'you can see this secret message!';
     }),
   getBanStatus: publicProcedure

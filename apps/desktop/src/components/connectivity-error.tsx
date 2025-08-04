@@ -105,8 +105,6 @@ export function ConnectivityError({
           variant: 'success' as const,
           isUserIssue: false,
         };
-
-      case 'unknown':
       default:
         return {
           icon: AlertCircle,
@@ -122,19 +120,21 @@ export function ConnectivityError({
   const status = getStatusInfo();
 
   const formatLastSuccessful = (date: Date | null) => {
-    if (!date) return 'Never';
+    if (!date) { return 'Never'; }
 
     const now = new Date();
     const diffMs = now.getTime() - date.getTime();
     const diffMins = Math.floor(diffMs / 60_000);
 
-    if (diffMins < 1) return 'Just now';
-    if (diffMins < 60)
+    if (diffMins < 1) { return 'Just now'; }
+    if (diffMins < 60) {
       return `${diffMins} minute${diffMins !== 1 ? 's' : ''} ago`;
+    }
 
     const diffHours = Math.floor(diffMins / 60);
-    if (diffHours < 24)
+    if (diffHours < 24) {
       return `${diffHours} hour${diffHours !== 1 ? 's' : ''} ago`;
+    }
 
     return date.toLocaleDateString();
   };

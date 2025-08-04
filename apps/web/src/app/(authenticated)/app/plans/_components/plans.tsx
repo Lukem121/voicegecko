@@ -1,17 +1,12 @@
 'use client';
 
 import type { PriceWithMetadata } from '@acme/api/src/router/stripe.route';
+import { log } from '@acme/observability';
 import {
-import
-{
-  log;
-}
-from;
-('@acme/observability');
-Alert,
+  Alert,
   AlertDescription,
   AlertTitle,
-} from '@acme/ui/components/ui/alert'
+} from '@acme/ui/components/ui/alert';
 
 import { Button } from '@acme/ui/components/ui/button';
 import {
@@ -184,7 +179,7 @@ export default function Plans({ prices, subscription, error }: PlansProps) {
   const [isStudentModalOpen, setIsStudentModalOpen] = useState(false);
 
   const { data: session } = authClient.useSession();
-  const trpc = useTRPC();
+  const _trpc = useTRPC();
 
   const showAlert = (
     title: string,
@@ -263,7 +258,7 @@ export default function Plans({ prices, subscription, error }: PlansProps) {
     // If the price has a minimum quantity (like Teams plan with minimum 3 seats),
     // divide by that quantity to get per-unit price
     if (price.minimumQuantity && price.minimumQuantity > 1) {
-      unitAmount = unitAmount / price.minimumQuantity;
+      unitAmount /= price.minimumQuantity;
     }
 
     const formatter = new Intl.NumberFormat('en-US', {
@@ -276,13 +271,13 @@ export default function Plans({ prices, subscription, error }: PlansProps) {
   };
 
   // Helper to format yearly price as monthly equivalent
-  const formatYearlyAsMonthly = (price: PriceWithMetadata, planId: string) => {
+  const formatYearlyAsMonthly = (price: PriceWithMetadata, _planId: string) => {
     let monthlyAmount = price.unitAmount / 12; // Divide yearly price by 12
 
     // If the price has a minimum quantity (like Teams plan with minimum 3 seats),
     // divide by that quantity to get per-unit monthly price
     if (price.minimumQuantity && price.minimumQuantity > 1) {
-      monthlyAmount = monthlyAmount / price.minimumQuantity;
+      monthlyAmount /= price.minimumQuantity;
     }
 
     const formatter = new Intl.NumberFormat('en-US', {
@@ -315,7 +310,7 @@ export default function Plans({ prices, subscription, error }: PlansProps) {
   };
 
   // Get per-unit price display (for plans with minimum quantities)
-  const getPerUnitPriceDisplay = (
+  const _getPerUnitPriceDisplay = (
     planId: string,
     interval: 'monthly' | 'yearly',
     fallback: string
@@ -420,15 +415,23 @@ export default function Plans({ prices, subscription, error }: PlansProps) {
   };
 
   const getCurrentPlanStatus = (planId: string) => {
-    if (!subscription && planId === 'basic') return 'current';
-    if (subscription?.plan === planId) return 'current';
+    if (!subscription && planId === 'basic') {
+      return 'current';
+    }
+    if (subscription?.plan === planId) {
+      return 'current';
+    }
     return null;
   };
 
   const getButtonText = (plan: (typeof plans)[0]) => {
     const status = getCurrentPlanStatus(plan.id);
-    if (status === 'current') return 'Current plan';
-    if (plan.isFree && subscription) return 'Downgrade';
+    if (status === 'current') {
+      return 'Current plan';
+    }
+    if (plan.isFree && subscription) {
+      return 'Downgrade';
+    }
     return plan.cta;
   };
 

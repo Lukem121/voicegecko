@@ -122,7 +122,7 @@ export const useInfiniteTranscriptions = ({
 
   // Flatten and merge all groups from all pages with stable sorting
   const serverTranscriptions = useMemo(() => {
-    if (!infiniteQuery.data) return [];
+    if (!infiniteQuery.data) { return []; }
 
     const allGroups = infiniteQuery.data.pages.flatMap((page) => page.groups);
 

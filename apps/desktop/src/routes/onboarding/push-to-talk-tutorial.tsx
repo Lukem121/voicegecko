@@ -1,18 +1,13 @@
+import { log } from '@acme/observability';
 import {
-import
-{
-  log;
-}
-from;
-('@acme/observability');
-Stepper,
+  Stepper,
   StepperDescription,
   StepperIndicator,
   StepperItem,
   StepperSeparator,
   StepperTitle,
   StepperTrigger,
-} from '@acme/ui/components/stepper-vertical'
+} from '@acme/ui/components/stepper-vertical';
 
 import { Badge } from '@acme/ui/components/ui/badge';
 import {
@@ -92,7 +87,9 @@ function useRecordingTutorialSteps() {
 
   // Listen for audio levels to detect speech (only when recording)
   useEffect(() => {
-    if (!isRecording || hasSpoken) return;
+    if (!isRecording || hasSpoken) {
+      return;
+    }
 
     let unlistenAudioLevel: (() => void) | undefined;
 
@@ -112,7 +109,9 @@ function useRecordingTutorialSteps() {
       );
     };
 
-    setupAudioLevelListener().catch(console.error);
+    setupAudioLevelListener().catch((error) => {
+      log.error('Failed to setup audio level listener:', error);
+    });
 
     return () => {
       unlistenAudioLevel?.();
@@ -156,6 +155,86 @@ function useRecordingTutorialSteps() {
     resetSteps,
   };
 }
+
+// Component to render keyboard shortcuts with proper styling
+const ShortcutBadge = ({ keys }: { keys: string[] }) => (
+  <span className="mx-1 inline-flex items-center gap-1">
+    {keys.map((key, index) => (
+      <React.Fragment key={key}>
+        <Badge
+          className="inline-flex px-1.5 py-0.5 font-mono text-xs"
+          variant="outline"
+        >
+          {key}
+        </Badge>
+        {index < keys.length - 1 && (
+          <span className="text-muted-foreground text-xs">+</span>
+        )}
+      </React.Fragment>
+    ))}
+  </span>
+);
+
+// Component to show OR separator
+const OrSeparator = () => (
+  <div className="relative flex items-center justify-center">
+    <div className="absolute inset-0 flex items-center">
+      <div className="w-full border-muted-foreground/30 border-t border-dashed" />
+    </div>
+    <span className="relative bg-background px-2 font-medium text-muted-foreground text-xs">
+      OR
+    </span>
+  </div>
+);
+
+// Component to show recording method option
+const MethodOption = ({
+  label,
+  action,
+  shortcut,
+  description,
+}: {
+  label: string;
+  action: React.ReactNode;
+  shortcut?: React.ReactNode;
+  description: string;
+}) => (
+  <div className="flex items-center gap-2">
+    <div className="flex h-5 w-5 items-center justify-center rounded-full bg-primary/10">
+      <span className="font-semibold text-primary text-xs">{label}</span>
+    </div>
+    <div className="flex items-center gap-1 text-xs">
+      {action}
+      {shortcut}
+      <span className="text-muted-foreground">{description}</span>
+    </div>
+  </div>
+);
+
+// Component to show recording method options
+const RecordingMethodOptions = ({
+  pushToTalkKeys,
+  toggleKeys,
+}: {
+  pushToTalkKeys: string[];
+  toggleKeys: string[];
+}) => (
+  <div className="mt-2 space-y-2">
+    <MethodOption
+      action={<strong>Hold</strong>}
+      description="for push-to-talk"
+      label="A"
+      shortcut={<ShortcutBadge keys={pushToTalkKeys} />}
+    />
+    <OrSeparator />
+    <MethodOption
+      action={<strong>Press</strong>}
+      description="to toggle on/off"
+      label="B"
+      shortcut={<ShortcutBadge keys={toggleKeys} />}
+    />
+  </div>
+);
 
 function RecordingTutorialStep() {
   const { markStepCompleted, sendMascotMessage, triggerMascotAnimation } =
@@ -227,12 +306,12 @@ function RecordingTutorialStep() {
 
     // Clear step completion messages so they can be sent again
     const clearedMessages: string[] = [];
-    ['step0', 'step1', 'step2', 'step3'].forEach((msg) => {
+    for (const msg of ['step0', 'step1', 'step2', 'step3']) {
       if (sentMessages.current.has(msg)) {
         sentMessages.current.delete(msg);
         clearedMessages.push(msg);
       }
-    });
+    }
 
     // Reset previous transcription tracking for fresh detection
     previousTranscriptionText.current = null;
@@ -248,7 +327,9 @@ function RecordingTutorialStep() {
 
   // Send initial tutorial message
   useEffect(() => {
-    if (tutorialActionsPerformed.current) return;
+    if (tutorialActionsPerformed.current) {
+      return;
+    }
     tutorialActionsPerformed.current = true;
 
     sendMessageOnce('initial', {
@@ -337,6 +418,57 @@ function RecordingTutorialStep() {
   // Track the last processed transcription to prevent infinite loops
   const lastProcessedTranscription = React.useRef<string>('');
 
+  // Helper function to process individual step messages
+  const processStepMessages = React.useCallback(() => {
+    if (step0Completed && !sentMessages.current.has('step0')) {
+      sendMessageOnce('step0', {
+        content: `Great! You started recording! Now say "I love Voice Gecko"`,
+        type: 'info',
+        duration: 2000,
+        priority: 'high',
+      });
+    }
+
+    if (step1Completed && !sentMessages.current.has('step1')) {
+      sendMessageOnce('step1', {
+        content: 'Perfect! I hear you! 👂',
+        type: 'info',
+        duration: 2000,
+        priority: 'high',
+      });
+    }
+  }, [step0Completed, step1Completed, sendMessageOnce]);
+
+  // Helper function to handle completion celebration
+  const handleCompletion = React.useCallback(() => {
+    if (!sentMessages.current.has('complete')) {
+      sendMessageOnce('complete', {
+        content:
+          "🎉 Congratulations! You've mastered recording with VoiceGecko!",
+        type: 'success',
+        duration: 4000,
+        priority: 'high',
+      });
+    }
+
+    if (!sentMessages.current.has('immediate-celebration')) {
+      sentMessages.current.add('immediate-celebration');
+      triggerMascotAnimation('dancing');
+    }
+
+    if (!sentMessages.current.has('tutorial-completed')) {
+      sentMessages.current.add('tutorial-completed');
+      markStepCompleted('tutorial', 100);
+    }
+
+    lastProcessedTranscription.current = transcriptionText;
+  }, [
+    sendMessageOnce,
+    triggerMascotAnimation,
+    markStepCompleted,
+    transcriptionText,
+  ]);
+
   // Handle step completion messages with stable dependencies
   useEffect(() => {
     // Skip if we've already processed this exact transcription state
@@ -356,7 +488,6 @@ function RecordingTutorialStep() {
       transcriptionText: `"${transcriptionText}"`,
     });
 
-    // Only proceed with step messages if we have a valid (non-empty) transcription or haven't completed step 3 yet
     const hasValidTranscription =
       transcriptionText && transcriptionText.trim() !== '';
     const shouldProcessSteps = !step3Completed || hasValidTranscription;
@@ -368,54 +499,14 @@ function RecordingTutorialStep() {
       return;
     }
 
-    // Step 0: Started recording
-    if (step0Completed && !sentMessages.current.has('step0')) {
-      sendMessageOnce('step0', {
-        content: `Great! You started recording! Now say "I love Voice Gecko"`,
-        type: 'info',
-        duration: 2000,
-        priority: 'high',
-      });
-    }
+    processStepMessages();
 
-    // Step 1: Speaking detected
-    if (step1Completed && !sentMessages.current.has('step1')) {
-      sendMessageOnce('step1', {
-        content: 'Perfect! I hear you! 👂',
-        type: 'info',
-        duration: 2000,
-        priority: 'high',
-      });
-    }
-
-    // All steps completed (only for successful transcriptions)
     if (
       isAllStepsCompleted &&
       hasValidTranscription &&
       !sentMessages.current.has('complete')
     ) {
-      sendMessageOnce('complete', {
-        content:
-          "🎉 Congratulations! You've mastered recording with VoiceGecko!",
-        type: 'success',
-        duration: 4000,
-        priority: 'high',
-      });
-
-      // Immediately trigger dancing animation
-      if (!sentMessages.current.has('immediate-celebration')) {
-        sentMessages.current.add('immediate-celebration');
-        triggerMascotAnimation('dancing');
-      }
-
-      // Mark tutorial as completed after a delay
-      if (!sentMessages.current.has('tutorial-completed')) {
-        sentMessages.current.add('tutorial-completed');
-        markStepCompleted('tutorial', 100);
-      }
-
-      // Update the last processed transcription
-      lastProcessedTranscription.current = transcriptionText;
+      handleCompletion();
     }
   }, [
     step0Completed,
@@ -424,84 +515,9 @@ function RecordingTutorialStep() {
     step3Completed,
     transcriptionText,
     isAllStepsCompleted,
-    sendMessageOnce,
-    markStepCompleted,
-    triggerMascotAnimation,
+    processStepMessages,
+    handleCompletion,
   ]);
-
-  // Component to render keyboard shortcuts with proper styling
-  const ShortcutBadge = ({ keys }: { keys: string[] }) => (
-    <span className="mx-1 inline-flex items-center gap-1">
-      {keys.map((key, index) => (
-        <React.Fragment key={index}>
-          <Badge
-            className="inline-flex px-1.5 py-0.5 font-mono text-xs"
-            variant="outline"
-          >
-            {key}
-          </Badge>
-          {index < keys.length - 1 && (
-            <span className="text-muted-foreground text-xs">+</span>
-          )}
-        </React.Fragment>
-      ))}
-    </span>
-  );
-
-  // Component to show OR separator
-  const OrSeparator = () => (
-    <div className="relative flex items-center justify-center">
-      <div className="absolute inset-0 flex items-center">
-        <div className="w-full border-muted-foreground/30 border-t border-dashed" />
-      </div>
-      <span className="relative bg-background px-2 font-medium text-muted-foreground text-xs">
-        OR
-      </span>
-    </div>
-  );
-
-  // Component to show recording method option
-  const MethodOption = ({
-    label,
-    action,
-    shortcut,
-    description,
-  }: {
-    label: string;
-    action: React.ReactNode;
-    shortcut?: React.ReactNode;
-    description: string;
-  }) => (
-    <div className="flex items-center gap-2">
-      <div className="flex h-5 w-5 items-center justify-center rounded-full bg-primary/10">
-        <span className="font-semibold text-primary text-xs">{label}</span>
-      </div>
-      <div className="flex items-center gap-1 text-xs">
-        {action}
-        {shortcut}
-        <span className="text-muted-foreground">{description}</span>
-      </div>
-    </div>
-  );
-
-  // Component to show recording method options
-  const RecordingMethodOptions = () => (
-    <div className="mt-2 space-y-2">
-      <MethodOption
-        action={<strong>Hold</strong>}
-        description="for push-to-talk"
-        label="A"
-        shortcut={<ShortcutBadge keys={pushToTalkKeys} />}
-      />
-      <OrSeparator />
-      <MethodOption
-        action={<strong>Press</strong>}
-        description="to toggle on/off"
-        label="B"
-        shortcut={<ShortcutBadge keys={toggleKeys} />}
-      />
-    </div>
-  );
 
   const steps: TutorialStep[] = [
     {
@@ -509,7 +525,10 @@ function RecordingTutorialStep() {
       description: (
         <>
           <span>Choose your recording method:</span>
-          <RecordingMethodOptions />
+          <RecordingMethodOptions
+            pushToTalkKeys={pushToTalkKeys}
+            toggleKeys={toggleKeys}
+          />
         </>
       ),
       icon: KeyRound,
@@ -583,7 +602,7 @@ function RecordingTutorialStep() {
                     <StepperItem
                       className="relative not-last:flex-1 items-start"
                       completed={isStepCompleted(index)}
-                      key={index}
+                      key={step.title}
                       step={index + 1}
                     >
                       <StepperTrigger className="items-start rounded pb-8 last:pb-0">

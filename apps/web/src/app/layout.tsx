@@ -1,5 +1,5 @@
 import { Toaster } from '@acme/ui/components/ui/sonner';
-import { ThemeProvider, ThemeToggle } from '@acme/ui/components/ui/theme';
+import { ThemeProvider, } from '@acme/ui/components/ui/theme';
 import { cn } from '@acme/ui/lib/utils';
 import type { Metadata, Viewport } from 'next';
 import { Geist, Geist_Mono, Plus_Jakarta_Sans } from 'next/font/google';

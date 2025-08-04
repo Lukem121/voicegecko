@@ -31,9 +31,9 @@ export const FeedbackErrorCodes = {
 // Helper functions for creating results
 export const success = <T>(data: T): Result<T> => ({ success: true, data });
 
-export const error = <T>(error: AppError): Result<T> => ({
+export const error = <T>(appError: AppError): Result<T> => ({
   success: false,
-  error,
+  error: appError,
 });
 
 // Helper functions for creating specific dictionary errors

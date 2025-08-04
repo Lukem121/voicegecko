@@ -36,10 +36,10 @@ export function ShortcutRecorder({
 
     const keys: string[] = [];
 
-    if (metaKey) keys.push('Command');
-    if (ctrlKey) keys.push('Control');
-    if (altKey) keys.push('Alt');
-    if (shiftKey) keys.push('Shift');
+    if (metaKey) { keys.push('Command'); }
+    if (ctrlKey) { keys.push('Control'); }
+    if (altKey) { keys.push('Alt'); }
+    if (shiftKey) { keys.push('Shift'); }
 
     const keyName = key.toLowerCase();
     if (!['control', 'alt', 'shift', 'meta'].includes(keyName)) {

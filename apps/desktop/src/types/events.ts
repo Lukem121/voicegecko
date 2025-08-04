@@ -12,8 +12,8 @@ export interface TauriEventMap {
   'model-delete-complete': ModelDeleteCompleteEvent;
   'audio-level': AudioLevelEvent;
   'microphone-test-level': AudioLevelEvent;
-  'microphone-test-started': void;
-  'microphone-test-stopped': void;
+  'microphone-test-started': undefined;
+  'microphone-test-stopped': undefined;
   'microphone-test-error': string;
   'gecko-bar-notification': GeckoBarNotificationEvent;
 }

@@ -71,6 +71,7 @@ class StoreRegistry {
     for (const store of this.stores) {
       try {
         log.info(`[StoreRegistry] Initializing ${store.name}...`);
+        // biome-ignore lint/nursery/noAwaitInLoop: We need to await in a loop
         await store.initialize();
         log.info(`[StoreRegistry] ✅ ${store.name} initialized`);
       } catch (error) {
@@ -106,6 +107,7 @@ storeRegistry.register({
   name: 'Connectivity Store',
   priority: 2, // Initialize after settings, before shortcuts
   initialize: async () => {
+    await Promise.resolve();
     // Activate connectivity monitoring for transcription blocking
     log.info('[ConnectivityStore] Activating connectivity monitoring...');
     useConnectivityStore.getState().activateMonitoring();

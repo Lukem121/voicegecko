@@ -17,16 +17,12 @@ import { EmailFooter } from '../components/email-footer';
 
 interface WelcomeEmailProps {
   name?: string;
-  downloadUrl?: string;
 }
 
 const welcomeGeckoUrl =
   'https://90yklj7887.ufs.sh/f/Wzb1OBsC8B6ZZxxQQcfpboVIp95n82XArwQPSJcUjFZED3Ru';
 
-export const WelcomeTemplate = ({
-  name,
-  downloadUrl = 'https://voicegecko.io/downloads',
-}: WelcomeEmailProps) => (
+export const WelcomeTemplate = ({ name }: WelcomeEmailProps) => (
   <Tailwind>
     <Html>
       <DarkModeEmailHead />

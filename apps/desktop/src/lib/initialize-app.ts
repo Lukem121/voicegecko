@@ -150,7 +150,7 @@ export async function initializeApp(
     options?.onUpdateStatus?.('Initialization failed');
 
     // Track initialization failure
-    const failedTime = (Date.now() - startTime) / 1000;
+    const _failedTime = (Date.now() - startTime) / 1000;
     analytics.track('error_occurred', {
       error_type: 'app_initialization',
       error_message:

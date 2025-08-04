@@ -60,7 +60,7 @@ class ConnectivityManager {
    * Activate connectivity monitoring (force immediate check)
    */
   activate(): void {
-    if (this.isActive) return;
+    if (this.isActive) { return; }
 
     log.info('🔄 [ConnectivityManager] Activating connectivity monitoring');
     this.isActive = true;
@@ -85,7 +85,7 @@ class ConnectivityManager {
    * Deactivate connectivity monitoring (when issue is resolved)
    */
   private deactivate(): void {
-    if (!this.isActive) return;
+    if (!this.isActive) { return; }
 
     log.info('✅ [ConnectivityManager] Deactivating connectivity monitoring');
     this.isActive = false;
@@ -274,7 +274,6 @@ class ConnectivityManager {
         return 'No internet connection detected';
       case 'api_down':
         return 'VoiceGecko servers are unreachable (your internet is working)';
-      case 'unknown':
       default:
         return 'Connectivity issue detected';
     }

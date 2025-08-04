@@ -12,7 +12,7 @@ import { queryClient, trpc } from '~/trpc';
  * Utility function to check if an error is likely network-related
  */
 export function isNetworkError(error: unknown): boolean {
-  if (!error) return false;
+  if (!error) { return false; }
 
   const errorMessage =
     error instanceof Error

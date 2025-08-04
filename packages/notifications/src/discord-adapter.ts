@@ -2,11 +2,11 @@ import { log } from '@acme/observability';
 import { notificationsEnv } from './env';
 
 // Notification types enum for extensibility
-export enum DiscordNotificationType {
-  ERROR_REPORT = 'ERROR_REPORT',
-  FEEDBACK = 'FEEDBACK',
-  USER_SIGNUP = 'USER_SIGNUP',
-}
+export const DiscordNotificationType = {
+  ERROR_REPORT: 'ERROR_REPORT',
+  FEEDBACK: 'FEEDBACK',
+  USER_SIGNUP: 'USER_SIGNUP',
+} as const;
 
 // Base interface for all notifications
 interface BaseNotification {
@@ -45,7 +45,10 @@ interface DiscordEmbed {
 }
 
 export class DiscordAdapter {
-  private webhookUrls: Map<DiscordNotificationType, string>;
+  private webhookUrls: Map<
+    (typeof DiscordNotificationType)[keyof typeof DiscordNotificationType],
+    string
+  >;
 
   constructor() {
     const env = notificationsEnv();
@@ -191,7 +194,7 @@ export class DiscordAdapter {
   }
 
   private async sendWebhook(
-    type: DiscordNotificationType,
+    type: (typeof DiscordNotificationType)[keyof typeof DiscordNotificationType],
     embed: DiscordEmbed
   ) {
     try {

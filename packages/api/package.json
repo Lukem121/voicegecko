@@ -17,6 +17,7 @@
     "@acme/db": "workspace:*",
     "@acme/email": "workspace:*",
     "@acme/notifications": "workspace:*",
+    "@acme/observability": "workspace:*",
     "@acme/payment": "workspace:*",
     "@acme/rate-limit": "workspace:*",
     "@acme/validators": "workspace:*",

@@ -1,15 +1,10 @@
+import { log } from '@acme/observability';
 import { createFileRoute, Outlet, redirect } from '@tanstack/react-router';
 import {
-import
-{
-  log;
-}
-from;
-('@acme/observability');
-MascotChatProvider,
+  MascotChatProvider,
   mascotVariants,
   OnboardingMascotChat,
-} from '~/components/mascot'
+} from '~/components/mascot';
 
 import { OnboardingBottomNavigation } from '~/components/onboarding/onboarding-bottom-navigation';
 import type { OnboardingStepConfig } from '~/components/onboarding/onboarding-provider';

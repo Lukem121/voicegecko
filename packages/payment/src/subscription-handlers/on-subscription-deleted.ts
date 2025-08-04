@@ -9,10 +9,10 @@ interface SubscriptionDeletedParams {
 }
 
 export const onSubscriptionDeleted = async ({
-  event,
   subscription,
-  stripeSubscription,
 }: SubscriptionDeletedParams) => {
+  await Promise.resolve();
+
   log.info('[Subscription] Subscription deleted:', {
     subscriptionId: subscription.id,
     userId: subscription.id,

@@ -1,6 +1,7 @@
 import { neon } from '@neondatabase/serverless';
 import { drizzle } from 'drizzle-orm/neon-http';
 
+// biome-ignore lint/performance/noNamespaceImport: No need to import as a namespace
 import * as schema from './schema';
 
 if (!process.env.DATABASE_URL) {

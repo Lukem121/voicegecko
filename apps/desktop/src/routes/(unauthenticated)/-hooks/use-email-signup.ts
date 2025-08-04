@@ -104,7 +104,7 @@ export function useEmailSignup({
   };
 }
 
-const formatBanMessage = (reason: string | null, expires: Date | null) => {
+const _formatBanMessage = (reason: string | null, expires: Date | null) => {
   let errorMessage = 'You have been banned.';
   if (reason && expires) {
     errorMessage = `You have been banned for ${reason}, expires in ${countdown(expires)}.`;
