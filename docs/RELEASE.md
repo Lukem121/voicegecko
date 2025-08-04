@@ -43,11 +43,16 @@ pnpm version:check
 # Run pre-release validation
 pnpm pre-release
 
-# Bump version automatically (all 4 files)
-pnpm version:bump 0.0.8
+# Interactive version bump (prompts for version choice)
+pnpm version:bump
 
 # Verify the update
 pnpm version:check
+```
+
+**Or specify version directly:**
+```bash
+pnpm version:bump 0.0.8
 ```
 
 ### 3. Manual Version Update (Legacy)
@@ -152,8 +157,8 @@ pnpm version:check
 # 🚀 Full interactive release process
 pnpm release
 
-# 📦 Bump version automatically
-pnpm version:bump 0.0.8
+# 📦 Interactive version bump
+pnpm version:bump
 
 # ✅ Pre-release validation
 pnpm pre-release
@@ -167,6 +172,6 @@ grep -r "0\.0\.7" . --exclude-dir=node_modules --exclude-dir=target --exclude=Ca
 | Script             | Command                       | Description                                      |
 | ------------------ | ----------------------------- | ------------------------------------------------ |
 | **Version Check**  | `pnpm version:check`          | Verify all files have consistent versions        |
-| **Version Bump**   | `pnpm version:bump <version>` | Automatically update all 4 files                 |
+| **Version Bump**   | `pnpm version:bump` | Interactive version selection and update all 4 files |
 | **Pre-release**    | `pnpm pre-release`            | Run linting, type checking, and build validation |
 | **Release Helper** | `pnpm release`                | Interactive guided release process               |
