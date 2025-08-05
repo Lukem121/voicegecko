@@ -31,7 +31,7 @@ interface EventMap {
 type EventListener<T> = (data: T) => void;
 
 // Union type for all possible event listeners
-type AnyEventListener = EventListener<EventMap[keyof EventMap]>;
+type AnyEventListener = (data: unknown) => void;
 
 class EventBus {
   private static instance: EventBus;
@@ -52,11 +52,11 @@ class EventBus {
       this.listeners.set(event, new Set());
     }
 
-    this.listeners.get(event)?.add(listener);
+    this.listeners.get(event)?.add(listener as AnyEventListener);
 
     // Return unsubscribe function
     return () => {
-      this.listeners.get(event)?.delete(listener);
+      this.listeners.get(event)?.delete(listener as AnyEventListener);
     };
   }
 

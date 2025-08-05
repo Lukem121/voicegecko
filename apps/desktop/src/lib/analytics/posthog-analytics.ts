@@ -308,7 +308,7 @@ class PostHogAnalyticsService {
   private isInitialized = false;
   private queuedEvents: {
     event: EventName;
-    properties: AllEvents[EventName] & BaseEventProperties;
+    properties: Record<string, unknown>;
   }[] = [];
 
   /**

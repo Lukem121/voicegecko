@@ -57,7 +57,6 @@ async function checkAndInstallUpdates(options?: InitializeOptions) {
           options?.onUpdateDownloaded?.();
           break;
         default:
-          log.warn(`[Updater] Unknown event: ${event.event}`);
           break;
       }
     });
