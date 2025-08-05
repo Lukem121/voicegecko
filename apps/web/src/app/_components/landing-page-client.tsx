@@ -31,7 +31,6 @@ import GeckoWelcomeSign from 'public/assets/images/geckos/gecko-welcome-sign.png
 import GeckoWorker from 'public/assets/images/geckos/gecko-worker.png';
 import type { Dispatch, SetStateAction } from 'react';
 import React, { useEffect, useState } from 'react';
-import Marquee from 'react-fast-marquee';
 import { FaWindows } from 'react-icons/fa';
 import {
   HiArrowRight,
@@ -39,7 +38,6 @@ import {
   HiBriefcase,
   HiCheck,
   HiChevronDown,
-  HiCode,
   HiDocumentText,
   HiHeart,
   HiLightningBolt,
@@ -53,21 +51,12 @@ import {
   HiUsers,
   HiX,
 } from 'react-icons/hi';
-import {
-  SiGmail,
-  SiGoogledocs,
-  SiJira,
-  SiLinear,
-  SiNotion,
-  SiObsidian,
-  SiSlack,
-  SiTrello,
-} from 'react-icons/si';
 import { TbSparkles } from 'react-icons/tb';
 import { StudentDiscountModal } from '~/components/student-discount-modal';
 import { useStudentDiscountModal } from '~/hooks/use-student-discount-modal';
 import type { DownloadsData } from '~/lib/downloads-utils';
 import { getPrimaryDownload } from '~/lib/downloads-utils';
+import Threads from './landing/threads';
 
 // Simple height measurement hook replacement
 const useMeasure = () => {
@@ -370,47 +359,73 @@ export default function LandingPageClient({
           </motion.nav>
         )}
       </AnimatePresence>
-
       {/* ===== HERO SECTION ===== */}
       {/* dedicate a large gradient canvas to avoid clipping */}
-      <div className="relative overflow-hidden">
-        <div className="relative z-10 mx-auto max-w-6xl px-6 pt-8 md:pt-12">
+      <section className="relative w-full overflow-hidden pt-32 pb-16 md:pt-20 md:pb-20">
+        {/* Sound wave thread background */}
+        <div className="-translate-x-1/2 absolute top-40 bottom-0 left-1/2 opacity-50">
+          <div className="relative h-full w-screen max-w-2xl md:max-w-4xl lg:max-w-7xl">
+            <Threads amplitude={1.4} distance={0} />
+          </div>
+        </div>
+        <div className="container relative z-10 mx-auto max-w-2xl px-4 text-center md:max-w-4xl md:px-6 lg:max-w-7xl">
           <div className="flex items-center justify-center">
             {/* Hero content */}
-            <div className="max-w-4xl text-center">
-              <h1 className="mt-6 text-balance font-extrabold font-hero text-5xl">
+            <motion.div
+              animate={{ opacity: 1, y: 0 }}
+              className="text-center"
+              initial={{ opacity: 0, y: 20 }}
+              transition={{ duration: 0.8, ease: 'easeOut' }}
+            >
+              <h1 className="mx-auto mb-6 text-balance font-hero text-4xl md:text-5xl lg:text-7xl">
                 Stop Typing.{' '}
                 <span className="text-primary">Start Talking.</span> Perfect
                 Transcripts.
               </h1>
-              <p className="mx-auto mt-4 max-w-2xl text-pretty text-center font-medium text-muted-foreground leading-tight md:text-xl">
+              <p className="mx-auto mb-10 max-w-2xl text-lg text-muted-foreground md:text-xl">
                 Dictate Anywhere 4× Faster Than Typing
               </p>
 
-              <div className="mt-6">
-                <WindowsDownloadStrip
+              <motion.div
+                animate={{ opacity: 1, y: 0 }}
+                className="mb-10"
+                initial={{ opacity: 0, y: 10 }}
+                transition={{ duration: 0.6, ease: 'easeOut', delay: 0.3 }}
+              >
+                <WindowsDownloadButton
                   downloadError={downloadError}
                   downloadsData={downloadsData}
+                  text="Download for Windows"
                 />
-              </div>
+              </motion.div>
 
-              <div className="mt-5 flex flex-wrap items-center justify-center gap-4 text-muted-foreground text-xs">
+              <motion.div
+                animate={{ opacity: 1 }}
+                className="mb-4 flex flex-wrap items-center justify-center gap-4 text-muted-foreground text-xs"
+                initial={{ opacity: 0 }}
+                transition={{ duration: 0.6, ease: 'easeOut', delay: 0.5 }}
+              >
                 <span>Loved by 5,000+ users</span>
                 <span className="hidden h-1 w-1 rounded-full bg-border sm:block" />
                 <span>10,000+ hours transcribed</span>
-              </div>
-              <div className="mt-5 flex flex-wrap items-center justify-center gap-4 text-muted-foreground text-xs">
+              </motion.div>
+              <motion.div
+                animate={{ opacity: 1 }}
+                className="flex flex-wrap items-center justify-center gap-4 text-muted-foreground text-xs"
+                initial={{ opacity: 0 }}
+                transition={{ duration: 0.6, ease: 'easeOut', delay: 0.7 }}
+              >
                 <span className="inline-flex items-center gap-1">
                   <FaWindows className="h-3.5 w-3.5" /> Windows available now
                 </span>
                 <span className="rounded-full bg-accent px-2 py-1 font-semibold text-accent-foreground">
                   Free plan included
                 </span>
-              </div>
-            </div>
+              </motion.div>
+            </motion.div>
           </div>
         </div>
-      </div>
+      </section>
 
       {/* ===== WHY VOICE GECKO ===== */}
       <section className="mx-auto max-w-6xl px-6 py-16">
@@ -572,73 +587,6 @@ export default function LandingPageClient({
             </motion.div>
 
             <ShortcutPlayground />
-          </div>
-        </div>
-      </section>
-
-      {/* ===== WORKS EVERYWHERE ===== */}
-      <section className="py-16">
-        <div className="mx-auto max-w-6xl px-6">
-          <h2 className="text-center font-bold text-2xl text-foreground tracking-tight md:text-3xl">
-            Works everywhere you work
-          </h2>
-          <p className="mx-auto mt-3 max-w-2xl text-center text-muted-foreground text-sm">
-            Paste into any app—or let Voice Gecko type for you.
-          </p>
-
-          <PasteAutoTypeToggle />
-
-          <div className="mt-8">
-            <Marquee autoFill={true} speed={48}>
-              <div className="mr-3">
-                <LogoPill icon={<HiCode className="h-4 w-4" />}>
-                  VS Code
-                </LogoPill>
-              </div>
-              <div className="mr-3">
-                <LogoPill icon={<SiGoogledocs className="h-4 w-4" />}>
-                  Google Docs
-                </LogoPill>
-              </div>
-              <div className="mr-3">
-                <LogoPill icon={<SiNotion className="h-4 w-4" />}>
-                  Notion
-                </LogoPill>
-              </div>
-              <div className="mr-3">
-                <LogoPill icon={<SiGmail className="h-4 w-4" />}>
-                  Gmail
-                </LogoPill>
-              </div>
-              <div className="mr-3">
-                <LogoPill icon={<SiSlack className="h-4 w-4" />}>
-                  Slack
-                </LogoPill>
-              </div>
-              <div className="mr-3">
-                <LogoPill icon={<SiJira className="h-4 w-4" />}>Jira</LogoPill>
-              </div>
-              <div className="mr-3">
-                <LogoPill icon={<SiLinear className="h-4 w-4" />}>
-                  Linear
-                </LogoPill>
-              </div>
-              <div className="mr-3">
-                <LogoPill icon={<SiObsidian className="h-4 w-4" />}>
-                  Obsidian
-                </LogoPill>
-              </div>
-              <div className="mr-3">
-                <LogoPill icon={<HiDocumentText className="h-4 w-4" />}>
-                  Word
-                </LogoPill>
-              </div>
-              <div className="mr-3">
-                <LogoPill icon={<SiTrello className="h-4 w-4" />}>
-                  Trello
-                </LogoPill>
-              </div>
-            </Marquee>
           </div>
         </div>
       </section>
@@ -1553,34 +1501,6 @@ const WindowsDownloadButton = ({
   );
 };
 
-// Windows Download Strip for Hero Section
-const WindowsDownloadStrip = ({
-  downloadsData,
-  downloadError,
-}: {
-  downloadsData: DownloadsData | null;
-  downloadError?: string;
-}) => {
-  return (
-    <div className="flex flex-col justify-center gap-3 sm:flex-row sm:items-center">
-      <WindowsDownloadButton
-        downloadError={downloadError}
-        downloadsData={downloadsData}
-        text="Download for Windows"
-      />
-      <Link
-        className={cn(
-          buttonVariants({ variant: 'default', size: 'xl' }),
-          '!border-black dark:!border-muted rounded-lg border-2 bg-transparent font-semibold text-sm tracking-tight transition-all will-change-transform hover:scale-[1.02] hover:bg-transparent'
-        )}
-        href="/pricing"
-      >
-        See Pricing
-      </Link>
-    </div>
-  );
-};
-
 const _Check = () => (
   <span className="inline-flex items-center gap-1 text-green-700">
     <HiCheck className="h-4 w-4" /> Yes
@@ -1653,7 +1573,7 @@ const HowItWorksItem = ({
   </div>
 );
 
-const LogoPill = ({
+const _LogoPill = ({
   children,
   icon,
 }: {
@@ -2091,7 +2011,7 @@ const ShortcutPlayground = () => {
    WORKS EVERYWHERE: Paste vs Auto-type toggle (illustrative only)
    ========================= */
 
-const PasteAutoTypeToggle = () => {
+const _PasteAutoTypeToggle = () => {
   const [mode, setMode] = useState<'paste' | 'type'>('paste');
   return (
     <div className="mx-auto mt-5 max-w-lg rounded-xl border border-border bg-card p-2">
