@@ -1,9 +1,37 @@
 import type { PriceWithMetadata } from '@acme/api/src/router/stripe.route';
 import { log } from '@acme/observability';
+import { unstable_cache } from 'next/cache';
 import { getDownloadsData } from '~/lib/downloads';
 import type { DownloadsData } from '~/lib/downloads-utils';
 import { caller } from '~/trpc/server';
 import LandingPageClient from './_components/landing-page-client';
+
+// ISR configuration - revalidate every hour
+export const revalidate = 3600; // 1 hour in seconds
+
+// Cache downloads data with ISR tag for on-demand revalidation
+const getCachedDownloadsData = unstable_cache(
+  async (): Promise<DownloadsData> => {
+    return await getDownloadsData();
+  },
+  ['landing-downloads'],
+  {
+    revalidate: 3600, // 1 hour
+    tags: ['downloads', 'landing-page'],
+  }
+);
+
+// Cache pricing data with ISR tag for on-demand revalidation
+const getCachedPricingData = unstable_cache(
+  async (): Promise<Record<string, PriceWithMetadata>> => {
+    return await caller.stripe.getPrices();
+  },
+  ['landing-pricing'],
+  {
+    revalidate: 7200, // 2 hours (pricing changes less frequently)
+    tags: ['pricing', 'landing-page'],
+  }
+);
 
 export default async function LandingPage() {
   let downloadsData: DownloadsData | null = null;
@@ -12,7 +40,7 @@ export default async function LandingPage() {
   let pricingError: string | undefined;
 
   try {
-    downloadsData = await getDownloadsData();
+    downloadsData = await getCachedDownloadsData();
   } catch (err) {
     downloadError =
       err instanceof Error ? err.message : 'Unable to load download data';
@@ -20,7 +48,7 @@ export default async function LandingPage() {
   }
 
   try {
-    prices = await caller.stripe.getPrices();
+    prices = await getCachedPricingData();
   } catch (err) {
     pricingError =
       err instanceof Error ? err.message : 'Unable to load pricing data';
