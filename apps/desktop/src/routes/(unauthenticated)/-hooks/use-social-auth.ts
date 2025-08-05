@@ -1,9 +1,11 @@
-import { useState } from "react";
-import { signInSocial } from "@daveyplate/better-auth-tauri";
+import { log } from '@acme/observability';
+import { signInSocial } from '@daveyplate/better-auth-tauri';
+import { useState } from 'react';
 
-import { authClient } from "~/lib/client";
+import { analytics } from '~/lib/analytics/posthog-analytics';
+import { authClient } from '~/lib/client';
 
-export type SocialProvider = "discord" | "google";
+export type SocialProvider = 'discord' | 'google';
 
 interface LoadingState {
   discord: boolean;
@@ -30,19 +32,25 @@ export function useSocialAuth(): UseSocialAuthReturn {
     setIsLoading((prev) => ({ ...prev, [provider]: true }));
     setError(null);
 
-    const { error } = await signInSocial({
+    // Track social sign-in attempt
+    analytics.track('user_signed_in', {
+      method: provider,
+      returning_user: true, // Could be enhanced with proper detection
+    });
+
+    const { error: signInError } = await signInSocial({
       authClient,
       provider,
-      errorCallbackURL: "/authentication-error",
+      errorCallbackURL: '/authentication-error',
       fetchOptions: {
-        onError: ({ error }) => setError(error.message),
+        onError: ({ error: callbackError }) => setError(callbackError.message),
       },
     });
 
-    if (error) {
-      console.error("use-social-auth", { error });
+    if (signInError) {
+      log.error('use-social-auth', { error: signInError });
       setIsLoading((prev) => ({ ...prev, [provider]: false }));
-      setError(error.message ?? "An unexpected error occurred.");
+      setError(signInError.message ?? 'An unexpected error occurred.');
       return;
     }
   };

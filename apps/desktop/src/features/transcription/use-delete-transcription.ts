@@ -1,17 +1,23 @@
-import { useMutation } from "@tanstack/react-query";
+import { useMutation } from '@tanstack/react-query';
 
-import { queryClient, trpc } from "~/trpc";
+import { analytics } from '~/lib/analytics/posthog-analytics';
+import { queryClient, trpc } from '~/trpc';
 
 export const useDeleteTranscription = () => {
   const mutation = useMutation(
     trpc.transcription.delete.mutationOptions({
-      onSuccess: () => {
-        // Invalidate the transcriptions query to refresh the list
-        void queryClient.invalidateQueries({
+      onSuccess: (_data, variables) => {
+        // Track transcription deletion
+        analytics.track('transcription_deleted', {
+          transcription_id: variables.id,
+          method: 'user_action',
+        });
+
+        queryClient.invalidateQueries({
           queryKey: trpc.transcription.getAll.queryKey(),
         });
       },
-    }),
+    })
   );
 
   return {

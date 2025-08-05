@@ -1,20 +1,21 @@
-import type { ShortcutEvent } from "@tauri-apps/plugin-global-shortcut";
+import { log } from '@acme/observability';
+import type { ShortcutEvent } from '@tauri-apps/plugin-global-shortcut';
 import {
   register,
   unregister,
   unregisterAll,
-} from "@tauri-apps/plugin-global-shortcut";
-import { LazyStore } from "@tauri-apps/plugin-store";
+} from '@tauri-apps/plugin-global-shortcut';
 
-import type { ShortcutCategory } from "./types";
-import { recordingService } from "~/services/recording.service";
-import { shortcutActions } from "./actions";
+import { LazyStore } from '@tauri-apps/plugin-store';
+import { recordingService } from '~/services/recording.service';
+import { shortcutActions } from './actions';
 import {
   DEFAULT_SHORTCUTS,
   SHORTCUTS_SETTINGS_FILE,
   SHORTCUTS_STORE_KEY,
-} from "./constants";
-import { acceleratorFromKeys, normalizeKeys } from "./utils";
+} from './constants';
+import type { Shortcut, ShortcutCategory } from './types';
+import { acceleratorFromKeys, normalizeKeys } from './utils';
 
 class ShortcutManager {
   private static instance: ShortcutManager | undefined;
@@ -25,23 +26,23 @@ class ShortcutManager {
     this.store = new LazyStore(SHORTCUTS_SETTINGS_FILE);
   }
 
-  public getStore() {
+  getStore() {
     return this.store;
   }
 
-  public static getInstance(): ShortcutManager {
+  static getInstance(): ShortcutManager {
     ShortcutManager.instance ??= new ShortcutManager();
     return ShortcutManager.instance;
   }
 
   async initialize() {
     if (this.initialized) {
-      console.log("ShortcutManager already initialized, skipping...");
+      log.info('ShortcutManager already initialized, skipping...');
       return;
     }
 
     this.initialized = true;
-    console.log("Initializing ShortcutManager...");
+    log.info('Initializing ShortcutManager...');
     await this.loadAndRegisterShortcuts();
     // Here we could listen for changes in the store from other windows/instances
   }
@@ -53,11 +54,39 @@ class ShortcutManager {
     await this.registerAllShortcuts(categories);
   }
 
+  // Helper function to register a single shortcut
+  private async registerSingleShortcut(
+    shortcut: Shortcut,
+    accelerator: string
+  ): Promise<void> {
+    if (shortcut.id === 'push-to-talk') {
+      await register(accelerator, (event: ShortcutEvent) => {
+        if (event.state === 'Pressed') {
+          this.handlePushToTalkDown();
+        } else if (event.state === 'Released') {
+          this.handlePushToTalkUp();
+        }
+      });
+      log.info(`Successfully registered push-to-talk: ${accelerator}`);
+    } else if (shortcut.id in shortcutActions) {
+      await register(accelerator, () => {
+        const action =
+          shortcutActions[shortcut.id as keyof typeof shortcutActions];
+        if (action) {
+          action();
+        }
+      });
+      log.info(
+        `Successfully registered shortcut: ${accelerator} for ${shortcut.id}`
+      );
+    }
+  }
+
   async registerAllShortcuts(categories: ShortcutCategory[]) {
     try {
       await unregisterAll();
     } catch (error) {
-      console.warn("Failed to unregister all shortcuts:", error);
+      log.warn('Failed to unregister all shortcuts:', error);
     }
 
     for (const category of categories) {
@@ -66,33 +95,12 @@ class ShortcutManager {
           const normalizedKeys = normalizeKeys(shortcut.keys);
           const accelerator = acceleratorFromKeys(normalizedKeys);
           try {
-            if (shortcut.id === "push-to-talk") {
-              await register(accelerator, (event: ShortcutEvent) => {
-                if (event.state === "Pressed") {
-                  void this.handlePushToTalkDown();
-                } else if (event.state === "Released") {
-                  void this.handlePushToTalkUp();
-                }
-              });
-              console.log(
-                `Successfully registered push-to-talk: ${accelerator}`,
-              );
-            } else if (shortcut.id in shortcutActions) {
-              await register(accelerator, () => {
-                const action =
-                  shortcutActions[shortcut.id as keyof typeof shortcutActions];
-                if (action) {
-                  void action();
-                }
-              });
-              console.log(
-                `Successfully registered shortcut: ${accelerator} for ${shortcut.id}`,
-              );
-            }
+            // biome-ignore lint/nursery/noAwaitInLoop: Sequential registration prevents shortcut conflicts
+            await this.registerSingleShortcut(shortcut, accelerator);
           } catch (error) {
-            console.error(
+            log.error(
               `Failed to register shortcut ${accelerator} for ${shortcut.id}:`,
-              error,
+              error
             );
           }
         }
@@ -116,9 +124,9 @@ class ShortcutManager {
 
   private async handlePushToTalkDown() {
     try {
-      await recordingService.startPushToTalk();
+      await recordingService.startPushToTalk({ isKeyboardShortcut: true });
     } catch (error) {
-      console.error("Failed to start push-to-talk recording:", error);
+      log.error('Failed to start push-to-talk recording:', error);
     }
   }
 
@@ -126,7 +134,7 @@ class ShortcutManager {
     try {
       await recordingService.stopPushToTalk();
     } catch (error) {
-      console.error("Failed to stop push-to-talk recording:", error);
+      log.error('Failed to stop push-to-talk recording:', error);
     }
   }
 }

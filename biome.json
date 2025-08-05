@@ -1,0 +1,17 @@
+{
+  "$schema": "https://biomejs.dev/schemas/2.1.2/schema.json",
+  "extends": ["ultracite"],
+  "vcs": {
+    "enabled": true,
+    "clientKind": "git",
+    "useIgnoreFile": true
+  },
+  "files": {
+    "includes": [
+      "**",
+      "!scripts/**",
+      "!packages/ui/**",
+      "!apps/desktop/src/routeTree.gen.ts"
+    ]
+  }
+}

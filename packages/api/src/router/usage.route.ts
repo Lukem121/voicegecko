@@ -1,7 +1,7 @@
-import type { TRPCRouterRecord } from "@trpc/server";
+import type { TRPCRouterRecord } from '@trpc/server';
 
-import { usageService } from "../services/usage/usage.service";
-import { protectedProcedure } from "../trpc";
+import { usageService } from '../services/usage/usage.service';
+import { protectedProcedure } from '../trpc';
 
 export const usageRouter = {
   getStatus: protectedProcedure.query(async ({ ctx }) => {
@@ -12,6 +12,6 @@ export const usageRouter = {
 
   getStats: protectedProcedure.query(async ({ ctx }) => {
     const userId = ctx.session.user.id;
-    return usageService.getUserUsageStats(userId);
+    return await usageService.getUserUsageStats(userId);
   }),
 } satisfies TRPCRouterRecord;

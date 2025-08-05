@@ -1,6 +1,6 @@
 {
   "name": "@acme/db",
-  "version": "0.1.0",
+  "version": "0.0.7",
   "private": true,
   "type": "module",
   "exports": {
@@ -19,8 +19,8 @@
     "build": "tsc",
     "clean": "git clean -xdf .cache .turbo dist node_modules",
     "dev": "tsc",
-    "format": "prettier --check . --ignore-path ../../.gitignore",
-    "lint": "eslint",
+    "format": "ultracite format",
+    "lint": "ultracite lint",
     "push": "pnpm with-env drizzle-kit push",
     "studio": "pnpm with-env drizzle-kit studio",
     "typecheck": "tsc --noEmit --emitDeclarationOnly false",
@@ -28,19 +28,15 @@
   },
   "dependencies": {
     "@vercel/postgres": "^0.10.0",
-    "drizzle-orm": "^0.44.2",
+    "drizzle-orm": "^0.44.3",
     "drizzle-zod": "^0.8.2",
     "zod": "catalog:"
   },
   "devDependencies": {
-    "@acme/eslint-config": "workspace:*",
-    "@acme/prettier-config": "workspace:*",
     "@acme/tsconfig": "workspace:*",
-    "dotenv-cli": "^8.0.0",
+    "@biomejs/biome": "catalog:",
+    "dotenv-cli": "^9.0.0",
     "drizzle-kit": "^0.31.4",
-    "eslint": "catalog:",
-    "prettier": "catalog:",
     "typescript": "catalog:"
-  },
-  "prettier": "@acme/prettier-config"
+  }
 }

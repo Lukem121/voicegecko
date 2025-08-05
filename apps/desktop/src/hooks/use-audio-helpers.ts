@@ -1,11 +1,12 @@
-import { invoke } from "@tauri-apps/api/core";
+import { log } from '@acme/observability';
+import { invoke } from '@tauri-apps/api/core';
 
 export function useAudioHelpers() {
   const playTestSound = async () => {
     try {
-      await invoke("play_test_sound");
+      await invoke('play_test_sound');
     } catch (error) {
-      console.error("Failed to play test sound:", error);
+      log.error('Failed to play test sound:', error);
     }
   };
 

@@ -9,12 +9,12 @@
     }
   },
   "scripts": {
-    "build": "tsc",
+    "dev": "email dev --dir ./src/emails --port 3001",
     "clean": "git clean -xdf .cache .turbo dist node_modules",
     "typecheck": "tsc --noEmit --emitDeclarationOnly false"
   },
   "dependencies": {
-    "@react-email/components": "0.1.1",
+    "@react-email/components": "0.3.2",
     "@sendgrid/mail": "^8.1.5",
     "@t3-oss/env-nextjs": "^0.13.8",
     "react": "catalog:react19",
@@ -22,13 +22,12 @@
     "zod": "catalog:"
   },
   "devDependencies": {
-    "@acme/eslint-config": "workspace:*",
-    "@acme/prettier-config": "workspace:*",
     "@acme/tsconfig": "workspace:*",
+    "@biomejs/biome": "catalog:",
+    "@react-email/preview-server": "4.2.4",
     "@types/react": "catalog:react19",
     "@types/react-dom": "catalog:react19",
-    "eslint": "catalog:",
-    "prettier": "catalog:",
+    "react-email": "^4.2.4",
     "typescript": "catalog:"
   }
 }

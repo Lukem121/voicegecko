@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef } from 'react';
 
 export interface UseInfiniteScrollParams {
   hasNextPage: boolean;
@@ -13,7 +13,7 @@ export const useInfiniteScroll = ({
   isFetchingNextPage,
   fetchNextPage,
   threshold = 1000, // Trigger when 1000px from bottom
-  rootMargin = "0px 0px 1000px 0px", // Load when 1000px before reaching bottom
+  rootMargin = '0px 0px 1000px 0px', // Load when 1000px before reaching bottom
 }: UseInfiniteScrollParams) => {
   const loadMoreRef = useRef<HTMLDivElement>(null);
 
@@ -25,12 +25,12 @@ export const useInfiniteScroll = ({
         fetchNextPage();
       }
     },
-    [hasNextPage, isFetchingNextPage, fetchNextPage],
+    [hasNextPage, isFetchingNextPage, fetchNextPage]
   );
 
   useEffect(() => {
     const element = loadMoreRef.current;
-    if (!element) return;
+    if (!element) { return; }
 
     const observer = new IntersectionObserver(handleIntersection, {
       rootMargin,
@@ -47,7 +47,7 @@ export const useInfiniteScroll = ({
   // Alternative scroll-based approach as fallback
   useEffect(() => {
     const handleScroll = () => {
-      if (!hasNextPage || isFetchingNextPage || !window.scrollY) return;
+      if (!hasNextPage || isFetchingNextPage || !window.scrollY) { return; }
 
       const { scrollTop, scrollHeight, clientHeight } =
         document.documentElement;
@@ -58,10 +58,10 @@ export const useInfiniteScroll = ({
       }
     };
 
-    window.addEventListener("scroll", handleScroll, { passive: true });
+    window.addEventListener('scroll', handleScroll, { passive: true });
 
     return () => {
-      window.removeEventListener("scroll", handleScroll);
+      window.removeEventListener('scroll', handleScroll);
     };
   }, [hasNextPage, isFetchingNextPage, fetchNextPage, threshold]);
 

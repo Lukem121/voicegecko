@@ -5,7 +5,7 @@
     "node": ">=22.14.0",
     "pnpm": ">=9.6.0"
   },
-  "packageManager": "pnpm@10.12.4",
+  "packageManager": "pnpm@10.13.1",
   "scripts": {
     "build": "turbo run build",
     "clean": "git clean -xdf node_modules",
@@ -15,23 +15,23 @@
     "db:studio": "turbo -F @acme/db studio",
     "dev": "turbo watch dev --continue",
     "dev:web": "turbo watch dev -F @acme/web...",
-    "format": "turbo run format --continue -- --cache --cache-location .cache/.prettiercache",
-    "format:fix": "turbo run format --continue -- --write --cache --cache-location .cache/.prettiercache",
-    "lint": "turbo run lint --continue -- --cache --cache-location .cache/.eslintcache",
-    "lint:fix": "turbo run lint --continue -- --fix --cache --cache-location .cache/.eslintcache",
+    "lint": "ultracite lint",
+    "format": "ultracite format",
     "lint:ws": "pnpm dlx sherif@latest",
+    "bump-deps": "npx npm-check-updates --deep -u -x react-day-picker && pnpm install",
     "postinstall": "pnpm lint:ws",
     "typecheck": "turbo run typecheck",
     "ui-add": "turbo run ui-add",
-    "android": "expo run:android",
-    "ios": "expo run:ios"
+    "version:check": "node scripts/check-versions.js",
+    "version:bump": "node scripts/bump-version.js",
+    "pre-release": "node scripts/pre-release.js",
+    "release": "node scripts/release-helper.js"
   },
   "devDependencies": {
-    "@acme/prettier-config": "workspace:*",
-    "@turbo/gen": "^2.5.4",
-    "prettier": "catalog:",
-    "turbo": "^2.5.4",
-    "typescript": "catalog:"
-  },
-  "prettier": "@acme/prettier-config"
+    "@biomejs/biome": "2.1.2",
+    "@turbo/gen": "^2.5.5",
+    "glob": "^11.0.3",
+    "turbo": "^2.5.5",
+    "ultracite": "5.1.2"
+  }
 }

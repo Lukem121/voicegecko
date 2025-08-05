@@ -1,13 +1,13 @@
-"use client";
+'use client';
 
-import { SidebarInset, SidebarProvider } from "@acme/ui/components/ui/sidebar";
+import { SidebarInset, SidebarProvider } from '@acme/ui/components/ui/sidebar';
 
-import { UserMenu } from "../_components/user-menu";
-import AppSidebar from "../_components/web-sidebar";
+import { UserMenu } from '../_components/user-menu';
+import AppSidebar from '../_components/web-sidebar';
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="relative mx-auto my-10 max-w-7xl">
+    <div className="relative mx-auto my-4 max-w-7xl">
       <SidebarProvider>
         <AppSidebar />
         <SidebarInset className="!ml-0 !shadow-none">

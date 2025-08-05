@@ -11,7 +11,6 @@ use whisper_rs::{
 use crate::modules::transcription::{
     TranscriptionError, TranscriptionEvent, TranscriptionProgress,
 };
-use crate::modules::{self};
 
 pub struct TranscriptionService {
     model_cache: Arc<Mutex<HashMap<String, Arc<WhisperContext>>>>,
@@ -29,6 +28,7 @@ pub trait TranscriptionProvider: Send + Sync {
 
 pub struct LocalWhisperProvider {
     pub model_id: String,
+    pub dictionary_prompt: Option<String>,
 }
 
 impl LocalWhisperProvider {
@@ -52,18 +52,17 @@ impl LocalWhisperProvider {
                 audio_data.len()
             );
 
-            // Emit completion event with empty result
-            app.emit(
-                "transcription-progress",
-                TranscriptionEvent::from(TranscriptionProgress::Complete {
-                    transcript: String::new(),
-                    duration_seconds: Some(audio_data.len() as f32 / 16000.0),
-                    model_used: Some(self.model_id.clone()),
-                    sample_rate: Some(16000),
-                }),
-            )
-            .unwrap();
+            // Don't emit here - let the main transcribe_audio_buffer function handle the event emission
+            return Ok(String::new());
+        }
 
+        // Pre-transcription: Analyze audio to detect if it's mostly silence
+        if Self::is_audio_effectively_silent(&audio_data) {
+            println!(
+                "[Rust] Audio detected as effectively silent. Skipping transcription and returning empty result."
+            );
+
+            // Don't emit here - let the main transcribe_audio_buffer function handle the event emission
             return Ok(String::new());
         }
 
@@ -115,6 +114,38 @@ impl LocalWhisperProvider {
         params.set_print_progress(false);
         params.set_print_realtime(false);
         params.set_print_timestamps(false);
+        params.set_suppress_blank(true);
+
+        // Add dictionary to params
+        // Because it wasn't trained with instruction-following techniques, Whisper operates more like a base GPT model. Keep in mind that Whisper only considers the first 224 tokens of the prompt.
+
+        // Default dictionary items that should always be included
+        let default_dictionary_items =
+            vec!["VoiceGecko", "VoiceGecko", "Hello, welcome to my lecture."];
+
+        // Build the complete dictionary prompt
+        let mut complete_prompt = String::new();
+
+        // Always include default dictionary items first
+        if !default_dictionary_items.is_empty() {
+            complete_prompt.push_str(&default_dictionary_items.join(", "));
+        }
+
+        // Append user-provided dictionary items if they exist
+        if let Some(ref user_prompt) = self.dictionary_prompt {
+            if !user_prompt.is_empty() {
+                if !complete_prompt.is_empty() {
+                    complete_prompt.push_str(", ");
+                }
+                complete_prompt.push_str(user_prompt);
+            }
+        }
+
+        // Set the complete prompt if we have any dictionary items
+        if !complete_prompt.is_empty() {
+            println!("[Rust] 📖 Setting dictionary prompt: {}", complete_prompt);
+            params.set_initial_prompt(&complete_prompt);
+        }
 
         app.emit(
             "transcription-progress",
@@ -151,7 +182,91 @@ impl LocalWhisperProvider {
         // Return state to cache for reuse
         service.return_state(&self.model_id, state);
 
-        Ok(result)
+        // Trim the result and remove quotes if present
+        let mut cleaned_result = result.trim().to_string();
+
+        // Remove surrounding quotes if present
+        if cleaned_result.len() >= 2
+            && cleaned_result.starts_with('"')
+            && cleaned_result.ends_with('"')
+        {
+            cleaned_result = cleaned_result[1..cleaned_result.len() - 1].to_string();
+        }
+
+        Ok(cleaned_result)
+    }
+
+    /// Analyze audio to determine if it's effectively silent or contains no meaningful speech
+    fn is_audio_effectively_silent(audio_data: &[f32]) -> bool {
+        if audio_data.is_empty() {
+            return true;
+        }
+
+        // Calculate RMS energy
+        let rms = (audio_data.iter().map(|&x| x * x).sum::<f32>() / audio_data.len() as f32).sqrt();
+
+        // Calculate peak amplitude
+        let peak = audio_data
+            .iter()
+            .map(|&x| x.abs())
+            .fold(0.0f32, |a, b| a.max(b));
+
+        // Very low energy threshold - if RMS is below this, it's effectively silent
+        const SILENCE_RMS_THRESHOLD: f32 = 0.01;
+
+        // Very low peak threshold - if peak is below this, it's effectively silent
+        const SILENCE_PEAK_THRESHOLD: f32 = 0.05;
+
+        // Check if audio is below silence thresholds
+        if rms < SILENCE_RMS_THRESHOLD && peak < SILENCE_PEAK_THRESHOLD {
+            println!(
+                "[Rust] Audio analysis: RMS={:.4}, Peak={:.4} - detected as silent",
+                rms, peak
+            );
+            return true;
+        }
+
+        // Additional check: Count what percentage of the audio is near-zero
+        let near_zero_threshold = 0.005;
+        let near_zero_count = audio_data
+            .iter()
+            .filter(|&&x| x.abs() < near_zero_threshold)
+            .count();
+        let near_zero_percentage = near_zero_count as f32 / audio_data.len() as f32;
+
+        // If more than 95% of samples are near zero, consider it silent
+        if near_zero_percentage > 0.95 {
+            println!(
+                "[Rust] Audio analysis: {:.1}% of samples near zero - detected as silent",
+                near_zero_percentage * 100.0
+            );
+            return true;
+        }
+
+        // Check for consistent low-level noise (possible empty room tone)
+        // If the audio has very consistent low energy (low variance), it might be just noise
+        let mean = audio_data.iter().sum::<f32>() / audio_data.len() as f32;
+        let variance = audio_data
+            .iter()
+            .map(|&x| (x - mean) * (x - mean))
+            .sum::<f32>()
+            / audio_data.len() as f32;
+        let std_dev = variance.sqrt();
+
+        // If standard deviation is very low and RMS is low, it's likely just noise
+        if std_dev < 0.02 && rms < 0.03 {
+            println!(
+                "[Rust] Audio analysis: Low variance ({:.4}) and low RMS ({:.4}) - detected as background noise",
+                std_dev, rms
+            );
+            return true;
+        }
+
+        println!(
+            "[Rust] Audio analysis: RMS={:.4}, Peak={:.4}, StdDev={:.4}, ZeroPercent={:.1}% - proceeding with transcription",
+            rms, peak, std_dev, near_zero_percentage * 100.0
+        );
+        false
     }
 }
 

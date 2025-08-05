@@ -1,14 +1,16 @@
-import { invoke } from "@tauri-apps/api/core";
-import { exit } from "@tauri-apps/plugin-process";
+import { log } from '@acme/observability';
+import { exit } from '@tauri-apps/plugin-process';
 
-import { storeRegistry } from "~/stores/store-registry";
+import { storeRegistry } from '~/stores/store-registry';
 
-export enum AppState {
-  INITIALIZING = "initializing",
-  READY = "ready",
-  SHUTTING_DOWN = "shutting_down",
-  ERROR = "error",
-}
+export type AppState = 'initializing' | 'ready' | 'shutting_down' | 'error';
+
+export const AppState = {
+  INITIALIZING: 'initializing' as const,
+  READY: 'ready' as const,
+  SHUTTING_DOWN: 'shutting_down' as const,
+  ERROR: 'error' as const,
+} as const;
 
 class AppLifecycleManager {
   private static instance: AppLifecycleManager;
@@ -33,7 +35,9 @@ class AppLifecycleManager {
 
   private setState(state: AppState): void {
     this.state = state;
-    this.listeners.forEach((listener) => listener(state));
+    for (const listener of this.listeners) {
+      listener(state);
+    }
   }
 
   async startup(): Promise<void> {
@@ -47,7 +51,7 @@ class AppLifecycleManager {
 
       this.setState(AppState.READY);
     } catch (error) {
-      console.error("[AppLifecycle] Startup failed:", error);
+      log.error('[AppLifecycle] Startup failed:', error);
       this.setState(AppState.ERROR);
       throw error;
     }
@@ -65,7 +69,7 @@ class AppLifecycleManager {
 
       await exit(0);
     } catch (error) {
-      console.error("[AppLifecycle] Shutdown error:", error);
+      log.error('[AppLifecycle] Shutdown error:', error);
       throw error;
     }
   }

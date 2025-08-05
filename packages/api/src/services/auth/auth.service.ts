@@ -1,4 +1,4 @@
-import { authRepository } from "../../repository/auth.repository";
+import { authRepository } from '../../repository/auth.repository';
 
 export class AuthService {
   async getBanStatus(email: string) {

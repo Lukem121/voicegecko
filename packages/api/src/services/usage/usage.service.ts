@@ -1,6 +1,6 @@
-import { TRPCError } from "@trpc/server";
+import { TRPCError } from '@trpc/server';
 
-import { usageRepository } from "../../repository/usage.repository";
+import { usageRepository } from '../../repository/usage.repository';
 
 const FREE_TIER_WEEKLY_WORD_LIMIT = 2000;
 
@@ -82,7 +82,7 @@ export class UsageService {
    */
   async updateUsageAfterTranscription(
     userId: string,
-    wordCount: number,
+    wordCount: number
   ): Promise<void> {
     // Skip tracking for pro users
     const hasSubscription = await this.userHasActiveSubscription(userId);
@@ -117,9 +117,10 @@ export class UsageService {
     const currentStatus = await this.getUserUsageStatus(userId);
 
     // Get usage stats from repository
-    const [totalStats, monthlyStats] = await Promise.all([
+    const [totalStats, monthlyStats, wordsPerMinute] = await Promise.all([
       usageRepository.getTotalUsageStats(userId),
       usageRepository.getMonthlyUsageStats(userId),
+      usageRepository.getUserWordsPerMinute(userId),
     ]);
 
     return {
@@ -127,13 +128,14 @@ export class UsageService {
       total: {
         words: totalStats.totalWords,
         transcriptions: totalStats.totalTranscriptions,
-        timeSaved: totalStats.totalWords / 40 / 60, // hours (assume 40 words per minute typing speed)
+        timeSaved: totalStats.totalWords / 40, // minutes (assume 40 words per minute typing speed)
       },
       monthly: {
         words: monthlyStats.monthlyWords,
         transcriptions: monthlyStats.monthlyTranscriptions,
-        timeSaved: monthlyStats.monthlyWords / 40 / 60, // hours
+        timeSaved: monthlyStats.monthlyWords / 40, // minutes
       },
+      wordsPerMinute,
     };
   }
 
@@ -150,7 +152,7 @@ export class UsageService {
 
     // Check if subscription is active and not cancelled
     return (
-      subscriptionInfo.subscription.status === "active" &&
+      subscriptionInfo.subscription.status === 'active' &&
       !subscriptionInfo.subscription.cancelAtPeriodEnd
     );
   }
@@ -173,8 +175,8 @@ export class UsageService {
 
       if (!usage) {
         throw new TRPCError({
-          code: "INTERNAL_SERVER_ERROR",
-          message: "Failed to create usage record",
+          code: 'INTERNAL_SERVER_ERROR',
+          message: 'Failed to create usage record',
         });
       }
     }

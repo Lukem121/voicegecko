@@ -1,62 +1,117 @@
-/* eslint-disable @typescript-eslint/only-throw-error */
+import { SidebarInset, SidebarProvider } from '@acme/ui/components/ui/sidebar';
+import { createFileRoute, Outlet, redirect } from '@tanstack/react-router';
 
-import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
-import { LucideLoader2 } from "lucide-react";
-
-import { Separator } from "@acme/ui/components/ui/separator";
+import { AppSidebar } from '~/components/app-sidebar';
 import {
-  SidebarInset,
-  SidebarProvider,
-  SidebarTrigger,
-} from "@acme/ui/components/ui/sidebar";
+  ConnectivityError,
+  ConnectivityIndicator,
+} from '~/components/connectivity-error';
+import { TitleBar } from '~/components/custom-title-bar';
+import { useAuthWithConnectivity } from '~/hooks/use-auth-with-connectivity';
+import { useSettingsStore } from '~/stores/settings.store';
 
-import { AppBreadcrumb } from "~/components/app-breadcrumb";
-import { AppSidebar } from "~/components/app-sidebar";
+export const Route = createFileRoute('/_authenticated')({
+  beforeLoad: async ({ context, location }) => {
+    const authIssueType = context.auth.getAuthIssueType?.() ?? 'loading';
 
-export const Route = createFileRoute("/_authenticated")({
-  beforeLoad: ({ context, location }) => {
-    // Check if user is authenticated
-    if (!context.auth.isLoading && !context.auth.isAuthenticated) {
+    // If it's a connectivity issue, let the component handle it (don't redirect)
+    if (authIssueType === 'connectivity') {
+      return;
+    }
+
+    // Only redirect to sign-in for actual auth issues or unauthenticated users
+    if (authIssueType === 'auth' || authIssueType === 'unauthenticated') {
       throw redirect({
-        to: "/sign-in",
+        to: '/sign-in',
         search: {
           redirect: location.href,
         },
       });
+    }
+
+    // Check onboarding completion and redirect if needed
+    let settingsInitialized = false;
+    try {
+      const settingsStore = useSettingsStore.getState();
+
+      // Initialize settings if not already done
+      if (!settingsStore.isInitialized) {
+        await settingsStore.initialize();
+      }
+
+      settingsInitialized = true;
+    } catch (_error) {
+      // If settings initialization fails, continue to main app
+      return;
+    }
+
+    // Redirect to onboarding if not completed
+    if (settingsInitialized) {
+      const currentState = useSettingsStore.getState();
+
+      if (!currentState.settings.onboarding.completed) {
+        throw redirect({
+          to: '/onboarding',
+        });
+      }
     }
   },
   component: AuthenticatedLayout,
 });
 
 function AuthenticatedLayout() {
-  const authContext = Route.useRouteContext().auth;
+  const auth = useAuthWithConnectivity();
+  const authIssueType = auth.getAuthIssueType();
+  const { isInitialized } = useSettingsStore();
 
-  // Show loading state while checking authentication
-  if (authContext.isLoading) {
-    console.log("Checking authentication...");
+  // Show connectivity error when there are network issues
+  if (authIssueType === 'connectivity' || authIssueType === 'loading') {
     return (
-      <div className="flex h-screen items-center justify-center">
-        <LucideLoader2 className="h-4 w-4 animate-spin" />
+      <ConnectivityError
+        diagnosis={auth.connectivity.diagnosis}
+        isApiReachable={auth.connectivity.isApiReachable}
+        isChecking={auth.connectivity.isChecking}
+        isOnline={auth.connectivity.isOnline}
+        lastSuccessfulCheck={auth.connectivity.lastSuccessfulCheck}
+        onRetry={() => {
+          auth.connectivity.checkConnectivity();
+        }}
+      />
+    );
+  }
+
+  // Show loading screen only if settings are not initialized yet
+  if (!isInitialized) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="text-center">
+          <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-primary border-b-2" />
+          <p className="text-muted-foreground">Initializing application...</p>
+        </div>
       </div>
     );
   }
 
-  // User is authenticated, render the protected content with sidebar
+  // Render the authenticated content with sidebar
   return (
     <SidebarProvider>
-      <AppSidebar />
-      <SidebarInset className="!ml-0">
-        <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
-          <div className="flex items-center gap-2 px-4">
-            <SidebarTrigger className="-ml-1" />
-            <Separator orientation="vertical" className="mr-2 h-4" />
-            <AppBreadcrumb />
+        <TitleBar />
+        <AppSidebar />
+        <SidebarInset className="!ml-0 !shadow-none pt-8">
+          {/* Show connectivity indicator only for serious internet issues */}
+          <div className="absolute top-10 right-4 z-50">
+            <ConnectivityIndicator
+              diagnosis={auth.connectivity.diagnosis}
+              isApiReachable={auth.connectivity.isApiReachable}
+              isChecking={auth.connectivity.isChecking}
+              isOnline={auth.connectivity.isOnline}
+              lastChecked={auth.connectivity.lastSuccessfulCheck}
+            />
           </div>
-        </header>
-        <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
-          <Outlet />
-        </div>
-      </SidebarInset>
-    </SidebarProvider>
+          <div className="flex flex-1 flex-col gap-4 p-4">
+            <Outlet />
+          </div>
+        </SidebarInset>
+      </SidebarProvider>
   );
 }

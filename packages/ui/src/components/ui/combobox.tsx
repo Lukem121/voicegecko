@@ -1,9 +1,6 @@
-"use client";
+'use client';
 
-import * as React from "react";
-import { CheckIcon, ChevronsUpDownIcon } from "lucide-react";
-
-import { Button } from "@acme/ui/components/ui/button";
+import { Button } from '@acme/ui/components/ui/button';
 import {
   Command,
   CommandEmpty,
@@ -11,13 +8,15 @@ import {
   CommandInput,
   CommandItem,
   CommandList,
-} from "@acme/ui/components/ui/command";
+} from '@acme/ui/components/ui/command';
 import {
   Popover,
   PopoverContent,
   PopoverTrigger,
-} from "@acme/ui/components/ui/popover";
-import { cn } from "@acme/ui/lib/utils";
+} from '@acme/ui/components/ui/popover';
+import { cn } from '@acme/ui/lib/utils';
+import { CheckIcon, ChevronsUpDownIcon } from 'lucide-react';
+import * as React from 'react';
 
 interface ComboboxItem {
   value: string;
@@ -44,9 +43,9 @@ export function Combobox({
   items,
   value,
   onValueChange,
-  placeholder = "Select...",
-  searchPlaceholder = "Search...",
-  emptyText = "No results found.",
+  placeholder = 'Select...',
+  searchPlaceholder = 'Search...',
+  emptyText = 'No results found.',
   className,
   disabled = false,
   popoverClassName,
@@ -54,26 +53,26 @@ export function Combobox({
   threshold = 0.2, // Lower threshold for more lenient matching
 }: ComboboxProps) {
   const [open, setOpen] = React.useState(false);
-  const [internalValue, setInternalValue] = React.useState("");
-  const [search, setSearch] = React.useState("");
+  const [internalValue, setInternalValue] = React.useState('');
+  const [search, setSearch] = React.useState('');
 
   const currentValue = value ?? internalValue;
   const handleValueChange = (newValue: string) => {
-    const finalValue = newValue === currentValue ? "" : newValue;
+    const finalValue = newValue === currentValue ? '' : newValue;
     if (onValueChange) {
       onValueChange(finalValue);
     } else {
       setInternalValue(finalValue);
     }
     setOpen(false);
-    setSearch(""); // Clear search on selection
+    setSearch(''); // Clear search on selection
   };
 
   const selectedItem = items.find((item) => item.value === currentValue);
 
   // Filter items based on search
   const filteredItems = React.useMemo(() => {
-    if (!search || !fuzzySearch) {
+    if (!(search && fuzzySearch)) {
       // If no search or fuzzy search disabled, use simple filter
       if (!search) return items;
 
@@ -82,7 +81,7 @@ export function Combobox({
         (item) =>
           item.label.toLowerCase().includes(searchLower) ||
           item.value.toLowerCase().includes(searchLower) ||
-          item.keywords?.some((k) => k.toLowerCase().includes(searchLower)),
+          item.keywords?.some((k) => k.toLowerCase().includes(searchLower))
       );
     }
 
@@ -97,7 +96,7 @@ export function Combobox({
 
       // Search in keywords - check each keyword and take the best score
       const keywordScores = item.keywords?.map((k) =>
-        fuzzyMatch(searchLower, k.toLowerCase()),
+        fuzzyMatch(searchLower, k.toLowerCase())
       ) ?? [0];
       const keywordScore = Math.max(0, ...keywordScores);
 
@@ -122,29 +121,29 @@ export function Combobox({
   }, [items, search, fuzzySearch, threshold]);
 
   return (
-    <Popover open={open} onOpenChange={setOpen}>
+    <Popover onOpenChange={setOpen} open={open}>
       <PopoverTrigger asChild>
         <Button
-          variant="outline"
-          role="combobox"
           aria-expanded={open}
+          className={cn('justify-between', className)}
           disabled={disabled}
-          className={cn("justify-between", className)}
+          role="combobox"
+          variant="outline"
         >
           {selectedItem ? selectedItem.label : placeholder}
           <ChevronsUpDownIcon className="ml-2 h-4 w-4 shrink-0 opacity-50" />
         </Button>
       </PopoverTrigger>
       <PopoverContent
-        className={cn("p-0", popoverClassName)}
-        side="bottom"
         align="start"
+        className={cn('p-0', popoverClassName)}
+        side="bottom"
       >
         <Command shouldFilter={false}>
           <CommandInput
+            onValueChange={setSearch}
             placeholder={searchPlaceholder}
             value={search}
-            onValueChange={setSearch}
           />
           <CommandList>
             {filteredItems.length === 0 ? (
@@ -154,15 +153,15 @@ export function Combobox({
                 {filteredItems.map((item) => (
                   <CommandItem
                     key={item.value}
-                    value={item.value}
                     onSelect={handleValueChange}
+                    value={item.value}
                   >
                     <CheckIcon
                       className={cn(
-                        "mr-2 h-4 w-4",
+                        'mr-2 h-4 w-4',
                         currentValue === item.value
-                          ? "opacity-100"
-                          : "opacity-0",
+                          ? 'opacity-100'
+                          : 'opacity-0'
                       )}
                     />
                     {item.label}
@@ -228,25 +227,25 @@ function fuzzyMatch(pattern: string, text: string): number {
 
 // Example usage:
 export function ExampleCombobox() {
-  const [value, setValue] = React.useState("");
+  const [value, setValue] = React.useState('');
 
   const frameworks = [
-    { value: "next.js", label: "Next.js" },
-    { value: "sveltekit", label: "SvelteKit" },
-    { value: "nuxt.js", label: "Nuxt.js" },
-    { value: "remix", label: "Remix" },
-    { value: "astro", label: "Astro" },
+    { value: 'next.js', label: 'Next.js' },
+    { value: 'sveltekit', label: 'SvelteKit' },
+    { value: 'nuxt.js', label: 'Nuxt.js' },
+    { value: 'remix', label: 'Remix' },
+    { value: 'astro', label: 'Astro' },
   ];
 
   return (
     <Combobox
+      className="w-[200px]"
+      emptyText="No framework found."
       items={frameworks}
-      value={value}
       onValueChange={setValue}
       placeholder="Select framework..."
       searchPlaceholder="Search framework..."
-      emptyText="No framework found."
-      className="w-[200px]"
+      value={value}
     />
   );
 }

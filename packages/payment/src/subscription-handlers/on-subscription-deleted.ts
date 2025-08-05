@@ -1,5 +1,6 @@
-import type { Subscription } from "@better-auth/stripe";
-import type { Stripe } from "stripe";
+import { log } from '@acme/observability';
+import type { Subscription } from '@better-auth/stripe';
+import type { Stripe } from 'stripe';
 
 interface SubscriptionDeletedParams {
   event: Stripe.Event;
@@ -8,11 +9,11 @@ interface SubscriptionDeletedParams {
 }
 
 export const onSubscriptionDeleted = async ({
-  event,
   subscription,
-  stripeSubscription,
 }: SubscriptionDeletedParams) => {
-  console.log(`[Subscription] Subscription deleted:`, {
+  await Promise.resolve();
+
+  log.info('[Subscription] Subscription deleted:', {
     subscriptionId: subscription.id,
     userId: subscription.id,
     deletedAt: new Date().toISOString(),

@@ -15,12 +15,10 @@
       "persistent": false
     },
     "format": {
-      "outputs": [".cache/.prettiercache"],
       "outputLogs": "new-only"
     },
     "lint": {
-      "dependsOn": ["^topo", "^build"],
-      "outputs": [".cache/.eslintcache"]
+      "dependsOn": ["^topo", "^build"]
     },
     "typecheck": {
       "dependsOn": ["^topo", "^build"],
@@ -52,7 +50,26 @@
     "AUTH_REDIRECT_PROXY_URL",
     "AUTH_SECRET",
     "PORT",
-    "OPENAI_API_KEY"
+    "OPENAI_API_KEY",
+    "NEXT_PUBLIC_VOICEGECKO_URL",
+    "LOGTAIL_URL",
+    "LOGTAIL_SOURCE_TOKEN",
+    "SENDGRID_API_KEY",
+    "SIGNER_PASSWORD",
+    "GITHUB_TOKEN",
+    "GITHUB_OWNER",
+    "GITHUB_REPO",
+    "STRIPE_SECRET_KEY",
+    "STRIPE_WEBHOOK_SECRET",
+    "STRIPE_PRICE_ID_PRO_MONTHLY",
+    "STRIPE_PRICE_ID_PRO_YEARLY",
+    "STRIPE_PRICE_ID_TEAM_MONTHLY",
+    "STRIPE_PRICE_ID_TEAM_YEARLY",
+    "DISCORD_ERROR_REPORT_WEBHOOK_URL",
+    "DISCORD_FEEDBACK_WEBHOOK_URL",
+    "DISCORD_USER_SIGNUP_WEBHOOK_URL",
+    "UPSTASH_REDIS_REST_URL",
+    "UPSTASH_REDIS_REST_TOKEN"
   ],
   "globalPassThroughEnv": [
     "NODE_ENV",

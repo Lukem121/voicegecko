@@ -59,7 +59,7 @@ export const STYLES = {
   PATTERN_OPACITY: 0.1,
   PATTERN_SIZE: 40,
   STROKE_WIDTH: 3,
-  BORDER_RADIUS: "rounded-full",
+  BORDER_RADIUS: 'rounded-full',
   Z_INDEX: 50,
 } as const;
 

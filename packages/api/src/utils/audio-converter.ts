@@ -3,26 +3,26 @@
  */
 export function convertFloat32ToWav(
   samples: number[],
-  sampleRate: number,
+  sampleRate: number
 ): Buffer {
   const length = samples.length;
   const buffer = Buffer.alloc(44 + length * 2); // WAV header is 44 bytes
 
   // WAV header
-  const writeString = (offset: number, string: string) => {
+  const writeString = (offsetNumber: number, string: string) => {
     for (let i = 0; i < string.length; i++) {
-      buffer.writeUInt8(string.charCodeAt(i), offset + i);
+      buffer.writeUInt8(string.charCodeAt(i), offsetNumber + i);
     }
   };
 
   // ChunkID "RIFF"
-  writeString(0, "RIFF");
+  writeString(0, 'RIFF');
   // ChunkSize
   buffer.writeUInt32LE(36 + length * 2, 4);
   // Format "WAVE"
-  writeString(8, "WAVE");
+  writeString(8, 'WAVE');
   // Subchunk1ID "fmt "
-  writeString(12, "fmt ");
+  writeString(12, 'fmt ');
   // Subchunk1Size (16 for PCM)
   buffer.writeUInt32LE(16, 16);
   // AudioFormat (1 for PCM)
@@ -38,7 +38,7 @@ export function convertFloat32ToWav(
   // BitsPerSample
   buffer.writeUInt16LE(16, 34);
   // Subchunk2ID "data"
-  writeString(36, "data");
+  writeString(36, 'data');
   // Subchunk2Size
   buffer.writeUInt32LE(length * 2, 40);
 
@@ -46,7 +46,7 @@ export function convertFloat32ToWav(
   let offset = 44;
   for (let i = 0; i < length; i++) {
     const sample = Math.max(-1, Math.min(1, samples[i] ?? 0));
-    const int16 = Math.floor(sample * 32767);
+    const int16 = Math.floor(sample * 32_767);
     buffer.writeInt16LE(int16, offset);
     offset += 2;
   }

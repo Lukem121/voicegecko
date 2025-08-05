@@ -1,37 +1,57 @@
-import { useQuery } from "@tanstack/react-query";
-import { createFileRoute } from "@tanstack/react-router";
-import { open } from "@tauri-apps/plugin-shell";
-import {
-  BarChart,
-  Calendar,
-  Clock,
-  CreditCard,
-  Download,
-  ExternalLink,
-  FileText,
-  TrendingUp,
-} from "lucide-react";
-
-import { Button } from "@acme/ui/components/ui/button";
+import { Button } from '@acme/ui/components/ui/button';
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
-} from "@acme/ui/components/ui/card";
-import { Progress } from "@acme/ui/components/ui/progress";
-import { Skeleton } from "@acme/ui/components/ui/skeleton";
+} from '@acme/ui/components/ui/card';
+import { Progress } from '@acme/ui/components/ui/progress';
+import { Skeleton } from '@acme/ui/components/ui/skeleton';
+import { useQuery } from '@tanstack/react-query';
+import { createFileRoute } from '@tanstack/react-router';
+import { open } from '@tauri-apps/plugin-shell';
+import {
+  BarChart,
+  Clock,
+  CreditCard,
+  ExternalLink,
+  FileText,
+  TrendingUp,
+} from 'lucide-react';
+import React from 'react';
 
-import { trpc } from "~/trpc";
+import { analytics } from '~/lib/analytics/posthog-analytics';
+import { trpc } from '~/trpc';
 
-export const Route = createFileRoute("/_authenticated/usage")({
+export const Route = createFileRoute('/_authenticated/usage')({
   component: UsagePage,
 });
 
 function UsagePage() {
   const { data: stats, isLoading } = useQuery(
-    trpc.usage.getStats.queryOptions(),
+    trpc.usage.getStats.queryOptions()
   );
+
+  // Track usage page view and potential business intelligence
+  React.useEffect(() => {
+    if (stats && !isLoading) {
+      analytics.trackFeatureFirstUse('usage_page');
+
+      // Track usage patterns for business intelligence
+      const usagePercentage = stats.current.isUnlimited
+        ? 0
+        : (stats.current.wordsUsed / stats.current.wordsLimit) * 100;
+
+      if (!stats.current.isUnlimited && usagePercentage >= 80) {
+        analytics.track('usage_limit_approached', {
+          limit_type: 'transcription',
+          current_usage: stats.current.wordsUsed,
+          limit_value: stats.current.wordsLimit,
+          percentage_used: usagePercentage,
+        });
+      }
+    }
+  }, [stats, isLoading]);
 
   if (isLoading || !stats) {
     return <UsagePageSkeleton />;
@@ -43,7 +63,7 @@ function UsagePage() {
         ? stats.monthly.transcriptions
         : stats.current.transcriptionCount,
       limit: stats.current.isUnlimited
-        ? "Unlimited"
+        ? 'Unlimited'
         : `${stats.current.wordsLimit} words`,
     },
     wordsProcessed: stats.monthly.words,
@@ -53,37 +73,37 @@ function UsagePage() {
 
   const usageStats = [
     {
-      label: "Total Words",
+      label: 'Total Words',
       value: stats.total.words.toLocaleString(),
-      trend: "",
+      trend: '',
     },
     {
-      label: "Total Time Saved",
+      label: 'Total Time Saved',
       value: `${stats.total.timeSaved.toFixed(1)}h`,
-      trend: "",
+      trend: '',
     },
     {
-      label: "Avg. Words per Transcription",
+      label: 'Avg. Words per Transcription',
       value:
         stats.total.transcriptions > 0
           ? Math.round(
-              stats.total.words / stats.total.transcriptions,
+              stats.total.words / stats.total.transcriptions
             ).toString()
-          : "0",
-      trend: "",
+          : '0',
+      trend: '',
     },
   ];
 
   // Calculate usage percentage for free users
-  const usagePercentage = !stats.current.isUnlimited
-    ? (stats.current.wordsUsed / stats.current.wordsLimit) * 100
-    : 0;
+  const usagePercentage = stats.current.isUnlimited
+    ? 0
+    : (stats.current.wordsUsed / stats.current.wordsLimit) * 100;
 
   return (
     <div className="flex flex-1 flex-col gap-6">
       <div className="flex items-center justify-between">
         <div className="flex-1">
-          <h2 className="text-2xl font-semibold">Usage</h2>
+          <h2 className="font-semibold text-2xl">Usage</h2>
           <p className="text-muted-foreground text-sm">
             Track your transcription usage and performance metrics
           </p>
@@ -94,7 +114,7 @@ function UsagePage() {
       {!stats.current.isUnlimited && (
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-base font-medium">
+            <CardTitle className="font-medium text-base">
               Weekly Usage Limit
             </CardTitle>
           </CardHeader>
@@ -102,16 +122,16 @@ function UsagePage() {
             <div className="flex items-center justify-between text-sm">
               <span>Words Used</span>
               <span className="font-medium">
-                {stats.current.wordsUsed.toLocaleString()} /{" "}
+                {stats.current.wordsUsed.toLocaleString()} /{' '}
                 {stats.current.wordsLimit.toLocaleString()}
               </span>
             </div>
-            <Progress value={usagePercentage} className="h-2" />
+            <Progress className="h-2" value={usagePercentage} />
             {usagePercentage >= 90 && (
-              <p className="text-sm text-amber-600">
+              <p className="text-amber-600 text-sm">
                 {usagePercentage >= 100
-                  ? "Usage limit reached. Upgrade to Pro for unlimited words."
-                  : "Approaching usage limit"}
+                  ? 'Usage limit reached. Upgrade to Pro for unlimited words.'
+                  : 'Approaching usage limit'}
               </p>
             )}
           </CardContent>
@@ -122,18 +142,18 @@ function UsagePage() {
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-muted-foreground flex items-center gap-2 text-sm font-medium">
+            <CardTitle className="flex items-center gap-2 font-medium text-muted-foreground text-sm">
               <FileText className="h-4 w-4" />
               Transcriptions
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
+            <div className="font-bold text-2xl">
               {currentPeriod.transcriptions.used}
             </div>
-            <p className="text-muted-foreground mt-1 text-xs">
+            <p className="mt-1 text-muted-foreground text-xs">
               {stats.current.isUnlimited
-                ? "this month"
+                ? 'this month'
                 : `of ${currentPeriod.transcriptions.limit}`}
             </p>
           </CardContent>
@@ -141,46 +161,46 @@ function UsagePage() {
 
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-muted-foreground flex items-center gap-2 text-sm font-medium">
+            <CardTitle className="flex items-center gap-2 font-medium text-muted-foreground text-sm">
               <TrendingUp className="h-4 w-4" />
               Words Processed
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
+            <div className="font-bold text-2xl">
               {currentPeriod.wordsProcessed.toLocaleString()}
             </div>
-            <p className="text-muted-foreground mt-1 text-xs">this month</p>
+            <p className="mt-1 text-muted-foreground text-xs">this month</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-muted-foreground flex items-center gap-2 text-sm font-medium">
+            <CardTitle className="flex items-center gap-2 font-medium text-muted-foreground text-sm">
               <Clock className="h-4 w-4" />
               Time Saved
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
+            <div className="font-bold text-2xl">
               {currentPeriod.timeSaved.toFixed(1)}h
             </div>
-            <p className="text-muted-foreground mt-1 text-xs">estimated</p>
+            <p className="mt-1 text-muted-foreground text-xs">estimated</p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-muted-foreground flex items-center gap-2 text-sm font-medium">
+            <CardTitle className="flex items-center gap-2 font-medium text-muted-foreground text-sm">
               <BarChart className="h-4 w-4" />
               Total Transcriptions
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">
+            <div className="font-bold text-2xl">
               {currentPeriod.totalTranscriptions.toLocaleString()}
             </div>
-            <p className="text-muted-foreground mt-1 text-xs">all time</p>
+            <p className="mt-1 text-muted-foreground text-xs">all time</p>
           </CardContent>
         </Card>
       </div>
@@ -189,18 +209,21 @@ function UsagePage() {
         {/* Performance Stats */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg font-medium">
+            <CardTitle className="font-medium text-lg">
               Performance Stats
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            {usageStats.map((stat, index) => (
-              <div key={index} className="flex items-center justify-between">
-                <span className="text-sm font-medium">{stat.label}</span>
+            {usageStats.map((stat) => (
+              <div
+                className="flex items-center justify-between"
+                key={stat.label}
+              >
+                <span className="font-medium text-sm">{stat.label}</span>
                 <div className="flex items-center gap-2">
-                  <span className="text-sm font-bold">{stat.value}</span>
+                  <span className="font-bold text-sm">{stat.value}</span>
                   {stat.trend && (
-                    <span className="rounded bg-green-50 px-2 py-1 text-xs text-green-600">
+                    <span className="rounded bg-green-50 px-2 py-1 text-green-600 text-xs">
                       {stat.trend}
                     </span>
                   )}
@@ -213,18 +236,26 @@ function UsagePage() {
         {/* Quick Actions */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg font-medium">Quick Actions</CardTitle>
+            <CardTitle className="font-medium text-lg">Quick Actions</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             <Button
-              variant="outline"
               className="w-full justify-start"
               onClick={async () => {
+                // Track upgrade prompt interaction
+                analytics.track('upgrade_prompt_shown', {
+                  trigger: 'usage_page',
+                  plan_suggested: 'pro',
+                });
+
+                analytics.trackFeatureFirstUse('upgrade_button');
+
                 const websiteUrl =
                   import.meta.env.VITE_PUBLIC_VOICEGECKO_URL ||
-                  "https://www.voicegecko.io";
+                  'https://www.voicegecko.io';
                 await open(`${websiteUrl}/app/plans`);
               }}
+              variant="outline"
             >
               <CreditCard className="mr-2 h-4 w-4" />
               Upgrade to Pro
@@ -242,7 +273,7 @@ function UsagePageSkeleton() {
     <div className="flex flex-1 flex-col gap-6">
       <div className="flex items-center justify-between">
         <div className="flex-1">
-          <h2 className="text-2xl font-semibold">Usage</h2>
+          <h2 className="font-semibold text-2xl">Usage</h2>
           <p className="text-muted-foreground text-sm">
             Track your transcription usage and performance metrics
           </p>
@@ -250,8 +281,8 @@ function UsagePageSkeleton() {
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {[...Array(4)].map((_, i) => (
-          <Card key={i}>
+        {['transcriptions', 'words', 'time', 'total'].map((type) => (
+          <Card key={`overview-${type}`}>
             <CardHeader className="pb-3">
               <Skeleton className="h-4 w-24" />
             </CardHeader>
@@ -264,14 +295,17 @@ function UsagePageSkeleton() {
       </div>
 
       <div className="grid gap-6 md:grid-cols-2">
-        {[...Array(2)].map((_, i) => (
-          <Card key={i}>
+        {['performance', 'actions'].map((section) => (
+          <Card key={`section-${section}`}>
             <CardHeader>
               <Skeleton className="h-5 w-32" />
             </CardHeader>
             <CardContent className="space-y-4">
-              {[...Array(3)].map((_, j) => (
-                <div key={j} className="flex items-center justify-between">
+              {['item-1', 'item-2', 'item-3'].map((item) => (
+                <div
+                  className="flex items-center justify-between"
+                  key={`section-${section}-item-${item}`}
+                >
                   <Skeleton className="h-4 w-24" />
                   <Skeleton className="h-4 w-16" />
                 </div>

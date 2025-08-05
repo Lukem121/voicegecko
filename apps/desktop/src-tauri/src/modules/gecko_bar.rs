@@ -1,5 +1,5 @@
 use serde::{Deserialize, Serialize};
-use tauri::{AppHandle, Manager, PhysicalPosition, PhysicalSize};
+use tauri::{AppHandle, Emitter, Manager, PhysicalPosition, PhysicalSize};
 use tauri_plugin_positioner::{Position as PositionerPosition, WindowExt};
 
 #[cfg(target_os = "windows")]
@@ -9,6 +9,47 @@ use windows::Win32::UI::WindowsAndMessaging::{
     GetForegroundWindow, GetSystemMetrics, GetWindowRect, SystemParametersInfoW, SM_CXSCREEN,
     SM_CYSCREEN, SPI_GETWORKAREA, SYSTEM_PARAMETERS_INFO_UPDATE_FLAGS,
 };
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct GeckoBarNotification {
+    pub message: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub duration: Option<u32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub priority: Option<String>,
+}
+
+impl GeckoBarNotification {
+    #[allow(dead_code)]
+    pub fn new(message: impl Into<String>) -> Self {
+        Self {
+            message: message.into(),
+            duration: None,
+            priority: None,
+        }
+    }
+
+    #[allow(dead_code)]
+    pub fn with_duration(mut self, duration: u32) -> Self {
+        self.duration = Some(duration);
+        self
+    }
+
+    #[allow(dead_code)]
+    pub fn with_priority(mut self, priority: &str) -> Self {
+        self.priority = Some(priority.to_string());
+        self
+    }
+}
+
+/// Emit a notification to the gecko bar
+pub fn emit_gecko_bar_notification(
+    app: &AppHandle,
+    notification: GeckoBarNotification,
+) -> Result<(), String> {
+    app.emit("gecko-bar-notification", notification)
+        .map_err(|e| e.to_string())
+}
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct GeckoBarState {
@@ -304,4 +345,23 @@ pub fn set_gecko_bar_fullscreen_mode(app: AppHandle, is_fullscreen: bool) -> Res
         // Show gecko bar when not in fullscreen (will check if enabled)
         show_gecko_bar(app)
     }
+}
+
+#[tauri::command]
+pub fn send_gecko_bar_notification(
+    app: AppHandle,
+    message: String,
+    duration: Option<u32>,
+    priority: Option<String>,
+) -> Result<(), String> {
+    let notification = GeckoBarNotification {
+        message,
+        duration,
+        priority,
+    };
+
+    // Try to show gecko bar if it's enabled
+    let _ = show_gecko_bar(app.clone());
+
+    emit_gecko_bar_notification(&app, notification)
 }

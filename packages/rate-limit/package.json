@@ -1,0 +1,19 @@
+{
+  "name": "@acme/rate-limit",
+  "version": "0.0.7",
+  "private": true,
+  "scripts": {
+    "clean": "git clean -xdf .cache .turbo dist node_modules",
+    "typecheck": "tsc --noEmit --emitDeclarationOnly false"
+  },
+  "dependencies": {
+    "@t3-oss/env-nextjs": "^0.13.8",
+    "@upstash/ratelimit": "^2.0.6",
+    "@upstash/redis": "^1.35.1",
+    "zod": "^4.0.10"
+  },
+  "devDependencies": {
+    "@acme/tsconfig": "workspace:*",
+    "typescript": "^5.8.3"
+  }
+}

@@ -1,6 +1,6 @@
 {
   "productName": "Voice Gecko",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "identifier": "com.voicegecko.desktop",
   "build": {
     "frontendDist": "../dist",
@@ -18,12 +18,13 @@
         "minimizable": true,
         "maximizable": true,
         "resizable": true,
-        "center": true
+        "center": true,
+        "decorations": false
       },
       {
         "label": "gecko-bar",
         "title": "Voice Gecko Bar",
-        "width": 300,
+        "width": 200,
         "height": 80,
         "closable": false,
         "minimizable": false,
@@ -32,7 +33,6 @@
         "alwaysOnTop": true,
         "decorations": false,
         "skipTaskbar": true,
-        "visible": false,
         "transparent": true,
         "center": false,
         "shadow": false,
@@ -47,8 +47,13 @@
   "plugins": {
     "deep-link": {
       "mobile": [
-        { "host": "voicegecko.io", "pathPrefix": ["/login"] },
-        { "host": "voicegecko.io" }
+        {
+          "host": "voicegecko.io",
+          "pathPrefix": ["/login"]
+        },
+        {
+          "host": "voicegecko.io"
+        }
       ],
       "desktop": {
         "schemes": ["voicegecko"]

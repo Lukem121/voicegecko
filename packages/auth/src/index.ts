@@ -1,41 +1,39 @@
-import { expo } from "@better-auth/expo";
-import { stripe } from "@better-auth/stripe";
-import { tauri } from "@daveyplate/better-auth-tauri/plugin";
-import { betterAuth } from "better-auth";
-import { drizzleAdapter } from "better-auth/adapters/drizzle";
-import { nextCookies } from "better-auth/next-js";
-import {
-  admin as adminPlugin,
-  createAuthMiddleware,
-  oAuthProxy,
-  phoneNumber,
-  twoFactor,
-  username,
-} from "better-auth/plugins";
-
-import { db } from "@acme/db/client";
-import { sendResetPasswordEmail, sendVerificationEmail } from "@acme/email";
-import { stripeClient } from "@acme/payment/stripe";
+import { db } from '@acme/db/client';
+import { sendResetPasswordEmail, sendVerificationEmail } from '@acme/email';
+import { stripeClient } from '@acme/payment/stripe';
 import {
   onSubscriptionCancel,
   onSubscriptionComplete,
   onSubscriptionDeleted,
   onSubscriptionUpdate,
-} from "@acme/payment/subscription-handlers";
+} from '@acme/payment/subscription-handlers';
+import { stripe } from '@better-auth/stripe';
+import { tauri } from '@daveyplate/better-auth-tauri/plugin';
+import { betterAuth } from 'better-auth';
+import { drizzleAdapter } from 'better-auth/adapters/drizzle';
+import { nextCookies } from 'better-auth/next-js';
+import {
+  admin as adminPlugin,
+  oAuthProxy,
+  phoneNumber,
+  twoFactor,
+  username,
+} from 'better-auth/plugins';
 
-import { authEnv } from "../env";
-import { checkBannedMiddleware } from "./middleware/check-banned-middleware";
-import { usernameValidator } from "./schemas/username.schema";
+import { authEnv } from '../env';
+import { handleAfterHook } from './middleware/handle-after-hook';
+import { handleCreateAfterHook } from './middleware/handle-create-after-hook';
+import { usernameValidator } from './schemas/username.schema';
 
 export const serverAuth = betterAuth({
-  appName: "Voice Gecko",
+  appName: 'Voice Gecko',
   account: {
     accountLinking: {
       enabled: true,
     },
   },
   database: drizzleAdapter(db, {
-    provider: "pg",
+    provider: 'pg',
   }),
   secret: authEnv().AUTH_SECRET,
   session: {
@@ -48,13 +46,13 @@ export const serverAuth = betterAuth({
     cookies: {
       session_token: {
         attributes: {
-          sameSite: "none",
+          sameSite: 'none',
           secure: true,
         },
       },
       session_data: {
         attributes: {
-          sameSite: "none",
+          sameSite: 'none',
           secure: true,
         },
       },
@@ -69,12 +67,12 @@ export const serverAuth = betterAuth({
         enabled: true,
         plans: [
           {
-            name: "voice gecko pro",
+            name: 'voice gecko pro',
             priceId: authEnv().STRIPE_PRICE_ID_PRO_MONTHLY,
             annualDiscountPriceId: authEnv().STRIPE_PRICE_ID_PRO_YEARLY,
           },
           {
-            name: "voice gecko team",
+            name: 'voice gecko team',
             priceId: authEnv().STRIPE_PRICE_ID_TEAM_MONTHLY,
             annualDiscountPriceId: authEnv().STRIPE_PRICE_ID_TEAM_YEARLY,
           },
@@ -83,6 +81,13 @@ export const serverAuth = betterAuth({
         onSubscriptionUpdate,
         onSubscriptionCancel,
         onSubscriptionDeleted,
+        getCheckoutSessionParams: () => {
+          return {
+            params: {
+              allow_promotion_codes: true,
+            },
+          };
+        },
       },
     }),
     oAuthProxy({
@@ -92,9 +97,8 @@ export const serverAuth = betterAuth({
       currentURL: authEnv().NEXT_PUBLIC_VOICEGECKO_URL,
       productionURL: authEnv().NEXT_PUBLIC_VOICEGECKO_URL,
     }),
-    expo(),
     tauri({
-      scheme: "voicegecko",
+      scheme: 'voicegecko',
       debugLogs: true,
     }),
     adminPlugin(),
@@ -106,35 +110,18 @@ export const serverAuth = betterAuth({
     nextCookies(),
   ],
   hooks: {
-    after: checkBannedMiddleware,
-    before: createAuthMiddleware(async (ctx) => {
-      const allowedEmails = [
-        "lukeask@hotmail.co.uk",
-        "pepperglazedluke@gmail.com",
-      ];
-
-      if (ctx.path !== "/sign-up/email" && ctx.path !== "/sign-in/discord") {
-        return;
-      }
-
-      const email = ctx.body?.email;
-      if (!email) {
-        throw new Error("Email is required");
-      }
-
-      // Extract base email (remove + extension if present)
-      const [localPart, domain] = email.split("@");
-      const baseLocalPart = localPart.split("+")[0];
-      const baseEmail = `${baseLocalPart}@${domain}`;
-
-      if (!allowedEmails.includes(baseEmail)) {
-        throw new Error("Email must be in the allowed list");
-      }
-    }),
+    after: handleAfterHook,
+  },
+  databaseHooks: {
+    user: {
+      create: {
+        after: handleCreateAfterHook,
+      },
+    },
   },
   emailVerification: {
     autoSignInAfterVerification: true,
-    sendVerificationEmail: sendVerificationEmail,
+    sendVerificationEmail,
   },
   emailAndPassword: {
     enabled: true,
@@ -142,6 +129,7 @@ export const serverAuth = betterAuth({
     requireEmailVerification: true,
     sendResetPassword: sendResetPasswordEmail,
   },
+
   socialProviders: {
     discord: {
       clientId: authEnv().AUTH_DISCORD_ID,
@@ -155,15 +143,14 @@ export const serverAuth = betterAuth({
     },
   },
   trustedOrigins: [
-    "expo://",
-    "voicegecko://",
+    'voicegecko://',
 
-    "http://localhost:3000", // Next.js app
-    "http://localhost:1420", // Tauri desktop app
-    "http://tauri.localhost", // Tauri desktop app
+    'http://localhost:3000', // Next.js app
+    'http://localhost:1420', // Tauri desktop app
+    'http://tauri.localhost', // Tauri desktop app
 
-    "https://voicegecko.io",
-    "https://www.voicegecko.io",
+    'https://voicegecko.io',
+    'https://www.voicegecko.io',
   ],
 });
 

@@ -1,6 +1,5 @@
-import { toNextJsHandler } from "better-auth/next-js";
-
-import { serverAuth } from "@acme/auth";
+import { serverAuth } from '@acme/auth';
+import { toNextJsHandler } from 'better-auth/next-js';
 
 /**
  * Create auth handlers

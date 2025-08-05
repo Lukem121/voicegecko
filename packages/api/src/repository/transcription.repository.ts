@@ -1,11 +1,11 @@
-import { and, count, desc, eq, ilike, lt, sql } from "@acme/db";
-import { db } from "@acme/db/client";
-import { TranscriptionTable } from "@acme/db/schema";
+import { and, count, desc, eq, ilike, lt, sql } from '@acme/db';
+import { db } from '@acme/db/client';
+import { TranscriptionTable } from '@acme/db/schema';
 
 export interface CreateTranscriptionData {
   userId: string;
   content: string;
-  status: "normal" | "silent";
+  status: 'normal' | 'silent';
   durationSeconds?: number;
   modelUsed?: string;
   sampleRate?: number;
@@ -16,7 +16,7 @@ export interface CreateTranscriptionData {
 export interface TranscriptionItem {
   id: number;
   content: string;
-  status: "normal" | "silent";
+  status: 'normal' | 'silent';
   createdAt: Date;
 }
 
@@ -42,7 +42,7 @@ class TranscriptionRepository {
   }
 
   async findByUserId(userId: string, limit = 100) {
-    return db
+    return await db
       .select({
         id: TranscriptionTable.id,
         content: TranscriptionTable.content,
@@ -57,13 +57,13 @@ class TranscriptionRepository {
         results.map((row) => ({
           ...row,
           status: row.status,
-        })),
+        }))
       );
   }
 
   async findByUserIdPaginated(
     userId: string,
-    params: FindPaginatedParams,
+    params: FindPaginatedParams
   ): Promise<PaginatedResult> {
     const { cursor, limit, search } = params;
 
@@ -84,20 +84,20 @@ class TranscriptionRepository {
       query = query.where(
         and(
           eq(TranscriptionTable.userId, userId),
-          lt(TranscriptionTable.id, cursor),
-        ),
+          lt(TranscriptionTable.id, cursor)
+        )
       );
     }
 
     // Add search filter if provided
-    if (search && search.trim()) {
+    if (search?.trim()) {
       const searchTerm = `%${search.trim()}%`;
       query = query.where(
         and(
           eq(TranscriptionTable.userId, userId),
           ilike(TranscriptionTable.content, searchTerm),
-          cursor ? lt(TranscriptionTable.id, cursor) : sql`true`,
-        ),
+          cursor ? lt(TranscriptionTable.id, cursor) : sql`true`
+        )
       );
     }
 
@@ -109,20 +109,20 @@ class TranscriptionRepository {
         results.map((row) => ({
           ...row,
           status: row.status,
-        })),
+        }))
       );
 
     // Get total count for search results (optional, only when searching)
     let totalResults: number | undefined;
-    if (search && search.trim()) {
+    if (search?.trim()) {
       const countResult = await db
         .select({ count: count() })
         .from(TranscriptionTable)
         .where(
           and(
             eq(TranscriptionTable.userId, userId),
-            ilike(TranscriptionTable.content, `%${search.trim()}%`),
-          ),
+            ilike(TranscriptionTable.content, `%${search.trim()}%`)
+          )
         );
 
       totalResults = countResult[0]?.count ?? 0;
@@ -134,14 +134,35 @@ class TranscriptionRepository {
     };
   }
 
+  async findById(id: number, userId: string) {
+    const [result] = await db
+      .select({
+        id: TranscriptionTable.id,
+        content: TranscriptionTable.content,
+        status: TranscriptionTable.status,
+        createdAt: TranscriptionTable.createdAt,
+        userId: TranscriptionTable.userId,
+      })
+      .from(TranscriptionTable)
+      .where(
+        and(
+          eq(TranscriptionTable.id, id),
+          eq(TranscriptionTable.userId, userId)
+        )
+      )
+      .limit(1);
+
+    return result;
+  }
+
   async deleteById(id: number, userId: string) {
     const [result] = await db
       .delete(TranscriptionTable)
       .where(
         and(
           eq(TranscriptionTable.id, id),
-          eq(TranscriptionTable.userId, userId),
-        ),
+          eq(TranscriptionTable.userId, userId)
+        )
       )
       .returning();
 

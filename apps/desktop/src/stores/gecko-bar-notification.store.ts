@@ -1,9 +1,9 @@
-import { create } from "zustand";
+import { create } from 'zustand';
 
 interface GeckoBarNotification {
   message: string;
   duration?: number; // Duration in milliseconds
-  priority?: "high" | "normal"; // High priority messages override any current message
+  priority?: 'high' | 'normal'; // High priority messages override any current message
 }
 
 interface GeckoBarNotificationStore {
@@ -13,28 +13,25 @@ interface GeckoBarNotificationStore {
 }
 
 export const useGeckoBarNotificationStore = create<GeckoBarNotificationStore>(
-  (set) => ({
+  (set, get) => ({
     notification: null,
 
     showNotification: (notification) => {
       set({ notification });
 
       // Auto-clear after duration if specified
-      if (notification.duration) {
-        setTimeout(() => {
-          set((state) => {
-            // Only clear if it's still the same notification
-            if (state.notification === notification) {
-              return { notification: null };
-            }
-            return state;
-          });
-        }, notification.duration);
-      }
+      const duration = notification.duration ?? 3000; // Default 3 seconds
+      setTimeout(() => {
+        const current = get().notification;
+        // Only clear if it's still the same notification (avoid clearing newer ones)
+        if (current === notification) {
+          set({ notification: null });
+        }
+      }, duration);
     },
 
     clearNotification: () => {
       set({ notification: null });
     },
-  }),
+  })
 );

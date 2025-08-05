@@ -1,21 +1,15 @@
-"use client";
+'use client';
 
-import type { z } from "zod/v4";
-import { useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { Loader } from "lucide-react";
-
-import { ResetPasswordSchema } from "@acme/auth/schemas";
-import { getAuthErrorMessage } from "@acme/auth/utils";
-import { Button } from "@acme/ui/components/ui/button";
+import { ResetPasswordSchema } from '@acme/auth/schemas';
+import { getAuthErrorMessage } from '@acme/auth/utils';
+import { Button } from '@acme/ui/components/ui/button';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@acme/ui/components/ui/card";
+} from '@acme/ui/components/ui/card';
 import {
   Form,
   FormControl,
@@ -24,19 +18,24 @@ import {
   FormLabel,
   FormMessage,
   useForm,
-} from "@acme/ui/components/ui/form";
-import { Input } from "@acme/ui/components/ui/input";
-import { toast } from "@acme/ui/components/ui/sonner";
+} from '@acme/ui/components/ui/form';
+import { Input } from '@acme/ui/components/ui/input';
+import { toast } from '@acme/ui/components/ui/sonner';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Loader } from 'lucide-react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useState } from 'react';
+import type { z } from 'zod/v4';
 
-import { authClient } from "~/lib/auth/client";
-import { APP_ROUTES } from "~/utils/app-routes";
+import { authClient } from '~/lib/auth/client';
+import { APP_ROUTES } from '~/utils/app-routes';
 
 type FormValues = z.infer<typeof ResetPasswordSchema>;
 
 export default function ResetPasswordPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const token = searchParams.get("token");
+  const token = searchParams.get('token');
 
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
@@ -45,8 +44,8 @@ export default function ResetPasswordPage() {
   const form = useForm({
     resolver: zodResolver(ResetPasswordSchema),
     defaultValues: {
-      password: "",
-      passwordConfirmation: "",
+      password: '',
+      passwordConfirmation: '',
     },
   });
 
@@ -56,26 +55,26 @@ export default function ResetPasswordPage() {
     setIsSuccess(false);
 
     if (!token) {
-      setError(getAuthErrorMessage("INVALID_TOKEN", "en"));
+      setError(getAuthErrorMessage('INVALID_TOKEN', 'en'));
       return;
     }
 
-    const { error } = await authClient.resetPassword({
+    const { error: resetPasswordError } = await authClient.resetPassword({
       newPassword: values.password,
-      token: token,
+      token,
       fetchOptions: {
         onSuccess: () => {
           router.push(APP_ROUTES.AUTH.SIGN_IN);
-          toast.success("Password reset successful, please sign in.");
+          toast.success('Password reset successful, please sign in.');
           setIsSuccess(true);
         },
       },
     });
 
-    if (error) {
-      const { code, message } = error;
+    if (resetPasswordError) {
+      const { code, message } = resetPasswordError;
       if (code) {
-        const errorMessage = getAuthErrorMessage(code, "en", message);
+        const errorMessage = getAuthErrorMessage(code, 'en', message);
         setError(errorMessage);
       }
     }
@@ -84,7 +83,7 @@ export default function ResetPasswordPage() {
   };
 
   return (
-    <div className={"flex flex-col gap-6"}>
+    <div className={'flex flex-col gap-6'}>
       <Card>
         <CardHeader className="text-center">
           <CardTitle className="text-xl">Reset your password</CardTitle>
@@ -108,9 +107,9 @@ export default function ResetPasswordPage() {
                           </div>
                           <FormControl>
                             <Input
-                              type="password"
                               autoComplete="password"
                               inputMode="text"
+                              type="password"
                               {...field}
                               disabled={isLoading || isSuccess}
                             />
@@ -131,9 +130,9 @@ export default function ResetPasswordPage() {
                           </div>
                           <FormControl>
                             <Input
-                              type="password"
                               autoComplete="password"
                               inputMode="text"
+                              type="password"
                               {...field}
                               disabled={isLoading || isSuccess}
                             />
@@ -143,20 +142,20 @@ export default function ResetPasswordPage() {
                       )}
                     />
                     {error !== null && (
-                      <p className="text-[0.8rem] font-medium text-red-600">
+                      <p className="font-medium text-[0.8rem] text-red-600">
                         {error}
                       </p>
                     )}
                   </div>
                   <Button
-                    type="submit"
                     className="w-full"
                     disabled={isLoading || isSuccess}
+                    type="submit"
                   >
                     {isLoading ? (
-                      <Loader className={"animate-spin"} />
+                      <Loader className={'animate-spin'} />
                     ) : (
-                      "Reset Password"
+                      'Reset Password'
                     )}
                   </Button>
                 </div>

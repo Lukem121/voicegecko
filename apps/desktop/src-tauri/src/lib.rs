@@ -1,10 +1,27 @@
 use tauri::Manager;
-
+use tauri_plugin_sentry::{minidump, sentry};
 mod modules;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
+
+    let client = sentry::init((
+        "https://5131669e441c266a66c873d2c97d3571@o4504837577768960.ingest.us.sentry.io/4509740408897546",
+        sentry::ClientOptions {
+            release: sentry::release_name!(),
+            auto_session_tracking: true,
+            send_default_pii: true,
+            ..Default::default()
+        },
+    ));
+
+    // Caution! Everything before here runs in both app and crash reporter processes
+    #[cfg(not(target_os = "ios"))]
+    let _guard = minidump::init(&client);
+    // Everything after here runs in only the app process
+
     tauri::Builder::default()
+        .plugin(tauri_plugin_sentry::init(&client))
         .plugin(tauri_plugin_positioner::init())
         .plugin(tauri_plugin_clipboard_manager::init())
         .plugin(tauri_plugin_global_shortcut::Builder::new().build())
@@ -40,6 +57,8 @@ pub fn run() {
             modules::audio::start_recording,
             modules::audio::stop_recording,
             modules::audio::cancel_recording,
+            modules::audio::start_microphone_test,
+            modules::audio::stop_microphone_test,
             modules::audio::play_notification_sound,
             modules::audio::set_volume,
             modules::audio::mute_system_audio,
@@ -50,6 +69,7 @@ pub fn run() {
             modules::gecko_bar::reposition_gecko_bar,
             modules::gecko_bar::is_fullscreen_app_active,
             modules::gecko_bar::set_gecko_bar_fullscreen_mode,
+            modules::gecko_bar::send_gecko_bar_notification,
             modules::hardware_info::get_hardware_info,
             modules::hardware_info::get_recommended_tier,
             modules::model_manager::list_models,
@@ -69,7 +89,9 @@ pub fn run() {
             modules::settings::get_gecko_bar_config,
             modules::settings::set_gecko_bar_config,
             modules::settings::get_autostart_config,
-            modules::settings::set_autostart_config
+            modules::settings::set_autostart_config,
+            modules::system::simulate_paste,
+            modules::tray::update_tray_stats
         ])
         .setup(|app| {
             let (_stream, stream_handle) = rodio::OutputStream::try_default().unwrap();
@@ -88,6 +110,11 @@ pub fn run() {
             }
             
             app.manage(transcription_service);
+
+            // Setup system tray
+            let tray_manager = modules::tray::TrayManager::new();
+            tray_manager.setup_tray(&app.handle()).expect("Failed to setup system tray");
+            app.manage(tray_manager);
 
             // Keep the stream alive for the duration of the app
             std::mem::forget(_stream);

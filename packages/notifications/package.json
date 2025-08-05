@@ -1,0 +1,29 @@
+{
+  "name": "@acme/notifications",
+  "version": "0.0.7",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "default": "./src/index.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "lint": "ultracite lint",
+    "format": "ultracite format",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@acme/observability": "workspace:*",
+    "@t3-oss/env-nextjs": "^0.13.8",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@acme/tsconfig": "workspace:*",
+    "@biomejs/biome": "catalog:",
+    "@types/minimatch": "^5.1.2",
+    "typescript": "catalog:"
+  }
+}

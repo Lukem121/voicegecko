@@ -8,6 +8,7 @@ interface ImportMetaEnv {
   readonly VITE_PUBLIC_VOICEGECKO_URL: string;
   readonly VITE_PUBLIC_POSTHOG_KEY: string;
   readonly VITE_PUBLIC_POSTHOG_HOST: string;
+  readonly VITE_APP_VERSION: string;
 }
 
 interface ImportMeta {

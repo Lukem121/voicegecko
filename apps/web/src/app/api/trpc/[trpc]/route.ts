@@ -1,9 +1,9 @@
-import type { NextRequest } from "next/server";
-import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
-
-import { appRouter } from "@acme/api/src/root";
-import { createTRPCContext } from "@acme/api/src/trpc";
-import { serverAuth } from "@acme/auth";
+import { appRouter } from '@acme/api/src/root';
+import { createTRPCContext } from '@acme/api/src/trpc';
+import { serverAuth } from '@acme/auth';
+import { log } from '@acme/observability';
+import { fetchRequestHandler } from '@trpc/server/adapters/fetch';
+import type { NextRequest } from 'next/server';
 
 /**
  * Handle all tRPC requests (GET and POST)
@@ -11,7 +11,7 @@ import { serverAuth } from "@acme/auth";
  */
 const handler = async (request: NextRequest) => {
   return await fetchRequestHandler({
-    endpoint: "/api/trpc",
+    endpoint: '/api/trpc',
     req: request,
     router: appRouter,
     createContext: () =>
@@ -20,7 +20,7 @@ const handler = async (request: NextRequest) => {
         auth: serverAuth,
       }),
     onError: ({ error, path }) => {
-      console.error(`❌ tRPC Error on '${path}':`, error);
+      log.error(`❌ tRPC Error on '${path}':`, error);
     },
   });
 };

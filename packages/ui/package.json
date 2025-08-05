@@ -1,7 +1,7 @@
 {
   "name": "@acme/ui",
   "private": true,
-  "version": "0.1.0",
+  "version": "0.0.7",
   "type": "module",
   "exports": {
     "./globals.css": "./src/styles/globals.css",
@@ -12,13 +12,13 @@
   },
   "scripts": {
     "clean": "git clean -xdf .cache .turbo dist node_modules",
-    "format": "prettier --check . --ignore-path ../../.gitignore",
-    "lint": "eslint",
+    "format": "ultracite format",
+    "lint": "ultracite lint",
     "typecheck": "tsc --noEmit --emitDeclarationOnly false",
-    "ui-add": "pnpm dlx shadcn@latest add && prettier src --write --list-different"
+    "ui-add": "pnpm dlx shadcn@latest add"
   },
   "dependencies": {
-    "@hookform/resolvers": "^5.1.1",
+    "@hookform/resolvers": "^5.2.0",
     "@radix-ui/react-accordion": "^1.2.11",
     "@radix-ui/react-alert-dialog": "^1.1.14",
     "@radix-ui/react-aspect-ratio": "^1.1.7",
@@ -51,31 +51,28 @@
     "date-fns": "^4.1.0",
     "embla-carousel-react": "^8.6.0",
     "input-otp": "^1.4.2",
-    "lucide-react": "^0.475.0",
+    "lucide-react": "^0.525.0",
     "next-themes": "^0.4.6",
     "radix-ui": "^1.4.2",
     "react": "catalog:react19",
     "react-day-picker": "^9.7.0",
     "react-dom": "catalog:react19",
-    "react-hook-form": "^7.59.0",
+    "react-hook-form": "^7.61.1",
     "react-icons": "^5.5.0",
     "react-resizable-panels": "^3.0.3",
-    "recharts": "^3.0.2",
-    "sonner": "^2.0.5",
+    "recharts": "^3.1.0",
+    "sonner": "^2.0.6",
     "tailwind-merge": "^3.3.1",
     "tailwindcss": "catalog:",
-    "tw-animate-css": "^1.3.4",
+    "tw-animate-css": "^1.3.6",
     "vaul": "^1.1.2",
-    "zod": "^3.25.67"
+    "zod": "^4.0.10"
   },
   "devDependencies": {
-    "@acme/eslint-config": "workspace:*",
-    "@acme/prettier-config": "workspace:*",
     "@acme/tsconfig": "workspace:*",
+    "@biomejs/biome": "catalog:",
     "@tailwindcss/postcss": "^4.1.11",
     "@types/react": "catalog:react19",
-    "eslint": "catalog:",
-    "prettier": "catalog:",
     "react": "catalog:react19",
     "typescript": "catalog:",
     "zod": "catalog:"
@@ -83,6 +80,5 @@
   "peerDependencies": {
     "react": "catalog:react19",
     "zod": "catalog:"
-  },
-  "prettier": "@acme/prettier-config"
+  }
 }

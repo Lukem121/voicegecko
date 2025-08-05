@@ -1,46 +1,46 @@
 export default function LogoSquare({ className }: { className?: string }) {
   return (
     <svg
+      className={className}
       fill="none"
       viewBox="0 0 1024 1024"
       xmlns="http://www.w3.org/2000/svg"
-      className={className}
     >
-      <rect height="1024" width="1024" fill="#E06B43" rx="116.157" />
+      <rect fill="#E06B43" height="1024" rx="116.157" width="1024" />
       <rect
-        height="238.661"
-        width="257.02"
         fill="#EFDDAF"
+        height="238.661"
         rx="40.757"
+        width="257.02"
         x="730.263"
         y="273.339"
       />
       <rect
-        height="32.6374"
-        width="169.307"
         fill="#413A2E"
+        height="32.6374"
         rx="16.3028"
+        width="169.307"
         x="773.099"
         y="334.534"
       />
       <rect
-        height="32.6374"
-        width="136.669"
         fill="#413A2E"
+        height="32.6374"
         rx="16.3028"
+        width="136.669"
         x="773.099"
         y="410.008"
       />
       <mask
         height="1024"
         id="mask0_887_203"
-        style={{ maskType: "alpha" }}
+        maskUnits="userSpaceOnUse"
+        style={{ maskType: 'alpha' }}
         width="1024"
         x="0"
         y="0"
-        maskUnits="userSpaceOnUse"
       >
-        <rect height="1024" width="1024" fill="#E06B43" rx="116.157" />
+        <rect fill="#E06B43" height="1024" rx="116.157" width="1024" />
       </mask>
       <g mask="url(#mask0_887_203)">
         <path
@@ -130,11 +130,11 @@ export default function LogoSquare({ className }: { className?: string }) {
         <mask
           height="764"
           id="mask1_887_203"
-          style={{ maskType: "alpha" }}
+          maskUnits="userSpaceOnUse"
+          style={{ maskType: 'alpha' }}
           width="692"
           x="12"
           y="152"
-          maskUnits="userSpaceOnUse"
         >
           <path
             d="M165.227 486.881C60.111 642.945 28.0577 737.09 12.239 915.248H575.235L571.155 804.077C571.155 724.522 486.502 563.375 528.319 553.176C607.872 526.658 700.685 452.204 702.725 391.009C704.765 329.813 696.605 323.694 656.829 274.738C662.948 186.005 579.561 128.103 494.661 163.567C463.044 152.348 377.37 148.268 337.594 162.547H303.936C243.743 172.122 221.638 198.861 182.566 247.2L154.008 469.543L165.227 486.881Z"
@@ -144,11 +144,11 @@ export default function LogoSquare({ className }: { className?: string }) {
         <mask
           height="764"
           id="mask2_887_203"
-          style={{ maskType: "alpha" }}
+          maskUnits="userSpaceOnUse"
+          style={{ maskType: 'alpha' }}
           width="692"
           x="12"
           y="152"
-          maskUnits="userSpaceOnUse"
         >
           <path
             d="M165.227 486.881C60.111 642.945 28.0577 737.09 12.239 915.248H575.235L571.155 804.077C571.155 724.522 486.502 563.375 528.319 553.176C607.872 526.658 700.685 452.204 702.725 391.009C704.765 329.813 696.605 323.694 656.829 274.738C662.948 186.005 579.561 128.103 494.661 163.567C463.044 152.348 377.37 148.268 337.594 162.547H303.936C243.743 172.122 221.638 198.861 182.566 247.2C182.566 247.2 116.464 296.797 113.211 356.972C109.958 417.148 154.008 469.543 154.008 469.543L165.227 486.881Z"

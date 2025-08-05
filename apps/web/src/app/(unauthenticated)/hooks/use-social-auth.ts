@@ -1,9 +1,9 @@
-import { useState } from "react";
+import { useState } from 'react';
 
-import { authClient } from "~/lib/auth/client";
-import { APP_ROUTES } from "~/utils/app-routes";
+import { authClient } from '~/lib/auth/client';
+import { APP_ROUTES } from '~/utils/app-routes';
 
-export type SocialProvider = "discord" | "google";
+export type SocialProvider = 'discord' | 'google';
 
 interface LoadingState {
   discord: boolean;
@@ -36,18 +36,18 @@ export function useSocialAuth({
     setIsLoading((prev) => ({ ...prev, [provider]: true }));
     setError(null);
 
-    const { error } = await authClient.signIn.social({
+    const { error: socialError } = await authClient.signIn.social({
       provider,
       callbackURL,
       errorCallbackURL: APP_ROUTES.AUTH.ERROR,
       fetchOptions: {
-        onError: ({ error }) => setError(error.message),
+        onError: ({ error: onError }) => setError(onError.message),
       },
     });
 
-    if (error) {
+    if (socialError) {
       setIsLoading((prev) => ({ ...prev, [provider]: false }));
-      setError(error.message ?? "An unexpected error occurred.");
+      setError(socialError.message ?? 'An unexpected error occurred.');
       return;
     }
   };

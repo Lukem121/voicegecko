@@ -1,4 +1,4 @@
-import { Skeleton } from "@acme/ui/components/ui/skeleton";
+import { Skeleton } from '@acme/ui/components/ui/skeleton';
 
 export function TranscriptionSkeleton() {
   return (
@@ -11,10 +11,11 @@ export function TranscriptionSkeleton() {
         <div className="overflow-hidden rounded-lg border">
           {Array.from({ length: 3 }).map((_, index) => (
             <div
-              key={index}
               className={`flex items-start justify-between p-3 ${
-                index < 2 ? "border-border border-b" : ""
+                index < 2 ? 'border-border border-b' : ''
               }`}
+              // biome-ignore lint/suspicious/noArrayIndexKey: skeleton components with static content can safely use index as key
+              key={index}
             >
               <div className="flex min-w-0 flex-1 items-start gap-3">
                 {/* Timestamp skeleton - matches text-sm */}
@@ -48,10 +49,11 @@ export function TranscriptionSkeleton() {
         <div className="overflow-hidden rounded-lg border">
           {Array.from({ length: 2 }).map((_, index) => (
             <div
-              key={index}
               className={`flex items-start justify-between p-3 ${
-                index < 1 ? "border-border border-b" : ""
+                index < 1 ? 'border-border border-b' : ''
               }`}
+              // biome-ignore lint/suspicious/noArrayIndexKey: skeleton components with static content can safely use index as key
+              key={index}
             >
               <div className="flex min-w-0 flex-1 items-start gap-3">
                 <Skeleton className="h-5 w-16 flex-shrink-0" />

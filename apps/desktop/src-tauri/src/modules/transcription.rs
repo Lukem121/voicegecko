@@ -11,6 +11,7 @@ pub enum TranscriptionError {
     #[error("Model load failed: {0}")]
     ModelLoad(String),
     #[error("Audio processing failed: {0}")]
+    #[allow(dead_code)]
     AudioProcessing(String),
     #[error("Transcription failed: {0}")]
     Transcription(String),
@@ -89,7 +90,11 @@ impl From<TranscriptionProgress> for TranscriptionEvent {
 }
 
 #[tauri::command]
-pub async fn transcribe_audio_buffer(app: AppHandle, audio_data: AudioData) -> Result<(), String> {
+pub async fn transcribe_audio_buffer(
+    app: AppHandle,
+    audio_data: AudioData,
+    dictionary_prompt: Option<String>,
+) -> Result<(), String> {
     let model_id = model_manager::get_active_model_id(app.clone()).map_err(|e| e.to_string())?;
 
     let provider: Box<dyn TranscriptionProvider> = if model_id == "cloud" {
@@ -103,6 +108,7 @@ pub async fn transcribe_audio_buffer(app: AppHandle, audio_data: AudioData) -> R
     } else {
         Box::new(LocalWhisperProvider {
             model_id: model_id.clone(),
+            dictionary_prompt,
         })
     };
 

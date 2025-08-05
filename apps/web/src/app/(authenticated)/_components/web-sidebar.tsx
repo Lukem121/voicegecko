@@ -1,11 +1,6 @@
-"use client";
+'use client';
 
-import type { LucideIcon } from "lucide-react";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { ChartBar, CreditCard, Package } from "lucide-react";
-
-import LogoSquare from "@acme/ui/components/logos/logo-square";
+import LogoSquare from '@acme/ui/components/logos/logo-square';
 import {
   Sidebar,
   SidebarContent,
@@ -19,7 +14,11 @@ import {
   SidebarMenuSub,
   SidebarMenuSubButton,
   SidebarMenuSubItem,
-} from "@acme/ui/components/ui/sidebar";
+} from '@acme/ui/components/ui/sidebar';
+import type { LucideIcon } from 'lucide-react';
+import { ChartBar, CreditCard, Package, User2 } from 'lucide-react';
+import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 
 interface NavigationSubItem {
   title: string;
@@ -40,19 +39,24 @@ interface NavigationData {
 const data: NavigationData = {
   navMain: [
     {
-      title: "Usage",
-      url: "/app/usage",
+      title: 'Usage',
+      url: '/app/usage',
       icon: ChartBar,
     },
     {
-      title: "Plans",
-      url: "/app/plans",
+      title: 'Plans',
+      url: '/app/plans',
       icon: Package,
     },
     {
-      title: "Billing",
-      url: "/app/billing",
+      title: 'Billing',
+      url: '/app/billing',
       icon: CreditCard,
+    },
+    {
+      title: 'Profile',
+      url: '/app/profile',
+      icon: User2,
     },
   ],
 };
@@ -61,15 +65,15 @@ export default function AppSidebar() {
   const pathname = usePathname();
   return (
     <Sidebar
-      variant="inset"
-      collapsible="icon"
       className="!top-auto !bottom-auto !left-auto !h-auto"
+      collapsible="icon"
+      variant="inset"
     >
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem>
             <div className="flex items-center gap-2">
-              <div className="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg">
+              <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
                 <LogoSquare />
               </div>
               <div className="grid flex-1 text-left text-sm leading-tight">
@@ -90,8 +94,8 @@ export default function AppSidebar() {
                   <SidebarMenuButton
                     asChild
                     isActive={
-                      item.url === "/app"
-                        ? pathname === "/app"
+                      item.url === '/app'
+                        ? pathname === '/app'
                         : pathname.startsWith(item.url)
                     }
                   >
