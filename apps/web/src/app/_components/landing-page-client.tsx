@@ -172,7 +172,7 @@ export default function LandingPageClient({
 }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'yearly'>(
-    'monthly'
+    'yearly'
   );
   const {
     isOpen: isStudentModalOpen,
@@ -708,11 +708,6 @@ export default function LandingPageClient({
           <div className="mt-8 flex items-center justify-center">
             <div className="flex items-center gap-3">
               <Toggle selected={billingPeriod} setSelected={setBillingPeriod} />
-              {isYearly && (
-                <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-1 font-semibold text-[11px] text-emerald-600 ring-1 ring-emerald-500/20">
-                  Save up to 17%
-                </span>
-              )}
             </div>
           </div>
           {/* ===== PRICING CARDS ===== */}
@@ -2004,49 +1999,6 @@ const ShortcutPlayground = () => {
         <span>This is a playful demo—no mic required.</span>
       </div>
     </motion.div>
-  );
-};
-
-/* =========================
-   WORKS EVERYWHERE: Paste vs Auto-type toggle (illustrative only)
-   ========================= */
-
-const _PasteAutoTypeToggle = () => {
-  const [mode, setMode] = useState<'paste' | 'type'>('paste');
-  return (
-    <div className="mx-auto mt-5 max-w-lg rounded-xl border border-border bg-card p-2">
-      <div className="grid grid-cols-2 rounded-lg border border-border bg-muted p-1 text-sm">
-        <button
-          className={cn(
-            'rounded-md px-3 py-1.5 font-medium transition',
-            mode === 'paste'
-              ? 'bg-background text-card-foreground shadow-sm'
-              : 'text-muted-foreground'
-          )}
-          onClick={() => setMode('paste')}
-          type="button"
-        >
-          Paste
-        </button>
-        <button
-          className={cn(
-            'rounded-md px-3 py-1.5 font-medium transition',
-            mode === 'type'
-              ? 'bg-background text-card-foreground shadow-sm'
-              : 'text-muted-foreground'
-          )}
-          onClick={() => setMode('type')}
-          type="button"
-        >
-          Auto‑type
-        </button>
-      </div>
-      <div className="mt-3 rounded-md border border-border bg-muted p-3 text-center text-muted-foreground text-xs">
-        {mode === 'paste'
-          ? 'Voice Gecko copies your text—press paste anywhere.'
-          : 'Voice Gecko can type the text into your focused app.'}
-      </div>
-    </div>
   );
 };
 
