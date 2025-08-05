@@ -1890,15 +1890,6 @@ const StickyCta = ({
                 downloadsData={downloadsData}
                 text="Download for Windows"
               />
-              <Link
-                className={cn(
-                  buttonVariants({ variant: 'default', size: 'lg' }),
-                  '!border-black rounded-lg border-2 bg-transparent font-semibold text-xs tracking-tight hover:scale-[1.01]'
-                )}
-                href="/pricing"
-              >
-                Pricing
-              </Link>
             </div>
           </div>
         </motion.div>
