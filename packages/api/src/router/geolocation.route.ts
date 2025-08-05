@@ -1,18 +1,12 @@
 import type { TRPCRouterRecord } from '@trpc/server';
-import { IPFlare } from 'ipflare';
-import { apiEnv } from '../../env';
+import { geolocationService } from '../services/geolocation/geolocation.service';
 import { publicProcedure } from '../trpc';
 
-export const authRouter = {
-  getGeolocation: publicProcedure.mutation(async ({ ctx }) => {
-    const geolocator = new IPFlare({
-      apiKey: apiEnv().IPFLARE_API_KEY,
-    });
-
-    const ip = ctx.ip;
-
-    const result = await geolocator.lookup(ip);
-
-    return result;
+export const geolocationRouter = {
+  getCurrency: publicProcedure.query(async ({ ctx }) => {
+    if (!ctx.ip) {
+      return null;
+    }
+    return await geolocationService.getCurrency(ctx.ip);
   }),
 } satisfies TRPCRouterRecord;

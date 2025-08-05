@@ -9,19 +9,19 @@ import {
   SelectValue,
 } from '@acme/ui/components/ui/select';
 import { cn } from '@acme/ui/lib/utils';
-import { useRouter } from 'next/navigation';
+import { useQuery } from '@tanstack/react-query';
 import {
   createContext,
   type FC,
   type ReactNode,
   useContext,
   useEffect,
-  useMemo,
   useState,
 } from 'react';
 import { Flag } from '~/components/flag';
-import type { Currency } from '~/server/schemas/currency';
-import { api, type RouterOutputs } from '~/trpc/react';
+import { useTRPC } from '~/trpc/react';
+
+type Currency = 'usd' | 'eur' | 'gbp';
 
 type CurrencyContext = {
   currency: Currency;
@@ -35,72 +35,60 @@ export function useCurrency() {
   if (!context) {
     throw new Error('useCurrency must be used within a CurrencyProvider.');
   }
-
   return context;
 }
 
+const CURRENCY_STORAGE_KEY = 'voicegecko-currency-preference';
+
 export const CurrencyProvider: FC<{ children: ReactNode }> = ({ children }) => {
-  const utils = api.useUtils();
-  const router = useRouter();
-  const { data: location, isLoading } = api.geolocation.get.useQuery();
+  // Start with 'usd' as default to prevent SSR/hydration mismatches
+  const [currency, setCurrency] = useState<Currency>('usd');
+  const [hasCheckedLocalStorage, setHasCheckedLocalStorage] = useState(false);
 
-  const geoCurrency = location?.currency;
-
-  const getInitialCurrency = (): Currency => {
+  // Check localStorage on mount (client-side only)
+  useEffect(() => {
+    // Only run on client-side
     if (typeof window !== 'undefined') {
-      const cookie = document.cookie
-        .split('; ')
-        .find((row) => row.startsWith('currency='));
-      if (cookie) {
-        const value = cookie.split('=')[1];
-        if (value === 'usd' || value === 'eur' || value === 'gbp') {
-          return value;
-        }
+      const savedCurrency = localStorage.getItem(
+        CURRENCY_STORAGE_KEY
+      ) as Currency | null;
+      if (savedCurrency && ['usd', 'eur', 'gbp'].includes(savedCurrency)) {
+        setCurrency(savedCurrency);
       }
     }
-    return 'usd';
-  };
+    setHasCheckedLocalStorage(true);
+  }, []);
 
-  const [currency, setCurrencyState] = useState<Currency>(getInitialCurrency);
+  const trpc = useTRPC();
+  const options = trpc.geolocation.getCurrency.queryOptions(undefined, {
+    enabled: hasCheckedLocalStorage && currency === 'usd', // Only fetch if still default and localStorage checked
+  });
+  const query = useQuery(options);
+  const resolvedCurrency = query.data ?? null;
 
   useEffect(() => {
-    if (!isLoading && geoCurrency !== undefined) {
-      const validatedCurrency = validateCurrency(geoCurrency, location);
-      if (validatedCurrency) {
-        setCurrency(validatedCurrency);
-      }
+    // Only update if we're still on default 'usd' and have a resolved currency
+    if (currency === 'usd' && resolvedCurrency && hasCheckedLocalStorage) {
+      setCurrency(resolvedCurrency);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isLoading, location, geoCurrency]);
+  }, [currency, resolvedCurrency, hasCheckedLocalStorage]);
 
-  const setCurrency = (newCurrency: Currency) => {
-    setCurrencyState(newCurrency);
-    if (typeof window !== 'undefined') {
-      document.cookie = `currency=${newCurrency}; path=/; max-age=${
-        60 * 60 * 24 * 365
-      }`; // Expires in 1 year
-    }
-
-    void utils.invalidate();
-    router.refresh();
+  // Enhanced setCurrency function that saves to localStorage
+  const handleSetCurrency = (newCurrency: Currency) => {
+    setCurrency(newCurrency);
+    localStorage.setItem(CURRENCY_STORAGE_KEY, newCurrency);
   };
 
-  const contextValue = useMemo<CurrencyContext>(
-    () => ({
-      currency,
-      setCurrency,
-    }),
-    [currency]
-  );
-
   return (
-    <CurrencyContext.Provider value={contextValue}>
+    <CurrencyContext.Provider
+      value={{ currency, setCurrency: handleSetCurrency }}
+    >
       {children}
     </CurrencyContext.Provider>
   );
 };
 
-export const CurrencySelect = ({ className }: { className?: string }) => {
+export const CurrencySelector = ({ className }: { className?: string }) => {
   const { currency, setCurrency } = useCurrency();
   return (
     <Select onValueChange={setCurrency} value={currency}>
@@ -128,33 +116,4 @@ export const CurrencySelect = ({ className }: { className?: string }) => {
       </SelectContent>
     </Select>
   );
-};
-
-const validateCurrency = (
-  currency: string,
-  location?: RouterOutputs['geolocation']['get']
-): Currency | null => {
-  if (currency === 'usd' || currency === 'eur' || currency === 'gbp') {
-    return currency;
-  }
-
-  if (location === undefined) {
-    return null;
-  }
-
-  if (location.country_code === 'GB') {
-    return 'gbp';
-  }
-
-  // Lets check if they are in the EU
-  if (location.continent_code === 'EU') {
-    return 'eur';
-  }
-
-  // North America
-  if (location.continent_code === 'NA') {
-    return 'usd';
-  }
-
-  return null;
 };

@@ -1,6 +1,6 @@
 'use client';
 
-import type { PriceWithMetadata } from '@acme/api/src/router/stripe.route';
+import type { PriceWithMetadata } from '@acme/api/src/services/stripe/stripe.service';
 import { log } from '@acme/observability';
 import {
   Alert,
@@ -26,6 +26,7 @@ import { useState } from 'react';
 import { StudentDiscountModal } from '~/components/student-discount-modal';
 import { useStudentDiscountModal } from '~/hooks/use-student-discount-modal';
 import { authClient } from '~/lib/auth/client';
+import { useCurrency } from '~/providers/currency';
 import { useTRPC } from '~/trpc/react';
 import { useCreateBillingPortalSession } from '../../_hooks/use-create-billing-portal-session';
 
@@ -175,6 +176,7 @@ export default function Plans({ prices, subscription, error }: PlansProps) {
   const router = useRouter();
   const createBillingPortalSessionMutation = useCreateBillingPortalSession();
   const [billingPeriod, setBillingPeriod] = useState<BillingPeriod>('monthly');
+  const { currency } = useCurrency();
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
   const [alertState, setAlertState] = useState<AlertState>({
     show: false,
@@ -251,18 +253,20 @@ export default function Plans({ prices, subscription, error }: PlansProps) {
 
   // Helper to format price with currency
   const formatPrice = (price: PriceWithMetadata) => {
+    const currencyData = price.currencies[currency];
     const formatter = new Intl.NumberFormat('en-US', {
       style: 'currency',
-      currency: price.currency.toUpperCase(),
+      currency: currencyData.currency.toUpperCase(),
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
     });
-    return formatter.format(price.unitAmount / 100); // Convert from cents
+    return formatter.format(currencyData.unitAmount / 100); // Convert from cents
   };
 
   // Helper to format price as per-unit amount (for plans with minimum quantities)
   const formatPricePerUnit = (price: PriceWithMetadata) => {
-    let unitAmount = price.unitAmount;
+    const currencyData = price.currencies[currency];
+    let unitAmount = currencyData.unitAmount;
 
     // If the price has a minimum quantity (like Teams plan with minimum 3 seats),
     // divide by that quantity to get per-unit price
@@ -272,7 +276,7 @@ export default function Plans({ prices, subscription, error }: PlansProps) {
 
     const formatter = new Intl.NumberFormat('en-US', {
       style: 'currency',
-      currency: price.currency.toUpperCase(),
+      currency: currencyData.currency.toUpperCase(),
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
     });
@@ -281,7 +285,8 @@ export default function Plans({ prices, subscription, error }: PlansProps) {
 
   // Helper to format yearly price as monthly equivalent
   const formatYearlyAsMonthly = (price: PriceWithMetadata, _planId: string) => {
-    let monthlyAmount = price.unitAmount / 12; // Divide yearly price by 12
+    const currencyData = price.currencies[currency];
+    let monthlyAmount = currencyData.unitAmount / 12; // Divide yearly price by 12
 
     // If the price has a minimum quantity (like Teams plan with minimum 3 seats),
     // divide by that quantity to get per-unit monthly price
@@ -291,7 +296,7 @@ export default function Plans({ prices, subscription, error }: PlansProps) {
 
     const formatter = new Intl.NumberFormat('en-US', {
       style: 'currency',
-      currency: price.currency.toUpperCase(),
+      currency: currencyData.currency.toUpperCase(),
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
     });

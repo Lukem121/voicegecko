@@ -14,7 +14,7 @@
     "typecheck": "tsc --noEmit --emitDeclarationOnly false"
   },
   "dependencies": {
-    "@react-email/components": "0.3.2",
+    "@react-email/components": "0.4.0",
     "@sendgrid/mail": "^8.1.5",
     "@t3-oss/env-nextjs": "^0.13.8",
     "react": "catalog:react19",
@@ -24,10 +24,10 @@
   "devDependencies": {
     "@acme/tsconfig": "workspace:*",
     "@biomejs/biome": "catalog:",
-    "@react-email/preview-server": "4.2.4",
+    "@react-email/preview-server": "4.2.7",
     "@types/react": "catalog:react19",
     "@types/react-dom": "catalog:react19",
-    "react-email": "^4.2.4",
+    "react-email": "^4.2.7",
     "typescript": "catalog:"
   }
 }

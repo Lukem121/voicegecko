@@ -8,6 +8,7 @@ import { NuqsAdapter } from 'nuqs/adapters/next/app';
 import { TRPCReactProvider } from '~/trpc/react';
 
 import '@acme/ui/globals.css';
+import { CurrencyProvider } from '~/providers/currency';
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://www.voicegecko.io'),
@@ -64,7 +65,9 @@ export default function RootLayout(props: { children: React.ReactNode }) {
       >
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <NuqsAdapter>
-            <TRPCReactProvider>{props.children}</TRPCReactProvider>
+            <TRPCReactProvider>
+              <CurrencyProvider>{props.children}</CurrencyProvider>
+            </TRPCReactProvider>
             <Toaster />
             <div className="absolute top-4 right-4 z-50">
               <ThemeToggle />
