@@ -48,16 +48,19 @@ export function useEmailSignup({
             log.info('Email signup successful, verification email sent');
             onSuccess?.();
           },
-          onError: ({ error }) => {
-            log.error('use-email-signup', { error });
+          onError: ({ error: signUpOnError }) => {
+            log.error('use-email-signup', { error: signUpError });
 
-            if (error.code) {
-              const errorMessage = getClientAuthErrorMessage(error.code, 'en');
+            if (signUpOnError.code) {
+              const errorMessage = getClientAuthErrorMessage(
+                signUpOnError.code,
+                'en'
+              );
               setError(errorMessage);
               onError?.(errorMessage);
             } else {
               const errorMessage =
-                error.message ?? 'An unexpected error occurred.';
+                signUpOnError.message ?? 'An unexpected error occurred.';
               setError(errorMessage);
               onError?.(errorMessage);
             }

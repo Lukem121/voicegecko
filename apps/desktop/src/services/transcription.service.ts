@@ -15,7 +15,7 @@ export class TranscriptionService {
     // Private constructor to prevent instantiation
   }
 
-  public static getInstance(): TranscriptionService {
+  static getInstance(): TranscriptionService {
     TranscriptionService.instance ??= new TranscriptionService();
     return TranscriptionService.instance;
   }
