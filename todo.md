@@ -2,6 +2,7 @@ Todo
 
 - [ ] Landing page & subsequent pages
 - [ ] Links in the Emails need removing or implementing.
+- [ ] The voice gecko bar is appearing in a weird location. We should hide it until it's being positioned correctly.
 
 Pre Launch Checks
 
