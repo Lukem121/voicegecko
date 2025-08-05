@@ -16,6 +16,8 @@ const config = {
     '@acme/validators',
   ],
 
+  serverExternalPackages: ['pino', 'pino-pretty'],
+
   /** We already do linting and typechecking as separate tasks in CI */
   eslint: { ignoreDuringBuilds: true },
   typescript: { ignoreBuildErrors: true },

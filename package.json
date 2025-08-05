@@ -5,7 +5,7 @@
     "node": ">=22.14.0",
     "pnpm": ">=9.6.0"
   },
-  "packageManager": "pnpm@10.13.1",
+  "packageManager": "pnpm@10.14.0",
   "scripts": {
     "build": "turbo run build",
     "clean": "git clean -xdf node_modules",
@@ -28,7 +28,7 @@
     "release": "node scripts/release-helper.js"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.1.2",
+    "@biomejs/biome": "2.1.3",
     "@turbo/gen": "^2.5.5",
     "glob": "^11.0.3",
     "turbo": "^2.5.5",

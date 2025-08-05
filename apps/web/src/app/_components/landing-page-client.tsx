@@ -1,6 +1,6 @@
 'use client';
 
-import type { PriceWithMetadata } from '@acme/api/src/router/stripe.route';
+import type { PriceWithMetadata } from '@acme/api/src/services/stripe/stripe.service';
 import { log } from '@acme/observability';
 import VoiceGeckoLogoText from '@acme/ui/components/logos/logo-text';
 import {
@@ -56,6 +56,7 @@ import { StudentDiscountModal } from '~/components/student-discount-modal';
 import { useStudentDiscountModal } from '~/hooks/use-student-discount-modal';
 import type { DownloadsData } from '~/lib/downloads-utils';
 import { getPrimaryDownload } from '~/lib/downloads-utils';
+import { CurrencySelector, useCurrency } from '~/providers/currency';
 import Threads from './landing/threads';
 
 // Simple height measurement hook replacement
@@ -180,23 +181,50 @@ export default function LandingPageClient({
     closeModal: closeStudentModal,
   } = useStudentDiscountModal();
 
+  // Get selected currency from provider
+  const { currency } = useCurrency();
+
   // Helper to format price with currency
   const formatPrice = (price: PriceWithMetadata) => {
+    // Defensive programming: check if price and currencies exist
+    if (!price?.currencies) {
+      return '$0'; // Fallback for invalid price data
+    }
+
+    const currencyData = price.currencies[currency];
+
+    // Check if currency data exists for the selected currency
+    if (!currencyData) {
+      return '$0'; // Fallback if currency not available
+    }
+
     const formatter = new Intl.NumberFormat('en-US', {
       style: 'currency',
-      currency: price.currency.toUpperCase(),
+      currency: currencyData.currency.toUpperCase(),
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
     });
-    return formatter.format(price.unitAmount / 100); // Convert from cents
+    return formatter.format(currencyData.unitAmount / 100); // Convert from cents
   };
 
   // Helper to format yearly price as monthly equivalent
   const formatYearlyAsMonthly = (price: PriceWithMetadata) => {
-    const monthlyAmount = price.unitAmount / 12; // Divide yearly price by 12
+    // Defensive programming: check if price and currencies exist
+    if (!price?.currencies) {
+      return '$0'; // Fallback for invalid price data
+    }
+
+    const currencyData = price.currencies[currency];
+
+    // Check if currency data exists for the selected currency
+    if (!currencyData) {
+      return '$0'; // Fallback if currency not available
+    }
+
+    const monthlyAmount = currencyData.unitAmount / 12; // Divide yearly price by 12
     const formatter = new Intl.NumberFormat('en-US', {
       style: 'currency',
-      currency: price.currency.toUpperCase(),
+      currency: currencyData.currency.toUpperCase(),
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
     });
@@ -947,13 +975,13 @@ export default function LandingPageClient({
             </Link>
           </div>
           <div className="pointer-events-none mx-auto mt-6 w-40">
-            <RiveGeckoPlaceholder className="h-24 " pose="wave" />
+            <RiveGeckoPlaceholder className="h-24" pose="wave" />
           </div>
         </div>
       </section>
 
       {/* ===== FOOTER ===== */}
-      <footer className="border-border border-t bg-background">
+      <footer className="mb-24 border-border border-t bg-background">
         <div className="mx-auto grid max-w-6xl grid-cols-2 gap-8 px-6 py-12 md:grid-cols-4">
           <div>
             <h4 className="font-semibold text-foreground text-sm">Product</h4>
@@ -1062,7 +1090,9 @@ export default function LandingPageClient({
               <VoiceGeckoLogoText className="w-24 opacity-80" />
               <span>© {new Date().getFullYear()} Voice Gecko</span>
             </div>
-            <span>English only • Windows now • macOS next</span>
+            <div className="flex w-56 items-center gap-4">
+              <CurrencySelector />
+            </div>
           </div>
         </div>
       </footer>

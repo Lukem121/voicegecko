@@ -1,9 +1,9 @@
-import type { PriceWithMetadata } from '@acme/api/src/router/stripe.route';
+import type { PriceWithMetadata } from '@acme/api/src/services/stripe/stripe.service';
+import { stripeService } from '@acme/api/src/services/stripe/stripe.service';
 import { log } from '@acme/observability';
 import { unstable_cache } from 'next/cache';
 import { getDownloadsData } from '~/lib/downloads';
 import type { DownloadsData } from '~/lib/downloads-utils';
-import { caller } from '~/trpc/server';
 import LandingPageClient from './_components/landing-page-client';
 
 // ISR configuration - revalidate every hour
@@ -24,7 +24,7 @@ const getCachedDownloadsData = unstable_cache(
 // Cache pricing data with ISR tag for on-demand revalidation
 const getCachedPricingData = unstable_cache(
   async (): Promise<Record<string, PriceWithMetadata>> => {
-    return await caller.stripe.getPrices();
+    return await stripeService.getPrices();
   },
   ['landing-pricing'],
   {

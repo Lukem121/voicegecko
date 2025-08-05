@@ -1,6 +1,6 @@
 'use client';
 
-import type { PriceWithMetadata } from '@acme/api/src/router/stripe.route';
+import type { PriceWithMetadata } from '@acme/api/src/services/stripe/stripe.service';
 import { log } from '@acme/observability';
 import {
   Alert,
@@ -23,6 +23,7 @@ import { AlertTriangle, Loader2, RefreshCw, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
+import { useCurrency } from '~/providers/currency';
 import { useTRPC } from '~/trpc/react';
 import { useCreateBillingPortalSession } from '../../_hooks/use-create-billing-portal-session';
 
@@ -210,6 +211,7 @@ function CurrentPlanCard({
 
 export default function Billing({ prices, subscription, error }: BillingProps) {
   const router = useRouter();
+  const { currency } = useCurrency();
   const [isLoading, setIsLoading] = useState(false);
   const [isRestoring, setIsRestoring] = useState(false);
   const [alertState, setAlertState] = useState<AlertState>({
@@ -241,13 +243,14 @@ export default function Billing({ prices, subscription, error }: BillingProps) {
 
   // Helper to format price with currency
   const formatPrice = (price: PriceWithMetadata) => {
+    const currencyData = price.currencies[currency];
     const formatter = new Intl.NumberFormat('en-US', {
       style: 'currency',
-      currency: price.currency.toUpperCase(),
+      currency: currencyData.currency.toUpperCase(),
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
     });
-    return formatter.format(price.unitAmount / 100); // Convert from cents
+    return formatter.format(currencyData.unitAmount / 100); // Convert from cents
   };
 
   // Helper to find the right price for a plan
