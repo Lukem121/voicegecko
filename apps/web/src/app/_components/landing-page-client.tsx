@@ -755,7 +755,6 @@ export default function LandingPageClient({
                   {
                     text: 'Lightning fast transcription',
                     included: true,
-                    subtext: '1-2 seconds average',
                   },
                   { text: 'Global shortcut access', included: true },
                   { text: 'Add words to dictionary', included: true },
@@ -2042,14 +2041,14 @@ const Toggle = ({
       >
         {isYearly && (
           <motion.div
-            className="absolute inset-0 rounded-full bg-neutral-900"
+            className="absolute inset-0 rounded-full border border-border bg-neutral-100 dark:bg-neutral-900"
             initial={false}
             layoutId="toggleBackground"
             transition={{ type: 'spring', stiffness: 300, damping: 30 }}
           />
         )}
         <span
-          className={`relative block font-medium text-sm ${isYearly ? 'text-white' : 'text-neutral-800'} duration-200`}
+          className={`relative block font-medium text-sm ${isYearly ? 'text-neutral-800 dark:text-white' : 'text-muted-foreground'} duration-200`}
         >
           Yearly
           <span className="ml-2 font-semibold text-green-500 text-xs">
@@ -2064,14 +2063,14 @@ const Toggle = ({
       >
         {!isYearly && (
           <motion.div
-            className="absolute inset-0 rounded-full bg-neutral-900"
+            className="absolute inset-0 rounded-full border border-border bg-neutral-100 dark:bg-neutral-900"
             initial={false}
             layoutId="toggleBackground"
             transition={{ type: 'spring', stiffness: 300, damping: 30 }}
           />
         )}
         <span
-          className={`relative block font-medium text-sm ${isYearly ? 'text-neutral-800' : 'text-white'} duration-200`}
+          className={`relative block font-medium text-sm ${isYearly ? 'text-neutral-800 dark:text-white' : 'text-muted-foreground'} duration-200`}
         >
           Monthly
         </span>
