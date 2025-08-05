@@ -9,8 +9,8 @@
 
 import type { Auth } from '@acme/auth';
 import { db } from '@acme/db/client';
-import { log } from '@acme/observability';
 import { initTRPC, TRPCError } from '@trpc/server';
+import { ipAddress } from '@vercel/functions';
 import superjson from 'superjson';
 import { ZodError, z } from 'zod/v4';
 
@@ -35,12 +35,13 @@ export const createTRPCContext = async (opts: {
   const session = await authApi.getSession({
     headers: opts.headers,
   });
-  const ip: string | null = getClientIp(opts.headers);
+  const ip = ipAddress(opts.headers);
   return {
     authApi,
     session,
     db,
     headers: opts.headers,
+    ip,
   };
 };
 /**

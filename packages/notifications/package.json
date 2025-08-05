@@ -23,7 +23,7 @@
   "devDependencies": {
     "@acme/tsconfig": "workspace:*",
     "@biomejs/biome": "catalog:",
-    "@types/minimatch": "^5.1.2",
+    "@types/minimatch": "^6.0.0",
     "typescript": "catalog:"
   }
 }
