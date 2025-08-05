@@ -14,7 +14,7 @@ import {
   Wifi,
   WifiOff,
 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { type JSX, useEffect, useState } from 'react';
 
 interface ConnectivityErrorProps {
   isOnline: boolean;
