@@ -2,7 +2,6 @@ Todo
 
 - [ ] Landing page & subsequent pages
 - [ ] Links in the Emails need removing or implementing.
-- [ ] On App Startup, it like shows it. I want it to show start on the system tray, not start showing up. It's kind of annoying seeing the application window when Windows launches.
 
 Pre Launch Checks
 

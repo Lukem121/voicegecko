@@ -27,7 +27,7 @@ pub fn run() {
         .plugin(tauri_plugin_global_shortcut::Builder::new().build())
         .plugin(tauri_plugin_autostart::init(
             tauri_plugin_autostart::MacosLauncher::LaunchAgent,
-            None,
+            Some(vec!["--autostart"]),
         ))
         .plugin(tauri_plugin_process::init())
         .plugin(tauri_plugin_opener::init())
@@ -94,6 +94,22 @@ pub fn run() {
             modules::tray::update_tray_stats
         ])
         .setup(|app| {
+            // Check if the app was launched via autostart
+            let args: Vec<String> = std::env::args().collect();
+            let is_autostart = args.iter().any(|arg| arg == "--autostart");
+            
+            println!("[Rust] App launched with args: {:?}", args);
+            println!("[Rust] Is autostart launch: {}", is_autostart);
+            
+            // If NOT launched via autostart, show the main window (it starts hidden by default)
+            if !is_autostart {
+                println!("[Rust] Showing main window for normal launch");
+                if let Some(window) = app.get_webview_window("main") {
+                    let _ = window.show();
+                }
+            } else {
+                println!("[Rust] Keeping main window hidden due to autostart launch");
+            }
             let (_stream, stream_handle) = rodio::OutputStream::try_default().unwrap();
             let sink = rodio::Sink::try_new(&stream_handle).unwrap();
             app.manage(modules::audio::AudioState::new(sink));
