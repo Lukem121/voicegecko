@@ -57,7 +57,7 @@ import { useStudentDiscountModal } from '~/hooks/use-student-discount-modal';
 import type { DownloadsData } from '~/lib/downloads-utils';
 import { getPrimaryDownload } from '~/lib/downloads-utils';
 import { CurrencySelector, useCurrency } from '~/providers/currency';
-import Threads from './landing/threads';
+import GeckoWithCursorTracking from './landing/gecko-with-cursor-tracking';
 
 // Simple height measurement hook replacement
 const useMeasure = () => {
@@ -389,14 +389,8 @@ export default function LandingPageClient({
       </AnimatePresence>
       {/* ===== HERO SECTION ===== */}
       {/* dedicate a large gradient canvas to avoid clipping */}
-      <section className="relative w-full overflow-hidden pt-32 pb-16 md:pt-20 md:pb-20">
-        {/* Sound wave thread background */}
-        <div className="-translate-x-1/2 absolute top-40 bottom-0 left-1/2 opacity-50">
-          <div className="relative h-full w-screen max-w-2xl md:max-w-4xl lg:max-w-7xl">
-            <Threads amplitude={1.4} distance={0} />
-          </div>
-        </div>
-        <div className="container relative z-10 mx-auto max-w-2xl px-4 text-center md:max-w-4xl md:px-6 lg:max-w-7xl">
+      <section className="relative w-full pt-32 pb-16 md:pt-64 md:pb-20">
+        <div className="container relative mx-auto max-w-2xl px-4 text-center md:max-w-4xl md:px-6 lg:max-w-7xl">
           <div className="flex items-center justify-center">
             {/* Hero content */}
             <motion.div
@@ -405,10 +399,13 @@ export default function LandingPageClient({
               initial={{ opacity: 0, y: 20 }}
               transition={{ duration: 0.8, ease: 'easeOut' }}
             >
-              <h1 className="mx-auto mb-6 text-balance font-hero text-4xl md:text-5xl lg:text-7xl">
+              <h1 className="mx-auto mb-6 text-balance font-black font-hero text-4xl italic tracking-tighter md:text-5xl lg:text-7xl">
                 Stop Typing.{' '}
-                <span className="text-primary">Start Talking.</span> Perfect
-                Transcripts.
+                <span className="text-primary">Start Talking.</span>
+                <br />
+                <span className="font-normal text-muted-foreground not-italic">
+                  Perfect Transcripts.
+                </span>
               </h1>
               <p className="mx-auto mb-10 max-w-2xl text-lg text-muted-foreground md:text-xl">
                 Dictate Anywhere 4× Faster Than Typing
@@ -465,7 +462,8 @@ export default function LandingPageClient({
           and onto your clipboard.
         </p>
 
-        <div className="mt-8 grid gap-6 md:grid-cols-3">
+        <div className="-ml-12 mt-8 grid gap-6 md:grid-cols-4">
+          <GeckoWithCursorTracking className="-mb-3 self-end justify-self-end" />
           <WhyCard
             body="Most transcriptions land on your clipboard in 1–2 seconds."
             tag="Speed"
