@@ -26,6 +26,7 @@
     "@octokit/rest": "^22.0.0",
     "@react-three/drei": "^10.6.1",
     "@react-three/fiber": "^9.3.0",
+    "@rive-app/react-canvas-lite": "^4.22.1",
     "@t3-oss/env-nextjs": "^0.13.8",
     "@tanstack/react-query": "catalog:",
     "@trpc/client": "catalog:",

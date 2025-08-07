@@ -2,10 +2,14 @@ Todo
 
 - [ ] Landing page & subsequent pages
 - [ ] Links in the Emails need removing or implementing.
+- [ ] Cant change keybord shortcuts not working. Control + Shift + Z, the toggle recording on and off is only working when the main window
+- [ ] Cant open the main window from the system tray
+
+- [ ] Bugs (inscts) on landing page?
 
 Pre Launch Checks
 
-- [ ] Check added stripe student coupon code: RYGALTMSXJAA
+- [ ] Check added stripe student coupon code: RYGALTMSXJAAWould it be better if instead we had a specific point that I would position manually where the actual eyes are? I imagine part of this is because we are trying to do this relative to the component, but the component is kind of bigger or we've centred it. We're doing it from the middle of the component, which is like the belly and not the eyes.
 - [ ] Inside BetterAuth we are only allowing MY emails to sign up. We need to remove that.
 - [ ] Check all links are working including in emails.
 
