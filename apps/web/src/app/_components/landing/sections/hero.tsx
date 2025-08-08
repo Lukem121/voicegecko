@@ -15,7 +15,7 @@ export default function HeroSection({
 }) {
   const prefersReducedMotion = useReducedMotion();
   return (
-    <Section className="relative w-full pb-16md:py-24 pt-16">
+    <Section className="relative w-full max-w-6xl pt-16 pb-16 md:py-24">
       <div className="flex items-center justify-start md:justify-center">
         <motion.div
           animate={{ opacity: 1, y: prefersReducedMotion ? 0 : 0 }}
@@ -26,11 +26,11 @@ export default function HeroSection({
             ease: 'easeOut',
           }}
         >
-          <h1 className="mx-0 mb-4 text-balance font-black font-hero text-4xl leading-[1.1] tracking-tighter md:mx-auto md:text-5xl lg:text-[5rem]">
+          <h1 className="mx-0 mb-4 text-balance font-extrabold font-hero text-4xl leading-[1.1] tracking-tight md:mx-auto md:text-6xl lg:text-7xl">
             Speech‑to‑text that works{' '}
             <span className="text-primary">everywhere</span>
           </h1>
-          <p className="mx-0 mb-6 max-w-2xl text-balance font-bold text-lg text-muted-foreground leading-relaxed md:mx-auto md:mb-8 md:text-xl">
+          <p className="mx-0 mb-6 max-w-2xl text-balance font-medium text-base text-muted-foreground leading-relaxed md:mx-auto md:mb-8 md:text-lg">
             Dictating is ~5× faster than typing. Works in any app. Stay in flow
             —no app switching.
           </p>

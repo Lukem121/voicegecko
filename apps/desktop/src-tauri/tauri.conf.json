@@ -11,6 +11,7 @@
   "app": {
     "windows": [
       {
+        "label": "main",
         "title": "Voice Gecko",
         "width": 1350,
         "height": 820,

@@ -3,7 +3,6 @@
   "version": "0.0.7",
   "private": true,
   "type": "module",
-  "license": "MIT",
   "scripts": {
     "build": "tsc",
     "clean": "git clean -xdf .cache .turbo dist node_modules",

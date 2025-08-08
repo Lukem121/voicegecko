@@ -7,7 +7,6 @@ import FaqSection from './sections/faq';
 import FinalCtaSection from './sections/final-cta';
 import FooterSection from './sections/footer';
 import HeroSection from './sections/hero';
-import HowItWorksSection from './sections/how-it-works';
 import Navigation from './sections/navigation';
 import OutcomesSection from './sections/outcomes';
 import PerformanceSection from './sections/performance';
@@ -15,7 +14,6 @@ import PersonalDictionarySection from './sections/personal-dictionary';
 import PersonasSection from './sections/personas';
 import PricingSection from './sections/pricing';
 import StickyCta from './sections/sticky-cta';
-import UiSnapshotSection from './sections/ui-snapshot';
 import WhySection from './sections/why';
 import WorksEverywhereSection from './sections/works-everywhere';
 
@@ -39,9 +37,7 @@ export default function LandingPageClient({
       />
       <WhySection />
       <OutcomesSection />
-      <HowItWorksSection />
       <PerformanceSection />
-      <UiSnapshotSection />
       <WorksEverywhereSection />
       <PersonalDictionarySection />
       <PersonasSection />

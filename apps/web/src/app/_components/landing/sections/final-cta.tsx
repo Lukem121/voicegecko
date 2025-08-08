@@ -16,18 +16,18 @@ export default function FinalCtaSection({
   downloadError?: string;
 }) {
   return (
-    <Section className="rounded-3xl bg-gradient-to-b from-primary/10 via-white to-primary/10 py-20 text-centermd:py-24">
-      <h3 className="text-balance font-black font-hero text-3xl text-foreground tracking-tight md:text-4xl">
+    <Section className="mb-12 rounded-3xl bg-gradient-to-b from-primary/10 via-background to-primary/10 py-16 text-center md:py-24">
+      <h3 className="text-balance font-extrabold font-hero text-3xl text-foreground tracking-tight md:text-4xl">
         Say it. See it. Send it.
       </h3>
-      <p className="mx-auto mt-3 max-w-2xl text-muted-foreground">
+      <p className="mx-auto mt-3 max-w-2xl text-muted-foreground text-sm md:text-base">
         Download Voice Gecko and speak your work into existence.
       </p>
-      <div className="mt-6 flex flex-col items-center justify-center gap-4 sm:flex-row">
+      <div className="mt-6 flex flex-col items-center justify-center gap-3 sm:flex-row">
         <WindowsDownloadButton
           className={cn(
             buttonVariants({ variant: 'default', size: 'xl' }),
-            '!border-foreground rounded-lg border-2 bg-primary/80 font-semibold text-sm tracking-tight transition-all will-change-transform hover:scale-[1.02]'
+            '!border-foreground rounded-lg border-2 bg-primary/80 font-semibold text-sm tracking-tight transition-all hover:scale-[1.01]'
           )}
           downloadError={downloadError}
           downloadsData={downloadsData}
@@ -36,7 +36,7 @@ export default function FinalCtaSection({
         <Link
           className={cn(
             buttonVariants({ variant: 'default', size: 'xl' }),
-            '!border-foreground rounded-lg border-2 bg-transparent font-semibold text-sm tracking-tight transition-all will-change-transform hover:scale-[1.02] hover:bg-transparent'
+            '!border-foreground rounded-lg border-2 bg-transparent font-semibold text-sm tracking-tight transition-all hover:scale-[1.01] hover:bg-transparent'
           )}
           href="/use-cases"
         >

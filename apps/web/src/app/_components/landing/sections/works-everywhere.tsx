@@ -43,11 +43,11 @@ const apps = [
 
 export default function WorksEverywhereSection() {
   return (
-    <Section className="rounded-3xl p-10md:py-24">
+    <Section className="rounded-3xl p-10 md:py-24">
       <h2 className="text-center font-bold text-2xl text-foreground tracking-tight md:text-3xl">
         Paste anywhere you work
       </h2>
-      <p className="mx-auto mt-2 max-w-2xl text-center text-muted-foreground text-sm">
+      <p className="mx-auto mt-2 max-w-2xl text-center text-muted-foreground text-sm md:text-base">
         Clipboard or auto‑type—Voice Gecko works across virtually any desktop
         app.
       </p>

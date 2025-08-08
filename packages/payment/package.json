@@ -3,7 +3,6 @@
   "version": "0.0.7",
   "private": true,
   "type": "module",
-  "license": "MIT",
   "exports": {
     "./stripe": "./src/stripe.ts",
     "./subscription-handlers": "./src/subscription-handlers/index.ts"
