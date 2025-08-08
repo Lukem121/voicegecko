@@ -5,6 +5,7 @@ export const APP_ROUTES = {
     PRODUCT: '/product',
     SOLUTIONS: '/solutions',
     ABOUT: '/about',
+    PRICING: '/pricing',
     USE_CASES: '/use-cases',
     WORKFLOWS: '/workflows',
     USER_GUIDES: '/user-guides',
@@ -14,10 +15,15 @@ export const APP_ROUTES = {
     CREATORS: '/creators',
     COMPANY: '/company',
     CAREERS: '/careers',
+    CONTACT: '/contact',
     SUPPORT: '/support',
     SALES: '/sales',
     CASE_STUDIES: '/case-studies',
     CASE_STUDY: '/case-studies/[slug]',
+    CHANGELOG: '/changelog',
+    SECURITY: '/security',
+    COOKIES: '/cookies',
+    EULA: '/eula',
   },
   AUTH: {
     SIGN_IN: '/sign-in',
@@ -34,8 +40,8 @@ export const APP_ROUTES = {
     APPEARANCE: '/settings/appearance',
   },
   LEGAL: {
-    TERMS: '/legal/terms',
-    PRIVACY: '/legal/privacy',
+    TERMS: '/terms',
+    PRIVACY: '/privacy',
   },
 } as const;
 
