@@ -1,6 +1,24 @@
 // URL configuration constants
 export const APP_ROUTES = {
   HOME: '/',
+  MARKETING: {
+    PRODUCT: '/product',
+    SOLUTIONS: '/solutions',
+    ABOUT: '/about',
+    USE_CASES: '/use-cases',
+    WORKFLOWS: '/workflows',
+    USER_GUIDES: '/user-guides',
+    LEADERS: '/leaders',
+    STUDENTS: '/students',
+    PROFESSIONALS: '/professionals',
+    CREATORS: '/creators',
+    COMPANY: '/company',
+    CAREERS: '/careers',
+    SUPPORT: '/support',
+    SALES: '/sales',
+    CASE_STUDIES: '/case-studies',
+    CASE_STUDY: '/case-studies/[slug]',
+  },
   AUTH: {
     SIGN_IN: '/sign-in',
     SIGN_UP: '/sign-up',

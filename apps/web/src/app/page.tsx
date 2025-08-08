@@ -4,7 +4,7 @@ import { log } from '@acme/observability';
 import { unstable_cache } from 'next/cache';
 import { getDownloadsData } from '~/lib/downloads';
 import type { DownloadsData } from '~/lib/downloads-utils';
-import LandingPageClient from './_components/landing-page-client';
+import LandingPageClient from './_components/landing/landing-page-client';
 
 // ISR configuration - revalidate every hour
 export const revalidate = 3600; // 1 hour in seconds
