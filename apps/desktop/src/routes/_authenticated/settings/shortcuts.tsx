@@ -1,3 +1,4 @@
+// import { Alert, AlertDescription } from '@acme/ui/components/ui/alert';
 import { Badge } from '@acme/ui/components/ui/badge';
 import { Button } from '@acme/ui/components/ui/button';
 import {
@@ -13,18 +14,12 @@ import {
   TooltipTrigger,
 } from '@acme/ui/components/ui/tooltip';
 import { createFileRoute } from '@tanstack/react-router';
-import {
-  Command,
-  Keyboard,
-  Loader2,
-  RotateCcw,
-  Settings2,
-} from 'lucide-react';
-
+import { Command, Keyboard, Loader2, RotateCcw, Settings2 } from 'lucide-react';
 import { ShortcutRecorder } from '~/components/shortcut-recorder';
 import { useShortcuts } from '~/hooks/use-shortcuts';
 import { analytics } from '~/lib/analytics/posthog-analytics';
 import { formatKeysForDisplay, getOS } from '~/lib/shortcuts/utils';
+import { useShortcutStore } from '~/lib/stores/shortcut-store';
 
 export const Route = createFileRoute('/_authenticated/settings/shortcuts')({
   component: ShortcutsPage,
@@ -43,6 +38,7 @@ function ShortcutsPage() {
     recordingActionId,
   } = useShortcuts();
   const os = getOS();
+  // const registrationErrors = useShortcutStore((s) => s.registrationErrors);
 
   const handleResetShortcuts = () => {
     analytics.track('settings_changed', {
@@ -140,10 +136,10 @@ function ShortcutsPage() {
                       <div className="flex items-center gap-3">
                         <div className="flex items-center gap-1">
                           {formatKeysForDisplay(shortcut.keys, os).map(
-                            (key, keyIndex) => (
+                            (key) => (
                               <div
                                 className="flex items-center gap-1"
-                                key={keyIndex}
+                                key={`${shortcut.id}-${key}`}
                               >
                                 <Badge
                                   className="px-2 py-1 font-mono text-xs"
@@ -158,7 +154,8 @@ function ShortcutsPage() {
                                     key
                                   )}
                                 </Badge>
-                                {keyIndex < shortcut.keys.length - 1 && (
+                                {shortcut.keys.indexOf(key) <
+                                  shortcut.keys.length - 1 && (
                                   <span className="text-muted-foreground text-xs">
                                     +
                                   </span>
@@ -186,6 +183,7 @@ function ShortcutsPage() {
                       </div>
                     </div>
                   ))}
+                  {/* Conflicting/registration error notice for this category (temporarily disabled) */}
                 </div>
               </CardContent>
             </Card>

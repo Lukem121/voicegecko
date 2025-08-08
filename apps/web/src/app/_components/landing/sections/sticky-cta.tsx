@@ -42,7 +42,7 @@ export default function StickyCta({
           <div className="flex flex-col items-center justify-between gap-3 sm:flex-row">
             <div className="flex items-center gap-3">
               <RiveGeckoPlaceholder className="h-10 w-auto" pose="peek" />
-              <p className="text-muted-foreground text-sm">
+              <p className="text-muted-foreground text-sm md:text-base">
                 Turn speech into text in seconds, not minutes.
               </p>
             </div>

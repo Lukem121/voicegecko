@@ -5,16 +5,11 @@ import Section from '../components/section';
 
 export default function OutcomesSection() {
   return (
-    <Section
-      className="py-24md:py-24"
-      surface
-      surfaceClassName="p-10 md:p-12"
-      variant="diagonal"
-    >
+    <Section className="p-10 md:p-12 md:py-24">
       <h2 className="text-center font-bold text-2xl text-foreground tracking-tight md:text-3xl">
         Get more done by talking first
       </h2>
-      <p className="mx-auto mt-2 max-w-2xl text-center text-muted-foreground text-sm">
+      <p className="mx-auto mt-2 max-w-2xl text-center text-muted-foreground text-sm md:text-base">
         Outcomes across roles—draft faster, document decisions, never lose
         ideas, and respond quickly.
       </p>

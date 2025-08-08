@@ -45,7 +45,7 @@
   --font-sans: "Plus Jakarta Sans", sans-serif;
   --font-serif: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
   --font-mono: monospace;
-  --font-hero: "Inter", sans-serif;
+  --font-hero: var(--font-plus-jakarta-sans);
   --radius: 0.5rem;
   --shadow-2xs: 0px 1px 3px 0px hsl(0 0% 0% / 0.09);
   --shadow-xs: 0px 1px 3px 0px hsl(0 0% 0% / 0.09);
@@ -100,7 +100,7 @@
   --font-sans: Outfit, sans-serif;
   --font-serif: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
   --font-mono: monospace;
-  --font-hero: "Inter", sans-serif;
+  --font-hero: var(--font-plus-jakarta-sans);
   --radius: 0.5rem;
   --shadow-2xs: 0px 1px 3px 0px hsl(0 0% 0% / 0.09);
   --shadow-xs: 0px 1px 3px 0px hsl(0 0% 0% / 0.09);
@@ -179,7 +179,7 @@
 }
 
 body {
-  letter-spacing: var(--tracking-normal);
+  letter-spacing: calc(var(--tracking-normal) - 0.005em);
 }
 
 * {

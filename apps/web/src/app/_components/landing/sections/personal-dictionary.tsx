@@ -8,7 +8,7 @@ export default function PersonalDictionarySection() {
   const [terms] = React.useState<string[]>([
     'Kubernetes',
     'PostgreSQL',
-    'GeckoFlow',
+    'Voice Gecko',
   ]);
   const [animIdx, setAnimIdx] = React.useState(0);
   React.useEffect(() => {
@@ -19,11 +19,11 @@ export default function PersonalDictionarySection() {
   }, [terms.length]);
 
   return (
-    <Section className="p-10 md:p-12md:py-24">
+    <Section className="p-10 md:p-12 md:py-24">
       <h2 className="text-center font-bold text-2xl text-foreground tracking-tight md:text-3xl">
         Personal dictionary for domain terms
       </h2>
-      <p className="mx-auto mt-2 max-w-2xl text-center text-muted-foreground text-sm">
+      <p className="mx-auto mt-2 max-w-2xl text-center text-muted-foreground text-sm md:text-base">
         Teach Voice Gecko your vocabulary. Keep names, acronyms, and industry
         jargon crystal clear in every transcription.
       </p>
@@ -86,7 +86,7 @@ export default function PersonalDictionarySection() {
                 After
               </p>
               <p className="mt-1 text-[12px] text-accent-foreground">
-                "Spin up Kubernetes on PostgreSQL with GeckoFlow."
+                "Spin up Kubernetes on PostgreSQL with VoiceGecko."
               </p>
             </div>
           </div>
@@ -99,7 +99,7 @@ export default function PersonalDictionarySection() {
 
 function AnimatedSubstitution({ idx }: { idx: number }) {
   const before = ['kubernetties', 'postgres sequel', 'gecko flow'];
-  const after = ['Kubernetes', 'PostgreSQL', 'GeckoFlow'];
+  const after = ['Kubernetes', 'PostgreSQL', 'Voice Gecko'];
   return (
     <div className="mt-4 rounded-md border border-border border-dashed bg-background p-2 text-[12px] text-muted-foreground">
       <div className="flex items-center gap-2">

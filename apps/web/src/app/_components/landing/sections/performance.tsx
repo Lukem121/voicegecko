@@ -5,11 +5,11 @@ import Section from '../components/section';
 
 export default function PerformanceSection() {
   return (
-    <Section className="py-24md:py-24" variant="mesh">
+    <Section className="py-24 md:py-24">
       <h2 className="text-center font-bold text-2xl text-foreground tracking-tight md:text-3xl">
         Talk at 200+ WPM. Around 4× faster than typing.
       </h2>
-      <p className="mx-auto mt-2 max-w-2xl text-center text-muted-foreground text-sm">
+      <p className="mx-auto mt-2 max-w-2xl text-center text-muted-foreground text-sm md:text-base">
         Most people type about 40–50 words per minute. Speaking can comfortably
         reach 180–230 WPM. Voice Gecko turns that speed into clean,
         clipboard‑ready text.
@@ -28,7 +28,7 @@ export default function PerformanceSection() {
           </h3>
           <div className="mt-4 space-y-4">
             <BarComparison
-              accentClass="bg-muted"
+              accentClass="bg-muted-foreground"
               label="Typing (avg)"
               max={230}
               value={45}
@@ -62,8 +62,7 @@ export default function PerformanceSection() {
             <TimelineItem t="1.8s" text="Clean text copied to clipboard" />
           </ol>
           <p className="mt-4 text-muted-foreground text-xs">
-            Example on Windows 11, mid‑range laptop. MVP focuses on fast,
-            reliable English transcription.
+            Example on Windows 11, mid‑range laptop.
           </p>
         </motion.div>
       </div>

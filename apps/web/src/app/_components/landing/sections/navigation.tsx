@@ -55,10 +55,10 @@ export default function Navigation({
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   return (
     <>
-      <nav className="relative z-50 w-full px-4 py-6 md:px-6 lg:px-12">
+      <nav className="relative z-50 w-full px-4 py-4 md:px-6 lg:px-12">
         <div className="mx-auto flex max-w-7xl items-center justify-between">
           <Link href="/">
-            <VoiceGeckoLogoText className="h-12" />
+            <VoiceGeckoLogoText className="h-10" />
           </Link>
           <div>
             <div className="hidden items-center gap-8 lg:flex">
