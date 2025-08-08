@@ -69,15 +69,112 @@ export function formatKeysForDisplay(
   });
 }
 
+const FUNCTION_KEY_REGEX = /^f(\d{1,2})$/;
+
+const MODIFIER_SYNONYMS: Record<string, string> = {
+  commandorcontrol: 'CommandOrControl',
+  cmdorctrl: 'CommandOrControl',
+  cmdorcontrol: 'CommandOrControl',
+  controlorcommand: 'CommandOrControl',
+  ctrl: 'CommandOrControl',
+  control: 'CommandOrControl',
+  cmd: 'CommandOrControl',
+  command: 'CommandOrControl',
+  option: 'Alt',
+  alt: 'Alt',
+  shift: 'Shift',
+  meta: 'Meta',
+  win: 'Meta',
+  windows: 'Meta',
+};
+
+const CANONICAL_MODIFIER_ORDER = ['CommandOrControl', 'Meta', 'Alt', 'Shift'];
+
+function normalizeSingleKey(rawKey: string): string {
+  const key = String(rawKey).trim();
+  const lower = key.toLowerCase();
+
+  if (MODIFIER_SYNONYMS[lower]) {
+    return MODIFIER_SYNONYMS[lower];
+  }
+
+  // Common special keys
+  const SPECIAL: Record<string, string> = {
+    ' ': 'Space',
+    space: 'Space',
+    enter: 'Enter',
+    return: 'Enter',
+    escape: 'Escape',
+    esc: 'Escape',
+    tab: 'Tab',
+    backspace: 'Backspace',
+    arrowup: 'ArrowUp',
+    arrowdown: 'ArrowDown',
+    arrowleft: 'ArrowLeft',
+    arrowright: 'ArrowRight',
+    pageup: 'PageUp',
+    pagedown: 'PageDown',
+    home: 'Home',
+    end: 'End',
+  };
+  if (SPECIAL[lower]) {
+    return SPECIAL[lower];
+  }
+
+  // Function keys F1..F24
+  const fMatch = lower.match(FUNCTION_KEY_REGEX);
+  if (fMatch) {
+    const n = Number(fMatch[1]);
+    if (n >= 1 && n <= 24) {
+      return `F${n}`;
+    }
+  }
+
+  // Single character keys (letters/numbers)
+  if (key.length === 1) {
+    return key.toUpperCase();
+  }
+
+  // Default: preserve original casing
+  return key;
+}
+
+function canonicalizeKeysOrder(keys: string[]): string[] {
+  const modifiers: string[] = [];
+  const others: string[] = [];
+
+  for (const key of keys) {
+    if (CANONICAL_MODIFIER_ORDER.includes(key)) {
+      modifiers.push(key);
+    } else {
+      others.push(key);
+    }
+  }
+
+  // Sort modifiers by defined order, keep others as-is (main key usually last)
+  modifiers.sort(
+    (a, b) =>
+      CANONICAL_MODIFIER_ORDER.indexOf(a) - CANONICAL_MODIFIER_ORDER.indexOf(b)
+  );
+
+  return [...modifiers, ...others];
+}
+
 export function acceleratorFromKeys(keys: string[]): string {
-  return keys.join('+');
+  // Ensure we produce a stable, canonical accelerator string
+  const normalized = normalizeKeys(keys);
+  const deduped = Array.from(new Set(normalized));
+  const ordered = canonicalizeKeysOrder(deduped);
+  return ordered.join('+');
 }
 
 /**
  * Validates that a shortcut has at least one modifier key and one regular key
  */
 export function isValidShortcut(keys: string[]): boolean {
-  if (keys.length < 2) { return false; }
+  if (keys.length < 2) {
+    return false;
+  }
 
   const modifiers = [
     'command',
@@ -99,17 +196,8 @@ export function isValidShortcut(keys: string[]): boolean {
 /**
  * Normalizes shortcut keys for consistent storage
  */
-export function normalizeKeys(keys: string[]): string[] {
-  return keys.map((key) => {
-    const lower = key.toLowerCase();
-    // Normalize common variations
-    if (lower === 'ctrl') { return 'Control'; }
-    if (lower === 'cmd') { return 'Command'; }
-    if (lower === 'meta') { return 'Command'; }
-    if (lower === 'win' || lower === 'windows') { return 'Meta'; }
-    if (lower === ' ' || lower === 'space') { return 'Space'; }
+// Remove duplicate declarations from earlier refactor
 
-    // Capitalize first letter for consistency
-    return key.charAt(0).toUpperCase() + key.slice(1).toLowerCase();
-  });
+export function normalizeKeys(keys: string[]): string[] {
+  return keys.map(normalizeSingleKey);
 }

@@ -1,5 +1,6 @@
 import { log } from '@acme/observability';
 import { invoke } from '@tauri-apps/api/core';
+import { emit } from '@tauri-apps/api/event';
 import { writeText } from '@tauri-apps/plugin-clipboard-manager';
 import { toast } from 'sonner';
 
@@ -10,6 +11,7 @@ export class TranscriptionService {
   private static instance: TranscriptionService | undefined;
   private lastTranscription = '';
   private lastTranscriptionId: string | null = null;
+  private lastPasteAtMs = 0;
 
   private constructor() {
     // Private constructor to prevent instantiation
@@ -48,11 +50,48 @@ export class TranscriptionService {
    * Paste the last transcription to clipboard
    */
   async pasteLastTranscription(): Promise<void> {
+    // Basic rate-limit to avoid spamming from duplicate shortcut events
+    const now = Date.now();
+    if (now - this.lastPasteAtMs < 500) {
+      return;
+    }
+    this.lastPasteAtMs = now;
+
     if (this.lastTranscription) {
-      await writeText(this.lastTranscription);
-      toast.success('Last transcription copied to clipboard.');
+      try {
+        log.info('[TranscriptionService] Paste-last invoked');
+        log.info(
+          `[TranscriptionService] Transcript length=${this.lastTranscription.length}`
+        );
+        // Copy to clipboard first to ensure paste has the right contents
+        await writeText(this.lastTranscription);
+        log.info('[TranscriptionService] Clipboard write complete');
+
+        // Attempt to paste into the currently focused input field
+        try {
+          // Small delay to give focus back to the target field after releasing modifiers
+          await new Promise((r) => setTimeout(r, 30));
+          await invoke('simulate_paste');
+          toast.success('Last transcription pasted.');
+          log.info('[TranscriptionService] Simulated paste success');
+        } catch {
+          // Fallback to copy-only if paste simulation fails
+          toast.success('Last transcription copied to clipboard.');
+          log.warn(
+            '[TranscriptionService] Simulated paste failed; copy fallback'
+          );
+        }
+      } catch (error) {
+        toast.error('Failed to copy transcription to clipboard');
+        log.error(
+          '[TranscriptionService] Failed during paste-last flow:',
+          error
+        );
+        throw error;
+      }
     } else {
       toast.info('No transcription available to paste.');
+      log.warn('[TranscriptionService] No last transcription available');
     }
   }
 
@@ -144,7 +183,12 @@ export class TranscriptionService {
    * Open last transcription (placeholder for future functionality)
    */
   openLastTranscription(): void {
-    toast.success('Opened transcriptions');
+    // Navigate the app to the transcriptions page via app-wide event.
+    // The TrayProvider listens for this event and performs router navigation.
+    emit('navigate', '/transcriptions').catch(() => {
+      // As a non-fatal fallback, show a toast so the user gets feedback
+      toast.success('Opened transcriptions');
+    });
   }
 }
 

@@ -54,11 +54,11 @@ const personas: Persona[] = [
 
 export default function PersonasSection() {
   return (
-    <Section className="bg-primary/10 p-8 md:p-10md:py-24">
+    <Section className="p-8 md:p-10 md:py-24">
       <h2 className="text-center font-bold text-2xl text-foreground tracking-tight md:text-3xl">
         Built to help different kinds of work
       </h2>
-      <p className="mx-auto mt-2 max-w-2xl text-center text-muted-foreground text-sm">
+      <p className="mx-auto mt-2 max-w-2xl text-center text-muted-foreground text-sm md:text-base">
         Whether you type less comfortably or talk to customers all day, Voice
         Gecko speeds up how you capture and share information.
       </p>

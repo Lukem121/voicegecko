@@ -37,19 +37,10 @@ export default function FaqSection() {
               Do you support multiple languages or offline mode?
             </AccordionTrigger>
             <AccordionContent className="text-muted-foreground text-sm">
-              Not yet. The current MVP focuses on fast, reliable English
-              transcription.
+              Not yet. Today we focus on fast, reliable English transcription.
             </AccordionContent>
           </AccordionItem>
-          <AccordionItem value="account">
-            <AccordionTrigger className="font-semibold text-foreground text-sm">
-              Do I need an account?
-            </AccordionTrigger>
-            <AccordionContent className="text-muted-foreground text-sm">
-              You can use the free plan right away. An account may be required
-              for paid features.
-            </AccordionContent>
-          </AccordionItem>
+
           <AccordionItem value="audio">
             <AccordionTrigger className="font-semibold text-foreground text-sm">
               What happens with my audio?
@@ -67,15 +58,6 @@ export default function FaqSection() {
             <AccordionContent className="text-muted-foreground text-sm">
               macOS is next on the roadmap. You'll be able to opt-in for a
               launch reminder soon.
-            </AccordionContent>
-          </AccordionItem>
-          <AccordionItem value="auto-type">
-            <AccordionTrigger className="font-semibold text-foreground text-sm">
-              Can it auto-type instead of paste?
-            </AccordionTrigger>
-            <AccordionContent className="text-muted-foreground text-sm">
-              Yes—Voice Gecko can paste or auto-type depending on your
-              preference.
             </AccordionContent>
           </AccordionItem>
         </Accordion>

@@ -6,17 +6,22 @@ interface ShortcutStoreState {
   categories: ShortcutCategory[];
   isRecording: boolean;
   recordingActionId: ShortcutId | null;
+  // Registration errors keyed by shortcut id (e.g., conflicts, registration failures)
+  registrationErrors: Record<ShortcutId, string | null>;
   setShortcuts: (categories: ShortcutCategory[]) => void;
   updateShortcut: (actionId: ShortcutId, keys: string[]) => void;
   resetShortcuts: () => void;
   startRecording: (actionId: ShortcutId) => void;
   stopRecording: () => void;
+  setRegistrationError: (actionId: ShortcutId, message: string | null) => void;
+  clearAllRegistrationErrors: () => void;
 }
 
 export const useShortcutStore = create<ShortcutStoreState>((set, get) => ({
   categories: [], // Start with empty array to avoid race conditions
   isRecording: false,
   recordingActionId: null,
+  registrationErrors: {} as Record<ShortcutId, string | null>,
 
   setShortcuts: (categories) => set({ categories }),
 
@@ -48,4 +53,12 @@ export const useShortcutStore = create<ShortcutStoreState>((set, get) => ({
     set({ isRecording: true, recordingActionId: actionId }),
 
   stopRecording: () => set({ isRecording: false, recordingActionId: null }),
+
+  setRegistrationError: (actionId, message) =>
+    set((state) => ({
+      registrationErrors: { ...state.registrationErrors, [actionId]: message },
+    })),
+
+  clearAllRegistrationErrors: () =>
+    set({ registrationErrors: {} as Record<ShortcutId, string | null> }),
 }));

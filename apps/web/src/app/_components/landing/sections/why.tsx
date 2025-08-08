@@ -8,13 +8,13 @@ import GeckoWithCursorTracking from '../gecko-with-cursor-tracking';
 export default function WhySection() {
   const isMobile = useIsMobile();
   return (
-    <Section className="py-20md:py-24">
+    <Section className="py-20 md:py-24">
       <h2 className="text-left font-bold text-2xl text-foreground tracking-tight md:text-center md:text-3xl">
         Why Voice Gecko?
       </h2>
-      <p className="mx-0 mt-2 max-w-2xl text-left text-muted-foreground text-sm md:mx-auto md:text-center">
+      <p className="mx-0 mt-2 max-w-2xl text-balance text-left text-muted-foreground text-sm md:mx-auto md:text-center md:text-base">
         Built to remove real blockers: stop cleanup, skip context switching, and
-        move ~4× faster than typing.
+        move faster than typing.
       </p>
       <div className="md:-ml-12 mt-8 grid gap-6 md:grid-cols-4">
         {!isMobile && (

@@ -8,6 +8,7 @@ import {
 
 import { LazyStore } from '@tauri-apps/plugin-store';
 import { recordingService } from '~/services/recording.service';
+import { useShortcutStore } from '../stores/shortcut-store';
 import { shortcutActions } from './actions';
 import {
   DEFAULT_SHORTCUTS,
@@ -59,8 +60,12 @@ class ShortcutManager {
     shortcut: Shortcut,
     accelerator: string
   ): Promise<void> {
+    // Clear any previous error for this id before attempting registration
+    useShortcutStore.getState().setRegistrationError(shortcut.id, null);
+
     if (shortcut.id === 'push-to-talk') {
       await register(accelerator, (event: ShortcutEvent) => {
+        log.info(`[Shortcuts] Event for push-to-talk: state=${event.state}`);
         if (event.state === 'Pressed') {
           this.handlePushToTalkDown();
         } else if (event.state === 'Released') {
@@ -69,13 +74,40 @@ class ShortcutManager {
       });
       log.info(`Successfully registered push-to-talk: ${accelerator}`);
     } else if (shortcut.id in shortcutActions) {
-      await register(accelerator, () => {
-        const action =
-          shortcutActions[shortcut.id as keyof typeof shortcutActions];
-        if (action) {
-          action();
-        }
-      });
+      // Standard shortcuts: separate handlers to keep complexity low
+      if (shortcut.id === 'paste-last-transcription') {
+        await register(accelerator, (event?: ShortcutEvent) => {
+          log.info(
+            `[Shortcuts] Event for ${shortcut.id}: state=${event?.state ?? 'unknown'} accel=${accelerator}`
+          );
+          if (!event || event.state !== 'Released') {
+            return;
+          }
+          const action =
+            shortcutActions[shortcut.id as keyof typeof shortcutActions];
+          if (action) {
+            log.info(`[Shortcuts] Invoking action for ${shortcut.id}`);
+            // eslint-disable-next-line @typescript-eslint/no-floating-promises
+            Promise.resolve(action());
+          }
+        });
+      } else {
+        await register(accelerator, (event?: ShortcutEvent) => {
+          log.info(
+            `[Shortcuts] Event for ${shortcut.id}: state=${event?.state ?? 'unknown'} accel=${accelerator}`
+          );
+          if (event && event.state !== 'Pressed') {
+            return;
+          }
+          const action =
+            shortcutActions[shortcut.id as keyof typeof shortcutActions];
+          if (action) {
+            log.info(`[Shortcuts] Invoking action for ${shortcut.id}`);
+            // eslint-disable-next-line @typescript-eslint/no-floating-promises
+            Promise.resolve(action());
+          }
+        });
+      }
       log.info(
         `Successfully registered shortcut: ${accelerator} for ${shortcut.id}`
       );
@@ -89,23 +121,42 @@ class ShortcutManager {
       log.warn('Failed to unregister all shortcuts:', error);
     }
 
+    // Clear existing errors before re-registering
+    useShortcutStore.getState().clearAllRegistrationErrors();
+
+    const enabledShortcuts: Array<{ shortcut: Shortcut; accelerator: string }> =
+      [];
+
     for (const category of categories) {
       for (const shortcut of category.shortcuts) {
-        if (shortcut.enabled && shortcut.keys.length > 0) {
-          const normalizedKeys = normalizeKeys(shortcut.keys);
-          const accelerator = acceleratorFromKeys(normalizedKeys);
-          try {
-            // biome-ignore lint/nursery/noAwaitInLoop: Sequential registration prevents shortcut conflicts
-            await this.registerSingleShortcut(shortcut, accelerator);
-          } catch (error) {
-            log.error(
-              `Failed to register shortcut ${accelerator} for ${shortcut.id}:`,
-              error
-            );
-          }
+        if (!shortcut.enabled || shortcut.keys.length === 0) {
+          continue;
         }
+        const normalizedKeys = normalizeKeys(shortcut.keys);
+        const accelerator = acceleratorFromKeys(normalizedKeys);
+        log.info(
+          `[Shortcuts] Preparing to register ${shortcut.id} keys=${JSON.stringify(normalizedKeys)} accel=${accelerator}`
+        );
+        enabledShortcuts.push({ shortcut, accelerator });
       }
     }
+
+    log.info(`[Shortcuts] Registering ${enabledShortcuts.length} shortcuts...`);
+    for (const { shortcut, accelerator } of enabledShortcuts) {
+      try {
+        // biome-ignore lint/nursery/noAwaitInLoop: Sequential registration prevents shortcut conflicts
+        await this.registerSingleShortcut(shortcut, accelerator);
+      } catch (error) {
+        log.error(
+          `Failed to register shortcut ${accelerator} for ${shortcut.id}:`,
+          error
+        );
+        const message =
+          error instanceof Error ? error.message : 'Registration failed';
+        useShortcutStore.getState().setRegistrationError(shortcut.id, message);
+      }
+    }
+    log.info('[Shortcuts] Finished registering shortcuts.');
   }
 
   async updateAndSaveShortcuts(categories: ShortcutCategory[]) {

@@ -45,10 +45,12 @@ const geistMono = Geist_Mono({
 const plusJakartaSans = Plus_Jakarta_Sans({
   subsets: ['latin'],
   variable: '--font-plus-jakarta-sans',
+  weight: 'variable',
 });
 const interVariable = Inter({
   subsets: ['latin'],
   variable: '--font-inter',
+  weight: 'variable',
 });
 
 export default function RootLayout(props: { children: React.ReactNode }) {
