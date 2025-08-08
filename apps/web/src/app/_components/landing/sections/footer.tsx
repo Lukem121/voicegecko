@@ -18,18 +18,8 @@ export default function FooterSection() {
               </Link>
             </li>
             <li>
-              <Link className="hover:underline" href="/use-cases">
-                Use Cases
-              </Link>
-            </li>
-            <li>
               <Link className="hover:underline" href="/changelog">
                 Changelog
-              </Link>
-            </li>
-            <li>
-              <Link className="hover:underline" href="/roadmap">
-                Roadmap
               </Link>
             </li>
           </ul>
@@ -38,20 +28,11 @@ export default function FooterSection() {
           <h4 className="font-semibold text-foreground text-sm">Company</h4>
           <ul className="mt-3 space-y-2 text-muted-foreground text-sm">
             <li>
-              <Link className="hover:underline" href="/company">
-                Company
-              </Link>
-            </li>
-            <li>
               <Link className="hover:underline" href="/careers">
                 Careers
               </Link>
             </li>
-            <li>
-              <Link className="hover:underline" href="/press">
-                Press Kit
-              </Link>
-            </li>
+
             <li>
               <Link className="hover:underline" href="/contact">
                 Contact
@@ -67,21 +48,6 @@ export default function FooterSection() {
                 Support
               </Link>
             </li>
-            <li>
-              <Link className="hover:underline" href="/user-guides">
-                User Guides
-              </Link>
-            </li>
-            <li>
-              <Link className="hover:underline" href="/workflows">
-                Workflows
-              </Link>
-            </li>
-            <li>
-              <Link className="hover:underline" href="/security">
-                Security
-              </Link>
-            </li>
           </ul>
         </div>
         <div>
@@ -95,16 +61,6 @@ export default function FooterSection() {
             <li>
               <Link className="hover:underline" href="/terms">
                 Terms
-              </Link>
-            </li>
-            <li>
-              <Link className="hover:underline" href="/eula">
-                EULA
-              </Link>
-            </li>
-            <li>
-              <Link className="hover:underline" href="/cookies">
-                Cookie Policy
               </Link>
             </li>
           </ul>
