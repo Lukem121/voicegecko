@@ -14,10 +14,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@acme/ui/components/ui/dropdown-menu';
-import {
-  ChevronDown,
-  LogOut,
-} from 'lucide-react';
+import { ChevronDown, LogOut } from 'lucide-react';
 
 import { useSignOut, useUser } from '~/hooks/auth';
 

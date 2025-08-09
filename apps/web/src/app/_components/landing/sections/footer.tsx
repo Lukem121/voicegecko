@@ -17,11 +17,6 @@ export default function FooterSection() {
                 Pricing
               </Link>
             </li>
-            <li>
-              <Link className="hover:underline" href="/changelog">
-                Changelog
-              </Link>
-            </li>
           </ul>
         </div>
         <div>
