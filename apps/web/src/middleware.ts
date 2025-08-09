@@ -26,7 +26,7 @@ export default function middleware(request: NextRequest) {
   const pathname = new URL(request.url).pathname;
 
   // Skip API routes - they have their own auth handling
-  if (pathname.startsWith('/api/')) {
+  if (pathname.startsWith('/api/') || pathname.startsWith('/assets/')) {
     return NextResponse.next();
   }
 
