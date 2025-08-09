@@ -1,5 +1,3 @@
-'use client';
-
 import { cn } from '@acme/ui/lib/utils';
 import { Alignment, Fit, Layout, useRive } from '@rive-app/react-canvas-lite';
 

@@ -29,7 +29,7 @@ export default function LandingPageClient({
   pricingError?: string;
 }) {
   return (
-    <div className="relative">
+    <div className="relative pt-20">
       <Navigation downloadError={downloadError} downloadsData={downloadsData} />
       <HeroSection
         downloadError={downloadError}

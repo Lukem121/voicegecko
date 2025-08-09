@@ -9,23 +9,14 @@ import {
   NavigationMenuList,
   navigationMenuTriggerStyle,
 } from '@acme/ui/components/ui/navigation-menu';
+import { cn } from '@acme/ui/lib/utils';
 import { AnimatePresence, motion } from 'framer-motion';
 import Link from 'next/link';
-import React, { useState } from 'react';
+import type React from 'react';
+import { useState } from 'react';
 import { HiArrowRight, HiChevronDown, HiMenu, HiX } from 'react-icons/hi';
 import type { DownloadsData } from '~/lib/downloads-utils';
 import WindowsDownloadButton from '../components/windows-download-button';
-
-function useMeasure() {
-  const ref = React.useRef<HTMLDivElement>(null);
-  const [height, setHeight] = React.useState(0);
-  React.useEffect(() => {
-    if (ref.current) {
-      setHeight(ref.current.scrollHeight);
-    }
-  }, []);
-  return [ref, { height }] as const;
-}
 
 export default function Navigation({
   downloadsData,
@@ -35,10 +26,15 @@ export default function Navigation({
   downloadError?: string;
 }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
   return (
     <>
-      <nav className="relative z-50 w-full px-4 py-4 md:px-6 lg:px-12">
-        <div className="mx-auto flex max-w-7xl items-center justify-between">
+      <nav
+        className={cn(
+          'fixed inset-x-0 top-0 z-50 w-full bg-transparent backdrop-blur-sm transition-colors'
+        )}
+      >
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 md:px-6 lg:px-12">
           <Link href="/">
             <VoiceGeckoLogoText className="h-10" />
           </Link>
@@ -46,6 +42,14 @@ export default function Navigation({
             <div className="hidden items-center gap-8 lg:flex">
               <NavigationMenu>
                 <NavigationMenuList>
+                  <NavigationMenuItem>
+                    <NavigationMenuLink
+                      className={navigationMenuTriggerStyle()}
+                      href="/app"
+                    >
+                      Account
+                    </NavigationMenuLink>
+                  </NavigationMenuItem>
                   <NavigationMenuItem>
                     <NavigationMenuLink
                       className={navigationMenuTriggerStyle()}
@@ -91,6 +95,9 @@ export default function Navigation({
               </button>
             </div>
             <div className="h-screen overflow-y-scroll p-6">
+              <MobileMenuLink href="/app" setMenuOpen={setMobileMenuOpen}>
+                Account
+              </MobileMenuLink>
               <MobileMenuLink href="/pricing" setMenuOpen={setMobileMenuOpen}>
                 Pricing
               </MobileMenuLink>
@@ -122,7 +129,6 @@ function MobileMenuLink({
   FoldContent?: React.ElementType;
   setMenuOpen: React.Dispatch<React.SetStateAction<boolean>>;
 }) {
-  const [ref, { height }] = useMeasure();
   const [open, setOpen] = useState(false);
   return (
     <div className="relative text-foreground">
@@ -171,14 +177,14 @@ function MobileMenuLink({
       {FoldContent && (
         <motion.div
           animate={{
-            height: open ? height : '0px',
+            height: open ? 'auto' : '0px',
             marginBottom: open ? '24px' : '0px',
             marginTop: open ? '12px' : '0px',
           }}
           className="overflow-hidden"
           initial={false}
         >
-          <div ref={ref}>
+          <div>
             <FoldContent />
           </div>
         </motion.div>

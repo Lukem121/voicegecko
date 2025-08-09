@@ -78,7 +78,7 @@ export default function PersonalDictionarySection() {
                 Before
               </p>
               <p className="mt-1 text-[12px] text-muted-foreground">
-                "Spin up kubernetties on postgres sequel with gecko flow."
+                "Spin up kubernetties on postgres sequel with voice gecko."
               </p>
             </div>
             <div className="rounded-lg border border-accent bg-accent p-3">
@@ -98,7 +98,7 @@ export default function PersonalDictionarySection() {
 }
 
 function AnimatedSubstitution({ idx }: { idx: number }) {
-  const before = ['kubernetties', 'postgres sequel', 'gecko flow'];
+  const before = ['kubernetties', 'postgres sequel', 'voice gecko'];
   const after = ['Kubernetes', 'PostgreSQL', 'Voice Gecko'];
   return (
     <div className="mt-4 rounded-md border border-border border-dashed bg-background p-2 text-[12px] text-muted-foreground">
