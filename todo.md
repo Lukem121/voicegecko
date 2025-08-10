@@ -2,8 +2,10 @@ Todo
 
 - [ ] Landing page & subsequent pages
 - [ ] Links in the Emails need removing or implementing.
-- [ ] Cant change keybord shortcuts not working. Control + Shift + Z, the toggle recording on and off is only working when the main window
-- [ ] Cant open the main window from the system tray
+- [x] Cant change keybord shortcuts not working. Control + Shift + Z, the toggle recording on and off is only working when the main window
+- [x] Cant open the main window from the system tray
+- [ ] I noticed that if we have been marked as no internet, then the Gecko bar needs to be restarted in order to detect that again. It doesn't seem to be getting updated to let it know that the internet has been regained.
+- [x] I'm noticing a difference between if we stop the recording using the push and hold shortcut there's no loading state showing in the gecko bar but if we press the stop button with our mouse on the gecko bar then the stop button turns into a loading spinner.
 
 - [ ] Bugs (inscts) on landing page?
 
