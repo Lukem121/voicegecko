@@ -12,12 +12,12 @@ export default function HeroSection() {
     <SectionWrapper className="mt-4 py-12">
       {/* Left Branch - Hidden on mobile/tablet, visible on large screens, positioned lower */}
       <div className="-translate-x-1/2 absolute top-1/2 left-0 z-20 hidden translate-y-20 transform lg:block">
-        <Branch1 className="h-44 w-auto opacity-90 xl:h-56 2xl:h-72" />
+        <Branch1 className="h-44 w-auto xl:h-56 2xl:h-72" />
       </div>
 
       {/* Right Branch - Hidden on mobile/tablet, visible on large screens */}
       <div className="absolute top-1/2 right-0 z-20 hidden translate-x-1/2 translate-y-4 transform lg:block">
-        <Branch2 className="h-44 w-auto opacity-90 xl:h-56 2xl:h-72" />
+        <Branch2 className="h-44 w-auto xl:h-56 2xl:h-72" />
       </div>
 
       {/* Main Hero Content */}
