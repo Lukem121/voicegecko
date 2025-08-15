@@ -136,12 +136,12 @@ export default function SpeedComparisonSection() {
     >
       {/* Left Vine - Hidden on mobile/tablet, visible on large screens, positioned high near header */}
       <div className="-translate-x-1/2 absolute top-0 left-0 z-20 hidden translate-y-4 transform lg:block">
-        <Vine1 className="h-52 w-auto opacity-90 xl:h-72" />
+        <Vine1 className="h-52 w-auto xl:h-72" />
       </div>
 
       {/* Right Gecko - Hidden on mobile/tablet, visible on large screens, extremely large size */}
       <div className="-translate-y-1/4 absolute top-1/2 right-0 z-20 hidden translate-x-1/2 transform lg:block">
-        <GeckoWithTranscriberInBush className="h-96 w-auto opacity-90 xl:h-[32rem] 2xl:h-[40rem]" />
+        <GeckoWithTranscriberInBush className="h-96 w-auto xl:h-[32rem] 2xl:h-[40rem]" />
       </div>
 
       {/* Main Content */}

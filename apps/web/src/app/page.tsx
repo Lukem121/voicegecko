@@ -48,7 +48,7 @@ export default function LandingPage() {
 
         <StickyCta />
 
-        <RiveGeckoPopup className="mt-[-4rem]" />
+        <RiveGeckoPopup />
       </main>
     </div>
   );

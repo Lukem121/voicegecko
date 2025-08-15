@@ -59,7 +59,7 @@ export default function GeckoBarSection() {
     autoplay: true,
     stateMachines: 'State Machine 1',
     layout: new Layout({
-      fit: Fit.Cover,
+      fit: Fit.Contain,
       alignment: Alignment.Center,
     }),
   });
@@ -113,15 +113,15 @@ export default function GeckoBarSection() {
     <SectionWrapper className="max-w-none bg-[#00A9A5]/10 py-12 md:py-20">
       <div className="relative mx-auto max-w-6xl">
         {/* Left Bug on Branch - Hidden on mobile/tablet, visible on large screens, positioned high */}
-        <div className="-translate-x-1/2 -top-16 absolute left-0 z-20 hidden translate-y-8 transform lg:block">
-          <div className="h-36 w-[11rem] xl:h-44 xl:w-[13.5rem] 2xl:h-56 2xl:w-[17rem]">
-            <BugOnBranchComponent className="h-full w-full opacity-90" />
+        <div className="-left-32 -top-32 -translate-x-3/5 absolute z-20 hidden translate-y-8 transform lg:block">
+          <div className="h-44 w-[14rem] xl:h-52 xl:w-[16rem] 2xl:h-64 2xl:w-[28rem]">
+            <BugOnBranchComponent className="h-full w-full" />
           </div>
         </div>
 
         {/* Right Vine with Flower - Hidden on mobile/tablet, visible on large screens, positioned low */}
-        <div className="absolute right-0 bottom-0 z-20 hidden translate-x-3/5 translate-y-1/3 transform lg:block">
-          <Vine2 className="h-32 w-auto opacity-90 xl:h-40 2xl:h-48" />
+        <div className="-right-32 -bottom-32 absolute z-20 hidden translate-x-3/5 translate-y-1/3 transform lg:block">
+          <Vine2 className="h-32 w-auto xl:h-40 2xl:h-72" />
         </div>
 
         {/* Main Content */}
