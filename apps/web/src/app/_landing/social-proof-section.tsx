@@ -11,7 +11,7 @@ import SectionWrapper from './section-wrapper';
 
 export default function SocialProofSection() {
   return (
-    <SectionWrapper className="max-w-7xl">
+    <SectionWrapper className="max-w-7xl py-0">
       <div className="mt-10 text-center text-muted-foreground text-xs md:text-sm">
         <p className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1">
           <span>Loved by 2,000+ users</span>

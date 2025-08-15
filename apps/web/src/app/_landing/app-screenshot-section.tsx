@@ -1,10 +1,18 @@
+'use client';
+
+import { useIsMobile } from '@acme/ui/hooks/use-mobile';
 import Image from 'next/image';
+import GeckoWithCursorTracking from './gecko-with-cursor-tracking';
 import SectionWrapper from './section-wrapper';
 
 export default function AppScreenshotSection() {
+  const isMobile = useIsMobile();
   return (
-    <SectionWrapper className="mx-auto max-w-7xl px-4 pt-8 pb-20 md:px-6 lg:px-12">
+    <SectionWrapper className="">
       <div className="relative mx-auto max-w-4xl">
+        {!isMobile && (
+          <GeckoWithCursorTracking className="-mb-7 z-10 cursor-pointer self-end justify-self-end" />
+        )}
         <div
           className="-inset-x-40 -top-16 pointer-events-none absolute bottom-[-8rem] rounded-[4rem] blur-3xl"
           style={{

@@ -8,7 +8,7 @@ import { FaArrowCircleUp, FaImage, FaRegCopy, FaWindows } from 'react-icons/fa';
 import SectionHeader from './section-header';
 import SectionWrapper from './section-wrapper';
 import GeckoWithTranscriberInBush from './svgs/gecko-with-transcriber-in-bush';
-import Vine1 from './svgs/vine-1';
+import Vine1Long from './svgs/vine-1-long';
 
 const TYPING_TEXT =
   'Typing takes time. Even at a good pace, words appear slowly on the screen, and the flow of your thoughts is constantly interrupted. Mistakes happen often, forcing you to stop, backspace, and correct them before you can continue. Over the course of an email, a report, or a document, these tiny pauses add up to hours of lost productivity.';
@@ -131,21 +131,42 @@ export default function SpeedComparisonSection() {
 
   return (
     <SectionWrapper
-      className="px-4 pb-20 md:px-6 lg:px-12"
+      className="px-4 pb-36 md:px-6 lg:px-12"
       id="speed-comparison"
     >
-      {/* Left Vine - Hidden on mobile/tablet, visible on large screens, positioned high near header */}
-      <div className="-translate-x-1/2 absolute top-0 left-0 z-20 hidden translate-y-4 transform lg:block">
-        <Vine1 className="h-52 w-auto xl:h-72" />
+      {/* Left Vine */}
+      <div
+        className="absolute top-4 md:top-8 lg:top-12"
+        style={{
+          left: 'clamp(-25rem, -20vw, -14rem)',
+          transform: 'translateX(-50%)',
+        }}
+      >
+        <Vine1Long
+          className="w-auto"
+          style={{
+            height: 'clamp(14rem, 22vw, 18rem)',
+          }}
+        />
       </div>
 
-      {/* Right Gecko - Hidden on mobile/tablet, visible on large screens, extremely large size */}
-      <div className="-translate-y-1/4 absolute top-1/2 right-0 z-20 hidden translate-x-1/2 transform lg:block">
-        <GeckoWithTranscriberInBush className="h-96 w-auto xl:h-[32rem] 2xl:h-[40rem]" />
+      {/* Right Gecko */}
+      <div
+        className="lg:-translate-y-1/4 -bottom-12 md:-bottom-8 absolute z-10 lg:top-1/3"
+        style={{
+          right: 'clamp(-32rem, -25vw, -13rem)',
+        }}
+      >
+        <GeckoWithTranscriberInBush
+          className="w-auto"
+          style={{
+            height: 'clamp(18rem, 30vw, 32rem)',
+          }}
+        />
       </div>
 
       {/* Main Content */}
-      <div className="relative z-10">
+      <div className="relative z-10 mb-10">
         <SectionHeader
           cta={
             <a

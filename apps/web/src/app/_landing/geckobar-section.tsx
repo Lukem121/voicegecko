@@ -16,7 +16,7 @@ import { AnimatePresence, motion } from 'motion/react';
 import { useEffect, useState } from 'react';
 import SectionHeader from './section-header';
 import SectionWrapper from './section-wrapper';
-import Vine2 from './svgs/vine-2';
+import Vine2Long from './svgs/vine-2-long';
 
 type TimelineStep = 'none' | 'start' | 'stop' | 'use';
 
@@ -112,16 +112,26 @@ export default function GeckoBarSection() {
   return (
     <SectionWrapper className="max-w-none bg-[#00A9A5]/10 py-12 md:py-20">
       <div className="relative mx-auto max-w-6xl">
-        {/* Left Bug on Branch - Hidden on mobile/tablet, visible on large screens, positioned high */}
-        <div className="-left-32 -top-32 -translate-x-3/5 absolute z-20 hidden translate-y-8 transform lg:block">
-          <div className="h-44 w-[14rem] xl:h-52 xl:w-[16rem] 2xl:h-64 2xl:w-[28rem]">
+        {/* Left Bug on Branch */}
+        <div className="-translate-y-20 -translate-x-1/2 absolute top-0 left-[-25rem] z-20 hidden lg:block">
+          <div className="h-60 w-[18rem] xl:h-72 xl:w-[22rem] 2xl:h-80 2xl:w-[45rem]">
             <BugOnBranchComponent className="h-full w-full" />
           </div>
         </div>
 
-        {/* Right Vine with Flower - Hidden on mobile/tablet, visible on large screens, positioned low */}
-        <div className="-right-32 -bottom-32 absolute z-20 hidden translate-x-3/5 translate-y-1/3 transform lg:block">
-          <Vine2 className="h-32 w-auto xl:h-40 2xl:h-72" />
+        {/* Right Vine with Flower */}
+        <div
+          className="-bottom-32 md:-bottom-24 absolute z-20 translate-x-0 md:translate-x-1/2 lg:bottom-0 lg:translate-y-2/3"
+          style={{
+            right: 'clamp(-25rem, -25vw, -12rem)',
+          }}
+        >
+          <Vine2Long
+            className="w-auto"
+            style={{
+              height: 'clamp(6rem, 18vw, 16rem)',
+            }}
+          />
         </div>
 
         {/* Main Content */}
