@@ -19,8 +19,10 @@ import Footer from './_landing/footer';
 import GeckoBarSection from './_landing/geckobar-section';
 import HeroHeading from './_landing/hero-heading';
 import HeroSubheading from './_landing/hero-subheading';
+import RiveGeckoPopup from './_landing/rive-gecko-popup';
 import SectionWrapper from './_landing/section-wrapper';
 import SpeedComparisonSection from './_landing/speed-comparison-section';
+import StickyCta from './_landing/sticky-cta';
 import Logo from './_landing/svgs/logo';
 import TalkToAISection from './_landing/talk-to-ai-section';
 import TranscriptionFeaturesSection from './_landing/transcription-features-section';
@@ -175,6 +177,10 @@ export default function LandingPage() {
         <FinalCtaSection />
 
         <Footer />
+
+        <StickyCta />
+
+        <RiveGeckoPopup className="mt-[-4rem]" />
       </main>
     </div>
   );
