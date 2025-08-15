@@ -163,7 +163,7 @@ export default function TranscriptionFeaturesSection() {
               </div>
 
               {/* Stats and descriptions - Bottom */}
-              <div className="mt-auto space-y-3">
+              <div className="mt-6 space-y-3 md:mt-auto">
                 <div className="flex items-center gap-2 md:gap-3">
                   <div className="flex min-w-20 items-center justify-center whitespace-nowrap rounded-xl bg-primary px-3 py-2 font-bold text-sm text-white">
                     4h/week

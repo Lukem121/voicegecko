@@ -9,6 +9,7 @@ import {
   SiSlack,
   SiTelegram,
 } from 'react-icons/si';
+import { TfiMenu } from 'react-icons/tfi';
 import { VscCode } from 'react-icons/vsc';
 import AIVoiceSection from './_landing/ai-voice-section';
 import DownloadButton from './_landing/download-button';
@@ -23,10 +24,9 @@ import SpeedComparisonSection from './_landing/speed-comparison-section';
 import Logo from './_landing/svgs/logo';
 import TalkToAISection from './_landing/talk-to-ai-section';
 import TranscriptionFeaturesSection from './_landing/transcription-features-section';
-
 export default function LandingPage() {
   return (
-    <div>
+    <div className="overflow-x-hidden">
       <header>
         <div
           aria-atomic="true"
@@ -44,21 +44,26 @@ export default function LandingPage() {
           className="mx-auto flex max-w-[90rem] items-center justify-between px-4 py-4 md:px-6 lg:px-12"
         >
           <Logo className="h-8" />
-          <div className="flex items-center gap-6">
-            <a
-              className="font-medium text-foreground/80 text-sm transition-colors hover:text-foreground"
-              href="/pricing"
-            >
-              Pricing
-            </a>
-            <span aria-hidden className="h-5 w-px bg-border" />
-            <a
-              className="font-medium text-foreground/80 text-sm transition-colors hover:text-foreground"
-              href="/auth/login"
-            >
-              Login
-            </a>
+          <div className="flex items-center gap-4 md:gap-6">
+            {/* Desktop navigation links - hidden on mobile */}
+            <div className="hidden items-center gap-6 md:flex">
+              <a
+                className="font-medium text-foreground/80 text-sm transition-colors hover:text-foreground"
+                href="/pricing"
+              >
+                Pricing
+              </a>
+              <span aria-hidden className="h-5 w-px bg-border" />
+              <a
+                className="font-medium text-foreground/80 text-sm transition-colors hover:text-foreground"
+                href="/auth/login"
+              >
+                Login
+              </a>
+            </div>
             <DownloadButton />
+            {/* Mobile burger menu - shown only on mobile */}
+            <TfiMenu className="h-5 w-5 md:hidden" />
           </div>
         </nav>
       </header>
