@@ -3,19 +3,13 @@
 import { buttonVariants } from '@acme/ui/components/ui/button';
 import { cn } from '@acme/ui/lib/utils';
 import { AnimatePresence, motion } from 'framer-motion';
+import Image from 'next/image';
+import GeckoInvisibleWall from 'public/assets/images/geckos/gecko-invisible-wall.png';
 import React from 'react';
+import { FaWindows } from 'react-icons/fa';
 import { HiX } from 'react-icons/hi';
-import type { DownloadsData } from '~/lib/downloads-utils';
-import RiveGeckoPlaceholder from '../components/rive-gecko-placeholder';
-import WindowsDownloadButton from '../components/windows-download-button';
 
-export default function StickyCta({
-  downloadsData,
-  downloadError,
-}: {
-  downloadsData: DownloadsData | null;
-  downloadError?: string;
-}) {
+export default function StickyCta() {
   const [show, setShow] = React.useState(false);
   const [dismissed, setDismissed] = React.useState(false);
   React.useEffect(() => {
@@ -41,21 +35,26 @@ export default function StickyCta({
         >
           <div className="flex flex-col items-center justify-between gap-3 sm:flex-row">
             <div className="flex items-center gap-3">
-              <RiveGeckoPlaceholder className="h-10 w-auto" pose="peek" />
+              <Image
+                alt="Gecko peeking"
+                className="h-10 w-auto"
+                src={GeckoInvisibleWall}
+              />
               <p className="text-muted-foreground text-sm md:text-base">
                 Turn speech into text in seconds, not minutes.
               </p>
             </div>
             <div className="flex items-center gap-2">
-              <WindowsDownloadButton
+              <a
                 className={cn(
-                  buttonVariants({ variant: 'default', size: 'lg' }),
-                  '!border-black rounded-lg border-2 bg-primary/80 font-semibold text-xs tracking-tight hover:scale-[1.01]'
+                  buttonVariants({ variant: 'default', size: 'xl' }),
+                  'gap-2 px-6 text-white'
                 )}
-                downloadError={downloadError}
-                downloadsData={downloadsData}
-                text="Download for Windows"
-              />
+                href="/download/windows"
+              >
+                <FaWindows aria-hidden className="h-4 w-4" />
+                <span>Download for Windows</span>
+              </a>
               <button
                 aria-label="Dismiss download bar"
                 className="rounded-md px-2 py-1 text-muted-foreground hover:text-foreground"
