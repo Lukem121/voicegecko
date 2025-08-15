@@ -12,22 +12,43 @@ import {
   Layout,
   useRive,
 } from '@rive-app/react-canvas-lite';
-import { motion } from 'motion/react';
+import { AnimatePresence, motion } from 'motion/react';
 import { useEffect, useState } from 'react';
 import SectionHeader from './section-header';
 import SectionWrapper from './section-wrapper';
 
 type TimelineStep = 'none' | 'start' | 'stop' | 'use';
 
+const steps = [
+  {
+    id: 'start',
+    title: 'Start Recording',
+    description:
+      'Click the GeckoBar or use your shortcut to begin capturing your speech.',
+  },
+  {
+    id: 'stop',
+    title: 'Stop and Process',
+    description:
+      'Finish speaking, click stop, and watch it process in seconds.',
+  },
+  {
+    id: 'use',
+    title: 'Use Your Text',
+    description:
+      "Your transcription is ready on your clipboard or instantly pasted where you're working.",
+  },
+];
+
 export default function GeckoBarSection() {
-  const [currentStep, setCurrentStep] = useState<TimelineStep>('none');
+  const [currentStep, setCurrentStep] = useState<TimelineStep>('start');
 
   const { RiveComponent, rive } = useRive({
     src: '/assets/images/geckos/rive/geckobar-demo.riv',
     autoplay: true,
     stateMachines: 'State Machine 1',
     layout: new Layout({
-      fit: Fit.Contain,
+      fit: Fit.Cover,
       alignment: Alignment.Center,
     }),
   });
@@ -69,8 +90,16 @@ export default function GeckoBarSection() {
 
   const isStepActive = (step: TimelineStep) => currentStep === step;
 
+  const getCurrentStepData = () => {
+    return steps.find((step) => step.id === currentStep);
+  };
+
+  const getCurrentStepIndex = () => {
+    return steps.findIndex((step) => step.id === currentStep);
+  };
+
   return (
-    <SectionWrapper className="max-w-none bg-[#00A9A5]/10 py-20">
+    <SectionWrapper className="max-w-none bg-[#00A9A5]/10 py-12 md:py-20">
       <div className="mx-auto max-w-6xl px-4 md:px-6 lg:px-12">
         <SectionHeader
           description="A persistent, interactive bar that lets you trigger transcription or see exactly what's happening."
@@ -82,11 +111,54 @@ export default function GeckoBarSection() {
 
         <div
           className={cn(
-            'mx-auto mt-16 grid max-w-4xl items-center gap-16 md:grid-cols-2 md:gap-32'
+            'mx-auto mt-8 grid max-w-4xl items-center gap-8 md:mt-16 md:grid-cols-2 md:gap-24 lg:gap-32'
           )}
         >
-          {/* Steps */}
-          <div className="space-y-10">
+          {/* Mobile Steps - Single rotating step */}
+          <div className="flex items-center gap-4 md:hidden">
+            {/* Progress indicator */}
+            <div className="flex flex-col items-center gap-1">
+              <div className="h-16 w-0.5 bg-primary" />
+              <div className="w-6 text-center font-medium text-primary text-xs">
+                {getCurrentStepIndex() + 1}/3
+              </div>
+            </div>
+
+            {/* Animated step content */}
+            <div className="relative flex min-h-[120px] flex-1 items-center">
+              <AnimatePresence mode="wait">
+                {getCurrentStepData() && (
+                  <motion.div
+                    animate={{
+                      opacity: 1,
+                    }}
+                    className="w-full"
+                    exit={{
+                      opacity: 0,
+                    }}
+                    initial={{
+                      opacity: 0,
+                    }}
+                    key={currentStep}
+                    transition={{
+                      duration: 0.3,
+                      ease: 'easeInOut',
+                    }}
+                  >
+                    <h3 className="font-semibold text-primary text-sm">
+                      {getCurrentStepData()?.title}
+                    </h3>
+                    <p className="mt-2 text-muted-foreground text-xs leading-relaxed">
+                      {getCurrentStepData()?.description}
+                    </p>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          </div>
+
+          {/* Desktop Steps - Original multi-step layout */}
+          <div className="hidden space-y-10 md:block">
             <motion.div
               animate={{ opacity: 1, x: 0 }}
               className="flex items-center gap-4"
@@ -197,7 +269,7 @@ export default function GeckoBarSection() {
             initial={{ opacity: 0, scale: 0.95 }}
             transition={{ duration: 0.6, delay: 0.4, ease: 'easeOut' }}
           >
-            <div className="aspect-square w-full max-w-md overflow-hidden rounded-3xl bg-[#2E2E2E] p-8">
+            <div className="aspect-[4/3] w-full max-w-md overflow-hidden rounded-2xl bg-[#2E2E2E] p-4 md:aspect-square md:rounded-3xl md:p-8">
               <RiveComponent className="h-full w-full" />
             </div>
           </motion.div>
