@@ -4,11 +4,24 @@ import { FaWindows } from 'react-icons/fa';
 import HeroHeading from './hero-heading';
 import HeroSubheading from './hero-subheading';
 import SectionWrapper from './section-wrapper';
+import Branch1 from './svgs/branch-1';
+import Branch2 from './svgs/branch-2';
 
 export default function HeroSection() {
   return (
-    <SectionWrapper className="mt-4 max-w-[90rem] py-12">
-      <div className="w-full rounded-3xl bg-[#F9F8F6] p-6 text-center md:p-12 lg:p-16">
+    <SectionWrapper className="mt-4 py-12">
+      {/* Left Branch - Hidden on mobile/tablet, visible on large screens, positioned lower */}
+      <div className="-translate-x-1/2 absolute top-1/2 left-0 z-20 hidden translate-y-20 transform lg:block">
+        <Branch1 className="h-44 w-auto opacity-90 xl:h-56 2xl:h-72" />
+      </div>
+
+      {/* Right Branch - Hidden on mobile/tablet, visible on large screens */}
+      <div className="absolute top-1/2 right-0 z-20 hidden translate-x-1/2 translate-y-4 transform lg:block">
+        <Branch2 className="h-44 w-auto opacity-90 xl:h-56 2xl:h-72" />
+      </div>
+
+      {/* Main Hero Content */}
+      <div className="relative z-10 w-full rounded-3xl bg-[#F9F8F6] p-6 text-center md:p-12 lg:p-16">
         <HeroHeading className="mx-auto mb-[0.3em] max-w-4xl">
           Instant voice transcription at your fingertips — type less, say more.
         </HeroHeading>
