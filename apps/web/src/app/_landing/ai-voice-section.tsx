@@ -46,11 +46,11 @@ export default function AIVoiceSection() {
 
         <div className="relative mx-auto mt-16 grid max-w-4xl items-center gap-16 lg:grid-cols-2 lg:gap-24">
           {/* Features column */}
-          <div className="space-y-8">
+          <div className="space-y-8 text-center lg:text-left">
             {features.map((feature, index) => (
               <motion.div
                 animate={{ opacity: 1, x: 0 }}
-                className="flex items-center gap-8"
+                className="flex flex-col items-center gap-6 lg:flex-row lg:gap-8"
                 initial={{ opacity: 0, x: -20 }}
                 key={feature.title}
                 transition={{ duration: 0.6, delay: index * 0.1 }}
@@ -82,10 +82,16 @@ export default function AIVoiceSection() {
             transition={{ duration: 0.8, delay: 0.3 }}
           >
             {/* Main interface mockup */}
-            <div className="relative flex flex-col overflow-hidden rounded-2xl border bg-[#141414] px-4 pt-8 pb-24 shadow-2xl">
+            <div
+              className="relative flex flex-col overflow-hidden rounded-2xl border bg-[#141414] px-3 pt-4 pb-16 shadow-2xl"
+              style={{
+                maxWidth: 'clamp(22rem, 45vw, 32rem)',
+                margin: '0 auto',
+              }}
+            >
               <Image
                 alt="Voice Gecko chat interface showing AI conversation for development tasks"
-                className="h-auto w-full"
+                className="mx-auto h-auto w-full"
                 height={600}
                 src="/assets/images/landing-page/cursor-ide.png"
                 width={800}
@@ -93,12 +99,20 @@ export default function AIVoiceSection() {
             </div>
 
             {/* Gecko mascot */}
-            <div className="-right-16 lg:-right-36 absolute bottom-0">
+            <div
+              className="absolute bottom-0"
+              style={{
+                right: 'clamp(-8rem, -15vw, -4rem)',
+              }}
+            >
               <Image
                 alt=""
-                className="h-32 w-auto scale-x-[-1] lg:h-40"
+                className="w-auto scale-x-[-1]"
                 height={908}
                 src="/assets/images/geckos/gecko-worker.png"
+                style={{
+                  height: 'clamp(8rem, 12vw, 10rem)',
+                }}
                 width={779}
               />
             </div>

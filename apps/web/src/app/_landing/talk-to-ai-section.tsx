@@ -4,8 +4,8 @@ import { motion } from 'motion/react';
 import Image from 'next/image';
 import SectionHeader from './section-header';
 import SectionWrapper from './section-wrapper';
-import Branch2 from './svgs/branch-2';
-import Vine1 from './svgs/vine-1';
+import Branch2Long from './svgs/branch-2-long';
+import Vine3Long from './svgs/vine-3-long';
 
 const features = [
   {
@@ -36,14 +36,34 @@ export default function TalkToAISection() {
   return (
     <SectionWrapper className="max-w-none bg-primary/10 py-20">
       <div className="relative mx-auto max-w-6xl">
-        {/* Left Bush - Hidden on mobile/tablet, visible on large screens, positioned high */}
-        <div className="-left-32 -top-32 -translate-x-3/5 absolute z-20 hidden translate-y-8 transform lg:block">
-          <Branch2 className="-scale-x-100 -rotate-[30deg] h-44 w-[14rem] xl:h-52 xl:w-[16rem] 2xl:h-64 2xl:w-[28rem]" />
+        {/* Left Branch */}
+        <div
+          className="-translate-x-1/2 lg:-translate-y-10 absolute top-4 z-20 md:top-8 lg:top-0"
+          style={{
+            left: 'clamp(-25rem, -20vw, -18rem)',
+          }}
+        >
+          <Branch2Long
+            className="-rotate-[15deg] w-auto scale-x-[-1]"
+            style={{
+              height: 'clamp(16rem, 24vw, 30rem)',
+            }}
+          />
         </div>
 
-        {/* Right Vine - Hidden on mobile/tablet, visible on large screens, positioned low */}
-        <div className="-right-32 -bottom-32 absolute z-20 hidden translate-x-3/5 translate-y-1/3 transform lg:block">
-          <Vine1 className="-scale-x-100 h-32 w-auto rotate-90 xl:h-40 2xl:h-72" />
+        {/* Right Vine */}
+        <div
+          className="-bottom-20 md:-bottom-16 lg:-bottom-20 absolute z-20 lg:translate-y-1/2"
+          style={{
+            right: 'clamp(-35rem, -30vw, -20rem)',
+          }}
+        >
+          <Vine3Long
+            className="w-auto"
+            style={{
+              height: 'clamp(12rem, 20vw, 20rem)',
+            }}
+          />
         </div>
 
         {/* Main Content */}
@@ -65,7 +85,13 @@ export default function TalkToAISection() {
               transition={{ duration: 0.8, delay: 0.3 }}
             >
               {/* Gradient background */}
-              <div className="relative flex aspect-[4/3] items-center justify-center rounded-3xl p-6 md:aspect-square md:p-8">
+              <div
+                className="relative flex aspect-square items-center justify-center rounded-3xl p-4 md:p-6"
+                style={{
+                  maxWidth: 'clamp(18rem, 35vw, 26rem)',
+                  margin: '0 auto',
+                }}
+              >
                 <Image
                   alt=""
                   className="absolute inset-0 h-full w-full rounded-3xl object-cover object-left"
@@ -75,7 +101,7 @@ export default function TalkToAISection() {
                 />
                 <Image
                   alt="Gecko with laptop and microphone for voice input"
-                  className="relative z-10 h-auto max-w-[70%] md:max-w-full"
+                  className="relative z-10 h-auto max-w-[85%] md:max-w-[90%]"
                   height={250}
                   src="/assets/images/geckos/gecko-laptop-w-mic.png"
                   width={250}
@@ -84,11 +110,11 @@ export default function TalkToAISection() {
             </motion.div>
 
             {/* Features column */}
-            <div className="order-1 space-y-8 lg:order-2">
+            <div className="order-1 space-y-8 text-center lg:order-2 lg:text-left">
               {features.map((feature, index) => (
                 <motion.div
                   animate={{ opacity: 1, x: 0 }}
-                  className="flex items-center gap-8"
+                  className="flex flex-col items-center gap-6 lg:flex-row lg:gap-8"
                   initial={{ opacity: 0, x: 20 }}
                   key={feature.title}
                   transition={{ duration: 0.6, delay: index * 0.1 }}

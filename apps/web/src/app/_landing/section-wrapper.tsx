@@ -15,7 +15,7 @@ export default function SectionWrapper({
   return (
     <section
       className={cn(
-        'relative mx-auto max-w-6xl px-4 py-20 md:px-6 lg:px-12',
+        'relative mx-auto max-w-6xl px-4 py-10 md:px-6 lg:px-12',
         className
       )}
       id={id}
