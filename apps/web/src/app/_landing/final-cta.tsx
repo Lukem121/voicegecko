@@ -40,15 +40,15 @@ export default function FinalCtaSection() {
 
             {/* Heading */}
             <h2 className="mt-2 font-bold font-hero text-4xl leading-tight tracking-tight">
-              Supercharge your
+              Work at the Speed
               <br />
-              productivity.
+              of Thought
             </h2>
 
             {/* Description */}
             <p className="mt-2 max-w-sm text-white lg:max-w-sm">
-              Organise tasks, collaborate on docs, track goals and streamline
-              team communications all in one place, enhanced by AI.
+              Stop letting the keyboard slow you down. Capture ideas instantly,
+              keep your flow, and get more done with Voice Gecko.
             </p>
 
             {/* CTA Button */}
