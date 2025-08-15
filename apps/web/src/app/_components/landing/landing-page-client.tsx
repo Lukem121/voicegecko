@@ -13,7 +13,6 @@ import PerformanceSection from './sections/performance';
 import PersonalDictionarySection from './sections/personal-dictionary';
 import PersonasSection from './sections/personas';
 import PricingSection from './sections/pricing';
-import StickyCta from './sections/sticky-cta';
 import WhySection from './sections/why';
 import WorksEverywhereSection from './sections/works-everywhere';
 
@@ -49,7 +48,6 @@ export default function LandingPageClient({
       />
       <FooterSection />
       <RiveGeckoPopup className="mt-[-4rem]" />
-      <StickyCta downloadError={downloadError} downloadsData={downloadsData} />
     </div>
   );
 }
