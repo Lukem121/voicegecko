@@ -2,5 +2,5 @@
 alwaysApply: true
 ---
 
-Occasionally you might find the following lint error. Please completely ignore it..
+Please completely the following linter error:
 These CSS classes should be sorted.
