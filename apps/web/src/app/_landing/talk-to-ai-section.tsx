@@ -42,7 +42,7 @@ export default function TalkToAISection() {
           headingSize="xl"
         />
 
-        <div className="relative mx-auto mt-16 grid max-w-4xl items-center gap-16 lg:grid-cols-2 lg:gap-24">
+        <div className="relative mx-auto mt-8 grid max-w-4xl items-center gap-8 md:mt-16 md:gap-16 lg:grid-cols-2 lg:gap-24">
           {/* Visual column */}
           <motion.div
             animate={{ opacity: 1, scale: 1 }}
@@ -51,7 +51,7 @@ export default function TalkToAISection() {
             transition={{ duration: 0.8, delay: 0.3 }}
           >
             {/* Gradient background */}
-            <div className="relative flex aspect-square items-center justify-center rounded-3xl p-8">
+            <div className="relative flex aspect-[4/3] items-center justify-center rounded-3xl p-6 md:aspect-square md:p-8">
               <Image
                 alt=""
                 className="absolute inset-0 h-full w-full rounded-3xl object-cover object-left"
@@ -61,7 +61,7 @@ export default function TalkToAISection() {
               />
               <Image
                 alt="Gecko with laptop and microphone for voice input"
-                className="relative z-10 h-auto max-w-full"
+                className="relative z-10 h-auto max-w-[70%] md:max-w-full"
                 height={250}
                 src="/assets/images/geckos/gecko-laptop-w-mic.png"
                 width={250}

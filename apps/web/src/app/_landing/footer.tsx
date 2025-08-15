@@ -25,47 +25,68 @@ const benefits = [
   { text: '99.9% uptime', icon: 'speedometer' as const },
 ];
 
+const mobileBenefits = [
+  { text: 'Type less, say more.', icon: 'logo' as const },
+];
+
 const productLinks = ['Download', 'About Us', 'Careers'];
 
 export default function Footer() {
   return (
-    <SectionWrapper className="">
+    <SectionWrapper className="px-0">
       <div className="space-y-12">
         {/* Top Benefits Section */}
         <motion.div
           animate={{ opacity: 1, y: 0 }}
-          className="flex flex-wrap items-center justify-between gap-6 border-gray-200 border-y py-6 md:gap-8"
+          className="flex flex-wrap items-center justify-between gap-6 border-gray-200 border-y py-4 md:gap-8 md:py-6"
           initial={{ opacity: 0, y: 20 }}
           transition={{ duration: 0.6 }}
         >
-          {benefits.map((benefit) => {
-            const IconComponent = iconMap[benefit.icon];
+          {/* Mobile: Only logo benefit */}
+          <div className="flex w-full justify-start px-4 md:hidden md:px-6 lg:px-12">
+            {mobileBenefits.map((benefit) => {
+              const IconComponent = iconMap[benefit.icon];
+              return (
+                <div className="flex items-center gap-2" key={benefit.text}>
+                  <IconComponent className="h-5 w-5 flex-shrink-0 text-gray-700" />
+                  <span className="font-semibold text-black text-sm">
+                    {benefit.text}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
 
-            return (
-              <div className="flex items-center gap-2" key={benefit.text}>
-                <IconComponent className="h-5 w-5 flex-shrink-0 text-gray-700" />
-                <span
-                  className={cn(
-                    'text-sm',
-                    benefit.icon === 'logo'
-                      ? 'font-semibold text-black'
-                      : 'font-normal text-gray-700'
-                  )}
-                  style={
-                    benefit.icon !== 'logo' ? { color: '#292D34' } : undefined
-                  }
-                >
-                  {benefit.text}
-                </span>
-              </div>
-            );
-          })}
+          {/* Desktop: All benefits */}
+          <div className="hidden w-full justify-between px-4 md:flex md:flex-wrap md:items-center md:gap-6 md:px-6 lg:gap-8 lg:px-12">
+            {benefits.map((benefit) => {
+              const IconComponent = iconMap[benefit.icon];
+              return (
+                <div className="flex items-center gap-2" key={benefit.text}>
+                  <IconComponent className="h-5 w-5 flex-shrink-0 text-gray-700" />
+                  <span
+                    className={cn(
+                      'text-sm',
+                      benefit.icon === 'logo'
+                        ? 'font-semibold text-black'
+                        : 'font-normal text-gray-700'
+                    )}
+                    style={
+                      benefit.icon !== 'logo' ? { color: '#292D34' } : undefined
+                    }
+                  >
+                    {benefit.text}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
         </motion.div>
 
         {/* Product Columns */}
         <motion.div
           animate={{ opacity: 1, y: 0 }}
-          className="grid grid-cols-2 gap-8 md:grid-cols-3 lg:grid-cols-5"
+          className="grid grid-cols-2 gap-8 px-4 md:grid-cols-3 md:px-6 lg:grid-cols-5 lg:px-12"
           initial={{ opacity: 0, y: 20 }}
           transition={{ duration: 0.6, delay: 0.2 }}
         >
@@ -90,7 +111,7 @@ export default function Footer() {
         {/* Bottom Bar */}
         <motion.div
           animate={{ opacity: 1, y: 0 }}
-          className="flex flex-col items-center justify-between gap-4 border-gray-200 border-t pt-8 md:flex-row"
+          className="flex flex-col items-center justify-between gap-4 border-gray-200 border-t px-4 pt-8 md:flex-row md:px-6 lg:px-12"
           initial={{ opacity: 0, y: 20 }}
           transition={{ duration: 0.6, delay: 0.4 }}
         >
@@ -102,8 +123,31 @@ export default function Footer() {
             <ThemeToggle />
           </div>
 
-          {/* Center - Copyright */}
-          <div className="flex items-center justify-between gap-4">
+          {/* Mobile: Links on top, Copyright below */}
+          <div className="flex flex-col gap-4 md:hidden">
+            {/* Links row */}
+            <div className="flex flex-wrap items-center justify-center gap-4">
+              {['Security', 'Privacy', 'Terms', 'Cookie Preferences'].map(
+                (link) => (
+                  <Link
+                    className="font-medium text-xs transition-colors"
+                    href={'/'}
+                    key={link}
+                  >
+                    {link}
+                  </Link>
+                )
+              )}
+            </div>
+
+            {/* Copyright row */}
+            <div className="text-center">
+              <p className="font-medium text-xs">©2025 VoiceGecko</p>
+            </div>
+          </div>
+
+          {/* Desktop: Original layout */}
+          <div className="hidden items-center justify-between gap-4 md:flex">
             <div className="text-center">
               <p className="font-medium text-xs">©2025 VoiceGecko</p>
             </div>
