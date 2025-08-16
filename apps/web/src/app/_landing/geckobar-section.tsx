@@ -110,7 +110,7 @@ export default function GeckoBarSection() {
   };
 
   return (
-    <SectionWrapper className="max-w-none bg-[#00A9A5]/10 py-12 md:py-20">
+    <SectionWrapper className="max-w-none bg-[#00A9A5]/10 py-16">
       <div className="relative mx-auto max-w-6xl">
         {/* Left Bug on Branch */}
         <div className="-translate-y-20 -translate-x-1/2 absolute top-0 left-[-25rem] z-20 hidden lg:block">
@@ -135,7 +135,7 @@ export default function GeckoBarSection() {
         </div>
 
         {/* Main Content */}
-        <div className="relative z-10 mx-auto max-w-6xl px-4 md:px-6 lg:px-12">
+        <div className="relative z-10 mx-auto max-w-6xl">
           <SectionHeader
             description="A persistent, interactive bar that lets you trigger transcription or see exactly what's happening."
             descriptionWidth="wide"

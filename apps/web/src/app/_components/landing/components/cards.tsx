@@ -168,7 +168,7 @@ export function PriceCard({
         <div className="flex items-center justify-between">
           <h3 className="font-semibold text-lg tracking-tight">{name}</h3>
           {popular && (
-            <span className="inline-flex items-center rounded-full bg-primary px-2.5 py-0.5 font-semibold text-[11px] text-primary-foreground shadow-sm">
+            <span className="inline-flex items-center rounded-full bg-primary px-2.5 py-0.5 font-semibold text-[11px] text-white shadow-sm">
               Most Popular
             </span>
           )}
@@ -218,7 +218,7 @@ export function PriceCard({
           className={cn(
             'inline-flex h-11 w-full items-center justify-center rounded-lg px-8 font-medium text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50',
             highlight
-              ? 'bg-primary text-primary-foreground hover:bg-primary/90'
+              ? 'bg-primary text-white hover:bg-primary/90'
               : 'bg-muted text-foreground hover:bg-muted/80'
           )}
           href={ctaLink}

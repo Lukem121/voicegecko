@@ -34,7 +34,7 @@ const features = [
 
 export default function TalkToAISection() {
   return (
-    <SectionWrapper className="max-w-none bg-primary/10 py-20">
+    <SectionWrapper className="max-w-none bg-primary/10 py-16">
       <div className="relative mx-auto max-w-6xl">
         {/* Left Branch */}
         <div
@@ -67,7 +67,7 @@ export default function TalkToAISection() {
         </div>
 
         {/* Main Content */}
-        <div className="relative z-10 mx-auto max-w-6xl px-4 md:px-6 lg:px-12">
+        <div className="relative z-10 mx-auto max-w-6xl">
           <SectionHeader
             description="Skip the tedious prompt typing. Speak naturally, capture every thought instantly, and send it straight to your large language model."
             descriptionWidth="wide"

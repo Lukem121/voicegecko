@@ -124,30 +124,30 @@ export default function PricingSection({
   } = useStudentDiscountModal();
 
   return (
-    <Section className="relative overflow-hidden py-24" id="pricing">
-      <div className="text-center">
-        <span className="inline-flex items-center gap-2 rounded-full border border-border/80 bg-gradient-to-b from-background/70 to-background/40 px-3 py-1.5 font-medium text-muted-foreground text-xs shadow-sm ring-1 ring-border/60 backdrop-blur">
-          <span className="inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-primary" />
-          Transparent Pricing
-        </span>
-        <h2 className="mt-4 font-bold text-3xl text-foreground tracking-tight md:text-4xl">
-          Simple, fair pricing
-        </h2>
-        <p className="mx-auto mt-3 max-w-2xl text-base text-muted-foreground">
-          Start free with 2,000 words per week. Upgrade for unlimited
-          transcription whenever you’re ready.
-        </p>
-      </div>
-      <div className="mt-8 flex items-center justify-center">
-        <div className="flex items-center gap-3">
+    <Section className="relative overflow-hidden md:py-12" id="pricing">
+      <div className="flex items-end justify-between gap-4">
+        <div className="text-left">
+          <p className="font-medium text-primary text-sm">
+            Transparent Pricing
+          </p>
+          <h2 className="mt-2 font-hero font-semibold text-4xl tracking-[-0.05em]">
+            Simple, fair pricing
+          </h2>
+          <p className="mt-2 max-w-lg text-pretty text-muted-foreground text-sm">
+            Start free with 2,000 words per week. Upgrade for unlimited
+            transcription whenever you’re ready.
+          </p>
+        </div>
+
+        <div className="mt-4">
           <Toggle selected={billingPeriod} setSelected={setBillingPeriod} />
         </div>
       </div>
-      <div className="mx-auto max-w-3xl">
-        <div className="mt-10 grid max-w-3xl gap-6 md:grid-cols-2">
+      <div>
+        <div className="mt-6 grid gap-6 md:grid-cols-2">
           <PriceCard
             cta="Get Started Free"
-            ctaLink="/sign-up"
+            ctaLink="/download"
             features={
               [
                 {
@@ -171,7 +171,7 @@ export default function PricingSection({
           />
           <PriceCard
             cta="Upgrade to Pro"
-            ctaLink="/sign-up?plan=pro"
+            ctaLink="/download?plan=pro"
             features={
               [
                 {
