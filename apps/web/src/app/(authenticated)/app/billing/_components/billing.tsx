@@ -91,7 +91,7 @@ function BillingErrorState({
   return (
     <div className="space-y-8">
       <div className="mb-8">
-        <h1 className="mb-2 font-medium text-3xl">Billing</h1>
+        <h1 className="mb-2 font-semibold text-2xl tracking-tight">Billing</h1>
         <p className="text-muted-foreground">
           Manage your subscription and billing information
         </p>
@@ -147,7 +147,7 @@ function CurrentPlanCard({
     <Card className="">
       <CardHeader>
         <div className="flex items-center justify-between">
-          <CardTitle className="mb-2 font-medium text-xl">
+          <CardTitle className="mb-2 font-semibold text-xl">
             Current Plan
           </CardTitle>
           <CardAction>
@@ -390,7 +390,7 @@ export default function Billing({ prices, subscription, error }: BillingProps) {
   return (
     <div className="space-y-8">
       <div className="mb-8">
-        <h1 className="mb-2 font-medium text-3xl">Billing</h1>
+        <h1 className="mb-2 font-semibold text-2xl tracking-tight">Billing</h1>
         <p className="text-muted-foreground">
           Manage your subscription and billing information
         </p>
@@ -467,7 +467,7 @@ export default function Billing({ prices, subscription, error }: BillingProps) {
       {subscription && (
         <Card className="">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 font-medium text-lg">
+            <CardTitle className="flex items-center gap-2 font-semibold text-lg">
               Subscription Details
             </CardTitle>
           </CardHeader>
@@ -519,7 +519,7 @@ export default function Billing({ prices, subscription, error }: BillingProps) {
       {/* Billing History Note */}
       <Card className="">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 font-medium text-lg">
+          <CardTitle className="flex items-center gap-2 font-semibold text-lg">
             Billing History
           </CardTitle>
         </CardHeader>
