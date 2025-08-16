@@ -280,7 +280,7 @@ export class RecordingService {
   /**
    * Play notification sound with proper error handling
    */
-  public async playNotificationSound(variant: 'Start' | 'End'): Promise<void> {
+  async playNotificationSound(variant: 'Start' | 'End'): Promise<void> {
     try {
       const { settings } = useSettingsStore.getState();
       log.info(
