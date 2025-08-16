@@ -33,7 +33,7 @@ const getCachedPricingData = unstable_cache(
   }
 );
 
-export default async function LandingPage() {
+export default async function OldLandingPage() {
   let downloadsData: DownloadsData | null = null;
   let downloadError: string | undefined;
   let prices: Record<string, PriceWithMetadata> | null = null;

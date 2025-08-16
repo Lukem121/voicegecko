@@ -11,7 +11,7 @@ import Logo from './svgs/logo';
 export default function FinalCtaSection() {
   return (
     <SectionWrapper className="max-w-5xl">
-      <div className="relative overflow-hidden rounded-3xl bg-black px-4 pt-12 md:px-6 md:pb-20 lg:px-12">
+      <div className="relative overflow-hidden rounded-3xl bg-black px-6 pt-12 md:pb-20 lg:px-12">
         {/* Right side gradient overlay - desktop only */}
         <div className="absolute top-0 right-0 z-20 hidden h-full w-24 bg-gradient-to-l from-primary/30 to-transparent lg:block" />
 
