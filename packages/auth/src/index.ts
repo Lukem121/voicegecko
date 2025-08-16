@@ -81,10 +81,12 @@ export const serverAuth = betterAuth({
         onSubscriptionUpdate,
         onSubscriptionCancel,
         onSubscriptionDeleted,
-        getCheckoutSessionParams: () => {
+        getCheckoutSessionParams: (_, request) => {
+          const currency = request?.headers?.get('x-currency') ?? undefined;
           return {
             params: {
               allow_promotion_codes: true,
+              currency,
             },
           };
         },

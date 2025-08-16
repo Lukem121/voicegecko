@@ -6,7 +6,7 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@acme/ui/components/ui/accordion';
-import Section from '../components/section';
+import Section from '../../section';
 
 export default function FaqSection() {
   return (

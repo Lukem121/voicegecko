@@ -12,7 +12,7 @@ export default function HeroSubheading({
   return (
     <p
       className={cn(
-        'mt-0 mb-[10px] block text-pretty text-center text-base text-muted-foreground leading-[1.6] tracking-[-0.05em] md:text-lg',
+        'mt-0 mb-[10px] block text-pretty text-center text-base text-muted-foreground leading-[1.6] tracking-[-0.05em] md:text-lg dark:text-white/80',
         className
       )}
     >
