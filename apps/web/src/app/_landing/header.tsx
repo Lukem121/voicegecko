@@ -4,11 +4,14 @@ import { cn } from '@acme/ui/lib/utils';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { TfiMenu } from 'react-icons/tfi';
+import { authClient } from '~/lib/auth/client';
+import { APP_ROUTES } from '~/utils/app-routes';
 import Section from '../_components/landing/components/section';
 import DownloadButton from './download-button';
 import Logo from './svgs/logo';
 
 export default function Header() {
+  const session = authClient.useSession();
   const pathname = usePathname();
   const isHome = pathname === '/';
   return (
@@ -38,19 +41,28 @@ export default function Header() {
           <div className="flex items-center gap-4 md:gap-6">
             {/* Desktop navigation links - hidden on mobile */}
             <div className="hidden items-center gap-6 md:flex">
-              <a
+              <Link
                 className="font-medium text-foreground/80 text-sm transition-colors hover:text-foreground"
                 href="/pricing"
               >
                 Pricing
-              </a>
+              </Link>
               <span aria-hidden className="h-5 w-px bg-border" />
-              <a
-                className="font-medium text-foreground/80 text-sm transition-colors hover:text-foreground"
-                href="/sign-in"
-              >
-                Login
-              </a>
+              {session.data?.user ? (
+                <Link
+                  className="font-medium text-foreground/80 text-sm transition-colors hover:text-foreground"
+                  href={APP_ROUTES.APP.USAGE}
+                >
+                  Account
+                </Link>
+              ) : (
+                <Link
+                  className="font-medium text-foreground/80 text-sm transition-colors hover:text-foreground"
+                  href="/sign-in"
+                >
+                  Login
+                </Link>
+              )}
             </div>
             <DownloadButton />
             {/* Mobile burger menu - shown only on mobile */}

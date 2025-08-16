@@ -16,6 +16,7 @@ import type React from 'react';
 import { useState } from 'react';
 import { HiArrowRight, HiChevronDown, HiMenu, HiX } from 'react-icons/hi';
 import type { DownloadsData } from '~/lib/downloads-utils';
+import { APP_ROUTES } from '~/utils/app-routes';
 import WindowsDownloadButton from '../components/windows-download-button';
 
 export default function Navigation({
@@ -45,7 +46,7 @@ export default function Navigation({
                   <NavigationMenuItem>
                     <NavigationMenuLink
                       className={navigationMenuTriggerStyle()}
-                      href="/app"
+                      href={APP_ROUTES.APP.USAGE}
                     >
                       Account
                     </NavigationMenuLink>
@@ -95,7 +96,10 @@ export default function Navigation({
               </button>
             </div>
             <div className="h-screen overflow-y-scroll p-6">
-              <MobileMenuLink href="/app" setMenuOpen={setMobileMenuOpen}>
+              <MobileMenuLink
+                href={APP_ROUTES.APP.USAGE}
+                setMenuOpen={setMobileMenuOpen}
+              >
                 Account
               </MobileMenuLink>
               <MobileMenuLink href="/pricing" setMenuOpen={setMobileMenuOpen}>
