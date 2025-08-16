@@ -8,6 +8,7 @@ import GeckoInvisibleWall from 'public/assets/images/geckos/gecko-invisible-wall
 import React from 'react';
 import { FaWindows } from 'react-icons/fa';
 import { HiX } from 'react-icons/hi';
+import { APP_ROUTES } from '~/utils/app-routes';
 
 export default function StickyCta() {
   const [show, setShow] = React.useState(false);
@@ -63,7 +64,7 @@ export default function StickyCta() {
                   buttonVariants({ variant: 'default', size: 'default' }),
                   'w-full gap-2 px-4 py-2.5 text-white sm:w-auto sm:px-6 sm:text-base'
                 )}
-                href="/download/windows"
+                href={APP_ROUTES.MARKETING.DOWNLOAD}
               >
                 <FaWindows aria-hidden className="h-4 w-4" />
                 <span>Download for Windows</span>

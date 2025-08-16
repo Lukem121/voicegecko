@@ -1,6 +1,7 @@
 import { buttonVariants } from '@acme/ui/components/ui/button';
 import { cn } from '@acme/ui/lib/utils';
 import { FaWindows } from 'react-icons/fa';
+import { APP_ROUTES } from '~/utils/app-routes';
 import HeroHeading from './hero-heading';
 import HeroSubheading from './hero-subheading';
 import SectionWrapper from './section-wrapper';
@@ -55,7 +56,7 @@ export default function HeroSection() {
               buttonVariants({ variant: 'default', size: 'xl' }),
               'gap-2 px-6 text-white'
             )}
-            href="/download/windows"
+            href={APP_ROUTES.MARKETING.DOWNLOAD}
           >
             <FaWindows aria-hidden className="h-4 w-4" />
             <span>Download for Windows</span>

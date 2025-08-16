@@ -2,9 +2,13 @@
 
 import { buttonVariants } from '@acme/ui/components/ui/button';
 import { cn } from '@acme/ui/lib/utils';
+import { usePathname } from 'next/navigation';
 import { FaWindows } from 'react-icons/fa';
+import { APP_ROUTES } from '~/utils/app-routes';
 
 export default function DownloadButton() {
+  const pathname = usePathname();
+  const isDownload = pathname === APP_ROUTES.MARKETING.DOWNLOAD;
   return (
     <button
       className={cn(
@@ -15,8 +19,14 @@ export default function DownloadButton() {
       )}
       type="button"
     >
-      <FaWindows className="hidden h-4 w-4 md:block" />
-      <span>Download</span>
+      {isDownload ? (
+        "Let's go!"
+      ) : (
+        <>
+          <FaWindows className="hidden h-4 w-4 md:block" />
+          <span>Download</span>
+        </>
+      )}
     </button>
   );
 }
