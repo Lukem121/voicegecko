@@ -15,7 +15,7 @@ export default function DownloadButton() {
       )}
       type="button"
     >
-      <FaWindows className="h-4 w-4" />
+      <FaWindows className="hidden h-4 w-4 md:block" />
       <span>Download</span>
     </button>
   );

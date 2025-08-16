@@ -20,9 +20,16 @@ interface TypingTextProps {
   wpm: number;
   isVisible: boolean;
   shouldRestart: boolean;
+  variant?: 'light' | 'dark';
 }
 
-function TypingText({ text, wpm, isVisible, shouldRestart }: TypingTextProps) {
+function TypingText({
+  text,
+  wpm,
+  isVisible,
+  shouldRestart,
+  variant = 'light',
+}: TypingTextProps) {
   const [displayText, setDisplayText] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const [isCompleted, setIsCompleted] = useState(false);
@@ -70,7 +77,12 @@ function TypingText({ text, wpm, isVisible, shouldRestart }: TypingTextProps) {
   }, [text, wpm, isVisible, shouldRestart, isCompleted]);
 
   return (
-    <span className="text-sm leading-6">
+    <span
+      className={cn(
+        'text-sm leading-6',
+        variant === 'dark' && 'dark:text-black'
+      )}
+    >
       {displayText}
       {isTyping && (
         <motion.span
@@ -194,19 +206,19 @@ export default function SpeedComparisonSection() {
             initial={{ opacity: 0, y: 20 }}
             transition={{ duration: 0.6 }}
           >
-            <h3 className="font-hero font-semibold text-3xl tracking-[-0.05em]">
+            <h3 className="font-hero font-semibold text-3xl tracking-[-0.05em] dark:text-black">
               40 words per minute
             </h3>
-            <p className="mt-4 font-semibold leading-5 tracking-[-0.05em]">
+            <p className="mt-4 font-semibold leading-5 tracking-[-0.05em] dark:text-black">
               The average typing speed. Slow, and full of interruptions for
               spelling corrections.
             </p>
             <div className="relative mt-5 rounded-xl border bg-white p-4 pb-20 text-foreground/80 shadow-sm">
               <div className="mb-3 inline-flex items-center gap-2 text-[10px] text-foreground/60">
-                <span className="inline-flex items-center gap-1 rounded border px-1.5 py-0.5">
+                <span className="inline-flex items-center gap-1 rounded border px-1.5 py-0.5 dark:text-black">
                   @
                 </span>
-                <span className="inline-flex items-center gap-1 rounded border px-1.5 py-0.5">
+                <span className="inline-flex items-center gap-1 rounded border px-1.5 py-0.5 dark:text-black">
                   <FaRegCopy aria-hidden className="h-3 w-3" />
                   <span>1 Tab</span>
                 </span>
@@ -216,6 +228,7 @@ export default function SpeedComparisonSection() {
                   isVisible={isInView}
                   shouldRestart={shouldRestart}
                   text={TYPING_TEXT}
+                  variant="dark"
                   wpm={40}
                 />
               </div>
@@ -259,6 +272,7 @@ export default function SpeedComparisonSection() {
                   isVisible={isInView}
                   shouldRestart={shouldRestart}
                   text={TYPING_TEXT}
+                  variant="light"
                   wpm={200}
                 />
               </div>
