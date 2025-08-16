@@ -2,6 +2,7 @@
 
 import { cn } from '@acme/ui/lib/utils';
 import { Alignment, Fit, Layout, useRive } from '@rive-app/react-canvas-lite';
+import { usePathname } from 'next/navigation';
 import Bush1 from './svgs/bush-1';
 import Bush2 from './svgs/bush-2';
 
@@ -12,6 +13,9 @@ export default function RiveGeckoPopup({
   className?: string;
   ariaLabel?: string;
 }) {
+  const pathname = usePathname();
+  const isHome = pathname === '/';
+
   const { RiveComponent } = useRive(
     {
       src: '/assets/images/geckos/rive/geckopopup.riv',
@@ -30,6 +34,10 @@ export default function RiveGeckoPopup({
       useDevicePixelRatio: true,
     }
   );
+
+  if (!isHome) {
+    return null;
+  }
 
   return (
     <section
