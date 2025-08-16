@@ -94,12 +94,12 @@ export default async function UsagePage() {
       {!stats.current.isUnlimited && (
         <section>
           <Card>
-            <CardHeader className="pb-3">
+            <CardHeader className="">
               <CardTitle className="font-medium text-base">
                 Weekly Usage Limit
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-3">
+            <CardContent>
               <div className="flex items-center justify-between text-sm">
                 <span>Words Used</span>
                 <span className="font-medium">

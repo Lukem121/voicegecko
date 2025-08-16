@@ -10,6 +10,7 @@ import { useState } from 'react';
 import { HiCheck } from 'react-icons/hi';
 import { StudentDiscountModal } from '~/components/student-discount-modal';
 import { useStudentDiscountModal } from '~/hooks/use-student-discount-modal';
+import { authClient } from '~/lib/auth/client';
 import { useCurrency } from '~/providers/currency';
 import { type FeatureItem, PriceCard } from '../components/cards';
 import Section from '../components/section';
@@ -107,6 +108,7 @@ export default function PricingSection({
   prices: Record<string, PriceWithMetadata> | null;
   pricingError?: string;
 }) {
+  const { data: session } = authClient.useSession();
   const [billingPeriod, setBillingPeriod] = useState<BillingPeriod>('yearly');
   const { currency } = useCurrency();
   const isYearly = billingPeriod === 'yearly';

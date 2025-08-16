@@ -2,24 +2,7 @@
 
 import type { PriceWithMetadata } from '@acme/api/src/services/stripe/stripe.service';
 import { log } from '@acme/observability';
-import {
-  Alert,
-  AlertDescription,
-  AlertTitle,
-} from '@acme/ui/components/ui/alert';
-
-import { Button } from '@acme/ui/components/ui/button';
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from '@acme/ui/components/ui/card';
-import { cn } from '@acme/ui/lib/utils';
 import type { Subscription } from '@better-auth/stripe';
-import { motion } from 'framer-motion';
-import { AlertTriangle, Check, Loader2, RefreshCw, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
@@ -29,9 +12,15 @@ import { authClient } from '~/lib/auth/client';
 import { useCurrency } from '~/providers/currency';
 import { useTRPC } from '~/trpc/react';
 import { useCreateBillingPortalSession } from '../../_hooks/use-create-billing-portal-session';
+import { AlertBanner } from './alert-banner';
+import { BillingToggle } from './billing-toggle';
+import { type Plan, PlanCard } from './plan-card';
+import { PlanComparison } from './plan-comparison';
+import { PlansErrorState } from './plans-error-state';
+import { StudentDiscountCard } from './student-discount-card';
+import { getPriceDisplay, getYearlyPriceAsMonthly } from './utils/price-utils';
 
 type BillingPeriod = 'monthly' | 'annual';
-type CellValue = 'check' | 'x' | (string & {});
 
 interface PlansProps {
   prices: Record<string, PriceWithMetadata>;
@@ -44,133 +33,12 @@ interface PlansProps {
   } | null;
 }
 
-interface ComparisonTableProps {
-  firstColumnHeader: string;
-  data: {
-    feature: string;
-    basic: CellValue;
-    pro: CellValue;
-  }[];
-}
-
 interface AlertState {
   show: boolean;
   variant: 'default' | 'destructive';
   title: string;
   message: string;
 }
-
-const ComparisonTable = ({ firstColumnHeader, data }: ComparisonTableProps) => {
-  const renderCell = (value: CellValue) => {
-    if (value === 'check') {
-      return <Check className="mx-auto h-4 w-4 text-muted-foreground" />;
-    }
-    if (value === 'x') {
-      return <X className="mx-auto h-4 w-4 text-red-500" />;
-    }
-    return (
-      <span className="block text-center text-muted-foreground text-sm">
-        {value}
-      </span>
-    );
-  };
-
-  return (
-    <div className="mb-8">
-      <div className="overflow-x-auto">
-        <table className="w-full table-fixed border-collapse">
-          <thead>
-            <tr className="border-b">
-              <th className="w-1/3 px-4 py-3 text-left font-medium">
-                {firstColumnHeader}
-              </th>
-              <th className="w-1/3 px-4 py-3 text-center font-medium">Basic</th>
-              <th className="w-1/3 px-4 py-3 text-center font-medium">Pro</th>
-            </tr>
-          </thead>
-          <tbody>
-            {data.map((row, index) => (
-              <tr
-                className="border-gray-100 border-b"
-                key={`${row.feature}-${index}`}
-              >
-                <td className="w-1/3 px-4 py-3 text-sm">{row.feature}</td>
-                <td className="w-1/3 px-4 py-3">{renderCell(row.basic)}</td>
-                <td className="w-1/3 px-4 py-3">{renderCell(row.pro)}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  );
-};
-
-const Toggle = ({
-  selected,
-  setSelected,
-}: {
-  selected: BillingPeriod;
-  setSelected: (period: BillingPeriod) => void;
-}) => {
-  const isYearly = selected === 'annual';
-  return (
-    <div className="flex justify-center">
-      <div className="flex rounded-full border p-1">
-        <button
-          className={cn('relative z-0 px-4 py-2', isYearly ? 'z-1' : 'z-0')}
-          onClick={() => setSelected('annual')}
-          type="button"
-        >
-          {isYearly && (
-            <motion.div
-              className="absolute inset-0 rounded-full bg-neutral-900"
-              initial={false}
-              layoutId="toggleBackground"
-              transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-            />
-          )}
-          <span
-            className={cn(
-              'relative block font-medium text-xs',
-              isYearly ? 'text-white' : 'text-muted-foreground',
-              'duration-200'
-            )}
-          >
-            Yearly
-            <span className="ml-2 font-semibold text-[10px] text-green-500">
-              <span className="hidden lg:inline">Save </span>
-              <span className="lg:hidden">-</span>20%
-            </span>
-          </span>
-        </button>
-        <button
-          className={cn('relative z-0 px-4 py-2', isYearly ? 'z-0' : 'z-1')}
-          onClick={() => setSelected('monthly')}
-          type="button"
-        >
-          {!isYearly && (
-            <motion.div
-              className="absolute inset-0 rounded-full bg-neutral-900"
-              initial={false}
-              layoutId="toggleBackground"
-              transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-            />
-          )}
-          <span
-            className={cn(
-              'relative block font-medium text-xs',
-              isYearly ? 'text-muted-foreground' : 'text-white',
-              'duration-200'
-            )}
-          >
-            Monthly
-          </span>
-        </button>
-      </div>
-    </div>
-  );
-};
 
 export default function Plans({ prices, subscription, error }: PlansProps) {
   const router = useRouter();
@@ -213,134 +81,11 @@ export default function Plans({ prices, subscription, error }: PlansProps) {
 
   // Handle error state
   if (error) {
-    return (
-      <div className="mx-auto max-w-5xl p-8">
-        <div className="mb-8 text-center">
-          <h1 className="mb-2 font-semibold text-2xl tracking-tight">Plans</h1>
-          <p className="text-muted-foreground">
-            Choose the plan that works for you
-          </p>
-        </div>
-
-        <Alert variant="destructive">
-          <AlertTriangle />
-          <AlertTitle>Failed to Load Pricing Data</AlertTitle>
-          <AlertDescription>
-            {error.message ??
-              `Failed to load pricing information (${error.status}: ${error.statusText})`}
-          </AlertDescription>
-        </Alert>
-
-        <Card className="mt-8">
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-center gap-3">
-              <Button
-                onClick={() => window.location.reload()}
-                variant="outline"
-              >
-                <RefreshCw className="mr-2 h-4 w-4" />
-                Retry
-              </Button>
-              <Button onClick={() => router.push('/app')} variant="outline">
-                Go to Dashboard
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
+    return <PlansErrorState error={error} />;
   }
 
-  // Helper to format price with currency
-  const formatPrice = (price: PriceWithMetadata) => {
-    const currencyData = price.currencies[currency];
-    const formatter = new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: currencyData.currency.toUpperCase(),
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    });
-    return formatter.format(currencyData.unitAmount / 100); // Convert from cents
-  };
-
-  // Helper to format price as per-unit amount (for plans with minimum quantities)
-  const formatPricePerUnit = (price: PriceWithMetadata) => {
-    const currencyData = price.currencies[currency];
-    let unitAmount = currencyData.unitAmount;
-
-    // If the price has a minimum quantity (like Teams plan with minimum 3 seats),
-    // divide by that quantity to get per-unit price
-    if (price.minimumQuantity && price.minimumQuantity > 1) {
-      unitAmount /= price.minimumQuantity;
-    }
-
-    const formatter = new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: currencyData.currency.toUpperCase(),
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    });
-    return formatter.format(unitAmount / 100); // Convert from cents
-  };
-
-  // Helper to format yearly price as monthly equivalent
-  const formatYearlyAsMonthly = (price: PriceWithMetadata, _planId: string) => {
-    const currencyData = price.currencies[currency];
-    let monthlyAmount = currencyData.unitAmount / 12; // Divide yearly price by 12
-
-    // If the price has a minimum quantity (like Teams plan with minimum 3 seats),
-    // divide by that quantity to get per-unit monthly price
-    if (price.minimumQuantity && price.minimumQuantity > 1) {
-      monthlyAmount /= price.minimumQuantity;
-    }
-
-    const formatter = new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: currencyData.currency.toUpperCase(),
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    });
-    return formatter.format(monthlyAmount / 100); // Convert from cents
-  };
-
-  // Helper to find the right price for a plan
-  const findPriceForPlan = (planId: string, interval: 'monthly' | 'yearly') => {
-    // Find price that matches the plan name and interval type
-    const matchingPriceEntry = Object.entries(prices).find(([_, price]) => {
-      return price.planName === planId && price.intervalType === interval;
-    });
-
-    return matchingPriceEntry ? matchingPriceEntry[1] : null;
-  };
-
-  // Get price display strings with fallbacks
-  const getPriceDisplay = (
-    planId: string,
-    interval: 'monthly' | 'yearly',
-    fallback: string
-  ) => {
-    const price = findPriceForPlan(planId, interval);
-    return price ? formatPrice(price) : fallback;
-  };
-
-  // Get per-unit price display (for plans with minimum quantities)
-  const _getPerUnitPriceDisplay = (
-    planId: string,
-    interval: 'monthly' | 'yearly',
-    fallback: string
-  ) => {
-    const price = findPriceForPlan(planId, interval);
-    return price ? formatPricePerUnit(price) : fallback;
-  };
-
-  // Get yearly price display as monthly equivalent
-  const getYearlyPriceAsMonthly = (planId: string, fallback: string) => {
-    const price = findPriceForPlan(planId, 'yearly');
-    return price ? formatYearlyAsMonthly(price, planId) : fallback;
-  };
-
   // Dynamic plans with prices from Stripe
-  const plans = [
+  const plans: Plan[] = [
     {
       name: 'Basic',
       id: 'basic',
@@ -356,14 +101,25 @@ export default function Plans({ prices, subscription, error }: PlansProps) {
         'Privacy mode',
       ],
       cta: 'Get started',
-      variant: 'outline' as const,
+      variant: 'outline',
     },
     {
       name: 'Pro',
       id: 'voice gecko pro',
       stripeId: 'voice gecko pro', // This matches the plan name in auth config
-      monthlyPrice: getPriceDisplay('voice gecko pro', 'monthly', '$29'),
-      yearlyMonthlyPrice: getYearlyPriceAsMonthly('voice gecko pro', '$24'),
+      monthlyPrice: getPriceDisplay(
+        prices,
+        'voice gecko pro',
+        'monthly',
+        currency,
+        '$29'
+      ),
+      yearlyMonthlyPrice: getYearlyPriceAsMonthly(
+        prices,
+        'voice gecko pro',
+        currency,
+        '$24'
+      ),
       subtitle: 'All of our features',
       features: [
         'Unlimited transcriptions',
@@ -374,12 +130,12 @@ export default function Plans({ prices, subscription, error }: PlansProps) {
         'Advanced features',
       ],
       cta: 'Get started',
-      variant: 'outline' as const,
+      variant: 'outline',
     },
   ];
 
   // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: This is a complex function
-  const handlePlanClick = async (plan: (typeof plans)[0]) => {
+  const handlePlanClick = async (plan: Plan) => {
     if (!session?.user) {
       router.push('/sign-in');
       return;
@@ -439,71 +195,6 @@ export default function Plans({ prices, subscription, error }: PlansProps) {
     return null;
   };
 
-  const getButtonText = (plan: (typeof plans)[0]) => {
-    const status = getCurrentPlanStatus(plan.id);
-    if (status === 'current') {
-      return 'Current plan';
-    }
-    if (plan.isFree && subscription) {
-      return 'Downgrade';
-    }
-    return plan.cta;
-  };
-
-  const devicePlatformData = [
-    {
-      feature: 'Desktop Mac',
-      basic: 'check' as const,
-      pro: 'check' as const,
-    },
-    {
-      feature: 'Desktop Windows',
-      basic: 'check' as const,
-      pro: 'check' as const,
-    },
-    {
-      feature: 'iPhone',
-      basic: 'Coming soon',
-      pro: 'Coming soon',
-    },
-    {
-      feature: 'Android',
-      basic: 'Coming soon',
-      pro: 'Coming soon',
-    },
-  ];
-
-  const voiceTypingData = [
-    {
-      feature: 'Word Limit',
-      basic: '2,000 a week',
-      pro: 'Unlimited',
-    },
-    {
-      feature: 'Add Words to Dictionary',
-      basic: 'check' as const,
-      pro: 'check' as const,
-    },
-    {
-      feature: 'Prioritized Feature Requests',
-      basic: 'x' as const,
-      pro: 'check' as const,
-    },
-    {
-      feature: 'Early Access to New Features',
-      basic: 'x' as const,
-      pro: 'check' as const,
-    },
-  ];
-
-  const teamCollaborationData = [
-    {
-      feature: 'Customer Support',
-      basic: 'Standard',
-      pro: 'Prioritized',
-    },
-  ];
-
   return (
     <div>
       <div className="mb-8 flex items-center justify-between">
@@ -514,27 +205,20 @@ export default function Plans({ prices, subscription, error }: PlansProps) {
           </p>
         </div>
         {/* Billing Toggle */}
-        <Toggle selected={billingPeriod} setSelected={setBillingPeriod} />
+        <BillingToggle
+          selected={billingPeriod}
+          setSelected={setBillingPeriod}
+        />
       </div>
 
       {/* Dynamic Alert */}
-      {alertState.show && (
-        <Alert className="mb-8" variant={alertState.variant}>
-          <AlertTriangle />
-          <AlertTitle className="flex items-center justify-between">
-            {alertState.title}
-            <Button
-              className="h-auto p-1"
-              onClick={hideAlert}
-              size="sm"
-              variant="ghost"
-            >
-              <X className="h-4 w-4" />
-            </Button>
-          </AlertTitle>
-          <AlertDescription>{alertState.message}</AlertDescription>
-        </Alert>
-      )}
+      <AlertBanner
+        message={alertState.message}
+        onClose={hideAlert}
+        show={alertState.show}
+        title={alertState.title}
+        variant={alertState.variant}
+      />
 
       {/* Plans */}
       <div className="mb-8 grid gap-6 md:grid-cols-2">
@@ -543,111 +227,24 @@ export default function Plans({ prices, subscription, error }: PlansProps) {
           const isLoading = loadingPlan === plan.id;
 
           return (
-            <Card
-              className={cn(
-                ', flex h-full flex-col gap-0',
-                isCurrent && 'ring-2 ring-primary'
-              )}
+            <PlanCard
+              isCurrent={isCurrent}
+              isLoading={isLoading}
+              isYearly={isYearly}
               key={plan.name}
-            >
-              <CardHeader className="pb-2">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="font-semibold text-lg">
-                    {plan.name}
-                  </CardTitle>
-                  {isCurrent && (
-                    <span className="font-medium text-primary text-xs">
-                      Current
-                    </span>
-                  )}
-                </div>
-                <div className="mt-2 flex items-baseline gap-1">
-                  {plan.isFree ? (
-                    <span className="font-bold text-2xl">Free</span>
-                  ) : (
-                    <>
-                      <span className="font-bold text-2xl">
-                        {isYearly ? plan.yearlyMonthlyPrice : plan.monthlyPrice}
-                      </span>
-                      <span className="text-muted-foreground text-sm">/mo</span>
-                    </>
-                  )}
-                </div>
-                <p className="mt-1 text-muted-foreground text-xs">
-                  {plan.subtitle}
-                </p>
-              </CardHeader>
-
-              <CardContent className="flex-grow py-3">
-                <ul className="grid grid-cols-2 gap-x-3 gap-y-2">
-                  {plan.features.map((feature) => (
-                    <li
-                      className="flex items-start gap-2"
-                      key={`${feature}-${plan.id}`}
-                    >
-                      <Check className="mt-0.5 h-3 w-3 flex-shrink-0 text-muted-foreground" />
-                      <span className="text-xs">{feature}</span>
-                    </li>
-                  ))}
-                </ul>
-              </CardContent>
-
-              <CardFooter className="mt-auto pt-3">
-                <Button
-                  className="w-full"
-                  disabled={isCurrent || isLoading}
-                  onClick={() => handlePlanClick(plan)}
-                  variant={plan.variant}
-                >
-                  {isLoading ? (
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                  ) : (
-                    getButtonText(plan)
-                  )}
-                </Button>
-              </CardFooter>
-            </Card>
+              onPlanClick={handlePlanClick}
+              plan={plan}
+              subscription={subscription}
+            />
           );
         })}
       </div>
 
       {/* Student Discount Card */}
-      <Card className="mb-12 p-6">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="font-medium">Student Discount</p>
-            <p className="text-muted-foreground text-sm">
-              Students get 50% off the Pro plan
-            </p>
-          </div>
-          <Button onClick={openStudentModal} variant="outline">
-            Get started
-          </Button>
-        </div>
-      </Card>
+      <StudentDiscountCard onGetStarted={openStudentModal} />
 
       {/* Plans and Features */}
-      <div className="mt-16">
-        <div className="mb-12">
-          <h2 className="mb-2 font-medium text-2xl">Plans and Features</h2>
-          <p className="text-muted-foreground">
-            Compare what's included in each plan
-          </p>
-        </div>
-
-        <ComparisonTable
-          data={devicePlatformData}
-          firstColumnHeader="Device and Platform"
-        />
-        <ComparisonTable
-          data={voiceTypingData}
-          firstColumnHeader="Effortless Voice Typing"
-        />
-        <ComparisonTable
-          data={teamCollaborationData}
-          firstColumnHeader="Support"
-        />
-      </div>
+      <PlanComparison />
 
       <StudentDiscountModal
         isOpen={isStudentModalOpen}
