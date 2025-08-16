@@ -1,9 +1,10 @@
 import { unstable_cache } from 'next/cache';
 import type { ReactNode } from 'react';
-import FooterSection from '~/app/_components/landing/sections/footer';
-import Navigation from '~/app/_components/landing/sections/navigation';
 import { getDownloadsData } from '~/lib/downloads';
 import type { DownloadsData } from '~/lib/downloads-utils';
+import Footer from '../_landing/footer';
+import Header from '../_landing/header';
+import RiveGeckoPopup from '../_landing/rive-gecko-popup';
 
 const getCachedDownloadsData = unstable_cache(
   async (): Promise<DownloadsData> => {
@@ -32,10 +33,10 @@ export default async function UnauthenticatedLayout({
 
   return (
     <div className="relative">
-      <Navigation downloadError={downloadError} downloadsData={downloadsData} />
+      <Header />
       {children}
-      <FooterSection />
+      <Footer />
+      <RiveGeckoPopup />
     </div>
   );
 }
-

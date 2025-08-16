@@ -18,6 +18,9 @@ const unprotectedRoutes: string[] = [
   // Legal
   APP_ROUTES.LEGAL.TERMS,
   APP_ROUTES.LEGAL.PRIVACY,
+
+  // Marketing
+  APP_ROUTES.MARKETING.PRICING,
 ];
 
 export default function middleware(request: NextRequest) {
@@ -39,6 +42,10 @@ export default function middleware(request: NextRequest) {
   if (!(sessionCookie || isUnprotectedRoute)) {
     log.info('🚨 Blocked in middleware:', pathname);
     return NextResponse.redirect(new URL(APP_ROUTES.AUTH.SIGN_IN, request.url));
+  }
+
+  if (sessionCookie && pathname === APP_ROUTES.AUTH.SIGN_IN) {
+    return NextResponse.redirect(new URL(APP_ROUTES.APP.ROOT, request.url));
   }
 
   return NextResponse.next();
