@@ -1,6 +1,13 @@
 // URL configuration constants
 export const APP_ROUTES = {
   HOME: '/',
+  APP: {
+    ROOT: '/app',
+    USAGE: '/app/usage',
+    PLANS: '/app/plans',
+    BILLING: '/app/billing',
+    PROFILE: '/app/profile',
+  },
   MARKETING: {
     PRODUCT: '/product',
     SOLUTIONS: '/solutions',
