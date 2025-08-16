@@ -216,7 +216,7 @@ export default function Plans({ prices, subscription, error }: PlansProps) {
     return (
       <div className="mx-auto max-w-5xl p-8">
         <div className="mb-8 text-center">
-          <h1 className="mb-2 font-medium text-3xl">Plans</h1>
+          <h1 className="mb-2 font-semibold text-2xl tracking-tight">Plans</h1>
           <p className="text-muted-foreground">
             Choose the plan that works for you
           </p>
@@ -508,7 +508,7 @@ export default function Plans({ prices, subscription, error }: PlansProps) {
     <div>
       <div className="mb-8 flex items-center justify-between">
         <div className="">
-          <h1 className="mb-2 font-medium text-3xl">Plans</h1>
+          <h1 className="mb-2 font-semibold text-2xl tracking-tight">Plans</h1>
           <p className="text-muted-foreground">
             Choose the plan that works for you
           </p>
@@ -552,7 +552,7 @@ export default function Plans({ prices, subscription, error }: PlansProps) {
             >
               <CardHeader className="pb-2">
                 <div className="flex items-center justify-between">
-                  <CardTitle className="font-medium text-lg">
+                  <CardTitle className="font-semibold text-lg">
                     {plan.name}
                   </CardTitle>
                   {isCurrent && (

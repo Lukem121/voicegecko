@@ -319,6 +319,9 @@ importers:
       react-use-measure:
         specifier: ^2.1.7
         version: 2.1.7(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
+      recharts:
+        specifier: ^3.1.1
+        version: 3.1.1(@types/react@19.1.6)(react-dom@19.0.0(react@19.0.0))(react-is@19.1.0)(react@19.0.0)(redux@5.0.1)
       superjson:
         specifier: 2.2.2
         version: 2.2.2
