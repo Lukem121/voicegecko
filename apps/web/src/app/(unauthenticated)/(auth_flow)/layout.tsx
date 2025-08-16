@@ -7,7 +7,7 @@ interface AuthLayoutProps {
 
 export default function AuthLayout({ children }: AuthLayoutProps) {
   return (
-    <div className="relative grid h-dvh flex-col items-center justify-center lg:max-w-none lg:px-0">
+    <div className="-mt-16 -my-10 relative grid h-dvh flex-col items-center justify-center lg:max-w-none lg:px-0">
       <div className="-z-10 absolute top-0 left-0 h-full w-full overflow-hidden">
         <div
           aria-hidden="true"

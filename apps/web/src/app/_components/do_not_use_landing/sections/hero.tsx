@@ -3,8 +3,8 @@
 import { motion, useReducedMotion } from 'framer-motion';
 import { FaWindows } from 'react-icons/fa';
 import type { DownloadsData } from '~/lib/downloads-utils';
-import Section from '../components/section';
-import WindowsDownloadButton from '../components/windows-download-button';
+import Section from '../../section';
+import WindowsDownloadButton from '../windows-download-button';
 
 export default function HeroSection({
   downloadsData,

@@ -42,7 +42,7 @@ export default function HeroSection() {
       </div>
 
       {/* Main Hero Content */}
-      <div className="relative z-10 w-full rounded-3xl bg-[#F9F8F6] p-6 text-center md:p-12 lg:p-16 dark:bg-gray-900/80">
+      <div className="relative z-10 w-full rounded-3xl bg-[#F9F8F6] p-6 text-center md:p-12 lg:p-16 dark:bg-zinc-900">
         <HeroHeading className="z-30 mx-auto mb-[0.3em] max-w-4xl">
           Instant voice transcription at your fingertips — type less, say more.
         </HeroHeading>

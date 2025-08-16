@@ -167,6 +167,11 @@ export default function Plans({ prices, subscription, error }: PlansProps) {
           ...(subscription?.stripeSubscriptionId && {
             subscriptionId: subscription.stripeSubscriptionId,
           }),
+          fetchOptions: {
+            headers: {
+              'x-currency': currency,
+            },
+          },
         });
 
         if (upgradeError) {

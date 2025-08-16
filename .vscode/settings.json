@@ -42,6 +42,6 @@
   "[graphql]": {
     "editor.defaultFormatter": "biomejs.biome"
   },
-  "editor.formatOnPaste": true,
+  "editor.formatOnPaste": false,
   "emmet.showExpandedAbbreviation": "never"
 }
