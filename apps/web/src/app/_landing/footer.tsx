@@ -33,7 +33,7 @@ const productLinks = ['Download', 'About Us', 'Careers'];
 
 export default function Footer() {
   return (
-    <SectionWrapper className="px-0">
+    <SectionWrapper className="px-0 md:px-0 lg:px-0">
       <div className="space-y-12">
         {/* Top Benefits Section */}
         <motion.div
