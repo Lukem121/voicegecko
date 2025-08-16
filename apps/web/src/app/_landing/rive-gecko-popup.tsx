@@ -35,7 +35,7 @@ export default function RiveGeckoPopup({
     <section
       aria-label={ariaLabel}
       className={cn(
-        'relative mt-20 w-full cursor-pointer bg-background md:mt-72',
+        'relative mt-10 w-full cursor-pointer bg-background md:mt-72',
         className
       )}
       role="img"
