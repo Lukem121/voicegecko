@@ -1,13 +1,17 @@
 'use client';
 
 import { SidebarInset, SidebarProvider } from '@acme/ui/components/ui/sidebar';
-
+import SectionWrapper from '~/app/_landing/section-wrapper';
 import { UserMenu } from '../_components/user-menu';
 import AppSidebar from '../_components/web-sidebar';
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="relative mx-auto my-4 max-w-5xl">
+    <SectionWrapper
+      className="px-4 pt-4"
+      useXPadding={false}
+      useYPadding={false}
+    >
       <SidebarProvider>
         <AppSidebar />
         <SidebarInset className="!ml-0 !shadow-none">
@@ -19,6 +23,6 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           </div>
         </SidebarInset>
       </SidebarProvider>
-    </div>
+    </SectionWrapper>
   );
 }
