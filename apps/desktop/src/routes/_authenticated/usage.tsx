@@ -11,7 +11,6 @@ import { useQuery } from '@tanstack/react-query';
 import { createFileRoute } from '@tanstack/react-router';
 import { open } from '@tauri-apps/plugin-shell';
 import {
-  BarChart,
   Clock,
   CreditCard,
   ExternalLink,
@@ -58,13 +57,17 @@ function UsagePage() {
   }
 
   const currentPeriod = {
+    wordsUsed: {
+      used: stats.current.isUnlimited
+        ? stats.monthly.words
+        : stats.current.wordsUsed,
+      limit: stats.current.isUnlimited ? 'Unlimited' : stats.current.wordsLimit,
+    },
     transcriptions: {
       used: stats.current.isUnlimited
         ? stats.monthly.transcriptions
         : stats.current.transcriptionCount,
-      limit: stats.current.isUnlimited
-        ? 'Unlimited'
-        : `${stats.current.wordsLimit} words`,
+      limit: stats.current.isUnlimited ? 'Unlimited' : 'this week',
     },
     wordsProcessed: stats.monthly.words,
     timeSaved: stats.monthly.timeSaved,
@@ -143,6 +146,27 @@ function UsagePage() {
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 font-medium text-muted-foreground text-sm">
+              <TrendingUp className="h-4 w-4" />
+              Words Used
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="font-bold text-2xl">
+              {stats.current.isUnlimited
+                ? currentPeriod.wordsUsed.used.toLocaleString()
+                : currentPeriod.wordsUsed.used.toLocaleString()}
+            </div>
+            <p className="mt-1 text-muted-foreground text-xs">
+              {stats.current.isUnlimited
+                ? 'this month'
+                : `of ${currentPeriod.wordsUsed.limit.toLocaleString()} this week`}
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 font-medium text-muted-foreground text-sm">
               <FileText className="h-4 w-4" />
               Transcriptions
             </CardTitle>
@@ -154,7 +178,7 @@ function UsagePage() {
             <p className="mt-1 text-muted-foreground text-xs">
               {stats.current.isUnlimited
                 ? 'this month'
-                : `of ${currentPeriod.transcriptions.limit}`}
+                : currentPeriod.transcriptions.limit}
             </p>
           </CardContent>
         </Card>
@@ -185,22 +209,7 @@ function UsagePage() {
             <div className="font-bold text-2xl">
               {currentPeriod.timeSaved.toFixed(1)}h
             </div>
-            <p className="mt-1 text-muted-foreground text-xs">estimated</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 font-medium text-muted-foreground text-sm">
-              <BarChart className="h-4 w-4" />
-              Total Transcriptions
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="font-bold text-2xl">
-              {currentPeriod.totalTranscriptions.toLocaleString()}
-            </div>
-            <p className="mt-1 text-muted-foreground text-xs">all time</p>
+            <p className="mt-1 text-muted-foreground text-xs">this month</p>
           </CardContent>
         </Card>
       </div>
