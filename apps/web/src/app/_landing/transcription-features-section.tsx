@@ -10,7 +10,7 @@ import SectionWrapper from './section-wrapper';
 export default function TranscriptionFeaturesSection() {
   return (
     <SectionWrapper>
-      <div className="mx-auto max-w-4xl px-4 md:px-6 lg:px-12">
+      <div className="mx-auto max-w-4xl">
         <div className="text-left">
           <p className="font-medium text-primary text-sm">
             Full Control, Every Time

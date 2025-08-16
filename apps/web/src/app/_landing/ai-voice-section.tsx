@@ -35,7 +35,7 @@ const features = [
 export default function AIVoiceSection() {
   return (
     <SectionWrapper className="">
-      <div className="mx-auto max-w-7xl px-4 md:px-6 lg:px-12">
+      <div className="mx-auto max-w-7xl">
         <SectionHeader
           description="Great code needs clear direction. Writing detailed plans is slow and exhausting — with Voice Gecko, you can speak your full vision in minutes."
           descriptionWidth="wide"

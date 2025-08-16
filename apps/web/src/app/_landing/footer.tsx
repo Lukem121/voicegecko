@@ -71,9 +71,6 @@ export default function Footer() {
                         ? 'font-semibold text-black dark:text-white'
                         : 'font-normal text-gray-700 dark:text-gray-300'
                     )}
-                    style={
-                      benefit.icon !== 'logo' ? { color: '#292D34' } : undefined
-                    }
                   >
                     {benefit.text}
                   </span>

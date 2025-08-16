@@ -32,7 +32,7 @@ export default async function UnauthenticatedLayout({
   }
 
   return (
-    <div className="relative">
+    <div className="relative overflow-hidden">
       <Header />
       {children}
       <Footer />

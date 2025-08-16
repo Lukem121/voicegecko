@@ -142,10 +142,7 @@ export default function SpeedComparisonSection() {
   }, [shouldRestart, isInView]);
 
   return (
-    <SectionWrapper
-      className="px-4 pb-36 md:px-6 lg:px-12"
-      id="speed-comparison"
-    >
+    <SectionWrapper className="pb-20" id="speed-comparison">
       {/* Left Vine */}
       <div
         className="absolute top-4 md:top-8 lg:top-12"
