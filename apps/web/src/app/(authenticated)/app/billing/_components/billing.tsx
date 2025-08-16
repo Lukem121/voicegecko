@@ -106,7 +106,7 @@ function BillingErrorState({
         </AlertDescription>
       </Alert>
 
-      <Card className="border-0 shadow-sm">
+      <Card className="">
         <CardContent className="pt-6">
           <div className="flex items-center justify-center gap-3">
             <Button onClick={onRetry} variant="outline">
@@ -144,7 +144,7 @@ function CurrentPlanCard({
   formatDate: (date: Date | string | undefined) => string;
 }) {
   return (
-    <Card className="border-0 shadow-sm">
+    <Card className="">
       <CardHeader>
         <div className="flex items-center justify-between">
           <CardTitle className="mb-2 font-medium text-xl">
@@ -465,7 +465,7 @@ export default function Billing({ prices, subscription, error }: BillingProps) {
 
       {/* Subscription Details */}
       {subscription && (
-        <Card className="border-0 shadow-sm">
+        <Card className="">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 font-medium text-lg">
               Subscription Details
@@ -517,7 +517,7 @@ export default function Billing({ prices, subscription, error }: BillingProps) {
       )}
 
       {/* Billing History Note */}
-      <Card className="border-0 shadow-sm">
+      <Card className="">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 font-medium text-lg">
             Billing History
