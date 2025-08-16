@@ -48,8 +48,8 @@ export default function Footer() {
               const IconComponent = iconMap[benefit.icon];
               return (
                 <div className="flex items-center gap-2" key={benefit.text}>
-                  <IconComponent className="h-5 w-5 flex-shrink-0 text-gray-700" />
-                  <span className="font-semibold text-black text-sm">
+                  <IconComponent className="h-5 w-5 flex-shrink-0 text-gray-700 dark:text-gray-300" />
+                  <span className="font-semibold text-black text-sm dark:text-white">
                     {benefit.text}
                   </span>
                 </div>
@@ -63,13 +63,13 @@ export default function Footer() {
               const IconComponent = iconMap[benefit.icon];
               return (
                 <div className="flex items-center gap-2" key={benefit.text}>
-                  <IconComponent className="h-5 w-5 flex-shrink-0 text-gray-700" />
+                  <IconComponent className="h-5 w-5 flex-shrink-0 text-gray-700 dark:text-gray-300" />
                   <span
                     className={cn(
                       'text-sm',
                       benefit.icon === 'logo'
-                        ? 'font-semibold text-black'
-                        : 'font-normal text-gray-700'
+                        ? 'font-semibold text-black dark:text-white'
+                        : 'font-normal text-gray-700 dark:text-gray-300'
                     )}
                     style={
                       benefit.icon !== 'logo' ? { color: '#292D34' } : undefined
@@ -93,11 +93,16 @@ export default function Footer() {
           {Array.from({ length: 5 }, (_, colIndex) => colIndex).map(
             (colIndex) => (
               <div className="space-y-4" key={`column-${colIndex}`}>
-                <h3 className="font-semibold text-gray-900 text-sm">Product</h3>
+                <h3 className="font-semibold text-gray-900 text-sm dark:text-white">
+                  Product
+                </h3>
                 <ul className="space-y-3">
                   {productLinks.map((link) => (
                     <li key={`${colIndex}-${link}`}>
-                      <Link className="text-sm" href={'/'}>
+                      <Link
+                        className="text-gray-600 text-sm transition-colors hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
+                        href={'/'}
+                      >
                         {link}
                       </Link>
                     </li>
@@ -130,7 +135,7 @@ export default function Footer() {
               {['Security', 'Privacy', 'Terms', 'Cookie Preferences'].map(
                 (link) => (
                   <Link
-                    className="font-medium text-xs transition-colors"
+                    className="font-medium text-gray-600 text-xs transition-colors hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
                     href={'/'}
                     key={link}
                   >
@@ -142,14 +147,18 @@ export default function Footer() {
 
             {/* Copyright row */}
             <div className="text-center">
-              <p className="font-medium text-xs">©2025 VoiceGecko</p>
+              <p className="font-medium text-gray-600 text-xs dark:text-gray-400">
+                ©2025 VoiceGecko
+              </p>
             </div>
           </div>
 
           {/* Desktop: Original layout */}
           <div className="hidden items-center justify-between gap-4 md:flex">
             <div className="text-center">
-              <p className="font-medium text-xs">©2025 VoiceGecko</p>
+              <p className="font-medium text-gray-600 text-xs dark:text-gray-400">
+                ©2025 VoiceGecko
+              </p>
             </div>
 
             {/* Right side - Links */}
@@ -157,7 +166,7 @@ export default function Footer() {
               {['Security', 'Privacy', 'Terms', 'Cookie Preferences'].map(
                 (link) => (
                   <Link
-                    className="font-medium text-xs transition-colors"
+                    className="font-medium text-gray-600 text-xs transition-colors hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
                     href={'/'}
                     key={link}
                   >
