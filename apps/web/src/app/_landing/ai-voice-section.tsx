@@ -46,18 +46,18 @@ export default function AIVoiceSection() {
 
         <div className="relative mx-auto mt-16 grid max-w-4xl items-center gap-16 lg:grid-cols-2 lg:gap-24">
           {/* Features column */}
-          <div className="space-y-8 text-center lg:text-left">
+          <div className="space-y-8 text-left">
             {features.map((feature, index) => (
               <motion.div
                 animate={{ opacity: 1, x: 0 }}
-                className="flex flex-col items-center gap-6 lg:flex-row lg:gap-8"
+                className="flex flex-row items-start gap-4 lg:gap-8"
                 initial={{ opacity: 0, x: -20 }}
                 key={feature.title}
                 transition={{ duration: 0.6, delay: index * 0.1 }}
               >
                 <Image
                   alt=""
-                  className="h-8 w-auto"
+                  className="h-auto w-6 flex-shrink-0"
                   height={32}
                   src={feature.icon}
                   width={32}

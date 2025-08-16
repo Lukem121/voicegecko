@@ -110,18 +110,18 @@ export default function TalkToAISection() {
             </motion.div>
 
             {/* Features column */}
-            <div className="order-1 space-y-8 text-center lg:order-2 lg:text-left">
+            <div className="order-1 space-y-8 text-left lg:order-2">
               {features.map((feature, index) => (
                 <motion.div
                   animate={{ opacity: 1, x: 0 }}
-                  className="flex flex-col items-center gap-6 lg:flex-row lg:gap-8"
+                  className="flex flex-row items-start gap-4 lg:gap-8"
                   initial={{ opacity: 0, x: 20 }}
                   key={feature.title}
                   transition={{ duration: 0.6, delay: index * 0.1 }}
                 >
                   <Image
                     alt=""
-                    className="h-8 w-auto"
+                    className="h-auto w-6 flex-shrink-0"
                     height={32}
                     src={feature.icon}
                     width={32}
