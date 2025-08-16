@@ -5,6 +5,7 @@ import { cn } from '@acme/ui/lib/utils';
 import { ArrowRight } from 'lucide-react';
 import { motion } from 'motion/react';
 import Image from 'next/image';
+import { APP_ROUTES } from '~/utils/app-routes';
 import SectionWrapper from './section-wrapper';
 
 export default function TranscriptionFeaturesSection() {
@@ -29,7 +30,7 @@ export default function TranscriptionFeaturesSection() {
                 buttonVariants({ variant: 'default', size: 'lg' }),
                 'gap-2 px-6 text-white'
               )}
-              href="/download/windows"
+              href={APP_ROUTES.MARKETING.DOWNLOAD}
             >
               <span>Start transcribing for free</span>
               <ArrowRight className="h-4 w-4" />

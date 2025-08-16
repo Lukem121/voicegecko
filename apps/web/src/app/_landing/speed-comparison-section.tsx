@@ -5,6 +5,7 @@ import { cn } from '@acme/ui/lib/utils';
 import { motion } from 'motion/react';
 import { useEffect, useState } from 'react';
 import { FaArrowCircleUp, FaImage, FaRegCopy, FaWindows } from 'react-icons/fa';
+import { APP_ROUTES } from '~/utils/app-routes';
 import SectionHeader from './section-header';
 import SectionWrapper from './section-wrapper';
 import GeckoWithTranscriberInBush from './svgs/gecko-with-transcriber-in-bush';
@@ -183,7 +184,7 @@ export default function SpeedComparisonSection() {
                 buttonVariants({ variant: 'default', size: 'lg' }),
                 'gap-2 px-6 text-white'
               )}
-              href="/download/windows"
+              href={APP_ROUTES.MARKETING.DOWNLOAD}
             >
               <FaWindows aria-hidden className="h-4 w-4" />
               <span>Download for Windows</span>

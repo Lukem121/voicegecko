@@ -5,6 +5,7 @@ import { cn } from '@acme/ui/lib/utils';
 import { motion } from 'motion/react';
 import Image from 'next/image';
 import { FaWindows } from 'react-icons/fa';
+import { APP_ROUTES } from '~/utils/app-routes';
 import SectionWrapper from './section-wrapper';
 import Logo from './svgs/logo';
 
@@ -58,7 +59,7 @@ export default function FinalCtaSection() {
                   buttonVariants({ variant: 'default', size: 'lg' }),
                   'gap-2 bg-primary px-6 py-3 text-white'
                 )}
-                href="/download/windows"
+                href={APP_ROUTES.MARKETING.DOWNLOAD}
               >
                 <FaWindows aria-hidden className="h-4 w-4" />
                 <span>Download for Windows</span>
