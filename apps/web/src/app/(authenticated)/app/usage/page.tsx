@@ -81,7 +81,7 @@ export default async function UsagePage() {
 
       {/* Current Usage Overview */}
       <div className="grid gap-6 md:grid-cols-4">
-        <Card className="border-0 shadow-sm">
+        <Card className="">
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 font-medium text-muted-foreground text-sm">
               <FileText className="h-4 w-4" />
@@ -100,7 +100,7 @@ export default async function UsagePage() {
           </CardContent>
         </Card>
 
-        <Card className="border-0 shadow-sm">
+        <Card className="">
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 font-medium text-muted-foreground text-sm">
               <TrendingUp className="h-4 w-4" />
@@ -115,7 +115,7 @@ export default async function UsagePage() {
           </CardContent>
         </Card>
 
-        <Card className="border-0 shadow-sm">
+        <Card className="">
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 font-medium text-muted-foreground text-sm">
               <Clock className="h-4 w-4" />
@@ -130,7 +130,7 @@ export default async function UsagePage() {
           </CardContent>
         </Card>
 
-        <Card className="border-0 shadow-sm">
+        <Card className="">
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 font-medium text-muted-foreground text-sm">
               <BarChart className="h-4 w-4" />
@@ -148,7 +148,7 @@ export default async function UsagePage() {
 
       <div className="grid gap-8 md:grid-cols-2">
         {/* Performance Stats */}
-        <Card className="border-0 shadow-sm">
+        <Card className="">
           <CardHeader>
             <CardTitle className="font-medium text-lg">
               Performance Stats

@@ -175,7 +175,7 @@ const Toggle = ({
 export default function Plans({ prices, subscription, error }: PlansProps) {
   const router = useRouter();
   const createBillingPortalSessionMutation = useCreateBillingPortalSession();
-  const [billingPeriod, setBillingPeriod] = useState<BillingPeriod>('monthly');
+  const [billingPeriod, setBillingPeriod] = useState<BillingPeriod>('annual');
   const { currency } = useCurrency();
   const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
   const [alertState, setAlertState] = useState<AlertState>({
@@ -231,7 +231,7 @@ export default function Plans({ prices, subscription, error }: PlansProps) {
           </AlertDescription>
         </Alert>
 
-        <Card className="mt-8 border-0 shadow-sm">
+        <Card className="mt-8">
           <CardContent className="pt-6">
             <div className="flex items-center justify-center gap-3">
               <Button
@@ -545,7 +545,7 @@ export default function Plans({ prices, subscription, error }: PlansProps) {
           return (
             <Card
               className={cn(
-                'flex h-full flex-col gap-0 border-0 shadow-sm,',
+                ', flex h-full flex-col gap-0',
                 isCurrent && 'ring-2 ring-primary'
               )}
               key={plan.name}
@@ -612,7 +612,7 @@ export default function Plans({ prices, subscription, error }: PlansProps) {
       </div>
 
       {/* Student Discount Card */}
-      <Card className="mb-12 border-0 p-6 shadow-sm">
+      <Card className="mb-12 p-6">
         <div className="flex items-center justify-between">
           <div>
             <p className="font-medium">Student Discount</p>
