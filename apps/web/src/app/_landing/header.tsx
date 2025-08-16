@@ -6,7 +6,7 @@ import { usePathname } from 'next/navigation';
 import { TfiMenu } from 'react-icons/tfi';
 import { authClient } from '~/lib/auth/client';
 import { APP_ROUTES } from '~/utils/app-routes';
-import Section from '../_components/landing/components/section';
+import Section from '../_components/section';
 import DownloadButton from './download-button';
 import Logo from './svgs/logo';
 
@@ -28,10 +28,10 @@ export default function Header() {
           </p>
         </div>
       )}
-      <nav aria-label="Main">
+      <nav aria-label="Main" className="backdrop-blur-sm">
         <Section
           className={cn(
-            'flex items-center justify-between px-4 py-4 md:py-4',
+            'flex h-16 items-center justify-between bg-transparent px-4 py-4 md:py-4',
             isHome && 'max-w-[90rem]'
           )}
         >

@@ -84,7 +84,7 @@ function SignIn() {
     setIsLoading((prev) => ({ ...prev, email: true }));
     setError(null);
 
-    const { error } = await authClient.signIn.email({
+    const { error: signInError } = await authClient.signIn.email({
       email: values.email,
       password: values.password,
       fetchOptions: {
@@ -92,13 +92,13 @@ function SignIn() {
       },
     });
 
-    if (!error) {
+    if (!signInError) {
       return;
     }
 
     setIsLoading((prev) => ({ ...prev, email: false }));
 
-    if (error.code === 'FAILED_TO_CREATE_SESSION') {
+    if (signInError.code === 'FAILED_TO_CREATE_SESSION') {
       const status = await getBanStatus.mutateAsync(values.email);
 
       if (!status) {
@@ -112,8 +112,8 @@ function SignIn() {
       }
     }
 
-    if (error.code) {
-      setError(getClientAuthErrorMessage(error.code, 'en'));
+    if (signInError.code) {
+      setError(getClientAuthErrorMessage(signInError.code, 'en'));
       return;
     }
 
@@ -169,16 +169,17 @@ function SignIn() {
                       <FormItem>
                         <div className="flex items-center justify-between">
                           <FormLabel htmlFor="password">Password</FormLabel>
-                          <a
+                          <button
                             className="cursor-pointer text-primary text-xs hover:underline focus:outline-none focus:ring-2 focus:ring-primary sm:text-sm"
                             onClick={() => {
                               openUrl(
                                 `${import.meta.env.VITE_PUBLIC_VOICEGECKO_URL}/auth/forgot-password`
                               );
                             }}
+                            type="button"
                           >
                             Forgot password?
-                          </a>
+                          </button>
                         </div>
                         <FormControl>
                           <Input

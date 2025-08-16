@@ -5,8 +5,8 @@ import { Separator } from '@acme/ui/components/ui/separator';
 import type { Metadata } from 'next';
 import { unstable_cache } from 'next/cache';
 import Link from 'next/link';
-import Section from '~/app/_components/landing/components/section';
-import PricingSection from '~/app/_components/landing/sections/pricing';
+import PricingSection from '~/app/_components/pricing';
+import Section from '~/app/_components/section';
 
 export const metadata: Metadata = {
   title: 'Pricing — Voice Gecko',

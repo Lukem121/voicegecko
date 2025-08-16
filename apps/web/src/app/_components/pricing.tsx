@@ -8,96 +8,16 @@ import Link from 'next/link';
 import GeckoStudentSitting from 'public/assets/images/geckos/gecko-student-sitting.png';
 import { useState } from 'react';
 import { HiCheck } from 'react-icons/hi';
+import { type FeatureItem, PriceCard } from '~/components/pricing/price-card';
 import { StudentDiscountModal } from '~/components/student-discount-modal';
 import { useStudentDiscountModal } from '~/hooks/use-student-discount-modal';
 import { authClient } from '~/lib/auth/client';
 import { useCurrency } from '~/providers/currency';
-import { type FeatureItem, PriceCard } from '../components/cards';
-import Section from '../components/section';
-
-type SupportedCurrency = 'usd' | 'eur' | 'gbp';
-
-function formatPriceForCurrency(
-  price: PriceWithMetadata,
-  currencyCode: SupportedCurrency
-): string {
-  if (!price?.currencies) {
-    return '$0';
-  }
-  const currencyData = price.currencies[currencyCode];
-  if (!currencyData) {
-    return '$0';
-  }
-  const formatter = new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: currencyData.currency.toUpperCase(),
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  });
-  return formatter.format(currencyData.unitAmount / 100);
-}
-
-function formatYearlyAsMonthlyForCurrency(
-  price: PriceWithMetadata,
-  currencyCode: SupportedCurrency
-): string {
-  if (!price?.currencies) {
-    return '$0';
-  }
-  const currencyData = price.currencies[currencyCode];
-  if (!currencyData) {
-    return '$0';
-  }
-  const monthlyAmount = currencyData.unitAmount / 12;
-  const formatter = new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: currencyData.currency.toUpperCase(),
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  });
-  return formatter.format(monthlyAmount / 100);
-}
-
-function findPriceForPlanIn(
-  prices: Record<string, PriceWithMetadata> | null,
-  planId: string,
-  interval: 'monthly' | 'yearly'
-): PriceWithMetadata | null {
-  if (!prices) {
-    return null;
-  }
-  const match = Object.entries(prices).find(
-    ([, price]) => price.planName === planId && price.intervalType === interval
-  );
-  return match ? match[1] : null;
-}
-
-function getPriceDisplayFor(
-  prices: Record<string, PriceWithMetadata> | null,
-  currencyCode: SupportedCurrency,
-  planId: string,
-  interval: 'monthly' | 'yearly',
-  fallback: string
-): string {
-  const price = findPriceForPlanIn(prices, planId, interval);
-  if (price) {
-    return formatPriceForCurrency(price, currencyCode);
-  }
-  return fallback;
-}
-
-function getYearlyPriceAsMonthlyFor(
-  prices: Record<string, PriceWithMetadata> | null,
-  currencyCode: SupportedCurrency,
-  planId: string,
-  fallback: string
-): string {
-  const price = findPriceForPlanIn(prices, planId, 'yearly');
-  if (price) {
-    return formatYearlyAsMonthlyForCurrency(price, currencyCode);
-  }
-  return fallback;
-}
+import {
+  getPriceDisplayFor,
+  getYearlyPriceAsMonthlyFor,
+} from '~/utils/pricing';
+import Section from './section';
 
 type BillingPeriod = 'monthly' | 'yearly';
 
@@ -112,13 +32,17 @@ export default function PricingSection({
   const [billingPeriod, setBillingPeriod] = useState<BillingPeriod>('yearly');
   const { currency } = useCurrency();
   const isYearly = billingPeriod === 'yearly';
+  const isLoggedIn = !!session?.user;
+
   const getPriceDisplay = (
     planId: string,
     interval: 'monthly' | 'yearly',
     fallback: string
   ) => getPriceDisplayFor(prices, currency, planId, interval, fallback);
+
   const getYearlyPriceAsMonthly = (planId: string, fallback: string) =>
     getYearlyPriceAsMonthlyFor(prices, currency, planId, fallback);
+
   const {
     isOpen: isStudentModalOpen,
     openModal: openStudentModal,
@@ -148,8 +72,7 @@ export default function PricingSection({
       <div>
         <div className="mt-6 grid gap-6 md:grid-cols-2">
           <PriceCard
-            cta="Get Started Free"
-            ctaLink="/download"
+            cta={isLoggedIn ? 'Download App' : 'Get Started'}
             features={
               [
                 {
@@ -165,15 +88,17 @@ export default function PricingSection({
               ] as FeatureItem[]
             }
             highlight={false}
+            isAnnual={isYearly}
+            isLoggedIn={isLoggedIn}
             name="Basic"
             period="month"
+            planType="basic"
             popular={false}
             price="$0"
             subtitle="Perfect for trying out Voice Gecko"
           />
           <PriceCard
-            cta="Upgrade to Pro"
-            ctaLink="/download?plan=pro"
+            cta={isLoggedIn ? 'Upgrade to Pro' : 'Get Started'}
             features={
               [
                 {
@@ -196,6 +121,8 @@ export default function PricingSection({
               ] as FeatureItem[]
             }
             highlight
+            isAnnual={isYearly}
+            isLoggedIn={isLoggedIn}
             name="Pro"
             originalPrice={
               isYearly
@@ -203,6 +130,7 @@ export default function PricingSection({
                 : undefined
             }
             period="month"
+            planType="pro"
             popular
             price={
               isYearly

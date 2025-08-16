@@ -17,7 +17,7 @@ import { useState } from 'react';
 import { HiArrowRight, HiChevronDown, HiMenu, HiX } from 'react-icons/hi';
 import type { DownloadsData } from '~/lib/downloads-utils';
 import { APP_ROUTES } from '~/utils/app-routes';
-import WindowsDownloadButton from '../components/windows-download-button';
+import WindowsDownloadButton from '../windows-download-button';
 
 export default function Navigation({
   downloadsData,

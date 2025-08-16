@@ -123,7 +123,7 @@ export default function SignIn() {
         <Card className="shadow-lg">
           <CardHeader className="space-y-3">
             <VoiceGeckoLogo aria-label="Voice Gecko Logo" className="h-10" />
-            <CardDescription className="text-center">
+            <CardDescription className="text-center font-medium">
               Sign in to continue to{' '}
               <span className="font-bold font-mono">voicegecko</span>
             </CardDescription>

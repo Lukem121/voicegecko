@@ -54,7 +54,7 @@ export default function RiveGeckoPopup({
           <Bush1 className="-translate-x-1/2 absolute bottom-0 left-0 z-10 h-auto w-40 lg:w-[45rem]" />
 
           {/* Centered Gecko */}
-          <RiveComponent className="relative z-20 block h-auto w-full" />
+          <RiveComponent className="pointer-events-none relative z-20 block h-auto w-full sm:pointer-events-auto" />
 
           {/* Bush 2 - Right side */}
           <Bush2 className="absolute right-0 bottom-0 z-10 h-auto w-40 translate-x-1/2 lg:w-[35rem]" />
