@@ -13,7 +13,7 @@ import ReactDOM from 'react-dom/client';
 import { AppLauncher } from '~/components/app-launcher';
 import { FullscreenDetector } from '~/components/fullscreen-detector';
 import { GeckoBarApp } from '~/components/gecko-bar/gecko-bar-app';
-import { useAuth } from '~/hooks/use-auth';
+import { useAuthWithConnectivity } from '~/hooks/use-auth-with-connectivity';
 import { isGeckoBarWindow } from '~/lib/window-detection';
 import { routeTree } from '~/routeTree.gen';
 import { useSettingsStore } from '~/stores/settings.store';
@@ -43,7 +43,7 @@ declare module '@tanstack/react-router' {
 }
 
 function InnerApp() {
-  const auth = useAuth();
+  const auth = useAuthWithConnectivity();
   const { session, query } = useSession();
   const settings = useSettingsStore((state) => state.settings);
 
@@ -84,7 +84,31 @@ function InnerApp() {
     },
     onSuccess: (callbackURL) => {
       log.info('✅ Auth successful, callback URL:', callbackURL);
-      query.refetch();
+
+      // Refetch session and wait for auth state to update
+      query
+        .refetch()
+        .then(() => {
+          // Give a small delay to ensure auth context updates
+          setTimeout(() => {
+            const targetUrl = callbackURL || '/';
+            log.info('🔄 Navigating to:', targetUrl);
+            router.navigate({ to: targetUrl }).catch((error) => {
+              log.error('Navigation failed:', error);
+              // Fallback: force page refresh to reset state if navigation fails
+              log.info('🔄 Fallback: forcing page refresh');
+              window.location.href = targetUrl;
+            });
+          }, 200);
+        })
+        .catch((error) => {
+          log.error('Session refetch failed:', error);
+          // Still try to navigate even if refetch fails
+          const targetUrl = callbackURL || '/';
+          router.navigate({ to: targetUrl }).catch(() => {
+            window.location.href = targetUrl;
+          });
+        });
     },
     onError: (error) => {
       log.error('❌ Auth error:', error);
@@ -137,7 +161,9 @@ function App() {
 // Render the app
 const rootElement = document.getElementById('root');
 
-if (!rootElement) { throw new Error('Root not in body'); }
+if (!rootElement) {
+  throw new Error('Root not in body');
+}
 
 if (!rootElement.innerHTML) {
   const root = ReactDOM.createRoot(rootElement);

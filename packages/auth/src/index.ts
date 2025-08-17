@@ -36,12 +36,12 @@ export const serverAuth = betterAuth({
     provider: 'pg',
   }),
   secret: authEnv().AUTH_SECRET,
-  session: {
-    cookieCache: {
-      enabled: true,
-      maxAge: 5 * 60, // Cache duration: 5 minutes
-    },
-  },
+  // session: {
+  //   cookieCache: {
+  //     enabled: true,
+  //     maxAge: 5 * 60, // Cache duration: 5 minutes
+  //   },
+  // },
   advanced: {
     cookies: {
       session_token: {
