@@ -85,22 +85,20 @@ function SignUp() {
     const { success } = await handleEmailSignup(values);
 
     if (success) {
-      void router.navigate({
+      router.navigate({
         to: '/verify-email',
         search: { email: values.email, redirect: callbackURL },
       });
-    } else {
+    } else if (emailError) {
       // Handle field-specific errors
-      if (emailError) {
-        if (isUsernameError(emailError)) {
-          form.setError('username', {
-            message: emailError,
-          });
-        } else if (isEmailError(emailError)) {
-          form.setError('email', {
-            message: emailError,
-          });
-        }
+      if (isUsernameError(emailError)) {
+        form.setError('username', {
+          message: emailError,
+        });
+      } else if (isEmailError(emailError)) {
+        form.setError('email', {
+          message: emailError,
+        });
       }
     }
   };
