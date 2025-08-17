@@ -12,6 +12,7 @@ export const APP_ROUTES = {
     PRICING: '/pricing',
     DOWNLOAD: '/download',
   },
+
   AUTH: {
     SIGN_IN: '/sign-in',
     SIGN_UP: '/sign-up',
@@ -27,8 +28,9 @@ export const APP_ROUTES = {
     APPEARANCE: '/settings/appearance',
   },
   LEGAL: {
-    TERMS: '/terms',
-    PRIVACY: '/privacy',
+    TERMS: '/terms/terms-of-service',
+    PRIVACY: '/terms/privacy-policy',
+    SECURITY_POLICY: '/terms/security-policy',
   },
 } as const;
 
