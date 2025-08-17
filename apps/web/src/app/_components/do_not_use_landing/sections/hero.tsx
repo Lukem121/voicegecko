@@ -78,10 +78,10 @@ export default function HeroSection({
               <FaWindows aria-hidden="true" className="h-3.5 w-3.5" /> Windows
               available now
             </span>
-            <span className="rounded-full bg-accent px-2 py-1 font-semibold text-accent-foreground">
+            <span className="rounded-full bg-brand-blue px-2 py-1 font-semibold text-accent-foreground">
               Free plan included
             </span>
-            <span className="rounded-full bg-accent px-2 py-1 font-semibold text-accent-foreground">
+            <span className="rounded-full bg-brand-blue px-2 py-1 font-semibold text-accent-foreground">
               No account required
             </span>
           </motion.div>
