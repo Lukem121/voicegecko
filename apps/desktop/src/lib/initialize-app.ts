@@ -7,6 +7,7 @@ import { check } from '@tauri-apps/plugin-updater';
 
 import { dictionaryService } from '~/services/dictionary.service';
 import { storeRegistry } from '~/stores/store-registry';
+import { setInitializationFlag } from '~/trpc';
 import { analytics } from './analytics/posthog-analytics';
 import { initializeTauriEvents } from './tauri-events';
 
@@ -79,6 +80,9 @@ export async function initializeApp(
   const startTime = Date.now();
   log.info('[App] 🚀 Initializing application...');
 
+  // Set initialization flag to prevent 401 logout during startup
+  setInitializationFlag(true);
+
   const initializationSteps: string[] = [];
 
   try {
@@ -112,6 +116,24 @@ export async function initializeApp(
     initializationSteps.push('event_listeners');
     await initializeTauriEvents();
 
+    log.info('[App] ✅ Application initialized successfully');
+    options?.onUpdateStatus?.('Application ready');
+
+    // Track successful app startup
+    const startupTime = (Date.now() - startTime) / 1000;
+    analytics.track('app_startup', {
+      startup_time_seconds: startupTime,
+      initialization_steps: initializationSteps,
+      models_synchronized: true,
+      auto_update_available: false, // Could be enhanced to detect this
+    });
+
+    // Clear initialization flag - now 401 errors should trigger logout
+    setInitializationFlag(false);
+
+    // Post-initialization optimizations (after auth flow can handle 401s properly)
+    // These are not critical for app startup, so they can fail gracefully
+
     // Prefetch dictionary prompt for faster transcriptions
     initializationSteps.push('dictionary_prefetch');
     dictionaryService.prefetchDictionaryPrompt().catch((error) => {
@@ -135,21 +157,12 @@ export async function initializeApp(
           );
         });
     }, 1000);
-
-    log.info('[App] ✅ Application initialized successfully');
-    options?.onUpdateStatus?.('Application ready');
-
-    // Track successful app startup
-    const startupTime = (Date.now() - startTime) / 1000;
-    analytics.track('app_startup', {
-      startup_time_seconds: startupTime,
-      initialization_steps: initializationSteps,
-      models_synchronized: true,
-      auto_update_available: false, // Could be enhanced to detect this
-    });
   } catch (error) {
     log.error('[App] ❌ Failed to initialize application:', error);
     options?.onUpdateStatus?.('Initialization failed');
+
+    // Clear initialization flag even on failure
+    setInitializationFlag(false);
 
     // Track initialization failure
     const _failedTime = (Date.now() - startTime) / 1000;
