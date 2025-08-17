@@ -18,6 +18,7 @@ const unprotectedRoutes: string[] = [
   // Legal
   APP_ROUTES.LEGAL.TERMS,
   APP_ROUTES.LEGAL.PRIVACY,
+  APP_ROUTES.LEGAL.SECURITY_POLICY,
 
   // Marketing
   APP_ROUTES.MARKETING.PRICING,

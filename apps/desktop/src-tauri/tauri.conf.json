@@ -39,7 +39,10 @@
         "center": false,
         "shadow": false,
         "acceptFirstMouse": true,
-        "tabbingIdentifier": "gecko-bar"
+        "tabbingIdentifier": "gecko-bar",
+        "visible": false,
+        "x": -1000,
+        "y": -1000
       }
     ],
     "security": {
