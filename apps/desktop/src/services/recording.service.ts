@@ -1,8 +1,7 @@
-import { log } from '@acme/observability';
+import { log } from '@acme/observability/log';
 import { invoke } from '@tauri-apps/api/core';
 import { toast } from 'sonner';
 
-import type { RecordingSessionTracker } from '~/lib/analytics/posthog-analytics';
 import {
   showNoInternetNotification,
   showUsageLimitNotification,
@@ -13,16 +12,16 @@ import { useSettingsStore } from '~/stores/settings.store';
 import { queryClient, trpc, trpcClient } from '~/trpc';
 import { invokeTranscriptionFromBuffer } from '../lib/transcription';
 
-export interface RecordingOptions {
+export type RecordingOptions = {
   device?: string;
   playStartSound?: boolean;
   playEndSound?: boolean;
   isKeyboardShortcut?: boolean;
-}
+};
 
 export class RecordingService {
   private static instance: RecordingService | undefined;
-  private currentRecordingTracker: RecordingSessionTracker | null = null;
+
   private isToggling = false;
   private isPushToTalkActive = false;
 
@@ -230,19 +229,8 @@ export class RecordingService {
       }
 
       await invokeTranscriptionFromBuffer(audioData);
-
-      // Clear the recording tracker after successful stop
-      this.currentRecordingTracker = null;
     } catch (error) {
       log.error('Failed to stop recording:', error);
-
-      // Track recording error
-      if (this.currentRecordingTracker) {
-        this.currentRecordingTracker.trackError(
-          'stop_recording_failed',
-          error instanceof Error ? error.message : 'Unknown error'
-        );
-      }
 
       toast.error('Failed to stop recording');
       throw error;

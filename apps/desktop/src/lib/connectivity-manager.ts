@@ -9,10 +9,10 @@
  * - No continuous background polling
  */
 
-import { log } from '@acme/observability';
+import { log } from '@acme/observability/log';
 import { analytics } from './analytics/posthog-analytics';
 
-export interface ConnectivityState {
+export type ConnectivityState = {
   isOnline: boolean;
   isApiReachable: boolean;
   isChecking: boolean;
@@ -20,7 +20,7 @@ export interface ConnectivityState {
   error: string | null;
   diagnosis: 'healthy' | 'no_internet' | 'api_down' | 'unknown';
   lastSuccessfulCheck: Date | null;
-}
+};
 
 type ConnectivityListener = (state: ConnectivityState) => void;
 
@@ -35,7 +35,7 @@ class ConnectivityManager {
     lastSuccessfulCheck: null,
   };
 
-  private listeners = new Set<ConnectivityListener>();
+  private readonly listeners = new Set<ConnectivityListener>();
   private retryInterval: NodeJS.Timeout | null = null;
   private isActive = false;
 
@@ -253,12 +253,12 @@ class ConnectivityManager {
     }
   }
 
-  private handleOnline = (): void => {
+  private readonly handleOnline = (): void => {
     log.info('🟢 [ConnectivityManager] Browser online event');
     this.checkConnectivity();
   };
 
-  private handleOffline = (): void => {
+  private readonly handleOffline = (): void => {
     log.info('🔴 [ConnectivityManager] Browser offline event');
     this.updateState({
       isOnline: false,

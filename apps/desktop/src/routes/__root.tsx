@@ -6,7 +6,7 @@ import { TrayProvider } from '~/components/tray-provider';
 import { VersionDisplay } from '~/components/version-display';
 
 // Define the router context interface
-interface MyRouterContext {
+type MyRouterContext = {
   auth: {
     isAuthenticated: boolean;
     isLoading: boolean;
@@ -33,7 +33,7 @@ interface MyRouterContext {
       | 'unauthenticated'
       | 'authenticated';
   };
-}
+};
 
 export const Route = createRootRouteWithContext<MyRouterContext>()({
   component: RouteLayout,

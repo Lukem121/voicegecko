@@ -1,5 +1,5 @@
 import { sendEmail } from '../lib/send-email';
-import { WelcomeProTemplate } from '../templates/welcome-pro';
+import { renderWelcomeProTemplate } from '../lib/template-renderer';
 
 type UserWithEmail = {
   email: string;
@@ -12,7 +12,6 @@ export const sendWelcomeProEmail = async ({
 }: {
   user: UserWithEmail;
   planName: string;
-  dashboardUrl?: string;
 }) => {
   await sendEmail({
     to: {
@@ -25,6 +24,6 @@ export const sendWelcomeProEmail = async ({
     },
     categories: ['welcome_pro'],
     subject: `Welcome to ${planName} - Unlock the full power of voice-to-text!`,
-    react: <WelcomeProTemplate name={user.name} planName={planName} />,
+    react: renderWelcomeProTemplate({ name: user.name, planName }),
   });
 };

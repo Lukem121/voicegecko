@@ -1,7 +1,7 @@
 'use client';
 
-import { SignInSchema } from '@acme/auth/schemas';
-import { getAuthErrorMessage } from '@acme/auth/utils';
+import { SignInSchema } from '@acme/auth/schemas/auth';
+import { getAuthErrorMessage } from '@acme/auth/utils/auth-error-messages';
 import VoiceGeckoLogo from '@acme/ui/components/logos/logo-full';
 import { Button } from '@acme/ui/components/ui/button';
 import {
@@ -36,14 +36,14 @@ import TermsAndPrivacyNotice from '../../../components/terms-and-privacy-notice'
 import { useSocialAuth } from '../../../hooks/use-social-auth';
 
 // Types
-interface SignInFormValues {
+type SignInFormValues = {
   email: string;
   password: string;
-}
+};
 
-interface LoadingState {
+type LoadingState = {
   email: boolean;
-}
+};
 
 export default function SignIn() {
   const trpc = useTRPC();

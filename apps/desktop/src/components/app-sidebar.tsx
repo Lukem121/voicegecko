@@ -58,23 +58,23 @@ import { useSignOut } from '~/hooks/auth';
 import { useAuthWithConnectivity } from '~/hooks/use-auth-with-connectivity';
 import { trpc } from '~/trpc';
 
-interface NavigationSubItem {
+type NavigationSubItem = {
   title: string;
   url: string;
-}
+};
 
-interface NavigationItem {
+type NavigationItem = {
   title: string;
   url: string;
   icon: LucideIcon;
   items?: NavigationSubItem[];
-}
+};
 
-interface NavigationData {
+type NavigationData = {
   navMain: NavigationItem[];
   navSmartFeatures: NavigationItem[];
   navSecondary: NavigationItem[];
-}
+};
 
 // Helper functions for link handling
 const isExternalLink = (url: string) => {
@@ -169,11 +169,11 @@ if (isDev) {
 }
 
 // Circular Progress Component
-interface CircularProgressProps {
+type CircularProgressProps = {
   percentage: number;
   size?: number;
   strokeWidth?: number;
-}
+};
 
 function CircularProgress({
   percentage,

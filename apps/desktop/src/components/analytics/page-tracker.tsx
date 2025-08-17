@@ -5,7 +5,7 @@
  * using TanStack Router's hooks
  */
 
-import { log } from '@acme/observability';
+import { log } from '@acme/observability/log';
 import { useRouterState } from '@tanstack/react-router';
 import React, { useEffect } from 'react';
 
@@ -29,7 +29,12 @@ export function PageTracker() {
 
       log.info(`[Analytics] Page viewed: ${pageName} (${pagePath})`);
     }
-  }, [router.location.pathname, router.matches.length, router.location, router.matches?.[router.matches.length - 1]]);
+  }, [
+    router.location.pathname,
+    router.matches.length,
+    router.location,
+    router.matches?.[router.matches.length - 1],
+  ]);
 
   // This component doesn't render anything
   return null;

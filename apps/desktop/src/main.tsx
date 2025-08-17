@@ -1,4 +1,4 @@
-import { log } from '@acme/observability';
+import { log } from '@acme/observability/log';
 import { StrictMode, useEffect, useState } from 'react';
 
 import { authClient } from '~/lib/client';
@@ -37,6 +37,7 @@ const router = createRouter({
 
 // Register the router instance for type safety
 declare module '@tanstack/react-router' {
+  // biome-ignore lint/nursery/useConsistentTypeDefinitions: TanStack Router types
   interface Register {
     router: typeof router;
   }

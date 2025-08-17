@@ -1,4 +1,4 @@
-import { log } from '@acme/observability';
+import { log } from '@acme/observability/log';
 import { toast } from 'sonner';
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
@@ -10,7 +10,7 @@ import { createTranscription } from '~/lib/transcription-mutations';
 import { transcriptionService } from '~/services/transcription.service';
 import { useConnectivityStore } from '~/stores/connectivity.store';
 
-export interface EventState {
+export type EventState = {
   // Recording state
   recordingStatus: 'idle' | 'recording' | 'processing' | 'error';
   recordingError: string | null;
@@ -60,7 +60,7 @@ export interface EventState {
   // Selectors (computed values)
   isRecording: () => boolean;
   isTranscribing: () => boolean;
-}
+};
 
 export const useEventStore = create<EventState>()(
   devtools(

@@ -14,12 +14,12 @@ import { useCallback, useEffect, useState } from 'react';
 import { analytics } from '~/lib/analytics/posthog-analytics';
 import { isValidShortcut, normalizeKeys } from '~/lib/shortcuts/utils';
 
-interface ShortcutRecorderProps {
+type ShortcutRecorderProps = {
   isOpen: boolean;
   onClose: () => void;
   onSave: (keys: string[]) => void;
   actionName: string;
-}
+};
 
 export function ShortcutRecorder({
   isOpen,

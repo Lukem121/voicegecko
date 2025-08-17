@@ -1,4 +1,4 @@
-import { SignUpSchema } from '@acme/auth/schemas';
+import { SignUpSchema } from '@acme/auth/schemas/auth';
 import LogoFull from '@acme/ui/components/logos/logo-full';
 import { Button } from '@acme/ui/components/ui/button';
 import {

@@ -2,7 +2,7 @@ import { and, count, desc, eq, ilike, lt, sql } from '@acme/db';
 import { db } from '@acme/db/client';
 import { TranscriptionTable } from '@acme/db/schema';
 
-export interface CreateTranscriptionData {
+export type CreateTranscriptionData = {
   userId: string;
   content: string;
   status: 'normal' | 'silent';
@@ -11,25 +11,25 @@ export interface CreateTranscriptionData {
   sampleRate?: number;
   appVersion?: string;
   wordCount: number;
-}
+};
 
-export interface TranscriptionItem {
+export type TranscriptionItem = {
   id: number;
   content: string;
   status: 'normal' | 'silent';
   createdAt: Date;
-}
+};
 
-export interface FindPaginatedParams {
+export type FindPaginatedParams = {
   cursor?: number;
   limit: number;
   search?: string;
-}
+};
 
-export interface PaginatedResult {
+export type PaginatedResult = {
   transcriptions: TranscriptionItem[];
   totalResults?: number;
-}
+};
 
 class TranscriptionRepository {
   async create(data: CreateTranscriptionData) {

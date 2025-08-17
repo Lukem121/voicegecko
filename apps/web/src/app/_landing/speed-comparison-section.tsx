@@ -16,13 +16,13 @@ const TYPING_TEXT =
 
 const WORD_SPLIT_REGEX = /\s+/;
 
-interface TypingTextProps {
+type TypingTextProps = {
   text: string;
   wpm: number;
   isVisible: boolean;
   shouldRestart: boolean;
   variant?: 'light' | 'dark';
-}
+};
 
 function TypingText({
   text,

@@ -5,7 +5,10 @@
   "type": "module",
   "exports": {
     "./stripe": "./src/stripe.ts",
-    "./subscription-handlers": "./src/subscription-handlers/index.ts"
+    "./subscription-handlers/on-subscription-cancel": "./src/subscription-handlers/on-subscription-cancel.ts",
+    "./subscription-handlers/on-subscription-complete": "./src/subscription-handlers/on-subscription-complete.ts",
+    "./subscription-handlers/on-subscription-deleted": "./src/subscription-handlers/on-subscription-deleted.ts",
+    "./subscription-handlers/on-subscription-update": "./src/subscription-handlers/on-subscription-update.ts"
   },
   "scripts": {
     "build": "tsc",

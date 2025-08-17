@@ -5,7 +5,6 @@ export default function StudentDiscountEmail() {
     <StudentDiscountTemplate
       couponCode="RYGALTMSXJAA"
       discountPercentage="50"
-      name="Alex"
       redemptionUrl="https://www.voicegecko.io/pricing?student=true"
     />
   );

@@ -1,8 +1,8 @@
 import { useTrayManager } from '~/hooks/use-tray-manager';
 
-interface TrayProviderProps {
+type TrayProviderProps = {
   children: React.ReactNode;
-}
+};
 
 /**
  * TrayProvider manages the system tray menu with dynamic content.

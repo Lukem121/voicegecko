@@ -1,4 +1,4 @@
-import { SignInSchema } from '@acme/auth/schemas';
+import { SignInSchema } from '@acme/auth/schemas/auth';
 import LogoFull from '@acme/ui/components/logos/logo-full';
 import { Button } from '@acme/ui/components/ui/button';
 import {
@@ -42,14 +42,14 @@ export const Route = createFileRoute('/(unauthenticated)/_auth/sign-in')({
 });
 
 // Types
-interface SignInFormValues {
+type SignInFormValues = {
   email: string;
   password: string;
-}
+};
 
-interface LoadingState {
+type LoadingState = {
   email: boolean;
-}
+};
 
 function SignIn() {
   const router = useRouter();

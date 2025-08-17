@@ -1,6 +1,6 @@
 'use client';
 
-import { log } from '@acme/observability';
+import { log } from '@acme/observability/log';
 import TextType from '@acme/ui/components/text-type';
 import { cn } from '@acme/ui/lib/utils';
 import { AnimatePresence, motion } from 'motion/react';
@@ -66,12 +66,12 @@ const getBubbleStyles = (type: MascotMessage['type']) => {
 };
 
 // Main chat bubble component
-interface MascotChatBubbleProps {
+type MascotChatBubbleProps = {
   message: MascotMessage | null;
   isTyping: boolean;
   className?: string;
   position?: 'top' | 'bottom' | 'left' | 'right';
-}
+};
 
 export function MascotChatBubble({
   message,

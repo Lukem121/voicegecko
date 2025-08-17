@@ -1,16 +1,16 @@
-export interface DownloadAsset {
+export type DownloadAsset = {
   name: string;
   url: string;
   size: number;
   contentType: string;
-}
+};
 
-export interface PlatformDownloads {
+export type PlatformDownloads = {
   available: boolean;
   assets: DownloadAsset[];
-}
+};
 
-export interface DownloadsData {
+export type DownloadsData = {
   version: string;
   publishedAt: string;
   releaseNotes?: string;
@@ -19,7 +19,7 @@ export interface DownloadsData {
     macos: PlatformDownloads;
     linux: PlatformDownloads;
   };
-}
+};
 
 /**
  * Helper function to format file size in human-readable format

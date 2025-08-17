@@ -1,4 +1,4 @@
-import { log } from '@acme/observability';
+import { log } from '@acme/observability/log';
 import LogoFull from '@acme/ui/components/logos/logo-full';
 import { Progress } from '@acme/ui/components/ui/progress';
 import { invoke } from '@tauri-apps/api/core';

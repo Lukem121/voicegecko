@@ -6,12 +6,12 @@ import {
 import type { UseAudioProcessorReturn } from '~/components/gecko-bar/gecko-bar-app.types';
 import type { AudioLevelEvent } from '~/types/events';
 
-interface UseAudioProcessorProps {
+type UseAudioProcessorProps = {
   isRecording: boolean;
   isTranscribing: boolean;
   isTransitioning: boolean;
   recordingStatus: string;
-}
+};
 
 export function useAudioProcessor({
   isRecording,

@@ -1,5 +1,5 @@
 {
-  "$schema": "https://biomejs.dev/schemas/2.1.2/schema.json",
+  "$schema": "https://biomejs.dev/schemas/2.2.0/schema.json",
   "extends": ["ultracite"],
   "vcs": {
     "enabled": true,
@@ -9,9 +9,19 @@
   "files": {
     "includes": [
       "**",
-      "!scripts/**",
-      "!packages/ui/**",
+      "!scripts",
+      "!packages/ui",
       "!apps/desktop/src/routeTree.gen.ts"
     ]
+  },
+  "linter": {
+    "rules": {
+      "nursery": {
+        "noUnnecessaryConditions": "off"
+      },
+      "style": {
+        "noMagicNumbers": "off"
+      }
+    }
   }
 }

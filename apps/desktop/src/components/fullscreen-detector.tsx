@@ -1,13 +1,13 @@
-import { log } from '@acme/observability';
+import { log } from '@acme/observability/log';
 import { invoke } from '@tauri-apps/api/core';
 import { useEffect } from 'react';
 
 import { useFullscreenDetection } from '~/hooks/use-fullscreen-detection';
 
-interface FullscreenDetectorProps {
+type FullscreenDetectorProps = {
   enabled: boolean;
   geckoBarEnabled?: boolean;
-}
+};
 
 export function FullscreenDetector({
   enabled,

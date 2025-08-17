@@ -8,8 +8,8 @@ export default function Vine2Long({
   return (
     <svg
       className={className}
-      style={style}
       fill="none"
+      style={style}
       viewBox="0 0 378 135"
       xmlns="http://www.w3.org/2000/svg"
     >

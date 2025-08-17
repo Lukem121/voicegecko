@@ -1,17 +1,17 @@
-import { sendSubscriptionCancelledEmail } from '@acme/email';
-import { log } from '@acme/observability';
+import { sendSubscriptionCancelledEmail } from '@acme/email/send/subscription-cancelled';
+import { log } from '@acme/observability/log';
 import type { Subscription } from '@better-auth/stripe';
 import type { Stripe } from 'stripe';
 
 import { paymentEnv } from '../../env';
 import { getUserForEmail } from './user-lookup';
 
-interface SubscriptionCancelParams {
+type SubscriptionCancelParams = {
   event?: Stripe.Event;
   subscription: Subscription;
   stripeSubscription: Stripe.Subscription;
   cancellationDetails?: Stripe.Subscription.CancellationDetails | null;
-}
+};
 
 export const onSubscriptionCancel = async ({
   subscription,

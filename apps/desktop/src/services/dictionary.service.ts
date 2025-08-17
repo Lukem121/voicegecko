@@ -1,4 +1,4 @@
-import { log } from '@acme/observability';
+import { log } from '@acme/observability/log';
 import { queryClient, trpc } from '~/trpc';
 
 export class DictionaryService {

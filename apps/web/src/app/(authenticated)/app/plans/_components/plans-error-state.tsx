@@ -8,14 +8,14 @@ import { Card, CardContent } from '@acme/ui/components/ui/card';
 import { AlertTriangle, RefreshCw } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 
-interface PlansErrorStateProps {
+type PlansErrorStateProps = {
   error: {
     code?: string | undefined;
     message?: string | undefined;
     status: number;
     statusText: string;
   };
-}
+};
 
 export const PlansErrorState = ({ error }: PlansErrorStateProps) => {
   const router = useRouter();

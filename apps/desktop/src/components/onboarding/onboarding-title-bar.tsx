@@ -5,9 +5,9 @@ import { Minus, Square, X } from 'lucide-react';
 
 const appWindow = getCurrentWindow();
 
-interface OnboardingTitleBarProps {
+type OnboardingTitleBarProps = {
   showLogo?: boolean;
-}
+};
 
 export function OnboardingTitleBar({
   showLogo = true,

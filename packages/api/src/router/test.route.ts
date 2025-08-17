@@ -1,12 +1,11 @@
-import {
-  sendPaymentFailedEmail,
-  sendResetPasswordEmail,
-  sendStudentDiscountEmail,
-  sendSubscriptionCancelledEmail,
-  sendVerificationEmail,
-  sendWelcomeEmail,
-  sendWelcomeProEmail,
-} from '@acme/email';
+import { sendPaymentFailedEmail } from '@acme/email/send/payment-failed';
+import { sendResetPasswordEmail } from '@acme/email/send/reset-password';
+import { sendStudentDiscountEmail } from '@acme/email/send/student-discount';
+import { sendSubscriptionCancelledEmail } from '@acme/email/send/subscription-cancelled';
+import { sendVerificationEmail } from '@acme/email/send/verification';
+import { sendWelcomeEmail } from '@acme/email/send/welcome';
+import { sendWelcomeProEmail } from '@acme/email/send/welcome-pro';
+
 import type { TRPCRouterRecord } from '@trpc/server';
 import { protectedProcedure } from '../trpc';
 

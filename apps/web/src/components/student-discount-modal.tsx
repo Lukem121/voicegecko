@@ -35,10 +35,10 @@ const StudentDiscountSchema = z.object({
 
 type StudentDiscountFormData = z.infer<typeof StudentDiscountSchema>;
 
-interface StudentDiscountModalProps {
+type StudentDiscountModalProps = {
   isOpen: boolean;
   onClose: () => void;
-}
+};
 
 export function StudentDiscountModal({
   isOpen,

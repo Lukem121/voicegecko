@@ -18,7 +18,14 @@ import { type JSX, useEffect, useState } from 'react';
 
 import { AuthTitleBar } from '~/components/auth-title-bar';
 
-interface ConnectivityErrorProps {
+// Constants for timing intervals
+const AUTO_RETRY_INTERVAL_SECONDS = 30;
+const AUTO_RETRY_INTERVAL_MS = 30_000;
+const COUNTDOWN_INTERVAL_MS = 1000;
+const MANUAL_RETRY_DISABLE_DURATION_MS = 60_000;
+const MS_PER_MINUTE = 60_000;
+
+type ConnectivityErrorProps = {
   isOnline: boolean;
   isApiReachable: boolean;
   isChecking: boolean;
@@ -26,7 +33,7 @@ interface ConnectivityErrorProps {
   lastSuccessfulCheck?: Date | null;
   onRetry: () => void;
   className?: string;
-}
+};
 
 // Helper function to get server status display text and styling
 const getServerStatusDisplay = (isApiReachable: boolean, isOnline: boolean) => {
@@ -97,13 +104,15 @@ export function ConnectivityError({
 }: ConnectivityErrorProps) {
   const [manualRetryDisabledUntil, setManualRetryDisabledUntil] =
     useState<Date | null>(null);
-  const [nextAutoRetryIn, setNextAutoRetryIn] = useState<number>(30);
+  const [nextAutoRetryIn, setNextAutoRetryIn] = useState<number>(
+    AUTO_RETRY_INTERVAL_SECONDS
+  );
 
   // Auto-retry every 30 seconds continuously, but not if user recently clicked manual retry
   useEffect(() => {
     if (diagnosis !== 'healthy') {
       // Reset countdown when starting a new cycle
-      setNextAutoRetryIn(30);
+      setNextAutoRetryIn(AUTO_RETRY_INTERVAL_SECONDS);
 
       const timer = setTimeout(() => {
         // Don't auto-retry if user recently clicked manual retry
@@ -112,11 +121,11 @@ export function ConnectivityError({
         }
 
         onRetry();
-      }, 30_000);
+      }, AUTO_RETRY_INTERVAL_MS);
 
       return () => clearTimeout(timer);
     }
-    setNextAutoRetryIn(30);
+    setNextAutoRetryIn(AUTO_RETRY_INTERVAL_SECONDS);
   }, [diagnosis, onRetry, manualRetryDisabledUntil]);
 
   // Countdown timer for next auto-retry
@@ -125,11 +134,11 @@ export function ConnectivityError({
       const interval = setInterval(() => {
         setNextAutoRetryIn((prev) => {
           if (prev <= 1) {
-            return 30; // Reset for next cycle
+            return AUTO_RETRY_INTERVAL_SECONDS; // Reset for next cycle
           }
           return prev - 1;
         });
-      }, 1000);
+      }, COUNTDOWN_INTERVAL_MS);
 
       return () => clearInterval(interval);
     }
@@ -191,7 +200,7 @@ export function ConnectivityError({
 
     const now = new Date();
     const diffMs = now.getTime() - date.getTime();
-    const diffMins = Math.floor(diffMs / 60_000);
+    const diffMins = Math.floor(diffMs / MS_PER_MINUTE);
 
     if (diffMins < 1) {
       return 'Just now';
@@ -283,10 +292,12 @@ export function ConnectivityError({
                       )}
                       disabled={isChecking}
                       onClick={() => {
-                        setNextAutoRetryIn(30);
+                        setNextAutoRetryIn(AUTO_RETRY_INTERVAL_SECONDS);
                         // Disable auto-retry for 60 seconds after manual retry
                         setManualRetryDisabledUntil(
-                          new Date(Date.now() + 60_000)
+                          new Date(
+                            Date.now() + MANUAL_RETRY_DISABLE_DURATION_MS
+                          )
                         );
                         onRetry();
                       }}
@@ -346,14 +357,14 @@ export function ConnectivityError({
 /**
  * Minimal connectivity indicator for showing in corners/headers
  */
-interface ConnectivityIndicatorProps {
+type ConnectivityIndicatorProps = {
   isOnline: boolean;
   isApiReachable: boolean;
   isChecking: boolean;
   diagnosis: 'healthy' | 'no_internet' | 'api_down' | 'unknown';
   lastChecked?: Date | null;
   className?: string;
-}
+};
 
 export function ConnectivityIndicator({
   // biome-ignore lint: parameter required by interface but not used in this component
