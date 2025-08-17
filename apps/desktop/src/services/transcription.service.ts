@@ -4,6 +4,7 @@ import { emit } from '@tauri-apps/api/event';
 import { writeText } from '@tauri-apps/plugin-clipboard-manager';
 import { toast } from 'sonner';
 
+import { performanceTracker } from '~/lib/performance-tracker';
 import { useSettingsStore } from '~/stores/settings.store';
 import { recordingService } from './recording.service';
 
@@ -63,15 +64,54 @@ export class TranscriptionService {
         log.info(
           `[TranscriptionService] Transcript length=${this.lastTranscription.length}`
         );
-        // Copy to clipboard first to ensure paste has the right contents
-        await writeText(this.lastTranscription);
+        // Debug: Check for unwanted characters in stored transcript
+        log.info('[DEBUG] Paste-last transcript check:', {
+          length: this.lastTranscription.length,
+          hasNewlines: this.lastTranscription.includes('\n'),
+          endsWithNewline: this.lastTranscription.endsWith('\n'),
+          lastChars: this.lastTranscription
+            .slice(-5)
+            .split('')
+            .map((c) => {
+              if (c === '\n') {
+                return '\\n';
+              }
+              if (c === '\r') {
+                return '\\r';
+              }
+              if (c === ' ') {
+                return '·';
+              }
+              return c;
+            })
+            .join(''),
+        });
+
+        // Clean the transcript before copying to clipboard
+        const cleanedForPaste = this.lastTranscription.trim();
+
+        // Copy cleaned transcript to clipboard
+        await writeText(cleanedForPaste);
         log.info('[TranscriptionService] Clipboard write complete');
 
         // Attempt to paste into the currently focused input field
         try {
           // Small delay to give focus back to the target field after releasing modifiers
           await new Promise((r) => setTimeout(r, 30));
-          await invoke('simulate_paste');
+
+          // Check if user wants to prevent auto-newlines
+          const { settings } = useSettingsStore.getState();
+          if (settings.personalization.preventPasteNewlines) {
+            log.info(
+              '[TranscriptionService] Using enhanced paste for manual paste'
+            );
+            await invoke('simulate_paste_with_options', {
+              preventAutoNewline: true,
+            });
+          } else {
+            await invoke('simulate_paste');
+          }
+
           toast.success('Last transcription pasted.');
           log.info('[TranscriptionService] Simulated paste success');
         } catch {
@@ -109,18 +149,65 @@ export class TranscriptionService {
         // Update internal state
         this.setLastTranscription(transcript);
 
-        // Copy to clipboard
-        await writeText(transcript);
+        // Debug: Log transcript before clipboard copy to check for unwanted characters
+        log.info('[DEBUG] Transcript before clipboard copy:', {
+          length: transcript.length,
+          hasNewlines: transcript.includes('\n'),
+          hasCarriageReturns: transcript.includes('\r'),
+          endsWithNewline: transcript.endsWith('\n'),
+          endsWithSpace: transcript.endsWith(' '),
+          lastChars: transcript
+            .slice(-5)
+            .split('')
+            .map((c) => {
+              if (c === '\n') {
+                return '\\n';
+              }
+              if (c === '\r') {
+                return '\\r';
+              }
+              if (c === ' ') {
+                return '·';
+              }
+              return c;
+            })
+            .join(''),
+        });
+
+        // Ensure transcript has no trailing newlines or extra whitespace before clipboard copy
+        const cleanedTranscript = transcript.trim();
+
+        // Copy cleaned transcript to clipboard
+        await writeText(cleanedTranscript);
+        performanceTracker.markPhase('clipboardCopyTime');
 
         // Check if auto-paste is enabled and simulate paste if so
         const { settings } = useSettingsStore.getState();
         if (settings.personalization.autoPasteOnCompletion) {
           try {
             log.info('[TranscriptionService] Auto-pasting transcription...');
-            await invoke('simulate_paste');
+
+            // Use enhanced paste if user has enabled newline prevention
+            if (settings.personalization.preventPasteNewlines) {
+              log.info(
+                '[TranscriptionService] Using enhanced paste to prevent unwanted newlines'
+              );
+              await invoke('simulate_paste_with_options', {
+                preventAutoNewline: true,
+              });
+            } else {
+              await invoke('simulate_paste');
+            }
+
+            performanceTracker.markPhase('pasteCompleteTime');
+            performanceTracker.completeSession();
+
             log.info('[TranscriptionService] ✅ Auto-paste successful');
             toast.success('Transcription complete and pasted!');
           } catch (pasteError) {
+            performanceTracker.markPhase('pasteCompleteTime');
+            performanceTracker.completeSession();
+
             log.error(
               '[TranscriptionService] Failed to auto-paste:',
               pasteError
@@ -132,16 +219,24 @@ export class TranscriptionService {
             );
           }
         } else {
+          // Complete the session at clipboard copy since no paste is expected
+          performanceTracker.markPhase('pasteCompleteTime');
+          performanceTracker.completeSession();
+
           // Show success toast for clipboard copy only
           toast.success('Transcription complete and copied to clipboard!');
         }
       } catch (error) {
+        performanceTracker.completeSession();
+
         log.error('[TranscriptionService] Failed to copy to clipboard:', error);
         toast.error('Failed to copy to clipboard', {
           description: error instanceof Error ? error.message : 'Unknown error',
         });
       }
     } else {
+      performanceTracker.completeSession();
+
       log.warn('[TranscriptionService] Empty transcript received');
       toast.warning('Transcription returned an empty result.');
     }
