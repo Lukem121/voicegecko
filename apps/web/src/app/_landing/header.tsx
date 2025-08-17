@@ -20,7 +20,7 @@ export default function Header() {
         <div
           aria-atomic="true"
           aria-live="polite"
-          className="hidden items-center justify-center bg-accent px-4 py-5 text-white md:flex dark:bg-primary/80"
+          className="hidden items-center justify-center bg-brand-blue px-4 py-5 text-white md:flex dark:bg-primary/80"
         >
           <p className="text-center font-medium font-sans text-sm">
             Get more done in less time — Voice to Text can 4x your productivity

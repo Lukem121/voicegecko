@@ -75,7 +75,7 @@ export default function TranscriptionFeaturesSection() {
           {/* Top Right: Teach It Your Vocabulary */}
           <motion.div
             animate={{ opacity: 1, y: 0 }}
-            className="relative min-h-[400px] overflow-hidden rounded-xl bg-accent p-4 text-white md:min-h-[500px] md:p-6"
+            className="relative min-h-[400px] overflow-hidden rounded-xl bg-brand-blue p-4 text-white md:min-h-[500px] md:p-6"
             initial={{ opacity: 0, y: 20 }}
             transition={{ duration: 0.6, delay: 0.2 }}
           >

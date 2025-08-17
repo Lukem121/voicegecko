@@ -80,7 +80,7 @@ export default function RiveGeckoPlaceholder({
     <div
       aria-label={label ?? `Gecko pose: ${pose}`}
       className={cn(
-        'relative grid place-items-center rounded-xl border border-accent/70 border-dashed bg-accent/50 text-accent-foreground',
+        'relative grid place-items-center rounded-xl border border-accent/70 border-dashed bg-brand-blue/50 text-accent-foreground',
         className
       )}
       role="img"
