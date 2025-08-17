@@ -13,7 +13,7 @@ export const WhyCard = ({
   tag: string;
 }) => (
   <div className="rounded-2xl border border-border bg-card p-6">
-    <div className="inline-flex items-center gap-2 rounded-full border border-accent bg-accent px-2.5 py-0.5 font-semibold text-[10px] text-accent-foreground">
+    <div className="inline-flex items-center gap-2 rounded-full border border-brand-blue bg-brand-blue px-2.5 py-0.5 font-semibold text-[10px] text-accent-foreground">
       {tag}
     </div>
     <h3 className="mt-3 font-semibold text-base text-card-foreground tracking-tight">
@@ -106,7 +106,7 @@ export const StatBlock = ({
 );
 
 export const Avatar = ({ initial }: { initial: string }) => (
-  <div className="flex h-7 w-7 items-center justify-center rounded-full bg-accent font-bold text-[11px] text-accent-foreground">
+  <div className="flex h-7 w-7 items-center justify-center rounded-full bg-brand-blue font-bold text-[11px] text-accent-foreground">
     {initial}
   </div>
 );
@@ -130,7 +130,7 @@ export function TestimonialCard({
         "{quote}"
       </blockquote>
       <div className="mt-4 flex items-center gap-3">
-        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-accent font-semibold text-accent-foreground text-sm">
+        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-brand-blue font-semibold text-accent-foreground text-sm">
           {avatar}
         </div>
         <div>
