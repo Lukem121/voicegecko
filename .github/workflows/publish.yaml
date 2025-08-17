@@ -163,7 +163,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
-          VITE_PUBLIC_VOICEGECKO_URL: ${{ secrets.VITE_PUBLIC_VOICEGECKO_URL }}
+          VITE_PUBLIC_VOICEGECKO_URL: ${{ vars.VITE_PUBLIC_VOICEGECKO_URL }}
         with:
           tagName: app-v__VERSION__ # the action automatically replaces \_\_VERSION\_\_ with the app version.
           releaseName: "App v__VERSION__"
@@ -228,7 +228,7 @@ jobs:
           } | ConvertTo-Json
 
           try {
-            $response = Invoke-RestMethod -Uri "${{ secrets.VOICEGECKO_URL }}/api/revalidate" -Method POST -Body $body -ContentType "application/json" -TimeoutSec 30
+            $response = Invoke-RestMethod -Uri "${{ vars.VITE_PUBLIC_VOICEGECKO_URL }}/api/revalidate" -Method POST -Body $body -ContentType "application/json" -TimeoutSec 30
             Write-Host "Revalidation successful: $($response.message)"
           } catch {
             Write-Host "Revalidation failed - this is non-critical: $($_.Exception.Message)"
@@ -272,7 +272,7 @@ jobs:
       - name: Revalidate Website Cache
         run: |
           echo "Triggering ISR revalidation for landing page..."
-          curl -X POST "${{ secrets.VOICEGECKO_URL }}/api/revalidate" \
+          curl -X POST "${{ vars.VITE_PUBLIC_VOICEGECKO_URL }}/api/revalidate" \
             -H "Content-Type: application/json" \
             -d '{
               "secret": "${{ secrets.REVALIDATE_SECRET }}",
