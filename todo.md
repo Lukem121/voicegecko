@@ -1,11 +1,8 @@
 Todo
 
-- [ ] Landing page & subsequent pages
 - [ ] there is a bug that if for example we had a session so we're logged in so the desktop app thinks of a session but it's no longer authorised like it's an old session it just carries on it doesn't like notice and logs out or anything
 - [ ] Links in the Emails need removing or implementing.
 - [ ] I noticed that if we have been marked as no internet, then the Gecko bar needs to be restarted in order to detect that again. It doesn't seem to be getting updated to let it know that the internet has been regained.
-
-- [ ] Bugs (inscts) on landing page?
 
 Pre Launch Checks
 
@@ -20,7 +17,7 @@ After MVP
 - [ ] Post processing, fix grammer, change style.
 - [ ] I notice whisper when it can mute the audio without having to just mute the whole It can like mute everything else. It can just like isolate its own audio.
 
-🪳 Bugs
+🪳 After MVP Bugs
 
 - [ ] Unable to click through the Geckobar window in the transparent sections (stuff under it is uncliclickable).
-- [ ] When the user has reached there usage allowance in the main app it will say that over but the if we scare go bar will let them transcribe one more time before realizing.
+- [ ] When the user has reached there usage allowance in the desktop app it will let them do one more transcription before blocking them.

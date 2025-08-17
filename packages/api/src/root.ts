@@ -4,11 +4,13 @@ import { authRouter } from './router/auth.route';
 import { dictionaryRouter } from './router/dictionary.route';
 import { geolocationRouter } from './router/geolocation.route';
 import { stripeRouter } from './router/stripe.route';
+import { testRouter } from './router/test.route';
 import { transcriptionRouter } from './router/transcription.route';
 import { usageRouter } from './router/usage.route';
 import { createTRPCRouter } from './trpc';
 
 export const appRouter = createTRPCRouter({
+  test: testRouter,
   auth: authRouter,
   transcription: transcriptionRouter,
   stripe: stripeRouter,
