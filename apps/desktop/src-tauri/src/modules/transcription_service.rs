@@ -40,7 +40,15 @@ impl LocalWhisperProvider {
         source_description: &str,
     ) -> Result<String, TranscriptionError> {
         let total_time = Instant::now();
-        println!("[Rust] Starting transcription for: {}", source_description);
+        println!(
+            "[PERF] =================== TRANSCRIPTION PERFORMANCE ANALYSIS ==================="
+        );
+        println!(
+            "[PERF] Starting transcription for: {} | Audio samples: {} | Memory size: ~{:.2} MB",
+            source_description,
+            audio_data.len(),
+            (audio_data.len() * std::mem::size_of::<f32>()) as f32 / 1_048_576.0
+        );
 
         // Check if audio is less than 1 second (assuming 16kHz sample rate)
         // Whisper requires at least 1 second of audio
@@ -48,21 +56,22 @@ impl LocalWhisperProvider {
 
         if audio_data.len() < MIN_SAMPLES_REQUIRED {
             println!(
-                "[Rust] Audio too short: {} samples (< 1 second). Returning empty transcription.",
+                "[PERF] Audio too short: {} samples (< 1 second). Returning empty transcription.",
                 audio_data.len()
             );
-
-            // Don't emit here - let the main transcribe_audio_buffer function handle the event emission
             return Ok(String::new());
         }
 
         // Pre-transcription: Analyze audio to detect if it's mostly silence
-        if Self::is_audio_effectively_silent(&audio_data) {
-            println!(
-                "[Rust] Audio detected as effectively silent. Skipping transcription and returning empty result."
-            );
+        let silence_check_time = Instant::now();
+        let is_silent = Self::is_audio_effectively_silent(&audio_data);
+        println!(
+            "[PERF] Silence detection took: {:?}",
+            silence_check_time.elapsed()
+        );
 
-            // Don't emit here - let the main transcribe_audio_buffer function handle the event emission
+        if is_silent {
+            println!("[PERF] Audio detected as effectively silent. Skipping transcription and returning empty result.");
             return Ok(String::new());
         }
 
@@ -75,20 +84,16 @@ impl LocalWhisperProvider {
 
         let model_load_time = Instant::now();
         let ctx = service.get_or_load_model(&app, &self.model_id)?;
-        println!(
-            "[Rust] Get or load model took: {:?}",
-            model_load_time.elapsed()
-        );
+        let model_load_duration = model_load_time.elapsed();
+        println!("[PERF] Model loading took: {:?}", model_load_duration);
 
         let state_create_time = Instant::now();
         let mut state = service.get_or_create_state(&ctx, &self.model_id)?;
-        println!(
-            "[Rust] Get or create state took: {:?}",
-            state_create_time.elapsed()
-        );
+        let state_create_duration = state_create_time.elapsed();
+        println!("[PERF] State creation took: {:?}", state_create_duration);
 
         println!(
-            "[Rust] Using {} audio samples from {}",
+            "[PERF] Using {} audio samples from {}",
             audio_data.len(),
             source_description
         );
@@ -97,7 +102,12 @@ impl LocalWhisperProvider {
         let threads = 4;
         let beam_size = 1; // Greedy for fastest performance
         let best_of = 1; // Single candidate for speed
+        println!(
+            "[PERF] Whisper config: {} threads, beam_size: {}, best_of: {}",
+            threads, beam_size, best_of
+        );
 
+        let params_setup_time = Instant::now();
         let mut params = if beam_size > 1 {
             FullParams::new(SamplingStrategy::BeamSearch {
                 beam_size,
@@ -143,47 +153,91 @@ impl LocalWhisperProvider {
 
         // Set the complete prompt if we have any dictionary items
         if !complete_prompt.is_empty() {
-            println!("[Rust] 📖 Setting dictionary prompt: {}", complete_prompt);
+            println!(
+                "[PERF] 📖 Setting dictionary prompt (length: {} chars): {}",
+                complete_prompt.len(),
+                complete_prompt
+            );
             params.set_initial_prompt(&complete_prompt);
         }
+
+        println!(
+            "[PERF] Parameters setup took: {:?}",
+            params_setup_time.elapsed()
+        );
 
         app.emit(
             "transcription-progress",
             TranscriptionEvent::from(TranscriptionProgress::Transcribing),
         )
         .unwrap();
+
+        // The main Whisper inference call - this is typically the slowest part
         let full_transcribe_time = Instant::now();
         state
             .full(params, &audio_data)
             .map_err(|e| TranscriptionError::Transcription(e.to_string()))?;
-        println!(
-            "[Rust] Full transcribe took: {:?}",
-            full_transcribe_time.elapsed()
+        let transcription_duration = full_transcribe_time.elapsed();
+        println!("[PERF] 🔥 WHISPER INFERENCE took: {:?} | Audio duration: {:.2}s | Real-time factor: {:.2}x", 
+            transcription_duration,
+            audio_data.len() as f32 / 16000.0,
+            (audio_data.len() as f32 / 16000.0) / transcription_duration.as_secs_f32()
         );
 
         let segment_build_time = Instant::now();
         let num_segments = state.full_n_segments().unwrap();
         let mut result = String::new();
+        println!("[PERF] Processing {} segments", num_segments);
+
         for i in 0..num_segments {
             let segment = state.full_get_segment_text(i).unwrap();
+            // Debug: Log segment content to identify newline sources
+            if i < 3 {
+                // Only log first few segments to avoid spam
+                println!(
+                    "[DEBUG] Segment {}: '{}'",
+                    i,
+                    segment.replace('\n', "\\n").replace('\r', "\\r")
+                );
+            }
             result.push_str(&segment);
         }
-        println!(
-            "[Rust] Segment building took: {:?}",
-            segment_build_time.elapsed()
-        );
+        let segment_duration = segment_build_time.elapsed();
+        println!("[PERF] Segment building took: {:?}", segment_duration);
 
+        let total_duration = total_time.elapsed();
         println!(
-            "[Rust] Total transcription time ({}): {:?}",
-            source_description,
-            total_time.elapsed()
+            "[PERF] ================= TOTAL TRANSCRIPTION TIME: {:?} =================",
+            total_duration
+        );
+        println!(
+            "[PERF] Breakdown - Model: {:?} | State: {:?} | Inference: {:?} | Segments: {:?}",
+            model_load_duration, state_create_duration, transcription_duration, segment_duration
         );
 
         // Return state to cache for reuse
         service.return_state(&self.model_id, state);
 
-        // Trim the result and remove quotes if present
-        let mut cleaned_result = result.trim().to_string();
+        // Debug: Log raw result before cleaning
+        println!(
+            "[DEBUG] Raw transcript before cleaning: '{}'",
+            result.replace('\n', "\\n").replace('\r', "\\r")
+        );
+
+        // Comprehensive text cleaning to remove unwanted whitespace and newlines
+        let mut cleaned_result = result
+            .trim() // Remove leading/trailing whitespace
+            .replace('\n', " ") // Replace newlines with spaces
+            .replace('\r', " ") // Replace carriage returns with spaces
+            .to_string();
+
+        // Normalize multiple spaces to single spaces
+        while cleaned_result.contains("  ") {
+            cleaned_result = cleaned_result.replace("  ", " ");
+        }
+
+        // Final trim after space normalization
+        cleaned_result = cleaned_result.trim().to_string();
 
         // Remove surrounding quotes if present
         if cleaned_result.len() >= 2
@@ -191,8 +245,11 @@ impl LocalWhisperProvider {
             && cleaned_result.ends_with('"')
         {
             cleaned_result = cleaned_result[1..cleaned_result.len() - 1].to_string();
+            // Trim again after quote removal
+            cleaned_result = cleaned_result.trim().to_string();
         }
 
+        println!("[DEBUG] Final cleaned transcript: '{}'", cleaned_result);
         Ok(cleaned_result)
     }
 
@@ -309,10 +366,22 @@ impl TranscriptionService {
 
         println!("[Rust] Preloading model {} during startup", model_id);
 
-        // Load the model into cache
+        // Load the model into cache and pre-create a state for instant access
         match self.get_or_load_model(app, &model_id) {
-            Ok(_) => {
+            Ok(ctx) => {
                 println!("[Rust] Successfully preloaded model {}", model_id);
+
+                // Pre-create a state for even faster first transcription
+                match ctx.create_state() {
+                    Ok(state) => {
+                        self.return_state(&model_id, state);
+                        println!("[Rust] Pre-created state for model {}", model_id);
+                    }
+                    Err(e) => {
+                        println!("[Rust] Failed to pre-create state for {}: {}", model_id, e);
+                        // Still successful if just model loading worked
+                    }
+                }
                 Ok(())
             }
             Err(e) => {

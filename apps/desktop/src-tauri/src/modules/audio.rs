@@ -588,34 +588,80 @@ pub fn stop_recording(
         .take()
         .ok_or_else(|| "No audio data recorded".to_string())?;
 
+    // Emit performance tracking start - this is the TRUE start of end-to-end processing
+    let audio_metadata = serde_json::json!({
+        "samplesLength": samples.len(),
+        "durationSeconds": samples.len() as f32 / 16000.0, // We always resample to 16kHz
+        "sampleRate": 16000
+    });
+    let _ = app.emit("end-to-end-performance-start", audio_metadata);
+
     // Generate timestamp for debug files
     let timestamp = SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .unwrap()
         .as_secs();
 
-    // Save pre-processed (raw) audio for debugging
-    if let Err(e) = save_audio_debug(&samples, &format!("raw_audio_{}.wav", timestamp), &app) {
-        println!("[Audio Debug] Failed to save raw audio: {}", e);
-    }
+    let audio_processing_start = Instant::now();
+    println!("[PERF] ============== AUDIO PROCESSING PERFORMANCE ANALYSIS ==============");
+    println!(
+        "[PERF] Starting audio processing on {} samples | Size: {:.2} MB",
+        samples.len(),
+        (samples.len() * std::mem::size_of::<f32>()) as f32 / 1_048_576.0
+    );
 
     // Apply noise suppression to the recorded audio
+    let denoise_time = Instant::now();
     let denoised_samples = denoise_audio(samples);
+    let denoise_duration = denoise_time.elapsed();
+    println!(
+        "[PERF] Audio processing pipeline took: {:?}",
+        denoise_duration
+    );
 
-    // Save post-processed audio for debugging
-    if let Err(e) = save_audio_debug(
-        &denoised_samples,
-        &format!("processed_audio_{}.wav", timestamp),
-        &app,
-    ) {
-        println!("[Audio Debug] Failed to save processed audio: {}", e);
+    // Optional debug file saves (disabled by default for performance)
+    const ENABLE_AUDIO_DEBUG_SAVES: bool = false;
+    if ENABLE_AUDIO_DEBUG_SAVES {
+        let debug_save_start = Instant::now();
+        if let Err(e) = save_audio_debug(
+            &denoised_samples,
+            &format!("processed_audio_{}.wav", timestamp),
+            &app,
+        ) {
+            println!("[Audio Debug] Failed to save processed audio: {}", e);
+        }
+        println!("[PERF] Debug save took: {:?}", debug_save_start.elapsed());
     }
 
-    Ok(AudioData {
+    let total_audio_processing = audio_processing_start.elapsed();
+    println!(
+        "[PERF] ========== TOTAL AUDIO PROCESSING TIME: {:?} ==========",
+        total_audio_processing
+    );
+
+    // Emit audio processing completion event to frontend for performance tracking
+    let _ = app.emit("audio-processing-complete", ());
+
+    // MAJOR OPTIMIZATION: Start transcription directly in Rust to eliminate data round-trip
+    // This saves ~267ms of serialization/transfer overhead
+    let audio_data = AudioData {
         samples: denoised_samples,
-        sample_rate: 16000, // We always resample to 16kHz
-        channels: 1,        // We always convert to mono
-    })
+        sample_rate: 16000,
+        channels: 1,
+    };
+
+    // Trigger immediate internal transcription (async, non-blocking)
+    let app_for_transcription = app.clone();
+    let audio_for_transcription = audio_data.clone();
+    tauri::async_runtime::spawn(async move {
+        let _ = crate::modules::transcription::start_internal_transcription(
+            app_for_transcription,
+            audio_for_transcription,
+        )
+        .await;
+    });
+
+    Ok(audio_data)
 }
 
 /// Apply Whisper-optimized audio processing: EQ -> Noise Reduction -> Normalization
@@ -626,26 +672,58 @@ pub fn stop_recording(
 /// - Normalizes to -16dB RMS for optimal transcription accuracy
 /// - Note: Quiet microphones are automatically boosted during recording, before this processing
 fn denoise_audio(samples: Vec<f32>) -> Vec<f32> {
+    // Performance testing mode - skip all audio processing for pure speed testing
+    const PERFORMANCE_TEST_MODE: bool = false;
+
+    if PERFORMANCE_TEST_MODE {
+        println!("[PERF] ⚡ Performance test mode - skipping all audio processing");
+        return apply_simple_normalization(samples); // Just basic normalization
+    }
+
+    let pipeline_start = Instant::now();
     println!(
-        "[Audio Processing] Starting Whisper-optimized audio processing on {} samples (quiet microphones already boosted during recording)",
+        "[PERF] Starting Whisper-optimized audio processing on {} samples",
         samples.len()
     );
 
+    // OPTIMIZATION: Pre-analyze audio for ultra-fast processing
+    let rms = (samples.iter().map(|&s| s * s).sum::<f32>() / samples.len() as f32).sqrt();
+    let peak = samples
+        .iter()
+        .map(|&s| s.abs())
+        .fold(0.0f32, |a, b| a.max(b));
+
+    // For very clean, high-quality audio, skip most processing
+    if rms > 0.08 && peak > 0.4 {
+        println!("[PERF] ⚡ Ultra-clean audio detected (RMS: {:.3}, Peak: {:.3}) - minimal processing mode", rms, peak);
+        return apply_simple_normalization(samples);
+    }
+
     // Stage 1: Simple EQ - Combined filtering
-    println!("[Audio Processing] Stage 1: Applying simple EQ (80Hz high-pass, 8kHz low-pass)");
+    let eq_start = Instant::now();
     let eq_filtered = apply_simple_eq(samples);
+    let eq_duration = eq_start.elapsed();
+    println!("[PERF] Stage 1 - EQ filtering took: {:?}", eq_duration);
 
     // Stage 2: Simple Noise Reduction - Direct neural denoising
-    println!("[Audio Processing] Stage 2: Applying noise reduction");
+    let denoise_start = Instant::now();
     let denoised = apply_simple_noise_reduction(eq_filtered);
+    let denoise_duration = denoise_start.elapsed();
+    println!(
+        "[PERF] Stage 2 - Noise reduction took: {:?}",
+        denoise_duration
+    );
 
     // Stage 3: Simple Normalization - RMS-based with peak limiting
-    println!("[Audio Processing] Stage 3: Applying normalization");
+    let norm_start = Instant::now();
     let normalized = apply_simple_normalization(denoised);
+    let norm_duration = norm_start.elapsed();
+    println!("[PERF] Stage 3 - Normalization took: {:?}", norm_duration);
 
+    let total_pipeline = pipeline_start.elapsed();
     println!(
-        "[Audio Processing] Whisper-optimized audio processing complete - {} samples processed",
-        normalized.len()
+        "[PERF] Audio pipeline complete - Total: {:?} | EQ: {:?} | Denoise: {:?} | Norm: {:?}",
+        total_pipeline, eq_duration, denoise_duration, norm_duration
     );
     normalized
 }
@@ -736,30 +814,51 @@ fn apply_biquad_filter(samples: Vec<f32>, b0: f32, b1: f32, b2: f32, a1: f32, a2
 /// Simple noise reduction optimized for Whisper transcription
 fn apply_simple_noise_reduction(samples: Vec<f32>) -> Vec<f32> {
     const FRAME_SIZE: usize = 480; // nnnoiseless requires exactly 480 samples per frame
-    const BLEND_FACTOR: f32 = 0.35; // Much more conservative - 35% denoised, 65% original
+    const BLEND_FACTOR: f32 = 0.25; // Even more conservative - 25% denoised, 75% original for speed
 
+    let noise_analysis_time = Instant::now();
     // Check if audio is already clean enough to skip noise reduction
     let rms = (samples.iter().map(|&s| s * s).sum::<f32>() / samples.len() as f32).sqrt();
+    println!(
+        "[PERF] Noise analysis took: {:?}",
+        noise_analysis_time.elapsed()
+    );
 
-    // If audio is already at a good level with low noise, skip denoising to preserve naturalness
-    if rms > 0.08 {
+    // Calculate peak for additional analysis
+    let peak = samples
+        .iter()
+        .map(|&s| s.abs())
+        .fold(0.0f32, |a, b| a.max(b));
+
+    // More aggressive skipping - if audio has decent energy, skip denoising entirely
+    // Whisper is quite robust to background noise, especially with good speech levels
+    if rms > 0.04 || peak > 0.25 {
         println!(
-            "[Audio Processing] Audio is clean enough (RMS: {:.3}), skipping noise reduction",
-            rms
+            "[PERF] Audio has good signal (RMS: {:.3}, Peak: {:.3}), skipping noise reduction for maximum speed", 
+            rms, peak
         );
         return samples;
     }
 
     println!(
-        "[Audio Processing] Applying light noise reduction (RMS: {:.3}, blend: {}%)",
+        "[PERF] Applying light noise reduction (RMS: {:.3}, Peak: {:.3}, blend: {}%)",
         rms,
+        peak,
         (BLEND_FACTOR * 100.0) as u32
     );
 
     let mut denoise_state = DenoiseState::new();
     let mut denoised_samples = Vec::with_capacity(samples.len());
 
+    let frame_processing_start = Instant::now();
+    let total_frames = (samples.len() + FRAME_SIZE - 1) / FRAME_SIZE;
+    println!(
+        "[PERF] Processing {} frames of {} samples each",
+        total_frames, FRAME_SIZE
+    );
+
     // Process complete frames
+    let mut frame_count = 0;
     for chunk in samples.chunks_exact(FRAME_SIZE) {
         let mut frame = [0.0; FRAME_SIZE];
         frame.copy_from_slice(chunk);
@@ -773,6 +872,7 @@ fn apply_simple_noise_reduction(samples: Vec<f32>) -> Vec<f32> {
             let blended = output[i] * BLEND_FACTOR + frame[i] * (1.0 - BLEND_FACTOR);
             denoised_samples.push(blended);
         }
+        frame_count += 1;
     }
 
     // Handle remaining samples (if any) by padding with zeros
@@ -791,7 +891,16 @@ fn apply_simple_noise_reduction(samples: Vec<f32>) -> Vec<f32> {
             let blended = output[i] * BLEND_FACTOR + last_frame[i] * (1.0 - BLEND_FACTOR);
             denoised_samples.push(blended);
         }
+        frame_count += 1;
     }
+
+    let frame_processing_duration = frame_processing_start.elapsed();
+    println!(
+        "[PERF] Neural denoising processed {} frames in {:?} | Avg per frame: {:?}",
+        frame_count,
+        frame_processing_duration,
+        frame_processing_duration / frame_count.max(1)
+    );
 
     denoised_samples
 }

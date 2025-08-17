@@ -41,6 +41,7 @@ type PersonalizationSettings = {
   smartFormatting: boolean;
   autoAddToDictionary: boolean;
   autoPasteOnCompletion: boolean;
+  preventPasteNewlines: boolean;
 };
 
 export type OnboardingSettings = {
@@ -148,6 +149,7 @@ const defaultSettings: AppSettings = {
     smartFormatting: true,
     autoAddToDictionary: true,
     autoPasteOnCompletion: true,
+    preventPasteNewlines: false,
   },
   models: {
     selectedTier: 'cloud',

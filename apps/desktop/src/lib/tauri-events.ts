@@ -13,6 +13,7 @@ import type {
 } from '~/types/events';
 
 import { TranscriptionTracker } from './analytics/posthog-analytics';
+import { performanceTracker } from './performance-tracker';
 
 let initialized = false;
 let initializationId: string | null = null;
@@ -156,6 +157,11 @@ export async function initializeTauriEvents(
 
       store.setTranscriptionProgress(payload.status, payload.data, metadata);
 
+      // Mark transcription completion for performance tracking
+      if (payload.status === 'Complete') {
+        performanceTracker.markPhase('transcriptionCompleteTime');
+      }
+
       // Only handle completion business logic in main window
       if (!options.isGeckoBar && payload.status === 'Complete') {
         log.info(
@@ -200,6 +206,35 @@ export async function initializeTauriEvents(
       const payload = event.payload as AudioLevelEvent;
       // Emit to any components that need real-time audio levels
       window.dispatchEvent(new CustomEvent('audio-level', { detail: payload }));
+    });
+
+    // Listen for performance tracking events
+    await listen('end-to-end-performance-start', (event) => {
+      // This is the true start - when audio processing begins in Rust
+      const audioMetadata = event.payload as {
+        samplesLength: number;
+        durationSeconds: number;
+        sampleRate: number;
+      };
+
+      log.info(
+        '[PERF] Starting TRUE end-to-end performance tracking from audio processing start'
+      );
+      performanceTracker.startSession(audioMetadata);
+    });
+
+    await listen('audio-processing-complete', () => {
+      // Only mark if we have an active session
+      if (performanceTracker.isSessionActive()) {
+        performanceTracker.markPhase('audioProcessingTime');
+      }
+    });
+
+    await listen('transcription-start', () => {
+      // Only mark if we have an active session
+      if (performanceTracker.isSessionActive()) {
+        performanceTracker.markPhase('transcriptionStartTime');
+      }
     });
 
     log.info('[TauriEvents] ✅ Tauri event listeners initialized successfully');
