@@ -2,7 +2,7 @@ import { log } from '@acme/observability/log';
 import { useRouter } from '@tanstack/react-router';
 import { isRegistered, register } from '@tauri-apps/plugin-deep-link';
 import { openUrl } from '@tauri-apps/plugin-opener';
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 
 import { authClient } from '~/lib/client';
 import { useSession } from './auth';
@@ -26,33 +26,34 @@ export const useAuth = () => {
     query: { isPending, error },
   } = useSession();
 
-  log.info('useAuth', session, isPending, error);
-
   useEffect(() => {
     if (error) {
       log.error('Auth error', error);
     }
   }, [error]);
 
-  return {
-    isAuthenticated: !!session?.user,
-    isLoading: isPending,
-    user: session?.user ?? null,
-    error,
-    // Simple auth state determination
-    getAuthState: () => {
-      if (isPending) {
-        return 'loading';
-      }
-      if (error) {
-        return 'error';
-      }
-      if (!session?.user) {
-        return 'unauthenticated';
-      }
-      return 'authenticated';
-    },
-  };
+  return useMemo(
+    () => ({
+      isAuthenticated: !!session?.user,
+      isLoading: isPending,
+      user: session?.user ?? null,
+      error,
+      // Simple auth state determination
+      getAuthState: () => {
+        if (isPending) {
+          return 'loading';
+        }
+        if (error) {
+          return 'error';
+        }
+        if (!session?.user) {
+          return 'unauthenticated';
+        }
+        return 'authenticated';
+      },
+    }),
+    [session?.user, isPending, error]
+  );
 };
 
 export const useSignIn = () => {

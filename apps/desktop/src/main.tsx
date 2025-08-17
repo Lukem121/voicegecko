@@ -14,6 +14,7 @@ import { AppLauncher } from '~/components/app-launcher';
 import { FullscreenDetector } from '~/components/fullscreen-detector';
 import { GeckoBarApp } from '~/components/gecko-bar/gecko-bar-app';
 import { useAuthWithConnectivity } from '~/hooks/use-auth-with-connectivity';
+import { appLifecycle } from '~/lib/app-lifecycle';
 import { isGeckoBarWindow } from '~/lib/window-detection';
 import { routeTree } from '~/routeTree.gen';
 import { useSettingsStore } from '~/stores/settings.store';
@@ -159,6 +160,21 @@ function App() {
   return <InnerApp />;
 }
 
+// Initialize core systems BEFORE React starts (but not updates - that needs UI)
+async function initializeApp() {
+  try {
+    log.info('[Main] 🚀 Starting core systems initialization...');
+
+    // Initialize core systems (but NOT updates - those need UI feedback)
+    await appLifecycle.initializeCoreSystemsOnce();
+
+    log.info('[Main] ✅ Core systems initialization complete');
+  } catch (error) {
+    log.error('[Main] ❌ Core systems initialization failed:', error);
+    // Continue with React startup even if initialization fails
+  }
+}
+
 // Render the app
 const rootElement = document.getElementById('root');
 
@@ -167,16 +183,39 @@ if (!rootElement) {
 }
 
 if (!rootElement.innerHTML) {
-  const root = ReactDOM.createRoot(rootElement);
-  root.render(
-    <StrictMode>
-      <TRPCReactProvider>
-        <PostHogProvider>
-          <ThemeProvider>
-            <App />
-          </ThemeProvider>
-        </PostHogProvider>
-      </TRPCReactProvider>
-    </StrictMode>
-  );
+  // Run app initialization, then start React
+  initializeApp()
+    .then(() => {
+      log.info('[Main] 🎨 Starting React application...');
+
+      const root = ReactDOM.createRoot(rootElement);
+      root.render(
+        <StrictMode>
+          <TRPCReactProvider>
+            <PostHogProvider>
+              <ThemeProvider>
+                <App />
+              </ThemeProvider>
+            </PostHogProvider>
+          </TRPCReactProvider>
+        </StrictMode>
+      );
+    })
+    .catch((error) => {
+      log.error('[Main] Failed to initialize app:', error);
+
+      // Still start React even if initialization fails
+      const root = ReactDOM.createRoot(rootElement);
+      root.render(
+        <StrictMode>
+          <TRPCReactProvider>
+            <PostHogProvider>
+              <ThemeProvider>
+                <App />
+              </ThemeProvider>
+            </PostHogProvider>
+          </TRPCReactProvider>
+        </StrictMode>
+      );
+    });
 }

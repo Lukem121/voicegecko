@@ -1,83 +1,364 @@
+/** biome-ignore-all lint/style/useReadonlyClassProperties: it is? */
 import { log } from '@acme/observability/log';
-import { exit } from '@tauri-apps/plugin-process';
+import { invoke } from '@tauri-apps/api/core';
+import { relaunch } from '@tauri-apps/plugin-process';
+import { check } from '@tauri-apps/plugin-updater';
 
+import { dictionaryService } from '~/services/dictionary.service';
 import { storeRegistry } from '~/stores/store-registry';
+import { setInitializationFlag } from '~/trpc';
+import { analytics } from './analytics/posthog-analytics';
+import { initializeTauriEvents } from './tauri-events';
 
-export type AppState = 'initializing' | 'ready' | 'shutting_down' | 'error';
+export type UpdateStatus =
+  | 'idle'
+  | 'checking'
+  | 'downloading'
+  | 'installing'
+  | 'ready-to-relaunch'
+  | 'no-update'
+  | 'error';
 
-export const AppState = {
-  INITIALIZING: 'initializing' as const,
-  READY: 'ready' as const,
-  SHUTTING_DOWN: 'shutting_down' as const,
-  ERROR: 'error' as const,
-} as const;
+export type UpdateProgressCallback = (progress: number) => void;
+export type UpdateStatusCallback = (status: string) => void;
 
+/**
+ * Global app lifecycle manager
+ * Handles app-wide concerns that should happen once, not per React component
+ */
 class AppLifecycleManager {
   private static instance: AppLifecycleManager;
-  private state: AppState = AppState.INITIALIZING;
-  private readonly listeners = new Set<(state: AppState) => void>();
+  private hasCheckedForUpdates = false;
+  private isInitialized = false;
+  private updateStatus: UpdateStatus = 'idle';
+  private updateProgress = 0;
+  private readonly statusCallbacks: Set<UpdateStatusCallback> = new Set();
+  private readonly progressCallbacks: Set<UpdateProgressCallback> = new Set();
+  private updatePromise: Promise<void> | null = null;
 
   private constructor() {}
 
   static getInstance(): AppLifecycleManager {
-    AppLifecycleManager.instance ??= new AppLifecycleManager();
+    if (!AppLifecycleManager.instance) {
+      AppLifecycleManager.instance = new AppLifecycleManager();
+    }
     return AppLifecycleManager.instance;
   }
 
-  getState(): AppState {
-    return this.state;
+  /**
+   * Subscribe to update status changes (for UI components)
+   */
+  onUpdateStatus(callback: UpdateStatusCallback): () => void {
+    this.statusCallbacks.add(callback);
+    // Immediately notify with current status
+    callback(this.getStatusMessage());
+
+    // Return unsubscribe function
+    return () => {
+      this.statusCallbacks.delete(callback);
+    };
   }
 
-  subscribe(listener: (state: AppState) => void): () => void {
-    this.listeners.add(listener);
-    return () => this.listeners.delete(listener);
+  /**
+   * Subscribe to update progress changes (for UI components)
+   */
+  onUpdateProgress(callback: UpdateProgressCallback): () => void {
+    this.progressCallbacks.add(callback);
+    // Immediately notify with current progress
+    callback(this.updateProgress);
+
+    // Return unsubscribe function
+    return () => {
+      this.progressCallbacks.delete(callback);
+    };
   }
 
-  private setState(state: AppState): void {
-    this.state = state;
-    for (const listener of this.listeners) {
-      listener(state);
+  /**
+   * Get current update status
+   */
+  getUpdateStatus(): UpdateStatus {
+    return this.updateStatus;
+  }
+
+  /**
+   * Get current update progress (0-100)
+   */
+  getUpdateProgress(): number {
+    return this.updateProgress;
+  }
+
+  /**
+   * Check if an update operation is currently in progress
+   */
+  isUpdating(): boolean {
+    return (
+      this.updateStatus !== 'idle' &&
+      this.updateStatus !== 'no-update' &&
+      this.updateStatus !== 'error'
+    );
+  }
+
+  /**
+   * Get user-friendly status message
+   */
+  private getStatusMessage(): string {
+    switch (this.updateStatus) {
+      case 'checking':
+        return 'Checking for updates...';
+      case 'downloading':
+        return `Downloading update... ${this.updateProgress}%`;
+      case 'installing':
+        return 'Installing update...';
+      case 'ready-to-relaunch':
+        return 'Update ready, relaunching...';
+      case 'error':
+        return 'Update failed';
+      case 'no-update':
+        return 'No updates available';
+      default:
+        return '';
     }
   }
 
-  async startup(): Promise<void> {
-    try {
-      this.setState(AppState.INITIALIZING);
+  /**
+   * Notify all status subscribers
+   */
+  private notifyStatusChange(status: UpdateStatus): void {
+    this.updateStatus = status;
+    const message = this.getStatusMessage();
+    for (const callback of this.statusCallbacks) {
+      callback(message);
+    }
+  }
 
-      // Initialize all stores
+  /**
+   * Notify all progress subscribers
+   */
+  private notifyProgressChange(progress: number): void {
+    this.updateProgress = progress;
+    for (const callback of this.progressCallbacks) {
+      callback(progress);
+    }
+    // Also notify status change to update the progress in status message
+    this.notifyStatusChange(this.updateStatus);
+  }
+
+  /**
+   * Check for updates ONCE when the app starts
+   * Multiple calls to this method will return the same promise
+   */
+  async checkForUpdatesOnce(): Promise<void> {
+    // If already checking, return the existing promise
+    if (this.updatePromise) {
+      log.info(
+        '[AppLifecycle] ✅ Update check already in progress, returning existing promise'
+      );
+      return this.updatePromise;
+    }
+
+    // If already checked, return immediately with current status
+    if (this.hasCheckedForUpdates) {
+      log.info('[AppLifecycle] ✅ Updates already checked');
+      return;
+    }
+
+    // Create and store the promise for this update check
+    this.updatePromise = this.performUpdateCheck();
+
+    try {
+      await this.updatePromise;
+    } finally {
+      // Clear the promise when done (success or failure)
+      this.updatePromise = null;
+    }
+  }
+
+  /**
+   * Perform the actual update check - only called once
+   */
+  private async performUpdateCheck(): Promise<void> {
+    this.hasCheckedForUpdates = true;
+
+    try {
+      log.info('[AppLifecycle] 🔍 Performing one-time update check...');
+      this.notifyStatusChange('checking');
+
+      const update = await check();
+      if (!update) {
+        log.info('[AppLifecycle] ✅ No updates available');
+        this.notifyStatusChange('no-update');
+        return;
+      }
+
+      log.info('[AppLifecycle] 🎉 Update available:', update.version);
+      this.notifyStatusChange('downloading');
+
+      let downloaded = 0;
+      let contentLength = 0;
+
+      await update.downloadAndInstall((event) => {
+        const progress =
+          contentLength > 0
+            ? Math.round((downloaded / contentLength) * 100)
+            : 0;
+
+        switch (event.event) {
+          case 'Started':
+            log.info('[AppLifecycle] 📥 Download started');
+            contentLength = event.data.contentLength ?? 0;
+            this.notifyProgressChange(0);
+            break;
+          case 'Progress':
+            downloaded += event.data.chunkLength;
+            this.notifyProgressChange(progress);
+            // Only log major progress milestones to avoid spam
+            if (progress % 25 === 0 || progress === 100) {
+              log.info(`[AppLifecycle] 📊 Download progress: ${progress}%`);
+            }
+            break;
+          case 'Finished':
+            log.info('[AppLifecycle] ✅ Download finished');
+            this.notifyStatusChange('installing');
+            break;
+          default:
+            break;
+        }
+      });
+
+      log.info('[AppLifecycle] 🔄 Update installed, relaunching app...');
+      this.notifyStatusChange('ready-to-relaunch');
+      await relaunch();
+    } catch (error) {
+      // Don't throw - app should continue even if updates fail
+      log.error('[AppLifecycle] ❌ Update check failed:', error);
+      this.notifyStatusChange('error');
+      log.info('[AppLifecycle] 🚀 Continuing with app startup...');
+    }
+  }
+
+  /**
+   * Initialize core app systems ONCE
+   * This runs independently of React but can be called safely multiple times
+   */
+  async initializeCoreSystemsOnce(): Promise<void> {
+    if (this.isInitialized) {
+      log.info('[AppLifecycle] ✅ Core systems already initialized, skipping');
+      return;
+    }
+
+    const startTime = Date.now();
+    log.info('[AppLifecycle] 🚀 Initializing core systems...');
+
+    try {
+      // Set initialization flag to prevent 401 logout during startup
+      setInitializationFlag(true);
+
+      // Synchronize models to detect bundled models
+      log.info('[AppLifecycle] 🔧 Synchronizing models...');
+      await invoke('synchronize_models');
+
+      // Check and clean up any partial downloads from previous sessions
+      try {
+        const partialFiles = await invoke<string[]>(
+          'check_and_fix_partial_downloads'
+        );
+        if (partialFiles.length > 0) {
+          log.info(
+            '[AppLifecycle] 🧹 Cleaned up partial downloads:',
+            partialFiles
+          );
+        }
+      } catch (error) {
+        log.warn('[AppLifecycle] Failed to check partial downloads:', error);
+      }
+
+      // Initialize stores
+      log.info('[AppLifecycle] 🗄️ Initializing stores...');
       await storeRegistry.initializeAll();
 
-      // Any other startup tasks can go here
+      // Initialize Tauri event listeners
+      log.info('[AppLifecycle] 📡 Initializing event listeners...');
+      await initializeTauriEvents();
 
-      this.setState(AppState.READY);
+      this.isInitialized = true;
+      log.info('[AppLifecycle] ✅ Core systems initialized successfully');
+
+      // Track successful app startup
+      const startupTime = (Date.now() - startTime) / 1000;
+      analytics.track('app_startup', {
+        startup_time_seconds: startupTime,
+        initialization_steps: [
+          'model_sync',
+          'cleanup_check',
+          'store_init',
+          'event_listeners',
+        ],
+        models_synchronized: true,
+        auto_update_available: false,
+      });
+
+      // Clear initialization flag - now 401 errors should trigger logout
+      setInitializationFlag(false);
+
+      // Post-initialization optimizations (non-blocking)
+      this.runPostInitializationTasks().catch((error) => {
+        log.warn('[AppLifecycle] Post-initialization tasks failed:', error);
+      });
     } catch (error) {
-      log.error('[AppLifecycle] Startup failed:', error);
-      this.setState(AppState.ERROR);
+      log.error('[AppLifecycle] ❌ Failed to initialize core systems:', error);
+
+      // Clear initialization flag even on failure
+      setInitializationFlag(false);
+
+      // Track initialization failure
+      analytics.track('error_occurred', {
+        error_type: 'app_initialization',
+        error_message:
+          error instanceof Error
+            ? error.message
+            : 'Unknown initialization error',
+        component: 'AppLifecycleManager',
+        user_action: 'app_startup',
+      });
+
       throw error;
     }
   }
 
-  async shutdown(): Promise<void> {
+  /**
+   * Run non-critical post-initialization tasks
+   */
+  private async runPostInitializationTasks(): Promise<void> {
+    // Prefetch dictionary prompt for faster transcriptions
     try {
-      this.setState(AppState.SHUTTING_DOWN);
-
-      // Cleanup tasks
-      // - Save any pending data
-      // - Unregister global shortcuts
-      // - Close database connections
-      // - etc.
-
-      await exit(0);
+      await dictionaryService.prefetchDictionaryPrompt();
+      log.info('[AppLifecycle] Dictionary prompt prefetched successfully');
     } catch (error) {
-      log.error('[AppLifecycle] Shutdown error:', error);
-      throw error;
+      log.warn('[AppLifecycle] Failed to prefetch dictionary prompt:', error);
     }
-  }
 
-  async restart(): Promise<void> {
-    await this.shutdown();
-    // Tauri will handle the actual restart
+    // Trigger automatic download of recommended model (non-blocking)
+    setTimeout(() => {
+      const downloadId = `${Date.now()}-${Math.random()}`;
+      log.info(
+        `[AppLifecycle] Starting auto-download check (ID: ${downloadId})`
+      );
+
+      invoke('auto_download_recommended_model')
+        .then(() => {
+          log.info(
+            `[AppLifecycle] Auto-download check completed (ID: ${downloadId})`
+          );
+        })
+        .catch((error) => {
+          log.error(
+            `[AppLifecycle] Failed to auto-download recommended model (ID: ${downloadId}):`,
+            error
+          );
+        });
+    }, 1000);
   }
 }
 
+// Export singleton instance
 export const appLifecycle = AppLifecycleManager.getInstance();
