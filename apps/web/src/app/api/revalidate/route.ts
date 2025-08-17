@@ -88,7 +88,7 @@ export async function POST(request: NextRequest) {
           revalidated: false,
           now: Date.now(),
           error: 'Invalid request format',
-          details: validationResult.error.errors,
+          details: validationResult.error,
         },
         { status: 400 }
       );
