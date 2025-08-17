@@ -37,7 +37,7 @@ export default async function DownloadPage() {
     <div className="bg-background">
       <SectionWrapper className="py-2 md:py-10" useXPadding={false}>
         {/* Main Content */}
-        <div className="relative z-10 w-full rounded-3xl bg-[#F9F8F6] p-4 md:p-12 lg:p-16 dark:bg-gray-900/80">
+        <div className="relative z-10 w-full rounded-3xl bg-[#F9F8F6] p-4 md:p-12 lg:p-16 dark:bg-zinc-900">
           {/* Background Gradient */}
           <div
             className="-inset-x-40 -top-16 pointer-events-none absolute bottom-[-8rem] rounded-[4rem] blur-3xl"

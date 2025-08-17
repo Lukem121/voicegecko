@@ -4,8 +4,11 @@ import { ThemeToggle } from '@acme/ui/components/ui/theme';
 import { cn } from '@acme/ui/lib/utils';
 import { motion } from 'motion/react';
 import Link from 'next/link';
+import type { IconType } from 'react-icons';
+import { SiDiscord } from 'react-icons/si';
 import { TbBolt, TbCalendarTime, TbGauge, TbLock } from 'react-icons/tb';
 import { CurrencySelector } from '~/providers/currency';
+import { APP_ROUTES } from '~/utils/app-routes';
 import SectionWrapper from './section-wrapper';
 import LogoOnlyHead from './svgs/logo-only-head';
 
@@ -29,7 +32,54 @@ const mobileBenefits = [
   { text: 'Type less, say more.', icon: 'logo' as const },
 ];
 
-const productLinks = ['Download', 'About Us', 'Careers'];
+// Footer sections with actual pages that exist
+interface FooterLink {
+  name: string;
+  href: string;
+  icon?: IconType;
+  openInNewTab?: boolean;
+}
+
+interface FooterSection {
+  title: string;
+  links: FooterLink[];
+}
+
+const footerSections: FooterSection[] = [
+  {
+    title: 'Product',
+    links: [
+      { name: 'Download', href: APP_ROUTES.MARKETING.DOWNLOAD },
+      { name: 'Pricing', href: APP_ROUTES.MARKETING.PRICING },
+    ],
+  },
+  {
+    title: 'Support',
+    links: [
+      { name: 'Contact', href: 'mailto:hello@ipflare.io' },
+      { name: 'Sales', href: 'mailto:hello@ipflare.io' },
+      { name: 'Careers', href: 'mailto:hello@ipflare.io' },
+    ],
+  },
+  {
+    title: 'Legal',
+    links: [
+      { name: 'Terms', href: APP_ROUTES.LEGAL.TERMS },
+      { name: 'Privacy', href: APP_ROUTES.LEGAL.PRIVACY },
+    ],
+  },
+  {
+    title: 'Socials',
+    links: [
+      {
+        name: 'Discord',
+        href: 'https://discord.gg/BFxNQCzZjB',
+        icon: SiDiscord,
+        openInNewTab: true,
+      },
+    ],
+  },
+];
 
 export default function Footer() {
   return (
@@ -80,34 +130,39 @@ export default function Footer() {
           </div>
         </motion.div>
 
-        {/* Product Columns */}
+        {/* Footer Sections */}
         <motion.div
           animate={{ opacity: 1, y: 0 }}
-          className="grid grid-cols-2 gap-8 px-4 md:grid-cols-3 md:px-6 lg:grid-cols-5 lg:px-12"
+          className="grid grid-cols-2 gap-8 px-4 md:grid-cols-4 md:px-6 lg:px-12"
           initial={{ opacity: 0, y: 20 }}
           transition={{ duration: 0.6, delay: 0.2 }}
         >
-          {Array.from({ length: 5 }, (_, colIndex) => colIndex).map(
-            (colIndex) => (
-              <div className="space-y-4" key={`column-${colIndex}`}>
-                <h3 className="font-semibold text-gray-900 text-sm dark:text-white">
-                  Product
-                </h3>
-                <ul className="space-y-3">
-                  {productLinks.map((link) => (
-                    <li key={`${colIndex}-${link}`}>
-                      <Link
-                        className="text-gray-600 text-sm transition-colors hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
-                        href={'/'}
-                      >
-                        {link}
-                      </Link>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )
-          )}
+          {footerSections.map((section) => (
+            <div className="space-y-4" key={section.title}>
+              <h3 className="font-semibold text-gray-900 text-sm dark:text-white">
+                {section.title}
+              </h3>
+              <ul className="space-y-3">
+                {section.links.map((link) => (
+                  <li key={link.name}>
+                    <Link
+                      className="flex items-center gap-2 text-gray-600 text-sm transition-colors hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
+                      href={link.href}
+                      {...(link.openInNewTab && {
+                        target: '_blank',
+                        rel: 'noopener noreferrer',
+                      })}
+                    >
+                      {link.icon && (
+                        <link.icon className="h-4 w-4 flex-shrink-0" />
+                      )}
+                      {link.name}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
         </motion.div>
 
         {/* Bottom Bar */}
@@ -129,17 +184,17 @@ export default function Footer() {
           <div className="flex flex-col gap-4 md:hidden">
             {/* Links row */}
             <div className="flex flex-wrap items-center justify-center gap-4">
-              {['Security', 'Privacy', 'Terms', 'Cookie Preferences'].map(
-                (link) => (
-                  <Link
-                    className="font-medium text-gray-600 text-xs transition-colors hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
-                    href={'/'}
-                    key={link}
-                  >
-                    {link}
-                  </Link>
-                )
-              )}
+              {[
+                { name: 'Security', href: APP_ROUTES.LEGAL.SECURITY_POLICY },
+              ].map((link) => (
+                <Link
+                  className="font-medium text-gray-600 text-xs transition-colors hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
+                  href={link.href}
+                  key={link.name}
+                >
+                  {link.name}
+                </Link>
+              ))}
             </div>
 
             {/* Copyright row */}
@@ -160,17 +215,17 @@ export default function Footer() {
 
             {/* Right side - Links */}
             <div className="flex items-center gap-6">
-              {['Security', 'Privacy', 'Terms', 'Cookie Preferences'].map(
-                (link) => (
-                  <Link
-                    className="font-medium text-gray-600 text-xs transition-colors hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
-                    href={'/'}
-                    key={link}
-                  >
-                    {link}
-                  </Link>
-                )
-              )}
+              {[
+                { name: 'Security', href: APP_ROUTES.LEGAL.SECURITY_POLICY },
+              ].map((link) => (
+                <Link
+                  className="font-medium text-gray-600 text-xs transition-colors hover:text-gray-900 dark:text-gray-400 dark:hover:text-white"
+                  href={link.href}
+                  key={link.name}
+                >
+                  {link.name}
+                </Link>
+              ))}
             </div>
           </div>
         </motion.div>
