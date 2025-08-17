@@ -1,11 +1,11 @@
-import { log } from '@acme/observability';
+import { log } from '@acme/observability/log';
 import { invoke } from '@tauri-apps/api/core';
 import { useCallback, useEffect, useState } from 'react';
 
-interface GeckoBarConfig {
+type GeckoBarConfig = {
   enabled: boolean;
   hideOnFullscreen: boolean | undefined; // Whether to hide gecko bar when fullscreen apps are detected
-}
+};
 
 export function useGeckoBarSettings() {
   const [config, setConfig] = useState<GeckoBarConfig>({

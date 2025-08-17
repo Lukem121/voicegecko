@@ -1,4 +1,4 @@
-import { log } from '@acme/observability';
+import { log } from '@acme/observability/log';
 import { useEffect, useRef } from 'react';
 
 import { useSession } from './auth';
@@ -40,7 +40,9 @@ export function useAuthWithConnectivity() {
   }, [connectivity.diagnosis, query]);
 
   const getAuthIssueType = () => {
-    if (auth.isLoading) { return 'loading'; }
+    if (auth.isLoading) {
+      return 'loading';
+    }
 
     // Only show connectivity error for actual internet issues, not just API down
     // API down should not block the entire UI when user is already authenticated
@@ -48,8 +50,12 @@ export function useAuthWithConnectivity() {
       return 'connectivity';
     }
 
-    if (auth.error) { return 'auth'; }
-    if (!auth.user) { return 'unauthenticated'; }
+    if (auth.error) {
+      return 'auth';
+    }
+    if (!auth.user) {
+      return 'unauthenticated';
+    }
     return 'authenticated';
   };
 

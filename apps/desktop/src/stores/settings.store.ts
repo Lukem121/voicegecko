@@ -1,4 +1,4 @@
-import { log } from '@acme/observability';
+import { log } from '@acme/observability/log';
 import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
 import { LazyStore } from '@tauri-apps/plugin-store';
@@ -17,35 +17,35 @@ import type {
 } from '~/types/settings';
 
 // Settings types
-interface AudioSettings {
+type AudioSettings = {
   selectedDevice: AudioDevice | null;
   selectedSound: NotificationSound;
   notificationTiming: NotificationTiming;
   notificationVolume: number;
   muteSystemAudio: boolean;
-}
+};
 
-interface GeneralSettings {
+type GeneralSettings = {
   launchOnStartup: boolean;
   showGeckoBar: boolean;
   hideGeckoOnFullscreen: boolean;
-}
+};
 
-interface PrivacySettings {
+type PrivacySettings = {
   usageAnalytics: boolean;
   crashReports: boolean;
-}
+};
 
-interface PersonalizationSettings {
+type PersonalizationSettings = {
   interactionSounds: boolean;
   smartFormatting: boolean;
   autoAddToDictionary: boolean;
   autoPasteOnCompletion: boolean;
-}
+};
 
-export interface OnboardingSettings {
+export type OnboardingSettings = {
   completed: boolean;
-}
+};
 
 // Model types
 export type ModelStatus =
@@ -53,7 +53,7 @@ export type ModelStatus =
   | { Downloading: number }
   | 'Downloaded';
 
-export interface Model {
+export type Model = {
   name: string;
   description: string;
   size: string;
@@ -63,23 +63,23 @@ export interface Model {
   url: string;
   recommended: boolean;
   tier: string;
-}
+};
 
-interface ModelSettings {
+type ModelSettings = {
   selectedTier: string;
   availableModels: Record<string, Model>;
-}
+};
 
-export interface AppSettings {
+export type AppSettings = {
   audio: AudioSettings;
   general: GeneralSettings;
   privacy: PrivacySettings;
   personalization: PersonalizationSettings;
   models: ModelSettings;
   onboarding: OnboardingSettings;
-}
+};
 
-interface SettingsState {
+type SettingsState = {
   // Settings data
   settings: AppSettings;
   audioDevices: AudioDevice[];
@@ -121,7 +121,7 @@ interface SettingsState {
 
   // Onboarding actions
   updateOnboardingCompleted: (completed: boolean) => Promise<void>;
-}
+};
 
 const settingsStore = new LazyStore('settings.json');
 

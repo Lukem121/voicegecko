@@ -1,5 +1,5 @@
 import { sendEmail } from '../lib/send-email';
-import { PaymentFailedTemplate } from '../templates/payment-failed';
+import { renderPaymentFailedTemplate } from '../lib/template-renderer';
 
 type UserWithEmail = {
   email: string;
@@ -28,13 +28,11 @@ export const sendPaymentFailedEmail = async ({
     },
     categories: ['payment_failed'],
     subject: `Payment issue with your ${planName} subscription`,
-    react: (
-      <PaymentFailedTemplate
-        accountUrl={accountUrl}
-        name={user.name}
-        planName={planName}
-        retryPaymentUrl={retryPaymentUrl}
-      />
-    ),
+    react: renderPaymentFailedTemplate({
+      accountUrl,
+      name: user.name,
+      planName,
+      retryPaymentUrl,
+    }),
   });
 };

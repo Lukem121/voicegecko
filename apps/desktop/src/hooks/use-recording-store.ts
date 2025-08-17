@@ -7,11 +7,11 @@ export type NotificationTiming =
   | 'completion_only'
   | 'disabled';
 
-export interface AudioDevice {
+export type AudioDevice = {
   name: string;
-}
+};
 
-interface RecordingSettingsState {
+type RecordingSettingsState = {
   // Audio settings
   devices: AudioDevice[];
   selectedDevice: AudioDevice | null;
@@ -27,7 +27,7 @@ interface RecordingSettingsState {
   setNotificationTiming: (timing: NotificationTiming) => void;
   setVolume: (volume: number) => void;
   setMuteSystemAudio: (mute: boolean) => void;
-}
+};
 
 export const useRecordingStore = create<RecordingSettingsState>((set) => ({
   // Audio settings

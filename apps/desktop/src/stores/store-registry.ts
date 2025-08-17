@@ -1,4 +1,4 @@
-import { log } from '@acme/observability';
+import { log } from '@acme/observability/log';
 import { migrationManager } from '~/lib/settings/migrations/manager';
 import { shortcutManager } from '~/lib/shortcuts/manager';
 import type { ShortcutCategory } from '~/lib/shortcuts/types';
@@ -7,15 +7,15 @@ import { isGeckoBarWindow } from '~/lib/window-detection';
 import { useConnectivityStore } from './connectivity.store';
 import { useSettingsStore } from './settings.store';
 
-export interface StoreInitializer {
+export type StoreInitializer = {
   name: string;
   initialize: () => Promise<void>;
   priority: number; // Lower = earlier initialization
-}
+};
 
 class StoreRegistry {
   private static instance: StoreRegistry;
-  private stores: StoreInitializer[] = [];
+  private readonly stores: StoreInitializer[] = [];
   private initialized = false;
 
   private constructor() {}
@@ -72,7 +72,6 @@ class StoreRegistry {
     for (const store of this.stores) {
       try {
         log.info(`[StoreRegistry] Initializing ${store.name}...`);
-        // biome-ignore lint/nursery/noAwaitInLoop: We need to await in a loop
         await store.initialize();
         log.info(`[StoreRegistry] ✅ ${store.name} initialized`);
       } catch (error) {

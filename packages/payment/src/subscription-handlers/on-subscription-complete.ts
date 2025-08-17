@@ -1,16 +1,16 @@
-import { sendWelcomeProEmail } from '@acme/email';
-import { log } from '@acme/observability';
+import { sendWelcomeProEmail } from '@acme/email/send/welcome-pro';
+import { log } from '@acme/observability/log';
 import type { StripePlan, Subscription } from '@better-auth/stripe';
 import type { Stripe } from 'stripe';
 
 import { getUserForEmail } from './user-lookup';
 
-interface SubscriptionCompleteParams {
+type SubscriptionCompleteParams = {
   event: Stripe.Event;
   subscription: Subscription;
   stripeSubscription: Stripe.Subscription;
   plan: StripePlan;
-}
+};
 
 export const onSubscriptionComplete = async ({
   subscription,

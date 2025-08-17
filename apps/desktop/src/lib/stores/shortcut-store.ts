@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { DEFAULT_SHORTCUTS } from '~/lib/shortcuts/constants';
 import type { ShortcutCategory, ShortcutId } from '~/lib/shortcuts/types';
 
-interface ShortcutStoreState {
+type ShortcutStoreState = {
   categories: ShortcutCategory[];
   isRecording: boolean;
   recordingActionId: ShortcutId | null;
@@ -15,7 +15,7 @@ interface ShortcutStoreState {
   stopRecording: () => void;
   setRegistrationError: (actionId: ShortcutId, message: string | null) => void;
   clearAllRegistrationErrors: () => void;
-}
+};
 
 export const useShortcutStore = create<ShortcutStoreState>((set, get) => ({
   categories: [], // Start with empty array to avoid race conditions

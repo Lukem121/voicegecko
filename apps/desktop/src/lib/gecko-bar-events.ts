@@ -1,4 +1,4 @@
-import { log } from '@acme/observability';
+import { log } from '@acme/observability/log';
 import { listen } from '@tauri-apps/api/event';
 
 import { useGeckoBarNotificationStore } from '~/stores/gecko-bar-notification.store';

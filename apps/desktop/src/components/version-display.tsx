@@ -1,4 +1,4 @@
-import { log } from '@acme/observability';
+import { log } from '@acme/observability/log';
 import { getVersion } from '@tauri-apps/api/app';
 import { useEffect, useState } from 'react';
 

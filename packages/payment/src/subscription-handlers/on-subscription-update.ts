@@ -1,15 +1,15 @@
-import { sendPaymentFailedEmail } from '@acme/email';
-import { log } from '@acme/observability';
+import { sendPaymentFailedEmail } from '@acme/email/send/payment-failed';
+import { log } from '@acme/observability/log';
 import type { Subscription } from '@better-auth/stripe';
 import type { Stripe } from 'stripe';
 
 import { paymentEnv } from '../../env';
 import { getUserForEmail } from './user-lookup';
 
-interface SubscriptionUpdateParams {
+type SubscriptionUpdateParams = {
   event: Stripe.Event;
   subscription: Subscription;
-}
+};
 
 export const onSubscriptionUpdate = async ({
   subscription,

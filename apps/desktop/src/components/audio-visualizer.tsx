@@ -9,20 +9,20 @@ export type VisualizationMode =
   | 'circular'
   | 'voice-reactive';
 
-interface AudioVisualizerProps {
+type AudioVisualizerProps = {
   audioLevel: AudioLevelEvent;
   isRecording: boolean;
   mode?: VisualizationMode;
   size?: 'small' | 'medium' | 'large';
   className?: string;
-}
+};
 
-interface SmoothedAudioData {
+type SmoothedAudioData = {
   levels: number[];
   peaks: number[];
   frequencyBands: number[];
   lastUpdate: number;
-}
+};
 
 export function AudioVisualizer({
   audioLevel,

@@ -68,12 +68,13 @@ export const isButtonEnabled = (
     return false;
   }
 
-  switch (buttonType) {
-    case 'cancel':
-      return isRecording && !isTranscribing && !isTransitioning;
-    case 'finish':
-      return isRecording && !isTranscribing;
-    default:
-      return false;
+  if (buttonType === 'cancel') {
+    return isRecording && !isTranscribing && !isTransitioning;
   }
+
+  if (buttonType === 'finish') {
+    return isRecording && !isTranscribing;
+  }
+
+  return false;
 };

@@ -1,4 +1,4 @@
-import { log } from '@acme/observability';
+import { log } from '@acme/observability/log';
 import { notificationsEnv } from './env';
 
 // Notification types enum for extensibility
@@ -9,12 +9,12 @@ export const DiscordNotificationType = {
 } as const;
 
 // Base interface for all notifications
-interface BaseNotification {
+type BaseNotification = {
   userId?: string;
   additionalContext?: Record<string, unknown>;
   url?: string;
   timestamp?: string;
-}
+};
 
 // Specific notification interfaces
 export interface ErrorReport extends BaseNotification {
@@ -33,7 +33,7 @@ export interface UserSignup extends BaseNotification {
 }
 
 // Discord embed interface
-interface DiscordEmbed {
+type DiscordEmbed = {
   title: string;
   color: number;
   fields: {
@@ -42,10 +42,10 @@ interface DiscordEmbed {
     inline?: boolean;
   }[];
   timestamp?: string;
-}
+};
 
 export class DiscordAdapter {
-  private webhookUrls: Map<
+  private readonly webhookUrls: Map<
     (typeof DiscordNotificationType)[keyof typeof DiscordNotificationType],
     string
   >;

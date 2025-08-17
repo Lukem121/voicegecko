@@ -1,6 +1,6 @@
 import { cn } from '@acme/ui/lib/utils';
 
-interface SectionHeaderProps {
+type SectionHeaderProps = {
   eyebrow: string;
   heading: string;
   description: string;
@@ -8,7 +8,7 @@ interface SectionHeaderProps {
   descriptionWidth?: 'normal' | 'wide';
   cta?: React.ReactNode;
   className?: string;
-}
+};
 
 export default function SectionHeader({
   eyebrow,

@@ -1,14 +1,14 @@
-import { DiscordAdapter } from '@acme/notifications';
+import { DiscordAdapter } from '@acme/notifications/discord-adapter';
 import { createAuthMiddleware } from 'better-auth/plugins';
 
 import { isObjectWithBody } from '../utils/is-object-with-body';
 
 const _discordAdapter = new DiscordAdapter();
 
-interface BannedUserError {
+type BannedUserError = {
   code: 'BANNED_USER';
   message: string;
-}
+};
 function isBannedUserError(value: unknown): value is BannedUserError {
   return (
     typeof value === 'object' &&

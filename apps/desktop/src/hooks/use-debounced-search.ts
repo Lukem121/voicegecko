@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 
-export interface UseSearchParams {
+export type UseSearchParams = {
   initialValue?: string;
   delay?: number;
-}
+};
 
 export const useDebouncedSearch = ({
   initialValue = '',

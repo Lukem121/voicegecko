@@ -95,23 +95,23 @@ function AuthenticatedLayout() {
   // Render the authenticated content with sidebar
   return (
     <SidebarProvider>
-        <TitleBar />
-        <AppSidebar />
-        <SidebarInset className="!ml-0 !shadow-none pt-8">
-          {/* Show connectivity indicator only for serious internet issues */}
-          <div className="absolute top-10 right-4 z-50">
-            <ConnectivityIndicator
-              diagnosis={auth.connectivity.diagnosis}
-              isApiReachable={auth.connectivity.isApiReachable}
-              isChecking={auth.connectivity.isChecking}
-              isOnline={auth.connectivity.isOnline}
-              lastChecked={auth.connectivity.lastSuccessfulCheck}
-            />
-          </div>
-          <div className="flex flex-1 flex-col gap-4 p-4">
-            <Outlet />
-          </div>
-        </SidebarInset>
-      </SidebarProvider>
+      <TitleBar />
+      <AppSidebar />
+      <SidebarInset className="!ml-0 !shadow-none pt-8">
+        {/* Show connectivity indicator only for serious internet issues */}
+        <div className="absolute top-10 right-4 z-50">
+          <ConnectivityIndicator
+            diagnosis={auth.connectivity.diagnosis}
+            isApiReachable={auth.connectivity.isApiReachable}
+            isChecking={auth.connectivity.isChecking}
+            isOnline={auth.connectivity.isOnline}
+            lastChecked={auth.connectivity.lastSuccessfulCheck}
+          />
+        </div>
+        <div className="flex flex-1 flex-col gap-4 p-4">
+          <Outlet />
+        </div>
+      </SidebarInset>
+    </SidebarProvider>
   );
 }

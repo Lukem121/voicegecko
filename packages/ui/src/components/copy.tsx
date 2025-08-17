@@ -1,13 +1,13 @@
 'use client';
 
+import { log } from '@acme/observability/log';
 import { Button } from '@acme/ui/components/ui/button';
-import { log } from '@acme/observability';
 import {
-Tooltip,
+  Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from '@acme/ui/components/ui/tooltip'
+} from '@acme/ui/components/ui/tooltip';
 
 import { cn } from '@acme/ui/lib/utils';
 import { CheckIcon, CopyIcon } from 'lucide-react';

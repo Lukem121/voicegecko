@@ -1,4 +1,4 @@
-export interface HardwareInfo {
+export type HardwareInfo = {
   cpu_count: number;
   cpu_frequency: number;
   total_memory: number;
@@ -9,7 +9,7 @@ export interface HardwareInfo {
   has_avx2: boolean;
   capability_score: number;
   recommended_tier: ModelTier;
-}
+};
 
 export type ModelTier =
   | 'cloud'
@@ -18,13 +18,13 @@ export type ModelTier =
   | 'quality'
   | 'maximum';
 
-export interface TierDisplayInfo {
+export type TierDisplayInfo = {
   name: string;
   description: string;
   icon: string;
   min_ram_gb: number;
   typical_model_size_mb: number;
-}
+};
 
 export const tierDisplayInfo: Record<ModelTier, TierDisplayInfo> = {
   cloud: {

@@ -1,5 +1,5 @@
-import { sendWelcomeEmail } from '@acme/email';
-import { DiscordAdapter } from '@acme/notifications';
+import { sendWelcomeEmail } from '@acme/email/send/welcome';
+import { DiscordAdapter } from '@acme/notifications/discord-adapter';
 import type { GenericEndpointContext, User } from 'better-auth';
 
 const discordAdapter = new DiscordAdapter();

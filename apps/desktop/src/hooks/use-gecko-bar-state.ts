@@ -1,4 +1,4 @@
-import { log } from '@acme/observability';
+import { log } from '@acme/observability/log';
 import { useCallback, useEffect, useState } from 'react';
 import { TIMINGS } from '~/components/gecko-bar/gecko-bar-app.constants';
 import type {

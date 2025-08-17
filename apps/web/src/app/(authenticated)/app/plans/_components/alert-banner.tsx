@@ -6,13 +6,13 @@ import {
 import { Button } from '@acme/ui/components/ui/button';
 import { AlertTriangle, X } from 'lucide-react';
 
-interface AlertBannerProps {
+type AlertBannerProps = {
   show: boolean;
   variant: 'default' | 'destructive';
   title: string;
   message: string;
   onClose: () => void;
-}
+};
 
 export const AlertBanner = ({
   show,

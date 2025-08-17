@@ -7,7 +7,7 @@ export type NotificationTiming =
   | 'completion_only'
   | 'disabled';
 
-export interface AudioDevice {
+export type AudioDevice = {
   name: string;
   id?: string;
-}
+};

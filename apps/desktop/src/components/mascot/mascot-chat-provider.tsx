@@ -1,6 +1,6 @@
 'use client';
 
-import { log } from '@acme/observability';
+import { log } from '@acme/observability/log';
 import type React from 'react';
 import {
   createContext,
@@ -11,7 +11,7 @@ import {
 } from 'react';
 
 // Types for the chat system
-export interface MascotMessage {
+export type MascotMessage = {
   id: string;
   content: string;
   type: 'info' | 'success' | 'warning' | 'celebration' | 'guidance';
@@ -19,9 +19,9 @@ export interface MascotMessage {
   showTyping?: boolean; // Whether to show typing animation
   priority?: 'low' | 'normal' | 'high'; // Message priority for queue management
   persist?: boolean; // If true, message stays until next message arrives
-}
+};
 
-export interface MascotAnimation {
+export type MascotAnimation = {
   type:
     | 'idle'
     | 'listening'
@@ -32,17 +32,17 @@ export interface MascotAnimation {
     | 'dancing';
   intensity?: 'low' | 'medium' | 'high';
   duration?: number; // Auto-return to idle after this time
-}
+};
 
-export interface MascotState {
+export type MascotState = {
   currentMessage: MascotMessage | null;
   messageQueue: MascotMessage[];
   isTyping: boolean;
   currentAnimation: MascotAnimation;
   isVisible: boolean;
-}
+};
 
-export interface MascotChatContextValue {
+export type MascotChatContextValue = {
   state: MascotState;
   // Message actions
   sendMessage: (message: Omit<MascotMessage, 'id'>) => void;
@@ -60,7 +60,7 @@ export interface MascotChatContextValue {
   showGuidance: (message: string, persist?: boolean) => void;
   showSuccess: (message: string, persist?: boolean) => void;
   showError: (message: string, persist?: boolean) => void;
-}
+};
 
 // Action types for the reducer
 type MascotAction =
@@ -194,11 +194,11 @@ export function useMascotChat(): MascotChatContextValue {
 }
 
 // Provider component
-interface MascotChatProviderProps {
+type MascotChatProviderProps = {
   children: React.ReactNode;
   defaultAnimation?: MascotAnimation;
   autoProcessQueue?: boolean; // Whether to automatically show queued messages
-}
+};
 
 export function MascotChatProvider({
   children,

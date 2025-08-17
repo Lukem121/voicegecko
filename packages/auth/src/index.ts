@@ -1,12 +1,11 @@
 import { db } from '@acme/db/client';
-import { sendResetPasswordEmail, sendVerificationEmail } from '@acme/email';
+import { sendResetPasswordEmail } from '@acme/email/send/reset-password';
+import { sendVerificationEmail } from '@acme/email/send/verification';
 import { stripeClient } from '@acme/payment/stripe';
-import {
-  onSubscriptionCancel,
-  onSubscriptionComplete,
-  onSubscriptionDeleted,
-  onSubscriptionUpdate,
-} from '@acme/payment/subscription-handlers';
+import { onSubscriptionCancel } from '@acme/payment/subscription-handlers/on-subscription-cancel';
+import { onSubscriptionComplete } from '@acme/payment/subscription-handlers/on-subscription-complete';
+import { onSubscriptionDeleted } from '@acme/payment/subscription-handlers/on-subscription-deleted';
+import { onSubscriptionUpdate } from '@acme/payment/subscription-handlers/on-subscription-update';
 import { stripe } from '@better-auth/stripe';
 import { tauri } from '@daveyplate/better-auth-tauri/plugin';
 import { betterAuth } from 'better-auth';

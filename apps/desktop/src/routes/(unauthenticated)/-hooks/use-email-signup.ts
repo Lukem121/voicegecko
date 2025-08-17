@@ -1,24 +1,24 @@
-import type { SignUpSchema } from '@acme/auth/schemas';
-import { log } from '@acme/observability';
+import type { SignUpSchema } from '@acme/auth/schemas/auth';
+import { log } from '@acme/observability/log';
 import { useState } from 'react';
 import type { z } from 'zod/v4';
 
 import { authClient } from '~/lib/client';
 import { getClientAuthErrorMessage } from '~/utils/client-error-messages';
 
-interface UseEmailSignupOptions {
+type UseEmailSignupOptions = {
   callbackURL: string;
   onSuccess?: () => void;
   onError?: (error: string) => void;
-}
+};
 
-interface UseEmailSignupReturn {
+type UseEmailSignupReturn = {
   isLoading: boolean;
   error: string | null;
   signUp: (
     values: z.infer<typeof SignUpSchema>
   ) => Promise<{ success: boolean }>;
-}
+};
 
 export function useEmailSignup({
   callbackURL,

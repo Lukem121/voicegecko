@@ -1,12 +1,12 @@
 import { db } from '@acme/db/client';
 import { user as UserTable } from '@acme/db/schema';
-import { log } from '@acme/observability';
+import { log } from '@acme/observability/log';
 import { eq } from 'drizzle-orm';
 
-export interface UserForEmail {
+export type UserForEmail = {
   email: string;
   name?: string;
-}
+};
 
 /**
  * Fetches user details needed for sending emails

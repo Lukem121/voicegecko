@@ -1,5 +1,5 @@
 import { sendEmail } from '../lib/send-email';
-import { StudentDiscountTemplate } from '../templates/student-discount';
+import { renderStudentDiscountTemplate } from '../lib/template-renderer';
 
 type UserWithEmail = {
   email: string;
@@ -14,7 +14,7 @@ export const sendStudentDiscountEmail = async ({
   user: UserWithEmail;
   couponCode: string;
   discountPercentage: string;
-  redemptionUrl?: string;
+  redemptionUrl: string;
 }) => {
   await sendEmail({
     to: {
@@ -26,12 +26,10 @@ export const sendStudentDiscountEmail = async ({
     },
     categories: ['student_discount'],
     subject: 'VoiceGecko student discount',
-    react: (
-      <StudentDiscountTemplate
-        couponCode={couponCode}
-        discountPercentage={discountPercentage}
-        redemptionUrl={redemptionUrl}
-      />
-    ),
+    react: renderStudentDiscountTemplate({
+      couponCode,
+      discountPercentage,
+      redemptionUrl,
+    }),
   });
 };

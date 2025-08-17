@@ -1,5 +1,5 @@
 import { sendEmail } from '../lib/send-email';
-import LinkTemplate from '../templates/link';
+import { renderResetPasswordTemplate } from '../lib/template-renderer';
 
 type UserWithEmail = {
   name: string;
@@ -24,12 +24,6 @@ export const sendResetPasswordEmail = async ({
     },
     categories: ['reset_password'],
     subject: 'Reset your password',
-    react: (
-      <LinkTemplate
-        description="Your reset password link is below - click it to reset your password. This will redirect you back to VoiceGecko."
-        heading="Reset your password"
-        url={url}
-      />
-    ),
+    react: renderResetPasswordTemplate({ url }),
   });
 };

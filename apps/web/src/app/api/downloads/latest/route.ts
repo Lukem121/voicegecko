@@ -1,4 +1,4 @@
-import { log } from '@acme/observability';
+import { log } from '@acme/observability/log';
 import { NextResponse } from 'next/server';
 
 import { getDownloadsData } from '~/lib/downloads';

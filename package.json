@@ -28,7 +28,7 @@
     "release": "node scripts/release-helper.js"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.2.0",
+    "@biomejs/biome": "catalog:",
     "@turbo/gen": "^2.5.6",
     "glob": "^11.0.3",
     "turbo": "^2.5.6",

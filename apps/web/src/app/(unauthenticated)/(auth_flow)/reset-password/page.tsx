@@ -1,7 +1,7 @@
 'use client';
 
-import { ResetPasswordSchema } from '@acme/auth/schemas';
-import { getAuthErrorMessage } from '@acme/auth/utils';
+import { ResetPasswordSchema } from '@acme/auth/schemas/auth';
+import { getAuthErrorMessage } from '@acme/auth/utils/auth-error-messages';
 import { Button } from '@acme/ui/components/ui/button';
 import {
   Card,

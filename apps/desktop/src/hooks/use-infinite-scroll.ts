@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useRef } from 'react';
 
-export interface UseInfiniteScrollParams {
+export type UseInfiniteScrollParams = {
   hasNextPage: boolean;
   isFetchingNextPage: boolean;
   fetchNextPage: () => void;
   threshold?: number; // Distance from bottom to trigger loading (in pixels)
   rootMargin?: string; // Intersection observer root margin
-}
+};
 
 export const useInfiniteScroll = ({
   hasNextPage,
@@ -30,7 +30,9 @@ export const useInfiniteScroll = ({
 
   useEffect(() => {
     const element = loadMoreRef.current;
-    if (!element) { return; }
+    if (!element) {
+      return;
+    }
 
     const observer = new IntersectionObserver(handleIntersection, {
       rootMargin,
@@ -47,7 +49,9 @@ export const useInfiniteScroll = ({
   // Alternative scroll-based approach as fallback
   useEffect(() => {
     const handleScroll = () => {
-      if (!hasNextPage || isFetchingNextPage || !window.scrollY) { return; }
+      if (!hasNextPage || isFetchingNextPage || !window.scrollY) {
+        return;
+      }
 
       const { scrollTop, scrollHeight, clientHeight } =
         document.documentElement;

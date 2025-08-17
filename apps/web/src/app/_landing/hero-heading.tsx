@@ -1,9 +1,9 @@
 import { cn } from '@acme/ui/lib/utils';
 
-interface HeroHeadingProps {
+type HeroHeadingProps = {
   children: React.ReactNode;
   className?: string;
-}
+};
 
 export default function HeroHeading({ children, className }: HeroHeadingProps) {
   return (

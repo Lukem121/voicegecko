@@ -1,4 +1,4 @@
-import { getAuthErrorMessage } from '@acme/auth/utils';
+import { getAuthErrorMessage } from '@acme/auth/utils/auth-error-messages';
 import {
   Card,
   CardContent,

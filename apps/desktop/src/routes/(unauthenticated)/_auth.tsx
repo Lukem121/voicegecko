@@ -1,4 +1,4 @@
-import { log } from '@acme/observability';
+import { log } from '@acme/observability/log';
 import { createFileRoute, Outlet, useRouter } from '@tanstack/react-router';
 import { useEffect } from 'react';
 

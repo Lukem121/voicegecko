@@ -1,4 +1,4 @@
-import { log } from '@acme/observability';
+import { log } from '@acme/observability/log';
 import { Octokit } from '@octokit/rest';
 import { env } from '~/env';
 import type { GitHubRelease, TauriTarget } from '~/types/updater';
@@ -168,6 +168,3 @@ export async function getDownloadsData(): Promise<DownloadsData> {
   // Process the release data for the downloads page
   return processReleaseForDownloads(release);
 }
-
-// Re-export the client-safe utilities
-export { formatFileSize, getPrimaryDownload } from './downloads-utils';

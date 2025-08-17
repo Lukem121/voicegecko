@@ -4,14 +4,14 @@ import { cn } from '@acme/ui/lib/utils';
 import { useRouter } from 'next/navigation';
 import { useSubscriptionUpgrade } from '~/hooks/use-subscription-upgrade';
 
-export interface UpgradeButtonProps {
+export type UpgradeButtonProps = {
   planType: 'basic' | 'pro';
   isLoggedIn: boolean;
   isAnnual?: boolean;
   highlight?: boolean;
   className?: string;
   children: React.ReactNode;
-}
+};
 
 /**
  * Smart upgrade button that handles different plan types and authentication states

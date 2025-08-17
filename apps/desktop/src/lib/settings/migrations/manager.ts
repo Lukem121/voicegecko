@@ -1,4 +1,4 @@
-import { log } from '@acme/observability';
+import { log } from '@acme/observability/log';
 import { LazyStore } from '@tauri-apps/plugin-store';
 import { CURRENT_SETTINGS_VERSION, getMigrationsToRun } from './registry';
 import type { MigrationResult, VersionedSettings } from './types';
@@ -84,7 +84,6 @@ export class SettingsMigrationManager {
         // Save migrated settings
         await store.clear();
         for (const [key, value] of Object.entries(migratedSettings)) {
-          // biome-ignore lint/nursery/noAwaitInLoop: Sequential processing ensures data integrity for settings
           await store.set(key, value);
         }
         await store.save();

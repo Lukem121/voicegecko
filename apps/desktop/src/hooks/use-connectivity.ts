@@ -1,4 +1,4 @@
-import { log } from '@acme/observability';
+import { log } from '@acme/observability/log';
 import { useEffect, useState } from 'react';
 
 import type { ConnectivityState } from '~/lib/connectivity-manager';

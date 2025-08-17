@@ -1,13 +1,13 @@
 import { cn } from '@acme/ui/lib/utils';
 
-interface SectionWrapperProps {
+type SectionWrapperProps = {
   children: React.ReactNode;
   className?: string;
   containerClassName?: string;
   id?: string;
   useXPadding?: boolean;
   useYPadding?: boolean;
-}
+};
 
 export default function SectionWrapper({
   children,

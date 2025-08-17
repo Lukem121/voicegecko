@@ -1,4 +1,4 @@
-import { log } from '@acme/observability';
+import { log } from '@acme/observability/log';
 import type { ShortcutEvent } from '@tauri-apps/plugin-global-shortcut';
 import {
   register,
@@ -20,7 +20,7 @@ import { acceleratorFromKeys, normalizeKeys } from './utils';
 
 class ShortcutManager {
   private static instance: ShortcutManager | undefined;
-  private store: LazyStore;
+  private readonly store: LazyStore;
   private initialized = false;
 
   private constructor() {
@@ -144,7 +144,6 @@ class ShortcutManager {
     log.info(`[Shortcuts] Registering ${enabledShortcuts.length} shortcuts...`);
     for (const { shortcut, accelerator } of enabledShortcuts) {
       try {
-        // biome-ignore lint/nursery/noAwaitInLoop: Sequential registration prevents shortcut conflicts
         await this.registerSingleShortcut(shortcut, accelerator);
       } catch (error) {
         log.error(

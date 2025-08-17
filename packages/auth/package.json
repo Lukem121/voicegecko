@@ -7,8 +7,10 @@
     ".": "./src/index.ts",
     "./middleware": "./src/middleware.ts",
     "./client": "./src/client.ts",
-    "./schemas": "./src/schemas/index.ts",
-    "./utils": "./src/utils/index.ts",
+    "./schemas/auth": "./src/schemas/auth.schema.ts",
+    "./utils/auth-error-messages": "./src/utils/auth-error-messages.ts",
+    "./utils/get-session": "./src/utils/get-session.ts",
+    "./utils/get-session-cookie": "./src/utils/get-session-cookie.ts",
     "./env": "./env.ts"
   },
   "scripts": {

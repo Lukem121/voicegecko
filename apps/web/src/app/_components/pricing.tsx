@@ -38,7 +38,13 @@ export default function PricingSection({
     planId: string,
     interval: 'monthly' | 'yearly',
     fallback: string
-  ) => getPriceDisplayFor(prices, currency, planId, interval, fallback);
+  ) =>
+    getPriceDisplayFor(prices, {
+      currencyCode: currency,
+      planId,
+      interval,
+      fallback,
+    });
 
   const getYearlyPriceAsMonthly = (planId: string, fallback: string) =>
     getYearlyPriceAsMonthlyFor(prices, currency, planId, fallback);

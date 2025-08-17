@@ -1,9 +1,5 @@
 import { Button } from '@acme/ui/components/ui/button';
-import {
-  ChevronLeft,
-  ChevronRight,
-  ChevronsRight,
-} from 'lucide-react';
+import { ChevronLeft, ChevronRight, ChevronsRight } from 'lucide-react';
 
 import { useOnboarding } from './onboarding-provider';
 

@@ -26,13 +26,13 @@ export const Route = createFileRoute('/(unauthenticated)/_auth/verify-email')({
 const COUNTDOWN_TIME = 30;
 
 // Types
-interface VerificationState {
+type VerificationState = {
   isLoading: boolean;
   resendDisabled: boolean;
   timer: number;
   message: string | null;
   error: string | null;
-}
+};
 
 // Custom hook for verification logic
 const useVerification = (email: string | null, redirect: string) => {

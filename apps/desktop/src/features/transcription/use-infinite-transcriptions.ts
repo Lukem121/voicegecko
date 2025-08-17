@@ -7,12 +7,12 @@ import { analytics } from '~/lib/analytics/posthog-analytics';
 import { trpc } from '~/trpc';
 import { useGetTranscriptions } from './use-get-transcriptions';
 
-export interface UseInfiniteTranscriptionsParams {
+export type UseInfiniteTranscriptionsParams = {
   limit?: number;
   searchDelay?: number;
-}
+};
 
-interface TranscriptionGroup {
+type TranscriptionGroup = {
   date: string;
   items: {
     id: number;
@@ -20,7 +20,7 @@ interface TranscriptionGroup {
     content: string;
     status: 'normal' | 'silent';
   }[];
-}
+};
 
 export const useInfiniteTranscriptions = ({
   limit = 20,
@@ -122,7 +122,9 @@ export const useInfiniteTranscriptions = ({
 
   // Flatten and merge all groups from all pages with stable sorting
   const serverTranscriptions = useMemo(() => {
-    if (!infiniteQuery.data) { return []; }
+    if (!infiniteQuery.data) {
+      return [];
+    }
 
     const allGroups = infiniteQuery.data.pages.flatMap((page) => page.groups);
 

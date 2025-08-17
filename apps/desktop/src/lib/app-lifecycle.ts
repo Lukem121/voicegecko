@@ -1,4 +1,4 @@
-import { log } from '@acme/observability';
+import { log } from '@acme/observability/log';
 import { exit } from '@tauri-apps/plugin-process';
 
 import { storeRegistry } from '~/stores/store-registry';
@@ -15,7 +15,7 @@ export const AppState = {
 class AppLifecycleManager {
   private static instance: AppLifecycleManager;
   private state: AppState = AppState.INITIALIZING;
-  private listeners = new Set<(state: AppState) => void>();
+  private readonly listeners = new Set<(state: AppState) => void>();
 
   private constructor() {}
 

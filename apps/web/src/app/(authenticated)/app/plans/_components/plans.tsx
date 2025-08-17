@@ -1,7 +1,7 @@
 'use client';
 
 import type { PriceWithMetadata } from '@acme/api/src/services/stripe/stripe.service';
-import { log } from '@acme/observability';
+import { log } from '@acme/observability/log';
 import type { Subscription } from '@better-auth/stripe';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
@@ -22,7 +22,7 @@ import { getPriceDisplay, getYearlyPriceAsMonthly } from './utils/price-utils';
 
 type BillingPeriod = 'monthly' | 'annual';
 
-interface PlansProps {
+type PlansProps = {
   prices: Record<string, PriceWithMetadata>;
   subscription: Subscription | null;
   error: {
@@ -31,14 +31,14 @@ interface PlansProps {
     status: number;
     statusText: string;
   } | null;
-}
+};
 
-interface AlertState {
+type AlertState = {
   show: boolean;
   variant: 'default' | 'destructive';
   title: string;
   message: string;
-}
+};
 
 export default function Plans({ prices, subscription, error }: PlansProps) {
   const router = useRouter();
@@ -107,13 +107,12 @@ export default function Plans({ prices, subscription, error }: PlansProps) {
       name: 'Pro',
       id: 'voice gecko pro',
       stripeId: 'voice gecko pro', // This matches the plan name in auth config
-      monthlyPrice: getPriceDisplay(
-        prices,
-        'voice gecko pro',
-        'monthly',
+      monthlyPrice: getPriceDisplay(prices, {
+        planId: 'voice gecko pro',
+        interval: 'monthly',
         currency,
-        '$29'
-      ),
+        fallback: '$29',
+      }),
       yearlyMonthlyPrice: getYearlyPriceAsMonthly(
         prices,
         'voice gecko pro',

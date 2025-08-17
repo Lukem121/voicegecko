@@ -1,12 +1,12 @@
-import { log } from '@acme/observability';
+import { log } from '@acme/observability/log';
 import { invoke } from '@tauri-apps/api/core';
 import { useCallback, useEffect, useState } from 'react';
 
 import { analytics } from '~/lib/analytics/posthog-analytics';
 
-interface AutostartConfig {
+type AutostartConfig = {
   enabled: boolean;
-}
+};
 
 export function useAutostartSettings() {
   const [config, setConfig] = useState<AutostartConfig>({

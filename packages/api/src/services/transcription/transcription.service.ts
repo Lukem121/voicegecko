@@ -1,4 +1,4 @@
-import { log } from '@acme/observability';
+import { log } from '@acme/observability/log';
 import { TRPCError } from '@trpc/server';
 
 import type {
@@ -8,7 +8,7 @@ import type {
 import { transcriptionRepository } from '../../repository/transcription.repository';
 import { countWords } from '../../utils/word-counter';
 
-export interface TranscriptionGroup {
+export type TranscriptionGroup = {
   date: string;
   items: {
     id: number;
@@ -16,20 +16,20 @@ export interface TranscriptionGroup {
     content: string;
     status: 'normal' | 'silent';
   }[];
-}
+};
 
-export interface PaginationParams {
+export type PaginationParams = {
   cursor?: number;
   limit: number;
   search?: string;
-}
+};
 
-export interface PaginatedTranscriptionsResult {
+export type PaginatedTranscriptionsResult = {
   groups: TranscriptionGroup[];
   hasNextPage: boolean;
   nextCursor?: number;
   totalResults?: number;
-}
+};
 
 export class TranscriptionService {
   async createTranscription(data: Omit<CreateTranscriptionData, 'wordCount'>) {

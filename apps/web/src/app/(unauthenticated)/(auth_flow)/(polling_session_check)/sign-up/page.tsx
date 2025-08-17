@@ -1,7 +1,7 @@
 'use client';
 
-import { SignUpSchema } from '@acme/auth/schemas';
-import { getAuthErrorMessage } from '@acme/auth/utils';
+import { SignUpSchema } from '@acme/auth/schemas/auth';
+import { getAuthErrorMessage } from '@acme/auth/utils/auth-error-messages';
 import VoiceGeckoLogo from '@acme/ui/components/logos/logo-full';
 import { Button } from '@acme/ui/components/ui/button';
 import {
@@ -50,9 +50,9 @@ const isUsernameError = (code: string) => {
   return false;
 };
 
-interface LoadingState {
+type LoadingState = {
   email: boolean;
-}
+};
 
 export default function SignUp() {
   const router = useRouter();
