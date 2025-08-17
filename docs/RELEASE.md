@@ -1,6 +1,6 @@
 # Release Process
 
-## Current Version: 0.0.7
+## Current Version: 0.0.8
 
 ## Overview
 
@@ -32,7 +32,7 @@ Before creating a release, the following files must be updated with the new vers
 - [ ] `apps/desktop/package.json` (line 4)
 - [ ] `apps/desktop/src-tauri/Cargo.toml` (line 3)
 - [ ] `apps/desktop/src-tauri/tauri.conf.json` (line 3)
-- [ ] `apps/web/package.json` (line 3) - **Note**: Currently at 0.0.7, needs sync
+- [ ] `apps/web/package.json` (line 3) - **Note**: Currently synced at 0.0.8
 
 ### 2. Automated Version Update (Recommended)
 
@@ -69,16 +69,16 @@ If you prefer manual updates:
 
    ```bash
    # Desktop app package.json
-   # Change line 4: "version": "0.0.7" → "version": "0.0.8"
+   # Change line 4: "version": "0.0.8" → "version": "0.0.8"
 
    # Tauri Cargo.toml
-   # Change line 3: version = "0.0.7" → version = "0.0.8"
+   # Change line 3: version = "0.0.8" → version = "0.0.8"
 
    # Tauri config
-   # Change line 3: "version": "0.0.7" → "version": "0.0.8"
+   # Change line 3: "version": "0.0.8" → "version": "0.0.8"
 
    # Web app package.json (sync with desktop)
-   # Change line 3: "version": "0.0.7" → "version": "0.0.8"
+   # Change line 3: "version": "0.0.8" → "version": "0.0.8"
    ```
 
 3. **Verify all changes**:
