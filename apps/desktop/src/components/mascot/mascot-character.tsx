@@ -7,18 +7,67 @@ import type React from 'react';
 
 import type { MascotAnimation } from './mascot-chat-provider';
 
+// Animation constants
+const ANIMATION_VALUES = {
+  // Rotation values (degrees)
+  ROTATION_SMALL: 3,
+  ROTATION_TINY: 2,
+  ROTATION_MICRO: 1,
+  ROTATION_SUBTLE: 0.5,
+  ROTATION_MEDIUM: 5,
+  ROTATION_LARGE: 8,
+  ROTATION_FULL: 360,
+
+  // Scale values
+  SCALE_SLIGHT: 1.05,
+  SCALE_SMALL: 1.1,
+  SCALE_TINY: 1.02,
+  SCALE_MICRO: 1.01,
+  SCALE_MEDIUM: 1.2,
+  SCALE_DOWN_SLIGHT: 0.95,
+  SCALE_DOWN_TINY: 0.98,
+
+  // Position values (pixels)
+  POSITION_SMALL: 3,
+  POSITION_TINY: 2,
+  POSITION_MEDIUM: 4,
+  POSITION_LARGE: 8,
+
+  // Duration values (seconds)
+  DURATION_SHORT: 1.5,
+  DURATION_MEDIUM: 1.8,
+  DURATION_STANDARD: 2,
+  DURATION_DANCE_COMPOSITE: 2.2,
+  DURATION_LONG: 3,
+  DURATION_EXTENDED: 4,
+
+  // Timing values
+  TIME_EARLY: 0.3,
+  TIME_LATE: 0.7,
+
+  // Opacity values
+  OPACITY_LOW: 0.3,
+  OPACITY_MEDIUM: 0.6,
+
+  // Conversion factor
+  MS_TO_SECONDS: 1000,
+
+  // Filter values
+  BRIGHTNESS_ENHANCED: 1.1,
+} as const;
+
 // Type for mascot component props
-export interface MascotComponentProps {
+export type MascotComponentProps = {
   className?: string;
   style?: React.CSSProperties;
-}
+};
 
 // Type for different mascot variants
-export interface MascotVariant {
+export type MascotVariant = {
   component: React.ComponentType<MascotComponentProps>;
   name: string;
   description?: string;
-}
+};
 
 // Animation configurations for different states
 const getAnimationConfig = (animation: MascotAnimation) => {
@@ -36,25 +85,56 @@ const getAnimationConfig = (animation: MascotAnimation) => {
     case 'welcoming':
       return {
         animate: {
-          rotate: [-3 * multiplier, 3 * multiplier, -3 * multiplier, 0],
-          scale: [1, 1.05 * multiplier, 1, 1],
+          rotate: [
+            -ANIMATION_VALUES.ROTATION_SMALL * multiplier,
+            ANIMATION_VALUES.ROTATION_SMALL * multiplier,
+            -ANIMATION_VALUES.ROTATION_SMALL * multiplier,
+            0,
+          ],
+          scale: [1, ANIMATION_VALUES.SCALE_SLIGHT * multiplier, 1, 1],
         },
         transition: {
-          duration: duration ? duration / 1000 : 2,
+          duration: duration
+            ? duration / ANIMATION_VALUES.MS_TO_SECONDS
+            : ANIMATION_VALUES.DURATION_STANDARD,
           ease: 'easeInOut' as const,
-          times: [0, 0.3, 0.7, 1],
+          times: [
+            0,
+            ANIMATION_VALUES.TIME_EARLY,
+            ANIMATION_VALUES.TIME_LATE,
+            1,
+          ],
         },
       };
 
     case 'celebrating':
       return {
         animate: {
-          y: [0, -8 * multiplier, 0, -4 * multiplier, 0],
-          rotate: [0, 5 * multiplier, -5 * multiplier, 0],
-          scale: [1, 1.1 * multiplier, 0.95, 1.05 * multiplier, 1],
+          y: [
+            0,
+            -ANIMATION_VALUES.POSITION_LARGE * multiplier,
+            0,
+            -ANIMATION_VALUES.POSITION_MEDIUM * multiplier,
+            0,
+          ],
+          rotate: [
+            0,
+            ANIMATION_VALUES.ROTATION_MEDIUM * multiplier,
+            -ANIMATION_VALUES.ROTATION_MEDIUM * multiplier,
+            0,
+          ],
+          scale: [
+            1,
+            ANIMATION_VALUES.SCALE_SMALL * multiplier,
+            ANIMATION_VALUES.SCALE_DOWN_SLIGHT,
+            ANIMATION_VALUES.SCALE_SLIGHT * multiplier,
+            1,
+          ],
         },
         transition: {
-          duration: duration ? duration / 1000 : 1.5,
+          duration: duration
+            ? duration / ANIMATION_VALUES.MS_TO_SECONDS
+            : ANIMATION_VALUES.DURATION_SHORT,
           ease: 'easeInOut' as const,
           repeat: intensity === 'high' ? 2 : 1,
         },
@@ -63,11 +143,25 @@ const getAnimationConfig = (animation: MascotAnimation) => {
     case 'thinking':
       return {
         animate: {
-          rotate: [0, -2 * multiplier, 2 * multiplier, -1 * multiplier, 0],
-          scale: [1, 1.02 * multiplier, 0.98, 1.01 * multiplier, 1],
+          rotate: [
+            0,
+            -ANIMATION_VALUES.ROTATION_TINY * multiplier,
+            ANIMATION_VALUES.ROTATION_TINY * multiplier,
+            -ANIMATION_VALUES.ROTATION_MICRO * multiplier,
+            0,
+          ],
+          scale: [
+            1,
+            ANIMATION_VALUES.SCALE_TINY * multiplier,
+            ANIMATION_VALUES.SCALE_DOWN_TINY,
+            ANIMATION_VALUES.SCALE_MICRO * multiplier,
+            1,
+          ],
         },
         transition: {
-          duration: duration ? duration / 1000 : 3,
+          duration: duration
+            ? duration / ANIMATION_VALUES.MS_TO_SECONDS
+            : ANIMATION_VALUES.DURATION_LONG,
           ease: 'easeInOut' as const,
           repeat: Number.POSITIVE_INFINITY,
           repeatType: 'reverse' as const,
@@ -77,11 +171,18 @@ const getAnimationConfig = (animation: MascotAnimation) => {
     case 'listening':
       return {
         animate: {
-          scale: [1, 1.05 * multiplier, 1],
-          rotate: [0, 1 * multiplier, -1 * multiplier, 0],
+          scale: [1, ANIMATION_VALUES.SCALE_SLIGHT * multiplier, 1],
+          rotate: [
+            0,
+            ANIMATION_VALUES.ROTATION_MICRO * multiplier,
+            -ANIMATION_VALUES.ROTATION_MICRO * multiplier,
+            0,
+          ],
         },
         transition: {
-          duration: duration ? duration / 1000 : 2,
+          duration: duration
+            ? duration / ANIMATION_VALUES.MS_TO_SECONDS
+            : ANIMATION_VALUES.DURATION_STANDARD,
           ease: 'easeInOut' as const,
           repeat: Number.POSITIVE_INFINITY,
           repeatType: 'reverse' as const,
@@ -91,12 +192,14 @@ const getAnimationConfig = (animation: MascotAnimation) => {
     case 'processing':
       return {
         animate: {
-          rotate: [0, 360],
-          scale: [1, 1.1 * multiplier, 1],
+          rotate: [0, ANIMATION_VALUES.ROTATION_FULL],
+          scale: [1, ANIMATION_VALUES.SCALE_SMALL * multiplier, 1],
         },
         transition: {
           rotate: {
-            duration: duration ? duration / 1000 : 2,
+            duration: duration
+              ? duration / ANIMATION_VALUES.MS_TO_SECONDS
+              : ANIMATION_VALUES.DURATION_STANDARD,
             ease: 'linear' as const,
             repeat: Number.POSITIVE_INFINITY,
           },
@@ -112,13 +215,38 @@ const getAnimationConfig = (animation: MascotAnimation) => {
     case 'dancing':
       return {
         animate: {
-          y: [0, -8 * multiplier, 0, -4 * multiplier, 0],
-          x: [0, 3 * multiplier, -3 * multiplier, 0],
-          rotate: [0, 8 * multiplier, -8 * multiplier, 5 * multiplier, 0],
-          scale: [1, 1.05 * multiplier, 0.95, 1.1 * multiplier, 1],
+          y: [
+            0,
+            -ANIMATION_VALUES.POSITION_LARGE * multiplier,
+            0,
+            -ANIMATION_VALUES.POSITION_MEDIUM * multiplier,
+            0,
+          ],
+          x: [
+            0,
+            ANIMATION_VALUES.POSITION_SMALL * multiplier,
+            -ANIMATION_VALUES.POSITION_SMALL * multiplier,
+            0,
+          ],
+          rotate: [
+            0,
+            ANIMATION_VALUES.ROTATION_LARGE * multiplier,
+            -ANIMATION_VALUES.ROTATION_LARGE * multiplier,
+            ANIMATION_VALUES.ROTATION_MEDIUM * multiplier,
+            0,
+          ],
+          scale: [
+            1,
+            ANIMATION_VALUES.SCALE_SLIGHT * multiplier,
+            ANIMATION_VALUES.SCALE_DOWN_SLIGHT,
+            ANIMATION_VALUES.SCALE_SMALL * multiplier,
+            1,
+          ],
         },
         transition: {
-          duration: duration ? duration / 1000 : 1.8,
+          duration: duration
+            ? duration / ANIMATION_VALUES.MS_TO_SECONDS
+            : ANIMATION_VALUES.DURATION_MEDIUM,
           ease: 'easeInOut' as const,
           repeat: Number.POSITIVE_INFINITY,
           repeatType: 'loop' as const,
@@ -127,11 +255,17 @@ const getAnimationConfig = (animation: MascotAnimation) => {
     default:
       return {
         animate: {
-          y: [0, -2, 0],
-          rotate: [0, 0.5, 0, -0.5, 0],
+          y: [0, -ANIMATION_VALUES.POSITION_TINY, 0],
+          rotate: [
+            0,
+            ANIMATION_VALUES.ROTATION_SUBTLE,
+            0,
+            -ANIMATION_VALUES.ROTATION_SUBTLE,
+            0,
+          ],
         },
         transition: {
-          duration: 4,
+          duration: ANIMATION_VALUES.DURATION_EXTENDED,
           ease: 'easeInOut' as const,
           repeat: Number.POSITIVE_INFINITY,
           repeatType: 'reverse' as const,
@@ -147,9 +281,9 @@ const getFloatingAnimation = (isEnabled: boolean) => {
   }
 
   return {
-    y: [0, -3, 0],
+    y: [0, -ANIMATION_VALUES.POSITION_SMALL, 0],
     transition: {
-      duration: 3,
+      duration: ANIMATION_VALUES.DURATION_LONG,
       ease: 'easeInOut' as const,
       repeat: Number.POSITIVE_INFINITY,
       repeatType: 'reverse' as const,
@@ -183,7 +317,7 @@ const _getHoverEffects = (enableHover: boolean) => {
 };
 
 // Props for the MascotCharacter component
-interface MascotCharacterProps {
+type MascotCharacterProps = {
   variant: MascotVariant;
   animation: MascotAnimation;
   className?: string;
@@ -191,7 +325,7 @@ interface MascotCharacterProps {
   enableFloating?: boolean;
   onClick?: () => void;
   style?: React.CSSProperties;
-}
+};
 
 // Size configurations
 const sizeClasses = {
@@ -257,7 +391,7 @@ export function MascotCharacter({
           filter:
             animation.type === 'processing' ||
             (animation.type === 'dancing' && !isDancingComposite)
-              ? 'brightness(1.1)'
+              ? `brightness(${ANIMATION_VALUES.BRIGHTNESS_ENHANCED})`
               : undefined,
         }}
       />
@@ -268,8 +402,12 @@ export function MascotCharacter({
         animation.type === 'dancing') && (
         <motion.div
           animate={{
-            opacity: [0.3, 0.6, 0.3],
-            scale: [1, 1.2, 1],
+            opacity: [
+              ANIMATION_VALUES.OPACITY_LOW,
+              ANIMATION_VALUES.OPACITY_MEDIUM,
+              ANIMATION_VALUES.OPACITY_LOW,
+            ],
+            scale: [1, ANIMATION_VALUES.SCALE_MEDIUM, 1],
           }}
           className="absolute inset-0 rounded-full opacity-30"
           style={{
@@ -279,7 +417,7 @@ export function MascotCharacter({
                 : 'radial-gradient(circle, rgba(59, 130, 246, 0.3) 0%, transparent 70%)',
           }}
           transition={{
-            duration: 1.5,
+            duration: ANIMATION_VALUES.DURATION_SHORT,
             repeat: Number.POSITIVE_INFINITY,
             ease: 'easeInOut',
           }}
@@ -361,19 +499,43 @@ export const mascotVariants = {
         <motion.img
           alt="Dancing Voice Gecko"
           animate={{
-            y: [0, -4, 0, -2, 0],
-            x: [0, 1, 0, -1, 0],
-            rotate: [0, 2, 0, -2, 0],
-            scale: [1, 1.02, 1, 1.01, 1],
+            y: [
+              0,
+              -ANIMATION_VALUES.POSITION_MEDIUM,
+              0,
+              -ANIMATION_VALUES.POSITION_TINY,
+              0,
+            ],
+            x: [
+              0,
+              ANIMATION_VALUES.ROTATION_MICRO,
+              0,
+              -ANIMATION_VALUES.ROTATION_MICRO,
+              0,
+            ],
+            rotate: [
+              0,
+              ANIMATION_VALUES.ROTATION_TINY,
+              0,
+              -ANIMATION_VALUES.ROTATION_TINY,
+              0,
+            ],
+            scale: [
+              1,
+              ANIMATION_VALUES.SCALE_TINY,
+              1,
+              ANIMATION_VALUES.SCALE_MICRO,
+              1,
+            ],
           }}
           className="relative h-full w-full object-contain"
           src="/geckos/gecko-dancing.png"
           style={{
             zIndex: 2,
-            filter: 'brightness(1.1)',
+            filter: `brightness(${ANIMATION_VALUES.BRIGHTNESS_ENHANCED})`,
           }}
           transition={{
-            duration: 2.2,
+            duration: ANIMATION_VALUES.DURATION_DANCE_COMPOSITE,
             ease: 'easeInOut',
             repeat: Number.POSITIVE_INFINITY,
             repeatType: 'loop',

@@ -8,19 +8,19 @@ import { useCurrency } from '../providers/currency';
 
 export type SubscriptionPlan = 'voice gecko pro';
 
-export interface UseSubscriptionUpgradeOptions {
+export type UseSubscriptionUpgradeOptions = {
   successUrl?: string;
   cancelUrl?: string;
   onSuccess?: () => void;
   onError?: (error: Error) => void;
-}
+};
 
-export interface UseSubscriptionUpgradeReturn {
+export type UseSubscriptionUpgradeReturn = {
   upgrade: (plan: SubscriptionPlan, isAnnual?: boolean) => Promise<void>;
   isUpgrading: boolean;
   error: Error | null;
   clearError: () => void;
-}
+};
 
 /**
  * Hook for managing subscription upgrades with proper error handling,

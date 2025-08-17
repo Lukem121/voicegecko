@@ -23,7 +23,7 @@ const config = {
   typescript: { ignoreBuildErrors: true },
 
   /** Configure CORS headers for API routes */
-  async headers() {
+  headers() {
     const allowedOrigins = [
       'http://localhost:3000', // Next.js app local dev
       'http://localhost:1420', // Tauri desktop app

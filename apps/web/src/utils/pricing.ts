@@ -59,16 +59,18 @@ export function findPriceForPlanIn(
 
 export function getPriceDisplayFor(
   prices: Record<string, PriceWithMetadata> | null,
-  currencyCode: SupportedCurrency,
-  planId: string,
-  interval: 'monthly' | 'yearly',
-  fallback: string
-): string {
-  const price = findPriceForPlanIn(prices, planId, interval);
-  if (price) {
-    return formatPriceForCurrency(price, currencyCode);
+  options: {
+    currencyCode: SupportedCurrency;
+    planId: string;
+    interval: 'monthly' | 'yearly';
+    fallback: string;
   }
-  return fallback;
+): string {
+  const price = findPriceForPlanIn(prices, options.planId, options.interval);
+  if (price) {
+    return formatPriceForCurrency(price, options.currencyCode);
+  }
+  return options.fallback;
 }
 
 export function getYearlyPriceAsMonthlyFor(

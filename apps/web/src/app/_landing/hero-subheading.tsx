@@ -1,9 +1,9 @@
 import { cn } from '@acme/ui/lib/utils';
 
-interface HeroSubheadingProps {
+type HeroSubheadingProps = {
   children: React.ReactNode;
   className?: string;
-}
+};
 
 export default function HeroSubheading({
   children,

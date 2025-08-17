@@ -1,4 +1,4 @@
-import { log } from '@acme/observability';
+import { log } from '@acme/observability/log';
 import { signInSocial } from '@daveyplate/better-auth-tauri';
 import { useState } from 'react';
 
@@ -7,17 +7,17 @@ import { authClient } from '~/lib/client';
 
 export type SocialProvider = 'discord' | 'google';
 
-interface LoadingState {
+type LoadingState = {
   discord: boolean;
   google: boolean;
-}
+};
 
-interface UseSocialAuthReturn {
+type UseSocialAuthReturn = {
   isLoading: LoadingState;
   error: string | null;
   signIn: (provider: SocialProvider) => Promise<void>;
   loading: boolean;
-}
+};
 
 export function useSocialAuth(): UseSocialAuthReturn {
   const [isLoading, setIsLoading] = useState<LoadingState>({

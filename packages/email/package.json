@@ -4,9 +4,14 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": {
-      "default": "./src/index.ts"
-    }
+    "./lib/send-email": "./src/lib/send-email.ts",
+    "./send/payment-failed": "./src/send/payment-failed.ts",
+    "./send/reset-password": "./src/send/reset-password.ts",
+    "./send/student-discount": "./src/send/student-discount.ts",
+    "./send/subscription-cancelled": "./src/send/subscription-cancelled.ts",
+    "./send/verification": "./src/send/verification.ts",
+    "./send/welcome": "./src/send/welcome.ts",
+    "./send/welcome-pro": "./src/send/welcome-pro.ts"
   },
   "scripts": {
     "dev": "email dev --dir ./src/emails --port 3001",

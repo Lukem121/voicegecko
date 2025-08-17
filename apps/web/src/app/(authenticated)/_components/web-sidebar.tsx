@@ -18,21 +18,21 @@ import { ChartBar, CreditCard, Package, User2 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
-interface NavigationSubItem {
+type NavigationSubItem = {
   title: string;
   url: string;
-}
+};
 
-interface NavigationItem {
+type NavigationItem = {
   title: string;
   url: string;
   icon: LucideIcon;
   items?: NavigationSubItem[];
-}
+};
 
-interface NavigationData {
+type NavigationData = {
   navMain: NavigationItem[];
-}
+};
 
 const data: NavigationData = {
   navMain: [

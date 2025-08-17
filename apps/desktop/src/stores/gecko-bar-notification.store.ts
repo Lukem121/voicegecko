@@ -1,16 +1,16 @@
 import { create } from 'zustand';
 
-interface GeckoBarNotification {
+type GeckoBarNotification = {
   message: string;
   duration?: number; // Duration in milliseconds
   priority?: 'high' | 'normal'; // High priority messages override any current message
-}
+};
 
-interface GeckoBarNotificationStore {
+type GeckoBarNotificationStore = {
   notification: GeckoBarNotification | null;
   showNotification: (notification: GeckoBarNotification) => void;
   clearNotification: () => void;
-}
+};
 
 export const useGeckoBarNotificationStore = create<GeckoBarNotificationStore>(
   (set, get) => ({

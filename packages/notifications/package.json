@@ -4,8 +4,8 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": {
-      "default": "./src/index.ts"
+    "./discord-adapter": {
+      "default": "./src/discord-adapter.ts"
     }
   },
   "scripts": {

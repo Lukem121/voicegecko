@@ -1,6 +1,6 @@
 import type { PriceWithMetadata } from '@acme/api/src/services/stripe/stripe.service';
 import { stripeService } from '@acme/api/src/services/stripe/stripe.service';
-import { log } from '@acme/observability';
+import { log } from '@acme/observability/log';
 import { unstable_cache } from 'next/cache';
 import { getDownloadsData } from '~/lib/downloads';
 import type { DownloadsData } from '~/lib/downloads-utils';

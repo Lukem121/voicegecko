@@ -1,9 +1,9 @@
 import { Button } from '@acme/ui/components/ui/button';
 import { Card } from '@acme/ui/components/ui/card';
 
-interface StudentDiscountCardProps {
+type StudentDiscountCardProps = {
   onGetStarted: () => void;
-}
+};
 
 export const StudentDiscountCard = ({
   onGetStarted,

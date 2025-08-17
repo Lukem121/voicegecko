@@ -1,5 +1,5 @@
 import type { AppRouter } from '@acme/api/src/root';
-import { log } from '@acme/observability';
+import { log } from '@acme/observability/log';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { createTRPCClient, httpBatchLink, TRPCClientError } from '@trpc/client';
 import { createTRPCOptionsProxy } from '@trpc/tanstack-react-query';

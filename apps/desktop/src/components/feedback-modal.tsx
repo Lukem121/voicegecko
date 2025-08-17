@@ -1,4 +1,4 @@
-import { log } from '@acme/observability';
+import { log } from '@acme/observability/log';
 import { Button } from '@acme/ui/components/ui/button';
 import {
   Dialog,
@@ -17,22 +17,28 @@ import { toast } from 'sonner';
 import { useSendFeedback } from '~/features/transcription/use-send-feedback';
 import { analytics } from '~/lib/analytics/posthog-analytics';
 
-interface FeedbackModalProps {
+type FeedbackModalProps = {
   isOpen: boolean;
   onClose: () => void;
   transcriptionId: number;
   transcriptionContent: string;
-}
+};
 
 // Character limit for feedback (matching backend constraint)
 const MAX_FEEDBACK_LENGTH = 1000;
+
+// Threshold for showing warning color (90% of max length)
+const WARNING_THRESHOLD_RATIO = 0.9;
+
+// Extra buffer for textarea maxLength to improve UX
+const MAX_LENGTH_BUFFER = 50;
 
 // Helper function to determine text color based on feedback length
 function getFeedbackLengthColor(length: number): string {
   if (length > MAX_FEEDBACK_LENGTH) {
     return 'text-red-500';
   }
-  if (length > MAX_FEEDBACK_LENGTH * 0.9) {
+  if (length > MAX_FEEDBACK_LENGTH * WARNING_THRESHOLD_RATIO) {
     return 'text-yellow-500';
   }
   return 'text-muted-foreground';
@@ -141,7 +147,7 @@ export function FeedbackModal({
               }`}
               disabled={isSending}
               id="feedback"
-              maxLength={MAX_FEEDBACK_LENGTH + 50}
+              maxLength={MAX_FEEDBACK_LENGTH + MAX_LENGTH_BUFFER}
               onChange={(e) => setFeedback(e.target.value)}
               placeholder="Describe what you expected instead..."
               // biome-ignore lint/suspicious/noExplicitAny: fieldSizing is a newer CSS property not fully typed in React

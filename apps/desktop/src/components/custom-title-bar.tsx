@@ -14,15 +14,33 @@ import { useUsageStats } from '~/hooks/use-usage-stats';
 
 const appWindow = getCurrentWindow();
 
+// Animation constants
+const SKELETON_OPACITY_MIN = 0.6;
+const SKELETON_OPACITY_MAX = 1;
+const SKELETON_PULSE_DURATION = 1.5;
+const LOADING_SCALE_FACTOR = 1.1;
+const LOADING_OPACITY = 0.7;
+const LOADING_ANIMATION_DURATION = 2;
+const STAT_TRANSITION_DURATION = 0.3;
+const STAT_ENTRY_DELAY = 0.2;
+const STAT_ENTRY_DELAY_LONG = 0.4;
+const CUBIC_BEZIER_EASING = [0.4, 0.0, 0.2, 1] as const;
+
 // Skeleton component for loading states
 function StatSkeleton() {
   return (
     <motion.div
-      animate={{ opacity: [0.6, 1, 0.6] }}
+      animate={{
+        opacity: [
+          SKELETON_OPACITY_MIN,
+          SKELETON_OPACITY_MAX,
+          SKELETON_OPACITY_MIN,
+        ],
+      }}
       className="h-3 w-8 animate-pulse rounded bg-muted"
-      initial={{ opacity: 0.6 }}
+      initial={{ opacity: SKELETON_OPACITY_MIN }}
       transition={{
-        duration: 1.5,
+        duration: SKELETON_PULSE_DURATION,
         repeat: Number.POSITIVE_INFINITY,
         ease: 'easeInOut',
       }}
@@ -60,8 +78,8 @@ function StatValue({
             initial={{ opacity: 0, y: 2 }}
             key="value"
             transition={{
-              duration: 0.3,
-              ease: [0.4, 0.0, 0.2, 1],
+              duration: STAT_TRANSITION_DURATION,
+              ease: CUBIC_BEZIER_EASING,
             }}
           >
             {value}
@@ -129,11 +147,15 @@ export function TitleBar() {
                 <div className="flex cursor-help items-center gap-1.5">
                   <motion.div
                     animate={{
-                      scale: usageStats.isLoading ? [1, 1.1, 1] : 1,
-                      opacity: usageStats.isLoading ? 0.7 : 1,
+                      scale: usageStats.isLoading
+                        ? [1, LOADING_SCALE_FACTOR, 1]
+                        : 1,
+                      opacity: usageStats.isLoading ? LOADING_OPACITY : 1,
                     }}
                     transition={{
-                      duration: usageStats.isLoading ? 2 : 0.3,
+                      duration: usageStats.isLoading
+                        ? LOADING_ANIMATION_DURATION
+                        : STAT_TRANSITION_DURATION,
                       repeat: usageStats.isLoading
                         ? Number.POSITIVE_INFINITY
                         : 0,
@@ -158,16 +180,20 @@ export function TitleBar() {
                 <div className="flex cursor-help items-center gap-1.5">
                   <motion.div
                     animate={{
-                      scale: usageStats.isLoading ? [1, 1.1, 1] : 1,
-                      opacity: usageStats.isLoading ? 0.7 : 1,
+                      scale: usageStats.isLoading
+                        ? [1, LOADING_SCALE_FACTOR, 1]
+                        : 1,
+                      opacity: usageStats.isLoading ? LOADING_OPACITY : 1,
                     }}
                     transition={{
-                      duration: usageStats.isLoading ? 2 : 0.3,
+                      duration: usageStats.isLoading
+                        ? LOADING_ANIMATION_DURATION
+                        : STAT_TRANSITION_DURATION,
                       repeat: usageStats.isLoading
                         ? Number.POSITIVE_INFINITY
                         : 0,
                       ease: 'easeInOut',
-                      delay: 0.2,
+                      delay: STAT_ENTRY_DELAY,
                     }}
                   >
                     <Clock className="h-3 w-3 text-muted-foreground" />
@@ -188,16 +214,20 @@ export function TitleBar() {
                 <div className="flex cursor-help items-center gap-1.5">
                   <motion.div
                     animate={{
-                      scale: usageStats.isLoading ? [1, 1.1, 1] : 1,
-                      opacity: usageStats.isLoading ? 0.7 : 1,
+                      scale: usageStats.isLoading
+                        ? [1, LOADING_SCALE_FACTOR, 1]
+                        : 1,
+                      opacity: usageStats.isLoading ? LOADING_OPACITY : 1,
                     }}
                     transition={{
-                      duration: usageStats.isLoading ? 2 : 0.3,
+                      duration: usageStats.isLoading
+                        ? LOADING_ANIMATION_DURATION
+                        : STAT_TRANSITION_DURATION,
                       repeat: usageStats.isLoading
                         ? Number.POSITIVE_INFINITY
                         : 0,
                       ease: 'easeInOut',
-                      delay: 0.4,
+                      delay: STAT_ENTRY_DELAY_LONG,
                     }}
                   >
                     <Gauge className="h-3 w-3 text-muted-foreground" />

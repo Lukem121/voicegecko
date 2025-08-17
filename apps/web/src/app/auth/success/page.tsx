@@ -1,6 +1,6 @@
 'use client';
 
-import { log } from '@acme/observability';
+import { log } from '@acme/observability/log';
 import VoiceGeckoLogo from '@acme/ui/components/logos/logo-full';
 import { Badge } from '@acme/ui/components/ui/badge';
 import { Button } from '@acme/ui/components/ui/button';

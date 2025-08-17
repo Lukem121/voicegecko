@@ -1,4 +1,4 @@
-import { log } from '@acme/observability';
+import { log } from '@acme/observability/log';
 import { listen } from '@tauri-apps/api/event';
 import { toast } from 'sonner';
 import { transcriptionService } from '~/services/transcription.service';
@@ -17,9 +17,9 @@ import { TranscriptionTracker } from './analytics/posthog-analytics';
 let initialized = false;
 let initializationId: string | null = null;
 
-interface InitializeOptions {
+type InitializeOptions = {
   isGeckoBar?: boolean;
-}
+};
 
 // Helper function to process cloud transcription
 async function processCloudTranscription(

@@ -5,21 +5,21 @@ import { APP_ROUTES } from '~/utils/app-routes';
 
 export type SocialProvider = 'discord' | 'google';
 
-interface LoadingState {
+type LoadingState = {
   discord: boolean;
   google: boolean;
-}
+};
 
-interface UseSocialAuthOptions {
+type UseSocialAuthOptions = {
   callbackURL: string;
-}
+};
 
-interface UseSocialAuthReturn {
+type UseSocialAuthReturn = {
   isLoading: LoadingState;
   error: string | null;
   signIn: (provider: SocialProvider) => Promise<void>;
   loading: boolean;
-}
+};
 
 export function useSocialAuth({
   callbackURL,

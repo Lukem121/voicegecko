@@ -10,7 +10,7 @@ import { cn } from '@acme/ui/lib/utils';
 import type { Subscription } from '@better-auth/stripe';
 import { Check, Loader2 } from 'lucide-react';
 
-export interface Plan {
+export type Plan = {
   name: string;
   id: string;
   stripeId: string | null;
@@ -21,16 +21,16 @@ export interface Plan {
   features: string[];
   cta: string;
   variant: 'outline' | 'default';
-}
+};
 
-interface PlanCardProps {
+type PlanCardProps = {
   plan: Plan;
   isYearly: boolean;
   isCurrent: boolean;
   isLoading: boolean;
   subscription: Subscription | null;
   onPlanClick: (plan: Plan) => void;
-}
+};
 
 export const PlanCard = ({
   plan,

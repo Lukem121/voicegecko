@@ -1,11 +1,11 @@
-import { log } from '@acme/observability';
+import { log } from '@acme/observability/log';
 import { invoke } from '@tauri-apps/api/core';
 
-export interface GeckoBarNotification {
+export type GeckoBarNotification = {
   message: string;
   duration?: number; // milliseconds
   priority?: 'high' | 'normal';
-}
+};
 
 /**
  * Send a notification to the gecko bar

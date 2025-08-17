@@ -1,5 +1,5 @@
-import { sendStudentDiscountEmail } from '@acme/email';
-import { log } from '@acme/observability';
+import { sendStudentDiscountEmail } from '@acme/email/send/student-discount';
+import { log } from '@acme/observability/log';
 import { stripeClient } from '@acme/payment/stripe';
 import { createRateLimiter, slidingWindow } from '@acme/rate-limit';
 import type { TRPCRouterRecord } from '@trpc/server';

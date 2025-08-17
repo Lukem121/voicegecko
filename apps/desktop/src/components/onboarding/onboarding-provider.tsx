@@ -1,6 +1,6 @@
 'use client';
 
-import { log } from '@acme/observability';
+import { log } from '@acme/observability/log';
 import { useNavigate } from '@tanstack/react-router';
 import {
   createContext,
@@ -12,13 +12,13 @@ import {
   useRef,
 } from 'react';
 
-import type { MascotMessage } from '~/components/mascot';
-import { useMascotChat } from '~/components/mascot';
+import type { MascotMessage } from '~/components/mascot/mascot-chat-provider';
+import { useMascotChat } from '~/components/mascot/mascot-chat-provider';
 import { analytics } from '~/lib/analytics/posthog-analytics';
 import { useSettingsStore } from '~/stores/settings.store';
 
 // Simplified types - removed complex lifecycle callbacks
-export interface OnboardingStepConfig {
+export type OnboardingStepConfig = {
   id: string;
   title: string;
   description: string;
@@ -34,16 +34,16 @@ export interface OnboardingStepConfig {
     | 'welcoming'
     | 'processing'
     | 'dancing';
-}
+};
 
-export interface OnboardingEvent {
+export type OnboardingEvent = {
   type: string;
   stepId: string;
   data?: Record<string, unknown>;
   timestamp: number;
-}
+};
 
-export interface OnboardingState {
+export type OnboardingState = {
   currentStepId: string | null;
   completedSteps: Set<string>;
   stepProgress: Record<string, number>;
@@ -51,9 +51,9 @@ export interface OnboardingState {
   isInitialized: boolean;
   canProceed: boolean;
   skipAvailable: boolean;
-}
+};
 
-export interface OnboardingContextValue {
+export type OnboardingContextValue = {
   // State
   state: OnboardingState;
   steps: OnboardingStepConfig[];
@@ -92,7 +92,7 @@ export interface OnboardingContextValue {
   getStepIndex: (stepId: string) => number;
   getNextStepId: () => string | null;
   getPreviousStepId: () => string | null;
-}
+};
 
 // Action types for the reducer
 type OnboardingAction =
@@ -201,11 +201,11 @@ export function useOnboarding(): OnboardingContextValue {
 }
 
 // Provider component
-interface OnboardingProviderProps {
+type OnboardingProviderProps = {
   children: React.ReactNode;
   steps: OnboardingStepConfig[];
   initialStepId?: string;
-}
+};
 
 export function OnboardingProvider({
   children,

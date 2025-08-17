@@ -1,5 +1,5 @@
 import { sendEmail } from '../lib/send-email';
-import { SubscriptionCancelledTemplate } from '../templates/subscription-cancelled';
+import { renderSubscriptionCancelledTemplate } from '../lib/template-renderer';
 
 type UserWithEmail = {
   email: string;
@@ -15,7 +15,7 @@ export const sendSubscriptionCancelledEmail = async ({
   user: UserWithEmail;
   planName: string;
   accessUntilDate: string;
-  reactivateUrl?: string;
+  reactivateUrl: string;
 }) => {
   await sendEmail({
     to: {
@@ -28,13 +28,11 @@ export const sendSubscriptionCancelledEmail = async ({
     },
     categories: ['subscription_cancelled'],
     subject: `${planName} subscription has been cancelled`,
-    react: (
-      <SubscriptionCancelledTemplate
-        accessUntilDate={accessUntilDate}
-        name={user.name}
-        planName={planName}
-        reactivateUrl={reactivateUrl}
-      />
-    ),
+    react: renderSubscriptionCancelledTemplate({
+      name: user.name,
+      planName,
+      accessUntilDate,
+      reactivateUrl,
+    }),
   });
 };

@@ -4,7 +4,8 @@ import type { PriceWithMetadata } from '@acme/api/src/services/stripe/stripe.ser
  * Formats a price with the appropriate currency formatting
  */
 export const formatPrice = (price: PriceWithMetadata, currency: string) => {
-  const currencyData = price.currencies[currency];
+  const currencyData =
+    price.currencies[currency as keyof typeof price.currencies];
   const formatter = new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: currencyData.currency.toUpperCase(),
@@ -21,7 +22,8 @@ export const formatPricePerUnit = (
   price: PriceWithMetadata,
   currency: string
 ) => {
-  const currencyData = price.currencies[currency];
+  const currencyData =
+    price.currencies[currency as keyof typeof price.currencies];
   let unitAmount = currencyData.unitAmount;
 
   // If the price has a minimum quantity (like Teams plan with minimum 3 seats),
@@ -47,7 +49,8 @@ export const formatYearlyAsMonthly = (
   currency: string,
   _planId: string
 ) => {
-  const currencyData = price.currencies[currency];
+  const currencyData =
+    price.currencies[currency as keyof typeof price.currencies];
   let monthlyAmount = currencyData.unitAmount / 12; // Divide yearly price by 12
 
   // If the price has a minimum quantity (like Teams plan with minimum 3 seats),
@@ -86,13 +89,15 @@ export const findPriceForPlan = (
  */
 export const getPriceDisplay = (
   prices: Record<string, PriceWithMetadata>,
-  planId: string,
-  interval: 'monthly' | 'yearly',
-  currency: string,
-  fallback: string
+  options: {
+    planId: string;
+    interval: 'monthly' | 'yearly';
+    currency: string;
+    fallback: string;
+  }
 ) => {
-  const price = findPriceForPlan(prices, planId, interval);
-  return price ? formatPrice(price, currency) : fallback;
+  const price = findPriceForPlan(prices, options.planId, options.interval);
+  return price ? formatPrice(price, options.currency) : options.fallback;
 };
 
 /**
@@ -100,13 +105,15 @@ export const getPriceDisplay = (
  */
 export const getPerUnitPriceDisplay = (
   prices: Record<string, PriceWithMetadata>,
-  planId: string,
-  interval: 'monthly' | 'yearly',
-  currency: string,
-  fallback: string
+  options: {
+    planId: string;
+    interval: 'monthly' | 'yearly';
+    currency: string;
+    fallback: string;
+  }
 ) => {
-  const price = findPriceForPlan(prices, planId, interval);
-  return price ? formatPricePerUnit(price, currency) : fallback;
+  const price = findPriceForPlan(prices, options.planId, options.interval);
+  return price ? formatPricePerUnit(price, options.currency) : options.fallback;
 };
 
 /**

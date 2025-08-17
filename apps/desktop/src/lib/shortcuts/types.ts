@@ -20,18 +20,18 @@ export type ShortcutId = ShortcutAction | SpecialShortcut;
 /**
  * Represents a keyboard shortcut configuration.
  */
-export interface Shortcut {
+export type Shortcut = {
   id: ShortcutId;
   name: string;
   keys: string[];
   global: boolean;
   enabled: boolean;
-}
+};
 
 /**
  * Defines the structure for a category of shortcuts.
  */
-export interface ShortcutCategory {
+export type ShortcutCategory = {
   name: string;
   shortcuts: Shortcut[];
-}
+};

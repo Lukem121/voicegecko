@@ -1,6 +1,6 @@
 // This function is used to initialize the app
 
-import { log } from '@acme/observability';
+import { log } from '@acme/observability/log';
 import { invoke } from '@tauri-apps/api/core';
 import { relaunch } from '@tauri-apps/plugin-process';
 import { check } from '@tauri-apps/plugin-updater';
@@ -11,11 +11,11 @@ import { setInitializationFlag } from '~/trpc';
 import { analytics } from './analytics/posthog-analytics';
 import { initializeTauriEvents } from './tauri-events';
 
-interface InitializeOptions {
+type InitializeOptions = {
   onUpdateStatus?: (status: string) => void;
   onUpdateProgress?: (progress: number) => void;
   onUpdateDownloaded?: () => void;
-}
+};
 
 /**
  * Check for and install app updates

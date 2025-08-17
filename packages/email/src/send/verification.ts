@@ -1,5 +1,5 @@
 import { sendEmail } from '../lib/send-email';
-import LinkTemplate from '../templates/link';
+import { renderVerificationTemplate } from '../lib/template-renderer';
 
 type UserWithEmail = {
   email: string;
@@ -24,12 +24,6 @@ export const sendVerificationEmail = async ({
     },
     categories: ['verification'],
     subject: 'Verify your email address',
-    react: (
-      <LinkTemplate
-        description="Your verification link is below - click it to verify your email address. This will redirect you back to VoiceGecko."
-        heading="Verify your email address"
-        url={url}
-      />
-    ),
+    react: renderVerificationTemplate({ url }),
   });
 };

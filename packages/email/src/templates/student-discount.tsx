@@ -15,11 +15,11 @@ import { DarkModeAwareLogoFull } from '../components/dark-mode-aware-logo-full';
 import { DarkModeEmailHead } from '../components/dark-mode-email-head';
 import { EmailFooter } from '../components/email-footer';
 
-interface StudentDiscountEmailProps {
+type StudentDiscountEmailProps = {
   couponCode: string;
   discountPercentage: string;
   redemptionUrl?: string;
-}
+};
 
 const studentGeckoUrl =
   'https://90yklj7887.ufs.sh/f/Wzb1OBsC8B6ZcQyRTazBT5UxRZaDh7eC29OQc6zNA04G8qLw';

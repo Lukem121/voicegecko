@@ -33,17 +33,17 @@ const mobileBenefits = [
 ];
 
 // Footer sections with actual pages that exist
-interface FooterLink {
+type FooterLink = {
   name: string;
   href: string;
   icon?: IconType;
   openInNewTab?: boolean;
-}
+};
 
-interface FooterSection {
+type FooterSection = {
   title: string;
   links: FooterLink[];
-}
+};
 
 const footerSections: FooterSection[] = [
   {

@@ -1,4 +1,4 @@
-import { log } from '@acme/observability';
+import { log } from '@acme/observability/log';
 import { getCurrentWebviewWindow } from '@tauri-apps/api/webviewWindow';
 
 export function getCurrentWindowLabel() {

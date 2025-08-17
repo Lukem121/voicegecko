@@ -4,14 +4,14 @@ import { usageRepository } from '../../repository/usage.repository';
 
 const FREE_TIER_WEEKLY_WORD_LIMIT = 2000;
 
-export interface UserUsageStatus {
+export type UserUsageStatus = {
   wordsUsed: number;
   wordsLimit: number;
   transcriptionCount: number;
   isUnlimited: boolean;
   canTranscribe: boolean;
   weekStartDate: Date;
-}
+};
 
 export class UsageService {
   /**

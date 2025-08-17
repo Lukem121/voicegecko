@@ -1,6 +1,6 @@
 'use client';
 
-import { log } from '@acme/observability';
+import { log } from '@acme/observability/log';
 import { buttonVariants } from '@acme/ui/components/ui/button';
 import { cn } from '@acme/ui/lib/utils';
 import { FaWindows } from 'react-icons/fa';

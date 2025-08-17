@@ -5,14 +5,14 @@ import { motion } from 'framer-motion';
 import { HiCheck, HiX } from 'react-icons/hi';
 import { UpgradeButton } from './upgrade-button';
 
-export interface FeatureItem {
+export type FeatureItem = {
   text: string;
   subtext?: string;
   included: boolean;
   isHighlight?: boolean;
-}
+};
 
-export interface PriceCardProps {
+export type PriceCardProps = {
   name: string;
   price: string;
   originalPrice?: string;
@@ -25,7 +25,7 @@ export interface PriceCardProps {
   subtitle?: string;
   popular?: boolean;
   period?: string;
-}
+};
 
 function PriceCardHeader({
   name,

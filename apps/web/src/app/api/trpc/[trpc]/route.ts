@@ -1,7 +1,7 @@
 import { appRouter } from '@acme/api/src/root';
 import { createTRPCContext } from '@acme/api/src/trpc';
 import { serverAuth } from '@acme/auth';
-import { log } from '@acme/observability';
+import { log } from '@acme/observability/log';
 import { fetchRequestHandler } from '@trpc/server/adapters/fetch';
 import type { NextRequest } from 'next/server';
 

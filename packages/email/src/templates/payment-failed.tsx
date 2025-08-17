@@ -14,12 +14,12 @@ import { DarkModeAwareLogoFull } from '../components/dark-mode-aware-logo-full';
 import { DarkModeEmailHead } from '../components/dark-mode-email-head';
 import { EmailFooter } from '../components/email-footer';
 
-interface PaymentFailedEmailProps {
+type PaymentFailedEmailProps = {
   name?: string;
   planName: string;
   retryPaymentUrl: string;
   accountUrl: string;
-}
+};
 
 export const PaymentFailedTemplate = ({
   planName,
