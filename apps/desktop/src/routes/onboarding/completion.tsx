@@ -1,4 +1,4 @@
-import { log } from '@acme/observability';
+import { log } from '@acme/observability/log';
 import { Button } from '@acme/ui/components/ui/button';
 import {
   Card,

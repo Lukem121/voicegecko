@@ -1,6 +1,6 @@
 Todo
 
-- [ ] I'm noticing that the gecko bar is getting, when the application is first launched, it's just appearing randomly like in the kind of center of my screen. And then obviously once the app is fully launched, we're actually positioning it correctly. I think what we should do is wait until we've positioned it before we make the gecko bar visible.
+- [ ]
 
 Pre Launch Checks
 

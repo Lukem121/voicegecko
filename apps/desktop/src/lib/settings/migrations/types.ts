@@ -1,28 +1,28 @@
 // Settings migration types - simplified for early development
 
-export interface SettingsVersion {
+export type SettingsVersion = {
   version: number;
   timestamp: number;
   appVersion?: string;
-}
+};
 
 // Base structure that all settings must have
-export interface VersionedSettings {
+export type VersionedSettings = {
   _meta: SettingsVersion;
   [key: string]: unknown;
-}
+};
 
 // Migration interface (for future use when you have users)
-export interface Migration<TFrom = VersionedSettings, TTo = VersionedSettings> {
+export type Migration<TFrom = VersionedSettings, TTo = VersionedSettings> = {
   version: number;
   description: string;
   up: (settings: TFrom) => TTo;
   down?: (settings: TTo) => TFrom; // For rollback support (optional)
-}
+};
 
-export interface MigrationResult {
+export type MigrationResult = {
   success: boolean;
   fromVersion: number;
   toVersion: number;
   error?: Error;
-}
+};

@@ -1,4 +1,4 @@
-import { getServerSession } from '@acme/auth/utils';
+import { getServerSession } from '@acme/auth/utils/get-session';
 import { redirect } from 'next/navigation';
 import type { ReactNode } from 'react';
 
@@ -6,9 +6,9 @@ import { APP_ROUTES } from '~/utils/app-routes';
 import Footer from '../_landing/footer';
 import Header from '../_landing/header';
 
-interface AppLayoutProperties {
+type AppLayoutProperties = {
   readonly children: ReactNode;
-}
+};
 
 const AppLayout = async ({ children }: AppLayoutProperties) => {
   const session = await getServerSession();

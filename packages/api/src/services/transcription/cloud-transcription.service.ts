@@ -1,9 +1,9 @@
-import { log } from '@acme/observability';
+import { log } from '@acme/observability/log';
 import { TRPCError } from '@trpc/server';
 import OpenAI from 'openai';
 
 export class CloudTranscriptionService {
-  private openai: OpenAI;
+  private readonly openai: OpenAI;
 
   constructor(apiKey: string) {
     this.openai = new OpenAI({

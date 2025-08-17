@@ -1,5 +1,5 @@
 import { sendEmail } from '../lib/send-email';
-import { WelcomeTemplate } from '../templates/welcome';
+import { renderWelcomeTemplate } from '../lib/template-renderer';
 
 type UserWithEmail = {
   email: string;
@@ -18,6 +18,6 @@ export const sendWelcomeEmail = async ({ user }: { user: UserWithEmail }) => {
     },
     categories: ['welcome'],
     subject: 'Welcome to VoiceGecko - Your voice-to-text journey begins now!',
-    react: <WelcomeTemplate name={user.name} />,
+    react: renderWelcomeTemplate({ name: user.name }),
   });
 };

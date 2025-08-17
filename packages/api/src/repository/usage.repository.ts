@@ -7,20 +7,20 @@ import {
   user as UserTable,
 } from '@acme/db/schema';
 
-export interface UsageData {
+export type UsageData = {
   userId: string;
   weekStartDate: Date;
   wordsUsed: number;
   transcriptionCount: number;
-}
+};
 
-export interface UserSubscriptionInfo {
+export type UserSubscriptionInfo = {
   stripeCustomerId: string | null;
   subscription: {
     status: string | null;
     cancelAtPeriodEnd: boolean | null;
   } | null;
-}
+};
 
 class UsageRepository {
   async findByUserId(userId: string) {

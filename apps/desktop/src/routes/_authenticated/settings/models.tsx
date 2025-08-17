@@ -1,4 +1,6 @@
-import { log } from '@acme/observability';
+/** biome-ignore-all lint/style/noNestedTernary: lazy */
+
+import { log } from '@acme/observability/log';
 import { Badge } from '@acme/ui/components/ui/badge';
 import { Button } from '@acme/ui/components/ui/button';
 import {
@@ -23,7 +25,11 @@ import {
 } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
-import { useHardwareInfo, useSettingsStore } from '~/stores/settings.store';
+import {
+  type Model,
+  useHardwareInfo,
+  useSettingsStore,
+} from '~/stores/settings.store';
 import type { ModelTier } from '~/types/models';
 import { tierDisplayInfo } from '~/types/models';
 
@@ -84,176 +90,182 @@ function SettingsModelsPage() {
     };
   }, [refreshModels, settings.models.availableModels, sessionStartTime]);
 
-  // Listen for model events
-  useEffect(() => {
-    let hasNotifiedAutoDownload = false;
+  // Helper function to handle model download progress
+  const handleModelDownloadProgress =
+    (hasNotifiedAutoDownload: { current: boolean }) =>
+    // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: lazy
+    (event: { payload: [string, number] }) => {
+      const [modelId, progress] = event.payload;
 
-    const unlistenProgress = listen<[string, number]>(
-      'model-download-progress',
-      (event) => {
-        const [modelId, progress] = event.payload;
+      // Check if this modelId exists in our available models
+      const modelExists = modelId in settings.models.availableModels;
+      if (!modelExists) {
+        log.warn(
+          '[Models UI] Model ID not found in available models:',
+          modelId
+        );
+      }
 
-        // Check if this modelId exists in our available models
-        const modelExists = modelId in settings.models.availableModels;
-        if (!modelExists) {
-          log.warn(
-            '[Models UI] Model ID not found in available models:',
-            modelId
-          );
+      // Smooth progress updates - only allow progress to increase
+      setSmoothedProgress((prev) => {
+        const currentProgress = prev[modelId] || 0;
+        const newProgress = Math.max(currentProgress, progress);
+        return {
+          ...prev,
+          [modelId]: newProgress,
+        };
+      });
+
+      updateModelStatus(modelId, { Downloading: progress });
+
+      // Notify user about automatic download on first progress event
+      if (!hasNotifiedAutoDownload.current && progress === 0) {
+        const model = Object.values(settings.models.availableModels).find(
+          (m) =>
+            Object.keys(settings.models.availableModels).find(
+              (k) => settings.models.availableModels[k] === m
+            ) === modelId
+        );
+
+        if (model && hardwareInfo) {
+          const modelTier = model.tier.toLowerCase();
+          const recommendedTier = hardwareInfo.recommended_tier.toLowerCase();
+
+          if (modelTier === recommendedTier) {
+            toast.info(`Downloading recommended model: ${model.name}`);
+            hasNotifiedAutoDownload.current = true;
+          }
         }
+      }
+    };
 
-        // Smooth progress updates - only allow progress to increase
-        setSmoothedProgress((prev) => {
-          const currentProgress = prev[modelId] || 0;
-          const newProgress = Math.max(currentProgress, progress);
-          return {
-            ...prev,
-            [modelId]: newProgress,
-          };
-        });
-
-        updateModelStatus(modelId, { Downloading: progress });
-
-        // Notify user about automatic download on first progress event
-        if (!hasNotifiedAutoDownload && progress === 0) {
-          const model = Object.values(settings.models.availableModels).find(
+  // Helper function to remove tier from downloading set
+  const removeTierFromDownloadingSet = (modelId: string) => {
+    setDownloadingTiers((prev) => {
+      const next = new Set(prev);
+      const tiers = Object.keys(tierDisplayInfo) as ModelTier[];
+      for (const tier of tiers) {
+        const models = getModelsForTier(tier);
+        if (
+          models.some(
             (m) =>
               Object.keys(settings.models.availableModels).find(
                 (k) => settings.models.availableModels[k] === m
               ) === modelId
-          );
-
-          if (model && hardwareInfo) {
-            const modelTier = model.tier.toLowerCase();
-            const recommendedTier = hardwareInfo.recommended_tier.toLowerCase();
-
-            if (modelTier === recommendedTier) {
-              toast.info(`Downloading recommended model: ${model.name}`);
-              hasNotifiedAutoDownload = true;
-            }
-          }
+          )
+        ) {
+          next.delete(tier);
         }
       }
+      return next;
+    });
+  };
+
+  // Helper function to handle model download completion
+  const handleModelDownloadComplete = (event: { payload: string }) => {
+    toast.success('Model downloaded successfully!');
+
+    // Immediately remove from progress tracking
+    setSmoothedProgress((prev) => {
+      const next = { ...prev };
+      delete next[event.payload];
+      return next;
+    });
+
+    // Remove tier from downloading set
+    removeTierFromDownloadingSet(event.payload);
+
+    // Refresh models after a short delay
+    setTimeout(() => {
+      refreshModels();
+    }, 100);
+  };
+
+  // Helper function to handle model download errors
+  const handleModelDownloadError = (event: { payload: [string, string] }) => {
+    const [modelId, errorMessage] = event.payload;
+
+    // Clear smoothed progress for failed model
+    setSmoothedProgress((prev) => {
+      const next = { ...prev };
+      delete next[modelId];
+      return next;
+    });
+
+    toast.error('Download failed', {
+      description: `Failed to download model: ${errorMessage}`,
+      action: {
+        label: 'Retry',
+        onClick: async () => {
+          try {
+            await invoke('check_and_fix_partial_downloads');
+            await refreshModels();
+            await invoke('download_model', { modelId });
+          } catch (error) {
+            toast.error('Retry failed', {
+              description: error as string,
+            });
+          }
+        },
+      },
+    });
+
+    // Remove from downloading tiers
+    removeTierFromDownloadingSet(modelId);
+    refreshModels();
+  };
+
+  // Helper function to handle tier auto-selection
+  const handleTierAutoSelected = async (event: { payload: string }) => {
+    const autoSelectedTier = event.payload;
+
+    // Update the store with the new selected tier
+    await updateSelectedTier(autoSelectedTier);
+
+    toast.success('Quality automatically set', {
+      description: `Selected "${tierDisplayInfo[autoSelectedTier as ModelTier]?.name || autoSelectedTier}" based on your hardware and downloaded model.`,
+    });
+
+    // Refresh to update UI
+    refreshModels();
+  };
+
+  // Listen for model events
+  // biome-ignore lint/correctness/useExhaustiveDependencies: we need to unlisten
+  useEffect(() => {
+    const hasNotifiedAutoDownload = { current: false };
+
+    const unlistenProgress = listen<[string, number]>(
+      'model-download-progress',
+      handleModelDownloadProgress(hasNotifiedAutoDownload)
     );
 
     const unlistenComplete = listen<string>(
       'model-download-complete',
-      (event) => {
-        toast.success('Model downloaded successfully!');
-
-        // Immediately remove from progress tracking
-        setSmoothedProgress((prev) => {
-          const next = { ...prev };
-          delete next[event.payload];
-          return next;
-        });
-
-        // Immediately remove tier from downloading set
-        setDownloadingTiers((prev) => {
-          const next = new Set(prev);
-          // Remove tier from downloading set when any model completes
-          const tiers = Object.keys(tierDisplayInfo) as ModelTier[];
-          tiers.forEach((tier) => {
-            const models = getModelsForTier(tier);
-            if (
-              models.some(
-                (m) =>
-                  Object.keys(settings.models.availableModels).find(
-                    (k) => settings.models.availableModels[k] === m
-                  ) === event.payload
-              )
-            ) {
-              next.delete(tier);
-            }
-          });
-          return next;
-        });
-
-        // Refresh models after a short delay
-        setTimeout(() => {
-          refreshModels();
-        }, 100);
-      }
+      handleModelDownloadComplete
     );
 
     const unlistenError = listen<[string, string]>(
       'model-download-error',
-      (event) => {
-        const [modelId, errorMessage] = event.payload;
-
-        // Clear smoothed progress for failed model
-        setSmoothedProgress((prev) => {
-          const next = { ...prev };
-          delete next[modelId];
-          return next;
-        });
-
-        toast.error('Download failed', {
-          description: `Failed to download model: ${errorMessage}`,
-          action: {
-            label: 'Retry',
-            onClick: async () => {
-              try {
-                await invoke('check_and_fix_partial_downloads');
-                await refreshModels();
-                await invoke('download_model', { modelId });
-              } catch (error) {
-                toast.error('Retry failed', {
-                  description: error as string,
-                });
-              }
-            },
-          },
-        });
-
-        // Remove from downloading tiers
-        setDownloadingTiers((prev) => {
-          const next = new Set(prev);
-          const tiers = Object.keys(tierDisplayInfo) as ModelTier[];
-          tiers.forEach((tier) => {
-            const models = getModelsForTier(tier);
-            if (
-              models.some(
-                (m) =>
-                  Object.keys(settings.models.availableModels).find(
-                    (k) => settings.models.availableModels[k] === m
-                  ) === modelId
-              )
-            ) {
-              next.delete(tier);
-            }
-          });
-          return next;
-        });
-
-        refreshModels();
-      }
+      handleModelDownloadError
     );
 
     const unlistenTierSelected = listen<string>(
       'tier-auto-selected',
-      async (event) => {
-        const selectedTier = event.payload;
-
-        // Update the store with the new selected tier
-        await updateSelectedTier(selectedTier);
-
-        toast.success('Quality automatically set', {
-          description: `Selected "${tierDisplayInfo[selectedTier as ModelTier]?.name || selectedTier}" based on your hardware and downloaded model.`,
-        });
-
-        // Refresh to update UI
-        refreshModels();
-      }
+      handleTierAutoSelected
     );
 
     return () => {
-      void Promise.all([
+      Promise.all([
         unlistenProgress,
         unlistenComplete,
         unlistenError,
         unlistenTierSelected,
-      ]).then((unlisteners) => unlisteners.forEach((u) => u()));
+      ]).then((unlisteners) => {
+        for (const unlisten of unlisteners) {
+          unlisten();
+        }
+      });
     };
   }, [
     refreshModels,
@@ -283,6 +295,64 @@ function SettingsModelsPage() {
     }
   };
 
+  // Helper function to get download progress for a tier
+  const getTierDownloadProgress = (models: Model[]) => {
+    const downloadingModel = models.find(
+      (m) => typeof m.status === 'object' && 'Downloading' in m.status
+    );
+
+    let progress = 0;
+    if (downloadingModel) {
+      const modelId = Object.keys(settings.models.availableModels).find(
+        (id) => settings.models.availableModels[id] === downloadingModel
+      );
+      if (modelId && smoothedProgress[modelId] !== undefined) {
+        progress = smoothedProgress[modelId];
+      } else if (typeof downloadingModel.status === 'object') {
+        progress = downloadingModel.status.Downloading;
+      }
+    }
+    return progress;
+  };
+
+  // Helper function to handle model download start
+  const handleDownloadStart = async (tier: ModelTier) => {
+    setDownloadingTiers((prev) => new Set(prev).add(tier));
+    const tierModels = getModelsForTier(tier);
+    if (tierModels.length > 0) {
+      const modelToDownload = Object.keys(settings.models.availableModels).find(
+        (id) => settings.models.availableModels[id] === tierModels[0]
+      );
+      if (modelToDownload) {
+        await invoke('download_model', { modelId: modelToDownload });
+      }
+    }
+  };
+
+  // Helper function to render downloading status
+  const renderDownloadingStatus = (progress: number) => (
+    <div className="flex items-center gap-2">
+      <Progress className="h-2 w-16" value={progress} />
+      <span className="text-muted-foreground text-xs">{progress}%</span>
+    </div>
+  );
+
+  // Helper function to render download button
+  const renderDownloadButton = (tier: ModelTier) => (
+    <Button
+      className="h-7 gap-1"
+      onClick={async (e) => {
+        e.stopPropagation();
+        await handleDownloadStart(tier);
+      }}
+      size="sm"
+      variant="outline"
+    >
+      <Download className="h-3 w-3" />
+      Download
+    </Button>
+  );
+
   const getTierStatus = (tier: ModelTier): React.ReactNode => {
     const status = getTierDownloadStatus(tier);
     const isDownloading = downloadingTiers.has(tier);
@@ -292,7 +362,6 @@ function SettingsModelsPage() {
       return <Badge variant="secondary">Ready</Badge>;
     }
 
-    // Check if tier is complete first, before checking downloading status
     if (status === 'complete') {
       return (
         <Badge className="gap-1" variant="secondary">
@@ -303,61 +372,15 @@ function SettingsModelsPage() {
     }
 
     if (isDownloading || status === 'downloading') {
-      const downloadingModel = models.find(
-        (m) => typeof m.status === 'object' && 'Downloading' in m.status
-      );
-
-      // Use smoothed progress if available, otherwise fall back to model status
-      let progress = 0;
-      if (downloadingModel) {
-        const modelId = Object.keys(settings.models.availableModels).find(
-          (id) => settings.models.availableModels[id] === downloadingModel
-        );
-        if (modelId && smoothedProgress[modelId] !== undefined) {
-          progress = smoothedProgress[modelId];
-        } else if (typeof downloadingModel.status === 'object') {
-          progress = downloadingModel.status.Downloading;
-        }
-      }
-
-      return (
-        <div className="flex items-center gap-2">
-          <Progress className="h-2 w-16" value={progress} />
-          <span className="text-muted-foreground text-xs">{progress}%</span>
-        </div>
-      );
+      const progress = getTierDownloadProgress(models);
+      return renderDownloadingStatus(progress);
     }
 
-    switch (status) {
-      case 'none':
-        return (
-          <Button
-            className="h-7 gap-1"
-            onClick={async (e) => {
-              e.stopPropagation();
-              setDownloadingTiers((prev) => new Set(prev).add(tier));
-              const tierModels = getModelsForTier(tier);
-              if (tierModels.length > 0) {
-                const modelToDownload = Object.keys(
-                  settings.models.availableModels
-                ).find(
-                  (id) => settings.models.availableModels[id] === tierModels[0]
-                );
-                if (modelToDownload) {
-                  await invoke('download_model', { modelId: modelToDownload });
-                }
-              }
-            }}
-            size="sm"
-            variant="outline"
-          >
-            <Download className="h-3 w-3" />
-            Download
-          </Button>
-        );
-      default:
-        return null;
+    if (status === 'none') {
+      return renderDownloadButton(tier);
     }
+
+    return null;
   };
 
   const isRecommended = (tier: ModelTier): boolean => {
@@ -466,6 +489,7 @@ function SettingsModelsPage() {
             }}
             value={selectedTier}
           >
+            {/** biome-ignore lint/complexity/noExcessiveCognitiveComplexity: lazy */}
             {(Object.keys(tierDisplayInfo) as ModelTier[]).map((tier) => {
               const info = tierDisplayInfo[tier];
               const recommended = isRecommended(tier);
@@ -478,7 +502,7 @@ function SettingsModelsPage() {
                 !isDownloaded || (downloadingTiers.size > 0 && !isDownloading);
 
               return (
-                <div
+                <button
                   className={`flex flex-col rounded-lg border p-4 transition-all ${
                     selectedTier === tier
                       ? 'border-2 border-primary bg-primary/5'
@@ -492,6 +516,7 @@ function SettingsModelsPage() {
                       handleTierChange(tier);
                     }
                   }}
+                  type="button"
                 >
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex items-start gap-4">
@@ -533,7 +558,7 @@ function SettingsModelsPage() {
                       />
                     </div>
                   </div>
-                </div>
+                </button>
               );
             })}
           </RadioGroup>

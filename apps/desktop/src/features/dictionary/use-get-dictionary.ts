@@ -21,8 +21,12 @@ export const useGetDictionary = () => {
 
   // Perform client-side fuzzy search when search term is present
   const filteredEntries = useMemo(() => {
-    if (!query.data?.entries) { return []; }
-    if (!search.debouncedSearchTerm) { return query.data.entries; }
+    if (!query.data?.entries) {
+      return [];
+    }
+    if (!search.debouncedSearchTerm) {
+      return query.data.entries;
+    }
 
     const fuse = new Fuse(query.data.entries, {
       keys: ['word'],

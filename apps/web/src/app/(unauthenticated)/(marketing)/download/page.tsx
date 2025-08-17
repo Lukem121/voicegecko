@@ -1,4 +1,4 @@
-import { log } from '@acme/observability';
+import { log } from '@acme/observability/log';
 import { unstable_cache } from 'next/cache';
 import SectionHeader from '~/app/_landing/section-header';
 import SectionWrapper from '~/app/_landing/section-wrapper';

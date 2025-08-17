@@ -1,12 +1,17 @@
 {
   "name": "@acme/email",
-  "version": "0.0.0",
+  "version": "0.0.9",
   "private": true,
   "type": "module",
   "exports": {
-    ".": {
-      "default": "./src/index.ts"
-    }
+    "./lib/send-email": "./src/lib/send-email.ts",
+    "./send/payment-failed": "./src/send/payment-failed.ts",
+    "./send/reset-password": "./src/send/reset-password.ts",
+    "./send/student-discount": "./src/send/student-discount.ts",
+    "./send/subscription-cancelled": "./src/send/subscription-cancelled.ts",
+    "./send/verification": "./src/send/verification.ts",
+    "./send/welcome": "./src/send/welcome.ts",
+    "./send/welcome-pro": "./src/send/welcome-pro.ts"
   },
   "scripts": {
     "dev": "email dev --dir ./src/emails --port 3001",
@@ -14,7 +19,7 @@
     "typecheck": "tsc --noEmit --emitDeclarationOnly false"
   },
   "dependencies": {
-    "@react-email/components": "0.4.0",
+    "@react-email/components": "0.5.0",
     "@sendgrid/mail": "^8.1.5",
     "@t3-oss/env-nextjs": "^0.13.8",
     "react": "catalog:react19",
@@ -24,10 +29,10 @@
   "devDependencies": {
     "@acme/tsconfig": "workspace:*",
     "@biomejs/biome": "catalog:",
-    "@react-email/preview-server": "4.2.7",
+    "@react-email/preview-server": "4.2.8",
     "@types/react": "catalog:react19",
     "@types/react-dom": "catalog:react19",
-    "react-email": "^4.2.7",
+    "react-email": "^4.2.8",
     "typescript": "catalog:"
   }
 }

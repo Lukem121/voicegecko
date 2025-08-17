@@ -2,14 +2,14 @@ import { Check, X } from 'lucide-react';
 
 type CellValue = 'check' | 'x' | (string & {});
 
-interface ComparisonTableProps {
+type ComparisonTableProps = {
   firstColumnHeader: string;
   data: {
     feature: string;
     basic: CellValue;
     pro: CellValue;
   }[];
-}
+};
 
 const ComparisonTable = ({ firstColumnHeader, data }: ComparisonTableProps) => {
   const renderCell = (value: CellValue) => {

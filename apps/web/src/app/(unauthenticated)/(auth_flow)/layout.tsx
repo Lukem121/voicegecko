@@ -1,9 +1,9 @@
 import type { ReactNode } from 'react';
 import { Suspense } from 'react';
 
-interface AuthLayoutProps {
+type AuthLayoutProps = {
   readonly children: ReactNode;
-}
+};
 
 export default function AuthLayout({ children }: AuthLayoutProps) {
   return (

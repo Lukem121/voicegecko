@@ -14,11 +14,11 @@ import { DarkModeAwareLogoFull } from '../components/dark-mode-aware-logo-full';
 import { DarkModeEmailHead } from '../components/dark-mode-email-head';
 import { EmailFooter } from '../components/email-footer';
 
-interface LinkEmailProps {
+type LinkEmailProps = {
   heading: string;
   description: string;
   url: string;
-}
+};
 
 export const LinkTemplate = ({ heading, description, url }: LinkEmailProps) => (
   <Tailwind>

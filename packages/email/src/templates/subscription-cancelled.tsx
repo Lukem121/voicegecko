@@ -14,12 +14,12 @@ import { DarkModeAwareLogoFull } from '../components/dark-mode-aware-logo-full';
 import { DarkModeEmailHead } from '../components/dark-mode-email-head';
 import { EmailFooter } from '../components/email-footer';
 
-interface SubscriptionCancelledEmailProps {
+type SubscriptionCancelledEmailProps = {
   name?: string;
   planName: string;
   accessUntilDate: string;
   reactivateUrl?: string;
-}
+};
 
 export const SubscriptionCancelledTemplate = ({
   planName,

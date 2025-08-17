@@ -1,5 +1,5 @@
-import { DiscordAdapter } from '@acme/notifications';
-import { log } from '@acme/observability';
+import { DiscordAdapter } from '@acme/notifications/discord-adapter';
+import { log } from '@acme/observability/log';
 import type { TRPCRouterRecord } from '@trpc/server';
 import { TRPCError } from '@trpc/server';
 import { z } from 'zod/v4';

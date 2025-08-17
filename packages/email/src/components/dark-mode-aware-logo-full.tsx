@@ -1,10 +1,10 @@
 import { Img } from '@react-email/components';
 
-interface DarkModeAwareLogoProps {
+type DarkModeAwareLogoProps = {
   height?: string;
   alt?: string;
   className?: string;
-}
+};
 
 const defaultLightModeUrl =
   'https://90yklj7887.ufs.sh/f/Wzb1OBsC8B6ZuhJ6bYnJFtDkTismYA8O9fNxQhRlaWHz26n0';

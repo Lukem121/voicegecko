@@ -1,21 +1,21 @@
-import { log } from '@acme/observability';
+import { log } from '@acme/observability/log';
 import { stripeClient } from '@acme/payment/stripe';
 import { apiEnv } from '../../../env';
 
 type PriceId = string;
 
-export interface Price {
+export type Price = {
   id: string;
   currency: string;
   unitAmount: number;
   interval: string;
   intervalCount: number;
-}
+};
 
-export interface CurrencyPrice {
+export type CurrencyPrice = {
   currency: string;
   unitAmount: number;
-}
+};
 
 export interface PriceWithMetadata extends Price {
   planName?: string;

@@ -1,4 +1,4 @@
-import { log } from '@acme/observability';
+import { log } from '@acme/observability/log';
 import { Octokit } from '@octokit/rest';
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
@@ -16,11 +16,11 @@ import { PLATFORM_FILE_EXTENSIONS } from '~/types/updater';
 
 // ===== CONFIGURATION =====
 
-interface Config {
+type Config = {
   readonly githubToken: string;
   readonly githubOwner: string;
   readonly githubRepo: string;
-}
+};
 
 const CONFIG: Config = {
   githubToken: env.GITHUB_TOKEN,
@@ -170,11 +170,11 @@ class GitHubService {
   }
 }
 
-interface ReleaseAsset {
+type ReleaseAsset = {
   readonly id: number;
   readonly name: string;
   readonly browser_download_url: string;
-}
+};
 
 class AssetProcessor {
   private readonly githubService: GitHubService;
@@ -550,9 +550,9 @@ export async function GET(
     }
 
     if (error instanceof z.ZodError) {
-      Logger.error('Request validation failed', { errors: error.errors });
+      Logger.error('Request validation failed', { errors: error });
       return ResponseBuilder.buildErrorResponse(
-        new InvalidPlatformError('Invalid request parameters', error.errors)
+        new InvalidPlatformError('Invalid request parameters', error)
       );
     }
 

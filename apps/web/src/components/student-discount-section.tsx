@@ -7,10 +7,10 @@ import { GraduationCap } from 'lucide-react';
 import { StudentDiscountModal } from '~/components/student-discount-modal';
 import { useStudentDiscountModal } from '~/hooks/use-student-discount-modal';
 
-interface StudentDiscountSectionProps {
+type StudentDiscountSectionProps = {
   variant?: 'card' | 'banner' | 'minimal';
   className?: string;
-}
+};
 
 /**
  * Reusable student discount section that can be styled differently across pages.

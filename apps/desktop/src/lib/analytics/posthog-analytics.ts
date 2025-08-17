@@ -5,7 +5,7 @@
  * throughout the application while respecting user privacy settings.
  */
 
-import { log } from '@acme/observability';
+import { log } from '@acme/observability/log';
 import { usePostHog } from 'posthog-js/react';
 import React from 'react';
 
@@ -21,14 +21,14 @@ const WORD_SPLIT_REGEX = /\s+/;
 // EVENT TYPES & INTERFACES
 // =============================================================================
 
-interface BaseEventProperties {
+type BaseEventProperties = {
   timestamp?: number;
   platform: 'desktop';
   app_version?: string;
-}
+};
 
 // User Lifecycle Events
-interface UserLifecycleEvents {
+type UserLifecycleEvents = {
   user_signed_up: {
     method: 'email' | 'discord' | 'google';
     source?: string;
@@ -39,10 +39,10 @@ interface UserLifecycleEvents {
   };
   user_signed_out: Record<string, never>;
   user_email_verified: Record<string, never>;
-}
+};
 
 // Onboarding Events
-interface OnboardingEvents {
+type OnboardingEvents = {
   onboarding_started: Record<string, never>;
   onboarding_step_completed: {
     step_id: string;
@@ -65,10 +65,10 @@ interface OnboardingEvents {
     steps_completed: number;
     time_spent_seconds: number;
   };
-}
+};
 
 // Recording Events
-interface RecordingEvents {
+type RecordingEvents = {
   recording_started: {
     trigger: 'gecko_bar' | 'main_ui' | 'keyboard_shortcut';
     device_name?: string;
@@ -88,10 +88,10 @@ interface RecordingEvents {
     error_message: string;
     duration_before_error?: number;
   };
-}
+};
 
 // Transcription Events
-interface TranscriptionEvents {
+type TranscriptionEvents = {
   transcription_started: {
     model_type: 'cloud' | 'local';
     model_name?: string;
@@ -130,10 +130,10 @@ interface TranscriptionEvents {
     search_term_length: number;
     search_type: 'server_search' | 'fuzzy_search';
   };
-}
+};
 
 // Dictionary Events
-interface DictionaryEvents {
+type DictionaryEvents = {
   dictionary_word_added: {
     word_length: number;
     total_words_count: number;
@@ -156,10 +156,10 @@ interface DictionaryEvents {
   dictionary_sort_changed: {
     sort_type: 'alphabetical' | 'newest' | 'oldest';
   };
-}
+};
 
 // Navigation Events
-interface NavigationEvents {
+type NavigationEvents = {
   page_viewed: {
     page_name: string;
     page_path: string;
@@ -171,10 +171,10 @@ interface NavigationEvents {
     item_title: string;
     item_url: string;
   };
-}
+};
 
 // Settings Events
-interface SettingsEvents {
+type SettingsEvents = {
   settings_changed: {
     category:
       | 'audio'
@@ -211,10 +211,10 @@ interface SettingsEvents {
     download_time_seconds: number;
     success: boolean;
   };
-}
+};
 
 // Gecko Bar Events
-interface GeckoBarEvents {
+type GeckoBarEvents = {
   gecko_bar_interaction: {
     action:
       | 'click'
@@ -228,10 +228,10 @@ interface GeckoBarEvents {
     visible: boolean;
     trigger: 'settings' | 'fullscreen' | 'manual';
   };
-}
+};
 
 // Performance Events
-interface PerformanceEvents {
+type PerformanceEvents = {
   app_startup: {
     startup_time_seconds: number;
     initialization_steps: string[];
@@ -254,10 +254,10 @@ interface PerformanceEvents {
     stack_trace?: string;
     user_action?: string;
   };
-}
+};
 
 // Business Intelligence Events
-interface BusinessEvents {
+type BusinessEvents = {
   usage_limit_approached: {
     limit_type: 'transcription' | 'storage';
     current_usage: number;
@@ -282,7 +282,7 @@ interface BusinessEvents {
     total_time_saved: number;
     current_plan: 'unlimited' | 'limited';
   };
-}
+};
 
 // Combined event types
 type AllEvents = UserLifecycleEvents &
@@ -534,8 +534,8 @@ export function useAnalytics() {
  * Track recording session from start to finish
  */
 export class RecordingSessionTracker {
-  private startTime: number;
-  private trigger: 'gecko_bar' | 'main_ui' | 'keyboard_shortcut';
+  private readonly startTime: number;
+  private readonly trigger: 'gecko_bar' | 'main_ui' | 'keyboard_shortcut';
 
   constructor(trigger: 'gecko_bar' | 'main_ui' | 'keyboard_shortcut') {
     this.startTime = Date.now();
@@ -581,10 +581,10 @@ export class RecordingSessionTracker {
  * Track transcription processing from start to finish
  */
 export class TranscriptionTracker {
-  private startTime: number;
-  private modelType: 'cloud' | 'local';
-  private modelName?: string;
-  private audioDuration: number;
+  private readonly startTime: number;
+  private readonly modelType: 'cloud' | 'local';
+  private readonly modelName?: string;
+  private readonly audioDuration: number;
 
   constructor(
     modelType: 'cloud' | 'local',

@@ -1,12 +1,12 @@
-import { log } from '@acme/observability';
+import { log } from '@acme/observability/log';
 import type { Subscription } from '@better-auth/stripe';
 import type { Stripe } from 'stripe';
 
-interface SubscriptionDeletedParams {
+type SubscriptionDeletedParams = {
   event: Stripe.Event;
   subscription: Subscription;
   stripeSubscription: Stripe.Subscription;
-}
+};
 
 export const onSubscriptionDeleted = async ({
   subscription,

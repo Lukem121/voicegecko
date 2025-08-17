@@ -1,6 +1,6 @@
 'use client';
 
-import { log } from '@acme/observability';
+import { log } from '@acme/observability/log';
 import {
   Card,
   CardAction,
@@ -25,7 +25,7 @@ import { HiGlobeAlt } from 'react-icons/hi2';
 import { SiApple } from 'react-icons/si';
 import type { DownloadsData } from '~/lib/downloads-utils';
 
-interface PlatformCardProps {
+type PlatformCardProps = {
   title: string;
   description: string;
   icon: React.ReactNode;
@@ -36,13 +36,13 @@ interface PlatformCardProps {
     size: number;
   }>;
   downloadError?: string;
-}
+};
 
-interface VotingCardProps {
+type VotingCardProps = {
   title: string;
   description: string;
   icon: React.ReactNode;
-}
+};
 
 const systemRequirements = {
   'Mac OS': {

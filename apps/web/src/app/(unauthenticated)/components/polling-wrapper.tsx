@@ -10,9 +10,9 @@ import { usePolling } from '../hooks/use-polling-refresh';
 
 const POLL_INTERVAL = 5000;
 
-interface PollingAuthWrapperProps {
+type PollingAuthWrapperProps = {
   readonly children: ReactNode;
-}
+};
 
 export default function PollingAuthWrapper({
   children,

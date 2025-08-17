@@ -3,7 +3,7 @@
  * These types ensure type safety for all events emitted by the Tauri backend
  */
 
-export interface TauriEventMap {
+export type TauriEventMap = {
   'transcription-progress': TranscriptionProgressEvent;
   'recording-state-changed': RecordingStateChangedEvent;
   'recording-error': RecordingErrorEvent;
@@ -16,16 +16,16 @@ export interface TauriEventMap {
   'microphone-test-stopped': undefined;
   'microphone-test-error': string;
   'gecko-bar-notification': GeckoBarNotificationEvent;
-}
+};
 
 // Transcription Events
-export interface TranscriptionProgressEvent {
+export type TranscriptionProgressEvent = {
   status: string;
   data?: string;
   duration_seconds?: number;
   model_used?: string;
   sample_rate?: number;
-}
+};
 
 // Backend sends raw string, not an object
 export type RecordingStateChangedEvent =
@@ -38,24 +38,24 @@ export type RecordingStateChangedEvent =
 export type RecordingErrorEvent = string;
 
 // Gecko Bar notification event
-export interface GeckoBarNotificationEvent {
+export type GeckoBarNotificationEvent = {
   message: string;
   duration?: number;
   priority?: 'high' | 'normal';
-}
+};
 
-export interface ModelDownloadProgressEvent {
+export type ModelDownloadProgressEvent = {
   modelId: string;
   progress: number;
-}
+};
 
-export interface ModelDownloadCompleteEvent {
+export type ModelDownloadCompleteEvent = {
   modelId: string;
-}
+};
 
-export interface ModelDeleteCompleteEvent {
+export type ModelDeleteCompleteEvent = {
   modelId: string;
-}
+};
 
 /**
  * Type-safe event listener function
@@ -67,11 +67,11 @@ export type TauriEventCallback<T extends keyof TauriEventMap> = (event: {
 /**
  * Audio data structure from Tauri backend
  */
-export interface AudioData {
+export type AudioData = {
   samples: number[];
   sample_rate: number;
   channels: number;
-}
+};
 
 /**
  * Sound variant for notification sounds
@@ -81,7 +81,7 @@ export type SoundVariant = 'Start' | 'End';
 /**
  * Audio level event for real-time audio monitoring with advanced analysis
  */
-export interface AudioLevelEvent {
+export type AudioLevelEvent = {
   level: number; // RMS level (0.0 to 1.0)
   peak: number; // Peak level (0.0 to 1.0)
   frequency_bands: number[]; // 10 frequency bands for visualization
@@ -91,4 +91,4 @@ export interface AudioLevelEvent {
   zero_crossing_rate: number; // Zero crossing rate (roughness)
   is_voice_detected: boolean; // Voice activity detection
   is_silence: boolean; // Silence detection
-}
+};

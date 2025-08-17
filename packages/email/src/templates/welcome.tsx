@@ -14,9 +14,9 @@ import { DarkModeAwareLogo } from '../components/dark-mode-aware-logo';
 import { DarkModeEmailHead } from '../components/dark-mode-email-head';
 import { EmailFooter } from '../components/email-footer';
 
-interface WelcomeEmailProps {
+type WelcomeEmailProps = {
   name?: string;
-}
+};
 
 const welcomeGeckoUrl =
   'https://90yklj7887.ufs.sh/f/Wzb1OBsC8B6ZZxxQQcfpboVIp95n82XArwQPSJcUjFZED3Ru';

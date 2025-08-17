@@ -19,7 +19,6 @@ import { ShortcutRecorder } from '~/components/shortcut-recorder';
 import { useShortcuts } from '~/hooks/use-shortcuts';
 import { analytics } from '~/lib/analytics/posthog-analytics';
 import { formatKeysForDisplay, getOS } from '~/lib/shortcuts/utils';
-import { useShortcutStore } from '~/lib/stores/shortcut-store';
 
 export const Route = createFileRoute('/_authenticated/settings/shortcuts')({
   component: ShortcutsPage,

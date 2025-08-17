@@ -4,11 +4,11 @@ export type Result<T, E = AppError> =
   | { success: false; error: E };
 
 // Standardized error types
-export interface AppError {
+export type AppError = {
   code: string;
   message: string;
   details?: Record<string, unknown>;
-}
+};
 
 // Dictionary-specific error codes
 export const DictionaryErrorCodes = {

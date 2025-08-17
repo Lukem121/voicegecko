@@ -1,4 +1,4 @@
-import { log } from '@acme/observability';
+import { log } from '@acme/observability/log';
 import {
   Stepper,
   StepperDescription,
@@ -40,12 +40,12 @@ export const Route = createFileRoute('/onboarding/push-to-talk-tutorial')({
 });
 
 // Type for tutorial steps
-interface TutorialStep {
+type TutorialStep = {
   title: string;
   description: React.ReactNode;
   icon: React.ComponentType<{ className?: string }>;
   instruction: string;
-}
+};
 
 // Hook to track recording tutorial steps using the app's event store
 function useRecordingTutorialSteps() {

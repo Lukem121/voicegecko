@@ -1,14 +1,16 @@
 {
   "name": "@acme/auth",
-  "version": "0.0.7",
+  "version": "0.0.9",
   "private": true,
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
     "./middleware": "./src/middleware.ts",
     "./client": "./src/client.ts",
-    "./schemas": "./src/schemas/index.ts",
-    "./utils": "./src/utils/index.ts",
+    "./schemas/auth": "./src/schemas/auth.schema.ts",
+    "./utils/auth-error-messages": "./src/utils/auth-error-messages.ts",
+    "./utils/get-session": "./src/utils/get-session.ts",
+    "./utils/get-session-cookie": "./src/utils/get-session-cookie.ts",
     "./env": "./env.ts"
   },
   "scripts": {
@@ -25,8 +27,8 @@
     "@acme/payment": "workspace:*",
     "@daveyplate/better-auth-tauri": "^0.0.24",
     "@t3-oss/env-nextjs": "^0.13.8",
-    "better-auth": "1.3.4",
-    "next": "^15.4.5",
+    "better-auth": "1.3.6",
+    "next": "^15.4.6",
     "react": "catalog:react19",
     "react-dom": "catalog:react19",
     "zod": "catalog:"

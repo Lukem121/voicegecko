@@ -22,6 +22,7 @@ export const Flag = ({
 
   return (
     // biome-ignore lint/performance/noImgElement: Rendering SVG
+    // biome-ignore lint/nursery/useImageSize: Rendering SVG
     <img
       alt={`${code} flag`}
       className={cn('inline', className)}

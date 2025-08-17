@@ -27,18 +27,18 @@ const formatTime = (minutes: number): string => {
   return `${hours.toFixed(1).replace(TRAILING_ZERO_REGEX, '')}h`;
 };
 
-interface UsageStatsData {
+type UsageStatsData = {
   wordsProcessed: number;
   timeSaved: number;
   wordsPerMinute: number;
-}
+};
 
-interface FormattedUsageStats {
+type FormattedUsageStats = {
   wordsProcessed: string;
   timeSaved: string;
   wordsPerMinute: string;
   isLoading: boolean;
-}
+};
 
 export function useUsageStats(): FormattedUsageStats {
   const options = trpc.usage.getStats.queryOptions();

@@ -4,12 +4,12 @@ import { AiFillDiscord } from 'react-icons/ai';
 
 import type { SocialProvider } from '../-hooks/use-social-auth';
 
-interface SocialSignInButtonProps {
+type SocialSignInButtonProps = {
   provider: SocialProvider;
   isLoading: boolean;
   onClick: () => void;
   disabled: boolean;
-}
+};
 
 export function SocialSignInButton({
   provider,

@@ -1,5 +1,5 @@
-import { getSessionCookie } from '@acme/auth/utils';
-import { log } from '@acme/observability';
+import { getSessionCookie } from '@acme/auth/utils/get-session-cookie';
+import { log } from '@acme/observability/log';
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 

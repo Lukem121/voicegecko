@@ -16,7 +16,7 @@ type MascotChatLayout =
   | 'bubble-right' // Chat bubble appears to the right of mascot
   | 'bubble-floating'; // Chat bubble floats above mascot with absolute positioning
 
-interface MascotChatProps {
+type MascotChatProps = {
   variant: MascotVariant;
   layout?: MascotChatLayout;
   size?: 'sm' | 'md' | 'lg' | 'xl';
@@ -28,7 +28,7 @@ interface MascotChatProps {
   onMascotClick?: () => void;
   // Layout-specific spacing
   spacing?: 'sm' | 'md' | 'lg';
-}
+};
 
 // Spacing configurations
 const spacingClasses = {
@@ -176,11 +176,11 @@ export function MascotChat({
 }
 
 // Convenience component with preset styling for onboarding
-interface OnboardingMascotChatProps {
+type OnboardingMascotChatProps = {
   variant: MascotVariant;
   className?: string;
   onMascotClick?: () => void;
-}
+};
 
 export function OnboardingMascotChat({
   variant,
@@ -238,11 +238,11 @@ export function OnboardingMascotChat({
 }
 
 // Convenience component for sidebar mascot (smaller, compact)
-interface SidebarMascotChatProps {
+type SidebarMascotChatProps = {
   variant: MascotVariant;
   className?: string;
   onMascotClick?: () => void;
-}
+};
 
 export function SidebarMascotChat({
   variant,
@@ -264,11 +264,11 @@ export function SidebarMascotChat({
 }
 
 // Convenience component for help tooltips
-interface HelpMascotChatProps {
+type HelpMascotChatProps = {
   variant: MascotVariant;
   className?: string;
   onMascotClick?: () => void;
-}
+};
 
 export function HelpMascotChat({
   variant,

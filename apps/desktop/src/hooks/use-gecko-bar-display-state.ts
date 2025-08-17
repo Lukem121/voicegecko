@@ -13,12 +13,12 @@ export type GeckoBarDisplayMode =
   | 'recording' // Currently recording, expanded
   | 'transcribing'; // Processing transcription, expanded
 
-export interface GeckoBarDisplayState {
+export type GeckoBarDisplayState = {
   mode: GeckoBarDisplayMode;
   isExpanded: boolean;
   showTooltip: boolean;
   tooltipMessage: string;
-}
+};
 
 type DisplayAction =
   | { type: 'HOVER_START'; canTranscribe: boolean }

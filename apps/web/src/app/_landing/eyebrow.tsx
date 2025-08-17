@@ -1,9 +1,9 @@
 import { cn } from '@acme/ui/lib/utils';
 
-interface EyebrowProps {
+type EyebrowProps = {
   children: React.ReactNode;
   className?: string;
-}
+};
 
 export default function Eyebrow({ children, className }: EyebrowProps) {
   return (

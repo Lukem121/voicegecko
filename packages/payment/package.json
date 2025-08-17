@@ -1,11 +1,14 @@
 {
   "name": "@acme/payment",
-  "version": "0.0.7",
+  "version": "0.0.9",
   "private": true,
   "type": "module",
   "exports": {
     "./stripe": "./src/stripe.ts",
-    "./subscription-handlers": "./src/subscription-handlers/index.ts"
+    "./subscription-handlers/on-subscription-cancel": "./src/subscription-handlers/on-subscription-cancel.ts",
+    "./subscription-handlers/on-subscription-complete": "./src/subscription-handlers/on-subscription-complete.ts",
+    "./subscription-handlers/on-subscription-deleted": "./src/subscription-handlers/on-subscription-deleted.ts",
+    "./subscription-handlers/on-subscription-update": "./src/subscription-handlers/on-subscription-update.ts"
   },
   "scripts": {
     "build": "tsc",
@@ -20,7 +23,7 @@
     "@acme/email": "workspace:*",
     "@acme/observability": "workspace:*",
     "@acme/validators": "workspace:*",
-    "@better-auth/stripe": "^1.3.4",
+    "@better-auth/stripe": "^1.3.6",
     "stripe": "^18.4.0",
     "zod": "catalog:"
   },

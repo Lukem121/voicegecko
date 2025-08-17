@@ -1,4 +1,4 @@
-import { log } from '@acme/observability';
+import { log } from '@acme/observability/log';
 import { Alert, AlertDescription } from '@acme/ui/components/ui/alert';
 import { Button } from '@acme/ui/components/ui/button';
 import {

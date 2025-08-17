@@ -1,9 +1,9 @@
-import { log } from '@acme/observability';
+import { log } from '@acme/observability/log';
 
 // Centralized event bus for cross-feature communication
 // This provides a typed, decoupled way for different parts of the app to communicate
 
-interface EventMap {
+type EventMap = {
   // App lifecycle events
   'app:ready': undefined;
   'app:error': Error;
@@ -26,7 +26,7 @@ interface EventMap {
   // Transcription events
   'transcription:complete': { text: string };
   'transcription:error': Error;
-}
+};
 
 type EventListener<T> = (data: T) => void;
 
@@ -35,7 +35,7 @@ type AnyEventListener = (data: unknown) => void;
 
 class EventBus {
   private static instance: EventBus;
-  private listeners = new Map<keyof EventMap, Set<AnyEventListener>>();
+  private readonly listeners = new Map<keyof EventMap, Set<AnyEventListener>>();
 
   private constructor() {}
 

@@ -1,7 +1,7 @@
 'use client';
 
 import type { PriceWithMetadata } from '@acme/api/src/services/stripe/stripe.service';
-import { log } from '@acme/observability';
+import { log } from '@acme/observability/log';
 import {
   Alert,
   AlertDescription,
@@ -27,7 +27,7 @@ import { useCurrency } from '~/providers/currency';
 import { useTRPC } from '~/trpc/react';
 import { useCreateBillingPortalSession } from '../../_hooks/use-create-billing-portal-session';
 
-interface BillingProps {
+type BillingProps = {
   prices: Record<string, PriceWithMetadata>;
   subscription: Subscription | null;
   error: {
@@ -36,14 +36,14 @@ interface BillingProps {
     status: number;
     statusText: string;
   } | null;
-}
+};
 
-interface AlertState {
+type AlertState = {
   show: boolean;
   variant: 'default' | 'destructive';
   title: string;
   message: string;
-}
+};
 
 const useRestoreSubscription = () => {
   const trpc = useTRPC();

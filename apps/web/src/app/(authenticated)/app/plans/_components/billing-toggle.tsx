@@ -3,10 +3,10 @@ import { motion } from 'framer-motion';
 
 type BillingPeriod = 'monthly' | 'annual';
 
-interface BillingToggleProps {
+type BillingToggleProps = {
   selected: BillingPeriod;
   setSelected: (period: BillingPeriod) => void;
-}
+};
 
 export const BillingToggle = ({
   selected,

@@ -1,14 +1,14 @@
-import { log } from '@acme/observability';
+import { log } from '@acme/observability/log';
 import { queryClient, trpc, trpcClient } from '~/trpc';
 
-export interface CreateTranscriptionInput {
+export type CreateTranscriptionInput = {
   content: string;
   status: 'normal' | 'silent';
   durationSeconds?: number;
   modelUsed?: string;
   sampleRate?: number;
   appVersion?: string;
-}
+};
 
 /**
  * Create a transcription using tRPC mutation outside of React components

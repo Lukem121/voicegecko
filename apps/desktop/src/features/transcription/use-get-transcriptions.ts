@@ -2,11 +2,11 @@ import { useQuery } from '@tanstack/react-query';
 
 import { trpc } from '~/trpc';
 
-export interface UseGetTranscriptionsParams {
+export type UseGetTranscriptionsParams = {
   cursor?: number;
   limit?: number;
   search?: string;
-}
+};
 
 export const useGetTranscriptions = (
   params: UseGetTranscriptionsParams = {}
