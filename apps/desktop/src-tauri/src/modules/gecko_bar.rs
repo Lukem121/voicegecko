@@ -136,10 +136,10 @@ pub fn show_gecko_bar(app: AppHandle) -> Result<(), String> {
             return Ok(());
         }
 
-        // Position the transparent window at bottom center
+        // Position the transparent window at bottom center first
         position_gecko_bar(&window)?;
 
-        // Show the window (already configured as 300x80px transparent in tauri.conf.json)
+        // Show the window (starts hidden and off-screen in tauri.conf.json)
         window.show().map_err(|e| e.to_string())?;
 
         Ok(())
