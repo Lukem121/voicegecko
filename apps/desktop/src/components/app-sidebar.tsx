@@ -159,14 +159,14 @@ const data: NavigationData = {
   ],
 };
 
-// const isDev = import.meta.env.DEV;
+const isDev = import.meta.env.DEV;
 
-// if (true) {
-data.navSecondary[2]?.items?.push({
-  title: 'Quality',
-  url: '/settings/models',
-});
-// }
+if (isDev) {
+  data.navSecondary[2]?.items?.push({
+    title: 'Quality',
+    url: '/settings/models',
+  });
+}
 
 // Circular Progress Component
 type CircularProgressProps = {

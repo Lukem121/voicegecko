@@ -103,6 +103,7 @@ pub fn run() {
             modules::settings::get_autostart_config,
             modules::settings::set_autostart_config,
             modules::system::simulate_paste,
+            modules::system::simulate_paste_with_options,
             modules::tray::update_tray_stats
         ])
         .setup(|app| {
