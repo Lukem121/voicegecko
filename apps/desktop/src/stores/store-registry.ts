@@ -3,6 +3,7 @@ import { migrationManager } from '~/lib/settings/migrations/manager';
 import { shortcutManager } from '~/lib/shortcuts/manager';
 import type { ShortcutCategory } from '~/lib/shortcuts/types';
 import { useShortcutStore } from '~/lib/stores/shortcut-store';
+import { isGeckoBarWindow } from '~/lib/window-detection';
 import { useConnectivityStore } from './connectivity.store';
 import { useSettingsStore } from './settings.store';
 
@@ -118,13 +119,19 @@ storeRegistry.register({
   name: 'Shortcuts',
   priority: 3, // Initialize after connectivity
   initialize: async () => {
-    // Load shortcuts from disk into the store
+    // Load shortcuts from disk into the store (for UI display)
     const store = shortcutManager.getStore();
     const savedShortcuts = await store.get<ShortcutCategory[]>('shortcuts');
     if (savedShortcuts) {
       useShortcutStore.getState().setShortcuts(savedShortcuts);
     }
-    // Then initialize the shortcut manager to register global shortcuts
-    await shortcutManager.initialize();
+
+    // Only the main window should register global shortcuts.
+    // The gecko bar window should NOT register to avoid duplicate bindings
+    // which can prevent updated shortcuts from taking effect until restart.
+    const isGeckoBar = isGeckoBarWindow();
+    if (!isGeckoBar) {
+      await shortcutManager.initialize();
+    }
   },
 });

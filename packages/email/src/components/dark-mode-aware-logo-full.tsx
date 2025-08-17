@@ -1,6 +1,5 @@
 import { Img } from '@react-email/components';
 
-
 interface DarkModeAwareLogoProps {
   height?: string;
   alt?: string;
@@ -8,9 +7,9 @@ interface DarkModeAwareLogoProps {
 }
 
 const defaultLightModeUrl =
-  'https://90yklj7887.ufs.sh/f/Wzb1OBsC8B6ZOUHIT7SEiXZxG9dY34AvLazHegtNsJIfWQOV';
+  'https://90yklj7887.ufs.sh/f/Wzb1OBsC8B6ZuhJ6bYnJFtDkTismYA8O9fNxQhRlaWHz26n0';
 const defaultDarkModeUrl =
-  'https://90yklj7887.ufs.sh/f/Wzb1OBsC8B6ZP2IFtSwDCEO9Xp2r37uNZRHlmToIxtJzj5S6';
+  'https://90yklj7887.ufs.sh/f/Wzb1OBsC8B6Zdrrvp8GANM8k36iyL4Jamp9sVUtxYP2ICfZ1';
 
 export const DarkModeAwareLogoFull = ({
   height = '42',

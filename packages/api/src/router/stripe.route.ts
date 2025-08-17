@@ -7,83 +7,12 @@ import { z } from 'zod/v4';
 
 import { apiEnv } from '../../env';
 import { EDUCATIONAL_DOMAINS } from '../consts/educational-domains';
+import { stripeService } from '../services/stripe/stripe.service';
 import { protectedProcedure, publicProcedure } from '../trpc';
 
-type PriceId = string;
-
-export interface Price {
-  id: string;
-  currency: string;
-  unitAmount: number;
-  interval: string;
-  intervalCount: number;
-}
-
-export interface PriceWithMetadata extends Price {
-  planName?: string;
-  intervalType?: 'monthly' | 'yearly';
-  minimumQuantity?: number;
-}
-
-// Map environment variables to plan metadata
-const PRICE_METADATA = {
-  [apiEnv().STRIPE_PRICE_ID_PRO_MONTHLY]: {
-    planName: 'voice gecko pro',
-    intervalType: 'monthly' as const,
-    minimumQuantity: 1,
-  },
-  [apiEnv().STRIPE_PRICE_ID_PRO_YEARLY]: {
-    planName: 'voice gecko pro',
-    intervalType: 'yearly' as const,
-    minimumQuantity: 1,
-  },
-  [apiEnv().STRIPE_PRICE_ID_TEAM_MONTHLY]: {
-    planName: 'voice gecko team',
-    intervalType: 'monthly' as const,
-    minimumQuantity: 3,
-  },
-  [apiEnv().STRIPE_PRICE_ID_TEAM_YEARLY]: {
-    planName: 'voice gecko team',
-    intervalType: 'yearly' as const,
-    minimumQuantity: 3,
-  },
-};
-
 export const stripeRouter = {
-  getPrices: protectedProcedure.query(async () => {
-    const priceIds = [
-      apiEnv().STRIPE_PRICE_ID_PRO_MONTHLY,
-      apiEnv().STRIPE_PRICE_ID_PRO_YEARLY,
-      apiEnv().STRIPE_PRICE_ID_TEAM_MONTHLY,
-      apiEnv().STRIPE_PRICE_ID_TEAM_YEARLY,
-    ];
-
-    const prices = await Promise.all(
-      priceIds.map((id) => stripeClient.prices.retrieve(id))
-    );
-
-    // Transform the data into a more usable format with metadata
-    const priceData = prices.reduce(
-      (acc, price) => {
-        const metadata =
-          PRICE_METADATA[price.id as keyof typeof PRICE_METADATA];
-
-        acc[price.id] = {
-          id: price.id,
-          currency: price.currency,
-          unitAmount: price.unit_amount ?? 0,
-          interval: price.recurring?.interval ?? 'month',
-          intervalCount: price.recurring?.interval_count ?? 1,
-          planName: metadata?.planName,
-          intervalType: metadata?.intervalType,
-          minimumQuantity: metadata?.minimumQuantity,
-        };
-        return acc;
-      },
-      {} as Record<PriceId, PriceWithMetadata>
-    );
-
-    return priceData;
+  getPrices: protectedProcedure.query(() => {
+    return stripeService.getPrices();
   }),
 
   createBillingPortalSession: protectedProcedure

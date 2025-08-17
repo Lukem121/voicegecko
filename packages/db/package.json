@@ -28,14 +28,14 @@
   },
   "dependencies": {
     "@vercel/postgres": "^0.10.0",
-    "drizzle-orm": "^0.44.3",
+    "drizzle-orm": "^0.44.4",
     "drizzle-zod": "^0.8.2",
     "zod": "catalog:"
   },
   "devDependencies": {
     "@acme/tsconfig": "workspace:*",
     "@biomejs/biome": "catalog:",
-    "dotenv-cli": "^9.0.0",
+    "dotenv-cli": "^10.0.0",
     "drizzle-kit": "^0.31.4",
     "typescript": "catalog:"
   }

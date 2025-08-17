@@ -25,6 +25,9 @@ export const env = createEnv({
     STRIPE_PRICE_ID_PRO_YEARLY: z.string().min(1),
     STRIPE_PRICE_ID_TEAM_MONTHLY: z.string().min(1),
     STRIPE_PRICE_ID_TEAM_YEARLY: z.string().min(1),
+    REVALIDATE_SECRET: z
+      .string()
+      .min(1, 'Revalidation secret is required for ISR'),
   },
 
   /**

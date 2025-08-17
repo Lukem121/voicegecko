@@ -18,6 +18,11 @@ const unprotectedRoutes: string[] = [
   // Legal
   APP_ROUTES.LEGAL.TERMS,
   APP_ROUTES.LEGAL.PRIVACY,
+  APP_ROUTES.LEGAL.SECURITY_POLICY,
+
+  // Marketing
+  APP_ROUTES.MARKETING.PRICING,
+  APP_ROUTES.MARKETING.DOWNLOAD,
 ];
 
 export default function middleware(request: NextRequest) {
@@ -26,7 +31,7 @@ export default function middleware(request: NextRequest) {
   const pathname = new URL(request.url).pathname;
 
   // Skip API routes - they have their own auth handling
-  if (pathname.startsWith('/api/')) {
+  if (pathname.startsWith('/api/') || pathname.startsWith('/assets/')) {
     return NextResponse.next();
   }
 
@@ -39,6 +44,10 @@ export default function middleware(request: NextRequest) {
   if (!(sessionCookie || isUnprotectedRoute)) {
     log.info('🚨 Blocked in middleware:', pathname);
     return NextResponse.redirect(new URL(APP_ROUTES.AUTH.SIGN_IN, request.url));
+  }
+
+  if (sessionCookie && pathname === APP_ROUTES.AUTH.SIGN_IN) {
+    return NextResponse.redirect(new URL(APP_ROUTES.APP.ROOT, request.url));
   }
 
   return NextResponse.next();

@@ -1,4 +1,3 @@
-import GeckoFullBody from '@acme/ui/components/geckos/gecko-full-body';
 import LogoText from '@acme/ui/components/logos/logo-text';
 import { useSidebar } from '@acme/ui/components/ui/sidebar';
 import {
@@ -114,7 +113,6 @@ export function TitleBar() {
       <div className="h-full flex-1" data-tauri-drag-region />
       <div className="pointer-events-none absolute top-0 right-0 left-2 flex h-full items-center justify-between">
         <div className="flex items-center gap-2">
-          <GeckoFullBody className="-mb-[10px] hover:-rotate-3 pointer-events-auto h-9 origin-bottom cursor-pointer transition-transform duration-150" />
           <LogoText className="h-7 pt-1.5 pl-1" />
         </div>
 

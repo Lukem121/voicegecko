@@ -1,6 +1,6 @@
 'use client';
 
-import type { PriceWithMetadata } from '@acme/api/src/router/stripe.route';
+import type { PriceWithMetadata } from '@acme/api/src/services/stripe/stripe.service';
 import { log } from '@acme/observability';
 import {
   Alert,
@@ -23,6 +23,7 @@ import { AlertTriangle, Loader2, RefreshCw, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
+import { useCurrency } from '~/providers/currency';
 import { useTRPC } from '~/trpc/react';
 import { useCreateBillingPortalSession } from '../../_hooks/use-create-billing-portal-session';
 
@@ -90,7 +91,7 @@ function BillingErrorState({
   return (
     <div className="space-y-8">
       <div className="mb-8">
-        <h1 className="mb-2 font-medium text-3xl">Billing</h1>
+        <h1 className="mb-2 font-semibold text-2xl tracking-tight">Billing</h1>
         <p className="text-muted-foreground">
           Manage your subscription and billing information
         </p>
@@ -105,7 +106,7 @@ function BillingErrorState({
         </AlertDescription>
       </Alert>
 
-      <Card className="border-0 shadow-sm">
+      <Card className="">
         <CardContent className="pt-6">
           <div className="flex items-center justify-center gap-3">
             <Button onClick={onRetry} variant="outline">
@@ -143,10 +144,10 @@ function CurrentPlanCard({
   formatDate: (date: Date | string | undefined) => string;
 }) {
   return (
-    <Card className="border-0 shadow-sm">
+    <Card className="">
       <CardHeader>
         <div className="flex items-center justify-between">
-          <CardTitle className="mb-2 font-medium text-xl">
+          <CardTitle className="mb-2 font-semibold text-xl">
             Current Plan
           </CardTitle>
           <CardAction>
@@ -210,6 +211,7 @@ function CurrentPlanCard({
 
 export default function Billing({ prices, subscription, error }: BillingProps) {
   const router = useRouter();
+  const { currency } = useCurrency();
   const [isLoading, setIsLoading] = useState(false);
   const [isRestoring, setIsRestoring] = useState(false);
   const [alertState, setAlertState] = useState<AlertState>({
@@ -241,13 +243,14 @@ export default function Billing({ prices, subscription, error }: BillingProps) {
 
   // Helper to format price with currency
   const formatPrice = (price: PriceWithMetadata) => {
+    const currencyData = price.currencies[currency];
     const formatter = new Intl.NumberFormat('en-US', {
       style: 'currency',
-      currency: price.currency.toUpperCase(),
+      currency: currencyData.currency.toUpperCase(),
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
     });
-    return formatter.format(price.unitAmount / 100); // Convert from cents
+    return formatter.format(currencyData.unitAmount / 100); // Convert from cents
   };
 
   // Helper to find the right price for a plan
@@ -387,7 +390,7 @@ export default function Billing({ prices, subscription, error }: BillingProps) {
   return (
     <div className="space-y-8">
       <div className="mb-8">
-        <h1 className="mb-2 font-medium text-3xl">Billing</h1>
+        <h1 className="mb-2 font-semibold text-2xl tracking-tight">Billing</h1>
         <p className="text-muted-foreground">
           Manage your subscription and billing information
         </p>
@@ -462,9 +465,9 @@ export default function Billing({ prices, subscription, error }: BillingProps) {
 
       {/* Subscription Details */}
       {subscription && (
-        <Card className="border-0 shadow-sm">
+        <Card className="">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 font-medium text-lg">
+            <CardTitle className="flex items-center gap-2 font-semibold text-lg">
               Subscription Details
             </CardTitle>
           </CardHeader>
@@ -514,9 +517,9 @@ export default function Billing({ prices, subscription, error }: BillingProps) {
       )}
 
       {/* Billing History Note */}
-      <Card className="border-0 shadow-sm">
+      <Card className="">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 font-medium text-lg">
+          <CardTitle className="flex items-center gap-2 font-semibold text-lg">
             Billing History
           </CardTitle>
         </CardHeader>

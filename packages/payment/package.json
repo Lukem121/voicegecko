@@ -3,7 +3,6 @@
   "version": "0.0.7",
   "private": true,
   "type": "module",
-  "license": "MIT",
   "exports": {
     "./stripe": "./src/stripe.ts",
     "./subscription-handlers": "./src/subscription-handlers/index.ts"
@@ -21,8 +20,8 @@
     "@acme/email": "workspace:*",
     "@acme/observability": "workspace:*",
     "@acme/validators": "workspace:*",
-    "@better-auth/stripe": "^1.3.3",
-    "stripe": "^18.3.0",
+    "@better-auth/stripe": "^1.3.4",
+    "stripe": "^18.4.0",
     "zod": "catalog:"
   },
   "devDependencies": {

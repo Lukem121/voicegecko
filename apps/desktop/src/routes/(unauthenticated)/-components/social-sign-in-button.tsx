@@ -20,7 +20,7 @@ export function SocialSignInButton({
   return (
     <Button
       aria-label={`Sign in with ${provider}`}
-      className="flex w-full items-center gap-2"
+      className="flex w-full items-center gap-2 border"
       disabled={disabled}
       onClick={onClick}
       variant={'secondary'}

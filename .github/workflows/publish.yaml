@@ -217,6 +217,24 @@ jobs:
             exit 1
           }
 
+      - name: Revalidate Website Cache (Windows)
+        if: matrix.platform == 'self-hosted' || contains(matrix.platform, 'windows')
+        shell: powershell
+        run: |
+          Write-Host "Triggering ISR revalidation for landing page..."
+          $body = @{
+            secret = "${{ secrets.REVALIDATE_SECRET }}"
+            paths = @("/")
+            tags = @("downloads", "landing-page")
+          } | ConvertTo-Json
+
+          try {
+            $response = Invoke-RestMethod -Uri "${{ secrets.VOICEGECKO_URL }}/api/revalidate" -Method POST -Body $body -ContentType "application/json" -TimeoutSec 30
+            Write-Host "Revalidation successful: $($response.message)"
+          } catch {
+            Write-Host "Revalidation failed - this is non-critical: $($_.Exception.Message)"
+          }
+
       - name: Create Release in Public Repository (macOS/Linux)
         if: matrix.platform == 'macos-latest' || matrix.platform == 'ubuntu-22.04'
         env:
@@ -245,3 +263,23 @@ jobs:
             echo "Uploading: $artifact"
             gh release upload $TAG_NAME "$artifact" --repo "Lukem121/voicegecko-releases" --clobber
           done
+
+  # Revalidate ISR cache after successful release
+  revalidate-cache:
+    needs: publish-tauri
+    runs-on: ubuntu-latest
+    if: success()
+    steps:
+      - name: Revalidate Website Cache
+        run: |
+          echo "Triggering ISR revalidation for landing page..."
+          curl -X POST "${{ secrets.VOICEGECKO_URL }}/api/revalidate" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "secret": "${{ secrets.REVALIDATE_SECRET }}",
+              "paths": ["/"],
+              "tags": ["downloads", "landing-page"]
+            }' \
+            --fail-with-body \
+            --max-time 30 \
+            || echo "Revalidation failed - this is non-critical"

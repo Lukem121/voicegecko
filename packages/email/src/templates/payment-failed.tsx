@@ -58,15 +58,17 @@ export const PaymentFailedTemplate = ({
               interruption, please update your payment information.
             </Text>
             <Link
-              className="mb-4 inline-block rounded-md bg-green-600 px-6 py-3 text-center font-medium text-white no-underline hover:bg-green-700 sm:px-8 sm:py-4"
+              className="mb-4 inline-flex min-h-[44px] items-center justify-center rounded-md bg-green-600 px-6 py-3 text-center font-medium text-white no-underline hover:bg-green-700 sm:px-8 sm:py-4"
               href={retryPaymentUrl}
+              style={{ minHeight: '44px' }}
             >
               Resolve Payment Issue
             </Link>
             <div className="mt-4">
               <Link
-                className="text-blue-600 text-sm underline hover:text-blue-800"
+                className="inline-block min-h-[44px] py-2 text-blue-600 text-sm underline hover:text-blue-800"
                 href={accountUrl}
+                style={{ minHeight: '44px', padding: '8px 4px' }}
               >
                 Or manage your account settings
               </Link>
@@ -106,15 +108,17 @@ export const PaymentFailedTemplate = ({
             </Text>
             <Text className="text-sm leading-6">
               <Link
-                className="text-blue-600 underline hover:text-blue-800"
+                className="mr-4 mb-2 inline-block min-h-[44px] py-2 text-blue-600 underline hover:text-blue-800"
                 href="mailto:support@voicegecko.io?subject=Need Help"
+                style={{ minHeight: '44px', padding: '8px 4px' }}
               >
                 Contact Support
               </Link>
-              {' • '}
+              <span className="hidden sm:inline"> • </span>
               <Link
-                className="text-blue-600 underline hover:text-blue-800"
+                className="mb-2 inline-block min-h-[44px] py-2 text-blue-600 underline hover:text-blue-800"
                 href="https://discord.gg/BFxNQCzZjB"
+                style={{ minHeight: '44px', padding: '8px 4px' }}
               >
                 Discord Community
               </Link>

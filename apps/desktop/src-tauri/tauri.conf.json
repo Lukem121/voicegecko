@@ -11,6 +11,7 @@
   "app": {
     "windows": [
       {
+        "label": "main",
         "title": "Voice Gecko",
         "width": 1350,
         "height": 820,
@@ -19,7 +20,8 @@
         "maximizable": true,
         "resizable": true,
         "center": true,
-        "decorations": false
+        "decorations": false,
+        "visible": false
       },
       {
         "label": "gecko-bar",
@@ -37,7 +39,10 @@
         "center": false,
         "shadow": false,
         "acceptFirstMouse": true,
-        "tabbingIdentifier": "gecko-bar"
+        "tabbingIdentifier": "gecko-bar",
+        "visible": false,
+        "x": -1000,
+        "y": -1000
       }
     ],
     "security": {

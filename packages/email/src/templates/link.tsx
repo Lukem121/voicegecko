@@ -39,8 +39,13 @@ export const LinkTemplate = ({ heading, description, url }: LinkEmailProps) => (
 
           <Section className="mx-2 mb-5 rounded-md bg-gray-100 p-6 sm:mx-0 sm:mb-7 sm:p-10">
             <Link
-              className="break-all text-base text-blue-600 leading-6 hover:text-blue-800 sm:text-lg"
+              className="block min-h-[44px] break-words py-2 text-base text-blue-600 leading-6 hover:text-blue-800 sm:text-lg"
               href={url}
+              style={{
+                wordBreak: 'break-word',
+                overflowWrap: 'break-word',
+                color: '#2563eb',
+              }}
             >
               {url}
             </Link>

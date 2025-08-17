@@ -1,13 +1,15 @@
 import { Toaster } from '@acme/ui/components/ui/sonner';
-import { ThemeProvider, ThemeToggle } from '@acme/ui/components/ui/theme';
+import { ThemeProvider } from '@acme/ui/components/ui/theme';
 import { cn } from '@acme/ui/lib/utils';
 import type { Metadata, Viewport } from 'next';
-import { Geist, Geist_Mono, Inter, Plus_Jakarta_Sans } from 'next/font/google';
+import { Plus_Jakarta_Sans } from 'next/font/google';
+import localFont from 'next/font/local';
 import { NuqsAdapter } from 'nuqs/adapters/next/app';
 
 import { TRPCReactProvider } from '~/trpc/react';
 
 import '@acme/ui/globals.css';
+import { CurrencyProvider } from '~/providers/currency';
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://www.voicegecko.io'),
@@ -33,21 +35,31 @@ export const viewport: Viewport = {
   ],
 };
 
-const geistSans = Geist({
-  subsets: ['latin'],
-  variable: '--font-geist-sans',
-});
-const geistMono = Geist_Mono({
-  subsets: ['latin'],
-  variable: '--font-geist-mono',
-});
 const plusJakartaSans = Plus_Jakarta_Sans({
   subsets: ['latin'],
   variable: '--font-plus-jakarta-sans',
+  weight: 'variable',
 });
-const interVariable = Inter({
-  subsets: ['latin'],
-  variable: '--font-inter',
+
+const roobert = localFont({
+  src: [
+    {
+      path: './fonts/Roobert/roobert-regular.woff2',
+      weight: '400',
+      style: 'normal',
+    },
+    {
+      path: './fonts/Roobert/roobert-medium.woff2',
+      weight: '500',
+      style: 'normal',
+    },
+    {
+      path: './fonts/Roobert/roobert-semibold.woff2',
+      weight: '600',
+      style: 'normal',
+    },
+  ],
+  variable: '--font-sans',
 });
 
 export default function RootLayout(props: { children: React.ReactNode }) {
@@ -56,19 +68,16 @@ export default function RootLayout(props: { children: React.ReactNode }) {
       <body
         className={cn(
           'min-h-screen bg-background font-sans text-foreground antialiased',
-          geistSans.variable,
-          geistMono.variable,
           plusJakartaSans.variable,
-          interVariable.variable
+          roobert.variable
         )}
       >
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <NuqsAdapter>
-            <TRPCReactProvider>{props.children}</TRPCReactProvider>
+            <TRPCReactProvider>
+              <CurrencyProvider>{props.children}</CurrencyProvider>
+            </TRPCReactProvider>
             <Toaster />
-            <div className="absolute top-4 right-4 z-50">
-              <ThemeToggle />
-            </div>
           </NuqsAdapter>
         </ThemeProvider>
       </body>

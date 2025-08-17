@@ -1,6 +1,18 @@
 // URL configuration constants
 export const APP_ROUTES = {
   HOME: '/',
+  APP: {
+    ROOT: '/app',
+    USAGE: '/app/usage',
+    PLANS: '/app/plans',
+    BILLING: '/app/billing',
+    PROFILE: '/app/profile',
+  },
+  MARKETING: {
+    PRICING: '/pricing',
+    DOWNLOAD: '/download',
+  },
+
   AUTH: {
     SIGN_IN: '/sign-in',
     SIGN_UP: '/sign-up',
@@ -16,8 +28,9 @@ export const APP_ROUTES = {
     APPEARANCE: '/settings/appearance',
   },
   LEGAL: {
-    TERMS: '/legal/terms',
-    PRIVACY: '/legal/privacy',
+    TERMS: '/terms/terms-of-service',
+    PRIVACY: '/terms/privacy-policy',
+    SECURITY_POLICY: '/terms/security-policy',
   },
 } as const;
 
