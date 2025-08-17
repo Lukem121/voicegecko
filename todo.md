@@ -1,6 +1,5 @@
 Todo
 
-- [ ] there is a bug that if for example we had a session so we're logged in so the desktop app thinks of a session but it's no longer authorised like it's an old session it just carries on it doesn't like notice and logs out or anything
 - [ ] I noticed that if we have been marked as no internet, then the Gecko bar needs to be restarted in order to detect that again. It doesn't seem to be getting updated to let it know that the internet has been regained.
 - [ ] I'm noticing that the gecko bar is getting, when the application is first launched, it's just appearing randomly like in the kind of center of my screen. And then obviously once the app is fully launched, we're actually positioning it correctly. I think what we should do is wait until we've positioned it before we make the gecko bar visible.
 

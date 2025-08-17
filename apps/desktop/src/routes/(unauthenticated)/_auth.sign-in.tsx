@@ -129,7 +129,6 @@ function SignIn() {
             <CardDescription className="text-center">
               Sign in to continue to{' '}
               <span className="font-bold font-mono">VoiceGecko</span>
-              <Link to="/">Test</Link>
             </CardDescription>
           </CardHeader>
           <CardContent>
