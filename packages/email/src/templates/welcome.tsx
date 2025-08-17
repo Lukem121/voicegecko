@@ -4,7 +4,6 @@ import {
   Heading,
   Html,
   Img,
-  Link,
   Preview,
   Section,
   Tailwind,
@@ -84,28 +83,6 @@ export const WelcomeTemplate = ({ name }: WelcomeEmailProps) => (
                 transcription errors
               </li>
             </ul>
-          </Section>
-
-          {/* Resources Section */}
-          <Section className="mb-5 px-2 sm:mb-7 sm:px-0">
-            <Text className="mb-3 text-base leading-6 sm:mb-4">
-              Need help getting started? We've got you covered:
-            </Text>
-            <Text className="text-sm leading-6">
-              <Link
-                className="text-blue-600 underline hover:text-blue-800"
-                href="mailto:support@voicegecko.io?subject=Need Help"
-              >
-                Contact Support
-              </Link>
-              {' • '}
-              <Link
-                className="text-blue-600 underline hover:text-blue-800"
-                href="https://discord.gg/BFxNQCzZjB"
-              >
-                Discord Community
-              </Link>
-            </Text>
           </Section>
 
           <Text className="px-2 text-base text-black leading-6 sm:px-0">
