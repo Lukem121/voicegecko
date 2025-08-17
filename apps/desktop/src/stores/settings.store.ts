@@ -665,6 +665,10 @@ async function loadPersonalizationSettings(): Promise<PersonalizationSettings> {
       (await settingsStore.get<boolean>(
         'personalization.autoPasteOnCompletion'
       )) ?? true,
+    preventPasteNewlines:
+      (await settingsStore.get<boolean>(
+        'personalization.preventPasteNewlines'
+      )) ?? false,
   };
 }
 
