@@ -7,7 +7,7 @@ export const EmailFooter = () => (
     <Section>
       <Row className="mb-8 w-full">
         <Column className="w-2/3">
-          <Link href="https://voicegecko.io">
+          <Link href="https://www.voicegecko.io">
             <DarkModeAwareLogo alt="VoiceGecko Logo Text" height="36" />
           </Link>
         </Column>
@@ -17,38 +17,42 @@ export const EmailFooter = () => (
     <Section>
       <Row className="mb-6">
         <Column>
-          <Text className="m-0 text-left text-[#b7b7b7] text-xs leading-4">
+          <Text className="m-0 text-left text-[#b7b7b7] text-xs leading-6">
             <Link
-              className="mr-2 text-[#b7b7b7] underline hover:text-gray-600"
-              href="https://docs.voicegecko.io"
+              className="mr-3 mb-2 inline-block min-h-[44px] py-1 text-[#b7b7b7] underline hover:text-gray-600"
+              href="https://www.voicegecko.io/pricing"
               rel="noopener noreferrer"
+              style={{ minHeight: '44px', padding: '8px 4px' }}
               target="_blank"
             >
-              Docs
+              Pricing
             </Link>
-            <span className="mx-2 text-[#b7b7b7]">|</span>
+            <span className="mx-1 hidden text-[#b7b7b7] sm:inline">|</span>
             <Link
-              className="mx-2 text-[#b7b7b7] underline hover:text-gray-600"
-              href="https://www.voicegecko.io/legal"
+              className="mr-3 mb-2 inline-block min-h-[44px] py-1 text-[#b7b7b7] underline hover:text-gray-600"
+              href="https://www.voicegecko.io/terms/privacy-policy"
               rel="noopener noreferrer"
+              style={{ minHeight: '44px', padding: '8px 4px' }}
               target="_blank"
             >
-              Policies
+              Privacy Policy
             </Link>
-            <span className="mx-2 text-[#b7b7b7]">|</span>
+            <span className="mx-1 hidden text-[#b7b7b7] sm:inline">|</span>
             <Link
-              className="mx-2 text-[#b7b7b7] underline hover:text-gray-600"
-              href="https://www.voicegecko.io/help"
+              className="mr-3 mb-2 inline-block min-h-[44px] py-1 text-[#b7b7b7] underline hover:text-gray-600"
+              href="https://www.voicegecko.io/terms/terms-of-service"
               rel="noopener noreferrer"
+              style={{ minHeight: '44px', padding: '8px 4px' }}
               target="_blank"
             >
-              Help center
+              Terms of Service
             </Link>
-            <span className="mx-2 text-[#b7b7b7]">|</span>
+            <span className="mx-1 hidden text-[#b7b7b7] sm:inline">|</span>
             <Link
-              className="mx-2 text-[#b7b7b7] underline hover:text-gray-600"
+              className="mr-3 mb-2 inline-block min-h-[44px] py-1 text-[#b7b7b7] underline hover:text-gray-600"
               href="https://discord.gg/BFxNQCzZjB"
               rel="noopener noreferrer"
+              style={{ minHeight: '44px', padding: '8px 4px' }}
               target="_blank"
             >
               Discord Community

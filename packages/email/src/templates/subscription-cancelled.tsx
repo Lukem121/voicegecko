@@ -95,8 +95,9 @@ export const SubscriptionCancelledTemplate = ({
                 {accessUntilDate} and pick up right where you left off.
               </Text>
               <Link
-                className="inline-block rounded-md bg-green-600 px-6 py-3 text-center font-medium text-white no-underline hover:bg-green-700 sm:px-8 sm:py-4"
+                className="inline-flex min-h-[44px] items-center justify-center rounded-md bg-green-600 px-6 py-3 text-center font-medium text-white no-underline hover:bg-green-700 sm:px-8 sm:py-4"
                 href={reactivateUrl}
+                style={{ minHeight: '44px' }}
               >
                 Reactivate Subscription
               </Link>
@@ -113,8 +114,9 @@ export const SubscriptionCancelledTemplate = ({
               helps us build a better experience for everyone.
             </Text>
             <Link
-              className="inline-block rounded-md bg-blue-600 px-4 py-2 text-center font-medium text-white no-underline hover:bg-blue-700 sm:px-6 sm:py-3"
+              className="inline-flex min-h-[44px] items-center justify-center rounded-md bg-blue-600 px-4 py-2 text-center font-medium text-white no-underline hover:bg-blue-700 sm:px-6 sm:py-3"
               href="mailto:feedback@voicegecko.io?subject=Subscription Cancellation Feedback"
+              style={{ minHeight: '44px' }}
             >
               Share Feedback
             </Link>
