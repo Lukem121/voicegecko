@@ -550,9 +550,9 @@ export async function GET(
     }
 
     if (error instanceof z.ZodError) {
-      Logger.error('Request validation failed', { errors: error.errors });
+      Logger.error('Request validation failed', { errors: error });
       return ResponseBuilder.buildErrorResponse(
-        new InvalidPlatformError('Invalid request parameters', error.errors)
+        new InvalidPlatformError('Invalid request parameters', error)
       );
     }
 
