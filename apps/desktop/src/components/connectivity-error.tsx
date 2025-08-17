@@ -16,6 +16,8 @@ import {
 } from 'lucide-react';
 import { type JSX, useEffect, useState } from 'react';
 
+import { AuthTitleBar } from '~/components/auth-title-bar';
+
 interface ConnectivityErrorProps {
   isOnline: boolean;
   isApiReachable: boolean;
@@ -207,134 +209,137 @@ export function ConnectivityError({
   };
 
   return (
-    <div
-      className={cn(
-        'flex min-h-screen items-center justify-center p-4',
-        className
-      )}
-    >
-      <div className="relative w-full max-w-md">
-        {/* Main Error Card */}
-        <Card className="relative w-full">
-          {/* Gecko Mascot - positioned at bottom-left corner of card */}
-          <div className="-bottom-2 -left-2 absolute z-10 hidden sm:block">
-            {/* biome-ignore lint: desktop app using static assets */}
-            <img
-              alt="Voice Gecko construction worker"
-              className="hover:-rotate-[5deg] h-16 w-16 origin-bottom cursor-pointer object-contain transition-transform duration-300 ease-in-out"
-              src="/geckos/worker.png"
-            />
-          </div>
-
-          <CardHeader className="text-center">
-            <CardTitle className="text-xl">{status.title}</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4 pb-12 text-center">
-            <p className="text-muted-foreground text-sm">
-              {status.description}
-            </p>
-
-            {/* Status indicators */}
-            <div className="space-y-2 text-sm">
-              <div className="flex items-center justify-between rounded-lg bg-muted/50 px-3 py-2">
-                <div className="flex items-center gap-2">
-                  <Globe className="h-4 w-4" />
-                  <span>Internet Connection</span>
-                </div>
-                <span
-                  className={cn(
-                    'font-medium',
-                    isOnline ? 'text-green-600' : 'text-red-600'
-                  )}
-                >
-                  {isOnline ? 'Connected' : 'Disconnected'}
-                </span>
-              </div>
-
-              <div className="flex items-center justify-between rounded-lg bg-muted/50 px-3 py-2">
-                <div className="flex items-center gap-2">
-                  <Server className="h-4 w-4" />
-                  <span>Voice Gecko Servers</span>
-                </div>
-                <span className={cn('font-medium', serverStatus.className)}>
-                  {serverStatus.text}
-                </span>
-              </div>
+    <>
+      <AuthTitleBar />
+      <div
+        className={cn(
+          'flex min-h-screen items-center justify-center p-4 pt-16',
+          className
+        )}
+      >
+        <div className="relative w-full max-w-md">
+          {/* Main Error Card */}
+          <Card className="relative w-full">
+            {/* Gecko Mascot - positioned at bottom-left corner of card */}
+            <div className="-bottom-2 -left-2 absolute z-10 hidden sm:block">
+              {/* biome-ignore lint: desktop app using static assets */}
+              <img
+                alt="Voice Gecko construction worker"
+                className="hover:-rotate-[5deg] h-16 w-16 origin-bottom cursor-pointer object-contain transition-transform duration-300 ease-in-out"
+                src="/geckos/worker.png"
+              />
             </div>
 
-            {diagnosis !== 'healthy' && (
-              <>
-                <div className="space-y-2">
-                  {lastSuccessfulCheck && (
-                    <p className="text-muted-foreground text-xs">
-                      Last successful connection:{' '}
-                      {formatLastSuccessful(lastSuccessfulCheck)}
-                    </p>
-                  )}
+            <CardHeader className="text-center">
+              <CardTitle className="text-xl">{status.title}</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4 pb-12 text-center">
+              <p className="text-muted-foreground text-sm">
+                {status.description}
+              </p>
 
-                  <Button
+              {/* Status indicators */}
+              <div className="space-y-2 text-sm">
+                <div className="flex items-center justify-between rounded-lg bg-muted/50 px-3 py-2">
+                  <div className="flex items-center gap-2">
+                    <Globe className="h-4 w-4" />
+                    <span>Internet Connection</span>
+                  </div>
+                  <span
                     className={cn(
-                      'w-full transition-all duration-300',
-                      !isChecking && 'border-dashed'
+                      'font-medium',
+                      isOnline ? 'text-green-600' : 'text-red-600'
                     )}
-                    disabled={isChecking}
-                    onClick={() => {
-                      setNextAutoRetryIn(30);
-                      // Disable auto-retry for 60 seconds after manual retry
-                      setManualRetryDisabledUntil(
-                        new Date(Date.now() + 60_000)
-                      );
-                      onRetry();
-                    }}
-                    variant="outline"
                   >
-                    {isChecking ? (
-                      <>
-                        <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
-                        Checking connection...
-                      </>
-                    ) : (
-                      <>
-                        <RefreshCw className="mr-2 h-4 w-4" />
-                        <span>Check Again</span>
-                        <span
-                          className={cn(
-                            'ml-2 rounded bg-muted px-2 py-0.5 font-mono text-xs transition-all duration-200 ease-in-out'
-                          )}
-                        >
-                          {nextAutoRetryIn}s
-                        </span>
-                      </>
+                    {isOnline ? 'Connected' : 'Disconnected'}
+                  </span>
+                </div>
+
+                <div className="flex items-center justify-between rounded-lg bg-muted/50 px-3 py-2">
+                  <div className="flex items-center gap-2">
+                    <Server className="h-4 w-4" />
+                    <span>Voice Gecko Servers</span>
+                  </div>
+                  <span className={cn('font-medium', serverStatus.className)}>
+                    {serverStatus.text}
+                  </span>
+                </div>
+              </div>
+
+              {diagnosis !== 'healthy' && (
+                <>
+                  <div className="space-y-2">
+                    {lastSuccessfulCheck && (
+                      <p className="text-muted-foreground text-xs">
+                        Last successful connection:{' '}
+                        {formatLastSuccessful(lastSuccessfulCheck)}
+                      </p>
                     )}
-                  </Button>
-                </div>
 
-                <div className="space-y-2 text-muted-foreground text-xs">
-                  <p className="text-left font-medium">
-                    {troubleshooting.title}
-                  </p>
-                  <ul className="space-y-1 text-left">
-                    {troubleshooting.content}
-                  </ul>
-                </div>
-              </>
-            )}
-          </CardContent>
-        </Card>
+                    <Button
+                      className={cn(
+                        'w-full transition-all duration-300',
+                        !isChecking && 'border-dashed'
+                      )}
+                      disabled={isChecking}
+                      onClick={() => {
+                        setNextAutoRetryIn(30);
+                        // Disable auto-retry for 60 seconds after manual retry
+                        setManualRetryDisabledUntil(
+                          new Date(Date.now() + 60_000)
+                        );
+                        onRetry();
+                      }}
+                      variant="outline"
+                    >
+                      {isChecking ? (
+                        <>
+                          <RefreshCw className="mr-2 h-4 w-4 animate-spin" />
+                          Checking connection...
+                        </>
+                      ) : (
+                        <>
+                          <RefreshCw className="mr-2 h-4 w-4" />
+                          <span>Check Again</span>
+                          <span
+                            className={cn(
+                              'ml-2 rounded bg-muted px-2 py-0.5 font-mono text-xs transition-all duration-200 ease-in-out'
+                            )}
+                          >
+                            {nextAutoRetryIn}s
+                          </span>
+                        </>
+                      )}
+                    </Button>
+                  </div>
 
-        {/* Mobile gecko - positioned below card on mobile */}
-        <div className="mt-4 flex justify-center sm:hidden">
-          <div className="relative">
-            {/* biome-ignore lint: desktop app using static assets */}
-            <img
-              alt="Voice Gecko construction worker"
-              className="hover:-rotate-[5deg] h-12 w-12 origin-bottom cursor-pointer object-contain opacity-60 transition-transform duration-300 ease-in-out"
-              src="/geckos/worker.png"
-            />
+                  <div className="space-y-2 text-muted-foreground text-xs">
+                    <p className="text-left font-medium">
+                      {troubleshooting.title}
+                    </p>
+                    <ul className="space-y-1 text-left">
+                      {troubleshooting.content}
+                    </ul>
+                  </div>
+                </>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Mobile gecko - positioned below card on mobile */}
+          <div className="mt-4 flex justify-center sm:hidden">
+            <div className="relative">
+              {/* biome-ignore lint: desktop app using static assets */}
+              <img
+                alt="Voice Gecko construction worker"
+                className="hover:-rotate-[5deg] h-12 w-12 origin-bottom cursor-pointer object-contain opacity-60 transition-transform duration-300 ease-in-out"
+                src="/geckos/worker.png"
+              />
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }
 
