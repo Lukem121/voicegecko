@@ -1,7 +1,7 @@
 import { Button } from '@acme/ui/components/ui/button';
 import { Loader } from 'lucide-react';
 import { AiFillDiscord } from 'react-icons/ai';
-
+import { FcGoogle } from 'react-icons/fc';
 import type { SocialProvider } from '../hooks/use-social-auth';
 
 type SocialSignInButtonProps = {
@@ -28,7 +28,10 @@ export function SocialSignInButton({
       {isLoading ? (
         <Loader className="h-4 w-4 animate-spin" />
       ) : (
-        provider === 'discord' && <AiFillDiscord className="h-5 w-5" />
+        <>
+          {provider === 'discord' && <AiFillDiscord className="h-5 w-5" />}
+          {provider === 'google' && <FcGoogle className="h-5 w-5" />}
+        </>
       )}
       <span className="capitalize">{provider}</span>
     </Button>

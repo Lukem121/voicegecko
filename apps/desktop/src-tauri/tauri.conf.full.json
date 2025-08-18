@@ -1,7 +1,7 @@
 {
   "$schema": "../../../node_modules/@tauri-apps/cli/schema.json",
   "productName": "Voice Gecko",
-  "version": "0.0.13",
+  "version": "0.0.14",
   "identifier": "com.voicegecko.desktop",
   "build": {
     "frontendDist": "../dist",
@@ -45,10 +45,7 @@
         "x": -1000,
         "y": -1000
       }
-    ],
-    "security": {
-      "csp": null
-    }
+    ]
   },
   "plugins": {
     "deep-link": {

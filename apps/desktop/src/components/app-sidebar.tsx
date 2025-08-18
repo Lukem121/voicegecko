@@ -4,6 +4,7 @@ import {
   AvatarFallback,
   AvatarImage,
 } from '@acme/ui/components/ui/avatar';
+import { Button } from '@acme/ui/components/ui/button';
 import {
   Dialog,
   DialogContent,
@@ -48,6 +49,7 @@ import {
   FileText,
   HelpCircle,
   LogOut,
+  MessageCircle,
   Mic,
   Settings2,
   Wand2,
@@ -167,6 +169,9 @@ if (isDev) {
     url: '/settings/models',
   });
 }
+
+// Discord URL for feedback
+const DISCORD_URL = 'https://discord.gg/BFxNQCzZjB';
 
 // Circular Progress Component
 type CircularProgressProps = {
@@ -555,6 +560,25 @@ export function AppSidebar() {
                 </div>
                 <CopyButton text="support@voicegecko.io" />
               </div>
+            </div>
+            <div className="space-y-2">
+              <div className="font-medium text-sm">Share Feedback</div>
+              <Button
+                className="w-full justify-start"
+                onClick={async () => {
+                  await open(DISCORD_URL);
+                }}
+                type="button"
+                variant="outline"
+              >
+                <MessageCircle className="mr-2 h-4 w-4" />
+                Join our Discord Community
+                <ExternalLink className="ml-auto h-3 w-3" />
+              </Button>
+              <p className="text-muted-foreground text-xs">
+                Connect with other users and share your feedback or suggestions
+                with our team.
+              </p>
             </div>
             {user?.id && (
               <div className="space-y-2">
