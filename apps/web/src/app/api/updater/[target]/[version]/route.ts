@@ -94,12 +94,24 @@ class GitHubService {
 
   async getLatestRelease(): Promise<GitHubRelease | null> {
     try {
+      // For updater requests, prefer "update" releases over "full" releases
+      const updateRelease = await this.getLatestUpdateRelease();
+      if (updateRelease) {
+        Logger.info('Found latest update release for updater', {
+          version: updateRelease.tag_name,
+        });
+        return updateRelease;
+      }
+
+      // Fallback to any latest release if no update release is available
       const { data } = await this.octokit.rest.repos.getLatestRelease({
         owner: CONFIG.githubOwner,
         repo: CONFIG.githubRepo,
       });
 
-      Logger.info('Found latest published release', { version: data.tag_name });
+      Logger.info('Found latest published release (fallback)', {
+        version: data.tag_name,
+      });
       return data as GitHubRelease;
     } catch (error) {
       if (error instanceof Error && 'status' in error && error.status === 404) {
@@ -113,6 +125,39 @@ class GitHubService {
         );
       }
       throw new GitHubApiError('Failed to fetch latest release', error);
+    }
+  }
+
+  private async getLatestUpdateRelease(): Promise<GitHubRelease | null> {
+    try {
+      // Get all releases and find the latest "update" release
+      const { data: releases } = await this.octokit.rest.repos.listReleases({
+        owner: CONFIG.githubOwner,
+        repo: CONFIG.githubRepo,
+        per_page: 50, // Get more releases to find update releases
+      });
+
+      // Filter for update releases (tag contains "-update")
+      const updateReleases = releases.filter(
+        (release) => release.tag_name.includes('-update') && !release.draft
+      );
+
+      if (updateReleases.length > 0) {
+        // Sort by published_at date (most recent first)
+        updateReleases.sort(
+          (a, b) =>
+            new Date(b.published_at || b.created_at).getTime() -
+            new Date(a.published_at || a.created_at).getTime()
+        );
+        return updateReleases[0] as GitHubRelease;
+      }
+
+      return null;
+    } catch (error) {
+      Logger.warn('Failed to fetch update releases', {
+        error: error instanceof Error ? error.message : String(error),
+      });
+      return null;
     }
   }
 
@@ -269,16 +314,86 @@ class AssetProcessor {
     assets: ReleaseAsset[],
     supportedExtensions: string[]
   ): ReleaseAsset[] {
-    return assets.filter((asset) =>
+    // Filter assets by supported extensions first
+    const compatibleAssets = assets.filter((asset) =>
       supportedExtensions.some((ext) => asset.name.endsWith(ext))
     );
+
+    // For updater requests, prefer "update" assets over "full" assets
+    const updateAssets = compatibleAssets.filter(
+      (asset) => asset.name.includes('-update') && !asset.name.endsWith('.sig')
+    );
+
+    const fullAssets = compatibleAssets.filter(
+      (asset) => asset.name.includes('-full') && !asset.name.endsWith('.sig')
+    );
+
+    const otherAssets = compatibleAssets.filter((asset) => {
+      const hasSpecialSuffix =
+        asset.name.includes('-update') || asset.name.includes('-full');
+      const isSignature = asset.name.endsWith('.sig');
+      return !(hasSpecialSuffix || isSignature);
+    });
+
+    Logger.info('Asset filtering for updater', {
+      total: compatibleAssets.length,
+      updateAssets: updateAssets.length,
+      fullAssets: fullAssets.length,
+      otherAssets: otherAssets.length,
+    });
+
+    // Prioritize update assets, then fall back to full assets, then other assets
+    if (updateAssets.length > 0) {
+      Logger.info('Using update assets for lightweight download');
+      return updateAssets;
+    }
+
+    if (fullAssets.length > 0) {
+      Logger.warn('No update assets found, falling back to full assets');
+      return fullAssets;
+    }
+
+    if (otherAssets.length > 0) {
+      Logger.warn(
+        'No update or full assets found, using other compatible assets'
+      );
+      return otherAssets;
+    }
+
+    // If no categorized assets found, return all compatible assets as fallback
+    Logger.warn('No categorized assets found, returning all compatible assets');
+    return compatibleAssets.filter((asset) => !asset.name.endsWith('.sig'));
   }
 
   private findSignatureAsset(
     assets: ReleaseAsset[],
     binaryAssetName: string
   ): ReleaseAsset | undefined {
-    return assets.find((asset) => asset.name === `${binaryAssetName}.sig`);
+    // First try exact match for the signature
+    const exactMatch = assets.find(
+      (asset) => asset.name === `${binaryAssetName}.sig`
+    );
+    if (exactMatch) {
+      return exactMatch;
+    }
+
+    // For update/full assets, try to find corresponding signature
+    // e.g., "app-v1.0.0-update-windows-x86_64.msi" -> "app-v1.0.0-update-windows-x86_64.msi.sig"
+    const directSigMatch = assets.find(
+      (asset) => asset.name === `${binaryAssetName}.sig`
+    );
+    if (directSigMatch) {
+      return directSigMatch;
+    }
+
+    // Fallback: try to find any signature that matches the base pattern
+    // This handles cases where signature naming might be slightly different
+    const baseName = binaryAssetName.replace(FILE_EXTENSION_REGEX, ''); // Remove extension
+    const potentialSigMatch = assets.find(
+      (asset) => asset.name.endsWith('.sig') && asset.name.includes(baseName)
+    );
+
+    return potentialSigMatch;
   }
 }
 
@@ -334,6 +449,9 @@ const CRITICAL_TAG_PATTERNS = [
   /hotfix/i,
   /emergency/i,
 ] as const;
+
+// Regex for extracting base names from asset file names
+const FILE_EXTENSION_REGEX = /\.[^.]+$/;
 
 const CRITICAL_BODY_PATTERNS = [
   /🚨/,

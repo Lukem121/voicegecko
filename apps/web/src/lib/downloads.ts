@@ -62,15 +62,29 @@ function formatApiError(error: unknown): string {
 }
 
 /**
- * Fetch the latest release from the public releases repository
+ * Fetch the latest FULL release from the public releases repository
+ * Full releases include the bundled AI model and are intended for first-time installations
  */
 async function fetchLatestRelease(): Promise<GitHubRelease | null> {
   try {
+    // For website downloads, prefer "full" releases over "update" releases
+    const fullRelease = await fetchLatestFullRelease();
+    if (fullRelease) {
+      log.info('Found latest full release for website downloads', {
+        version: fullRelease.tag_name,
+      });
+      return fullRelease;
+    }
+
+    // Fallback to any latest release if no full release is available
     const { data } = await octokit.rest.repos.getLatestRelease({
       owner: RELEASES_GITHUB_OWNER,
       repo: RELEASES_GITHUB_REPO,
     });
 
+    log.info('Found latest published release (fallback for downloads)', {
+      version: data.tag_name,
+    });
     return data as GitHubRelease;
   } catch (error) {
     if (isNotFoundError(error)) {
@@ -78,6 +92,42 @@ async function fetchLatestRelease(): Promise<GitHubRelease | null> {
     }
 
     throw new Error(formatApiError(error));
+  }
+}
+
+/**
+ * Fetch the latest full release (with bundled model) for website downloads
+ */
+async function fetchLatestFullRelease(): Promise<GitHubRelease | null> {
+  try {
+    // Get all releases and find the latest "full" release
+    const { data: releases } = await octokit.rest.repos.listReleases({
+      owner: RELEASES_GITHUB_OWNER,
+      repo: RELEASES_GITHUB_REPO,
+      per_page: 50, // Get more releases to find full releases
+    });
+
+    // Filter for full releases (tag contains "-full")
+    const fullReleases = releases.filter(
+      (release) => release.tag_name.includes('-full') && !release.draft
+    );
+
+    if (fullReleases.length > 0) {
+      // Sort by published_at date (most recent first)
+      fullReleases.sort(
+        (a, b) =>
+          new Date(b.published_at || b.created_at).getTime() -
+          new Date(a.published_at || a.created_at).getTime()
+      );
+      return fullReleases[0] as GitHubRelease;
+    }
+
+    return null;
+  } catch (error) {
+    log.warn('Failed to fetch full releases for website downloads', {
+      error: error instanceof Error ? error.message : String(error),
+    });
+    return null;
   }
 }
 
@@ -117,18 +167,57 @@ function processAssetsForPlatform(
 ): PlatformDownloads {
   const supportedExtensions = PLATFORM_FILE_EXTENSIONS[platform];
 
-  const platformAssets = assets
-    .filter(
-      (asset) =>
-        supportedExtensions.some((ext) => asset.name.endsWith(ext)) &&
-        !asset.name.endsWith('.sig') // Exclude signature files from download list
-    )
-    .map((asset) => ({
-      name: asset.name,
-      url: asset.browser_download_url,
-      size: asset.size,
-      contentType: asset.content_type,
-    }));
+  // Filter assets by supported extensions first
+  const compatibleAssets = assets.filter(
+    (asset) =>
+      supportedExtensions.some((ext) => asset.name.endsWith(ext)) &&
+      !asset.name.endsWith('.sig') // Exclude signature files from download list
+  );
+
+  // For website downloads, prefer "full" assets over "update" assets
+  const fullAssets = compatibleAssets.filter((asset) =>
+    asset.name.includes('-full')
+  );
+
+  const updateAssets = compatibleAssets.filter((asset) =>
+    asset.name.includes('-update')
+  );
+
+  const otherAssets = compatibleAssets.filter(
+    (asset) => !(asset.name.includes('-full') || asset.name.includes('-update'))
+  );
+
+  log.info('Asset filtering for website downloads', {
+    platform,
+    total: compatibleAssets.length,
+    fullAssets: fullAssets.length,
+    updateAssets: updateAssets.length,
+    otherAssets: otherAssets.length,
+  });
+
+  // Prioritize full assets, then fall back to other assets, then update assets as last resort
+  let selectedAssets: GitHubRelease['assets'] = [];
+
+  if (fullAssets.length > 0) {
+    log.info('Using full assets for website downloads with bundled model');
+    selectedAssets = fullAssets;
+  } else if (otherAssets.length > 0) {
+    log.warn('No full assets found, using other compatible assets');
+    selectedAssets = otherAssets;
+  } else if (updateAssets.length > 0) {
+    log.warn('Only update assets available, using lightweight downloads');
+    selectedAssets = updateAssets;
+  } else {
+    log.warn('No categorized assets found, returning all compatible assets');
+    selectedAssets = compatibleAssets;
+  }
+
+  const platformAssets = selectedAssets.map((asset) => ({
+    name: asset.name,
+    url: asset.browser_download_url,
+    size: asset.size,
+    contentType: asset.content_type,
+  }));
 
   return {
     available: platformAssets.length > 0,
