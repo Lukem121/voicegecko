@@ -1,7 +1,7 @@
 {
   "$schema": "../../../node_modules/@tauri-apps/cli/schema.json",
   "productName": "Voice Gecko",
-  "version": "0.0.13",
+  "version": "0.0.14",
   "identifier": "com.voicegecko.desktop",
   "build": {
     "frontendDist": "../dist",
@@ -52,14 +52,18 @@
       "mobile": [
         {
           "host": "voicegecko.io",
-          "pathPrefix": ["/login"]
+          "pathPrefix": [
+            "/login"
+          ]
         },
         {
           "host": "voicegecko.io"
         }
       ],
       "desktop": {
-        "schemes": ["voicegecko"]
+        "schemes": [
+          "voicegecko"
+        ]
       }
     },
     "updater": {
@@ -74,7 +78,9 @@
   "bundle": {
     "active": true,
     "targets": "all",
-    "icon": ["icons/icon.ico"],
+    "icon": [
+      "icons/icon.ico"
+    ],
     "createUpdaterArtifacts": true,
     "resources": {
       "resources/sounds/notification/**/*": "resources/sounds/notification/"
