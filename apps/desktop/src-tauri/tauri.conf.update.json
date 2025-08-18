@@ -1,0 +1,89 @@
+{
+  "$schema": "../../../node_modules/@tauri-apps/cli/schema.json",
+  "productName": "Voice Gecko",
+  "version": "0.0.12",
+  "identifier": "com.voicegecko.desktop",
+  "build": {
+    "frontendDist": "../dist",
+    "devUrl": "http://localhost:1420",
+    "beforeDevCommand": "pnpm dev:vite",
+    "beforeBuildCommand": "pnpm build:vite"
+  },
+  "app": {
+    "windows": [
+      {
+        "label": "main",
+        "title": "Voice Gecko",
+        "width": 1350,
+        "height": 820,
+        "closable": true,
+        "minimizable": true,
+        "maximizable": true,
+        "resizable": true,
+        "center": true,
+        "decorations": false,
+        "visible": false
+      },
+      {
+        "label": "gecko-bar",
+        "title": "Voice Gecko Bar",
+        "width": 200,
+        "height": 80,
+        "closable": false,
+        "minimizable": false,
+        "maximizable": false,
+        "resizable": false,
+        "alwaysOnTop": true,
+        "decorations": false,
+        "skipTaskbar": true,
+        "transparent": true,
+        "center": false,
+        "shadow": false,
+        "acceptFirstMouse": true,
+        "tabbingIdentifier": "gecko-bar",
+        "visible": false,
+        "x": -1000,
+        "y": -1000
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  },
+  "plugins": {
+    "deep-link": {
+      "mobile": [
+        {
+          "host": "voicegecko.io",
+          "pathPrefix": ["/login"]
+        },
+        {
+          "host": "voicegecko.io"
+        }
+      ],
+      "desktop": {
+        "schemes": ["voicegecko"]
+      }
+    },
+    "updater": {
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEUyQTlDMDc3NUNCOTdCRTEKUldUaGU3bGNkOENwNHVleGV3OEhXMTNpTUozaG82S0VSbFVKTnpVeTBkZWRhaGFuazhLL2dxWUkK",
+      "dangerousInsecureTransportProtocol": true,
+      "endpoints": [
+        "http://localhost:3000/api/updater/{{target}}/{{current_version}}",
+        "https://www.voicegecko.io/api/updater/{{target}}/{{current_version}}"
+      ]
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "icon": ["icons/icon.ico"],
+    "createUpdaterArtifacts": true,
+    "resources": {
+      "resources/sounds/**/*": "resources/sounds/"
+    },
+    "macOS": {
+      "minimumSystemVersion": "10.15"
+    }
+  }
+}
