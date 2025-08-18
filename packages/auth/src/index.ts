@@ -87,6 +87,7 @@ export const serverAuth = betterAuth({
     tauri({
       scheme: 'voicegecko',
       debugLogs: true,
+      successURL: '/redirect-deeplink',
     }),
     adminPlugin(),
     phoneNumber(),
