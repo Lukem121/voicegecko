@@ -1,6 +1,6 @@
 # Release Process
 
-## Current Version: 0.0.12
+## Current Version: 0.0.13
 
 ## Overview
 
@@ -69,16 +69,16 @@ If you prefer manual updates:
 
    ```bash
    # Desktop app package.json
-   # Change line 4: "version": "0.0.12" → "version": "0.0.12"
+   # Change line 4: "version": "0.0.13" → "version": "0.0.13"
 
    # Tauri Cargo.toml
-   # Change line 3: version = "0.0.12" → version = "0.0.12"
+   # Change line 3: version = "0.0.13" → version = "0.0.13"
 
    # Tauri config
-   # Change line 3: "version": "0.0.12" → "version": "0.0.12"
+   # Change line 3: "version": "0.0.13" → "version": "0.0.13"
 
    # Web app package.json (sync with desktop)
-   # Change line 3: "version": "0.0.12" → "version": "0.0.12"
+   # Change line 3: "version": "0.0.13" → "version": "0.0.13"
    ```
 
 3. **Verify all changes**:
