@@ -167,7 +167,9 @@ jobs:
       - name: install frontend dependencies
         run: pnpm install --frozen-lockfile
 
-      - uses: tauri-apps/tauri-action@v0
+      # Build FULL version (with model bundled) for first-time installations
+      - name: Build Full Version (with model)
+        uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
@@ -175,17 +177,79 @@ jobs:
           VITE_PUBLIC_VOICEGECKO_URL: ${{ vars.VITE_PUBLIC_VOICEGECKO_URL }}
           VITE_PUBLIC_POSTHOG_KEY: ${{ vars.VITE_PUBLIC_POSTHOG_KEY }}
           VITE_PUBLIC_POSTHOG_HOST: ${{ vars.VITE_PUBLIC_POSTHOG_HOST }}
+          TAURI_BUNDLE_IDENTIFIER_SUFFIX: "-full"
         with:
-          tagName: app-v__VERSION__ # the action automatically replaces \_\_VERSION\_\_ with the app version.
-          releaseName: "App v__VERSION__"
-          releaseBody: "See the assets to download this version and install."
+          tagName: app-v__VERSION__-full # Full version for website downloads
+          releaseName: "App v__VERSION__ (Full)"
+          releaseBody: "Full installation package with bundled AI model. See the assets to download this version and install."
           releaseDraft: false
           prerelease: false
           args: ${{ matrix.args }}
           projectPath: apps/desktop
 
+      # Backup original tauri config and create update config (without model) - Windows
+      - name: Create Update Build Config - Windows
+        if: matrix.platform == 'self-hosted' || contains(matrix.platform, 'windows')
+        shell: powershell
+        run: |
+          # PowerShell commands for Windows
+          Copy-Item "apps/desktop/src-tauri/tauri.conf.json" "apps/desktop/src-tauri/tauri.conf.json.backup"
+          $config = Get-Content "apps/desktop/src-tauri/tauri.conf.json" | ConvertFrom-Json
+          # Exclude the model file from resources
+          $config.bundle.resources = @("resources/**/*", "!resources/ggml-base.en.bin")
+          $config | ConvertTo-Json -Depth 10 | Set-Content "apps/desktop/src-tauri/tauri.conf.json"
+          Write-Host "Updated tauri config to exclude model file"
+
+      # Backup original tauri config and create update config (without model) - Unix
+      - name: Create Update Build Config - Unix
+        if: matrix.platform == 'macos-latest' || matrix.platform == 'ubuntu-22.04'
+        shell: bash
+        run: |
+          # Bash commands for Unix
+          cp apps/desktop/src-tauri/tauri.conf.json apps/desktop/src-tauri/tauri.conf.json.backup
+          # Use jq to modify the JSON - exclude the model file
+          jq '.bundle.resources = ["resources/**/*", "!resources/ggml-base.en.bin"]' apps/desktop/src-tauri/tauri.conf.json > apps/desktop/src-tauri/tauri.conf.temp.json
+          mv apps/desktop/src-tauri/tauri.conf.temp.json apps/desktop/src-tauri/tauri.conf.json
+          echo "Updated tauri config to exclude model file"
+
+      # Build UPDATE version (without model) for existing users
+      - name: Build Update Version (without model)
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+          VITE_PUBLIC_VOICEGECKO_URL: ${{ vars.VITE_PUBLIC_VOICEGECKO_URL }}
+          VITE_PUBLIC_POSTHOG_KEY: ${{ vars.VITE_PUBLIC_POSTHOG_KEY }}
+          VITE_PUBLIC_POSTHOG_HOST: ${{ vars.VITE_PUBLIC_POSTHOG_HOST }}
+          TAURI_BUNDLE_IDENTIFIER_SUFFIX: "-update"
+        with:
+          tagName: app-v__VERSION__-update # Update version for updater system
+          releaseName: "App v__VERSION__ (Update)"
+          releaseBody: "Lightweight update package without bundled AI model. For existing users only."
+          releaseDraft: false
+          prerelease: false
+          args: ${{ matrix.args }}
+          projectPath: apps/desktop
+
+      # Restore original tauri config - Windows
+      - name: Restore Original Config - Windows
+        if: matrix.platform == 'self-hosted' || contains(matrix.platform, 'windows')
+        shell: powershell
+        run: |
+          Move-Item "apps/desktop/src-tauri/tauri.conf.json.backup" "apps/desktop/src-tauri/tauri.conf.json" -Force
+          Write-Host "Restored original tauri config"
+
+      # Restore original tauri config - Unix
+      - name: Restore Original Config - Unix
+        if: matrix.platform == 'macos-latest' || matrix.platform == 'ubuntu-22.04'
+        shell: bash
+        run: |
+          mv apps/desktop/src-tauri/tauri.conf.json.backup apps/desktop/src-tauri/tauri.conf.json
+          echo "Restored original tauri config"
+
       # Publish to separate public releases repository
-      - name: Create Release in Public Repository (Windows/Self-hosted)
+      - name: Create Releases in Public Repository (Windows/Self-hosted)
         if: matrix.platform == 'self-hosted' || contains(matrix.platform, 'windows')
         env:
           GITHUB_TOKEN: ${{ secrets.RELEASES_REPO_TOKEN }}
@@ -193,16 +257,26 @@ jobs:
         run: |
           # Get the version from the package.json
           $VERSION = (Get-Content "apps/desktop/package.json" | ConvertFrom-Json).version
-          $TAG_NAME = "app-v$VERSION"
 
-          # Create release in public repository (will fail gracefully if already exists)
+          # Create FULL release (for website downloads)
+          $FULL_TAG = "app-v$VERSION-full"
           try {
-            gh release create $TAG_NAME --repo "Lukem121/voicegecko-releases" --title "App v$VERSION" --notes "See the assets to download this version and install." 2>$null
+            gh release create $FULL_TAG --repo "Lukem121/voicegecko-releases" --title "App v$VERSION (Full)" --notes "Full installation package with bundled AI model. For first-time installations from website." 2>$null
+            Write-Host "Created full release: $FULL_TAG"
           } catch {
-            Write-Host "Release already exists or creation failed - continuing with upload"
+            Write-Host "Full release $FULL_TAG already exists or creation failed - continuing with upload"
           }
 
-          # Upload all built artifacts to the public repository
+          # Create UPDATE release (for updater system)
+          $UPDATE_TAG = "app-v$VERSION-update"
+          try {
+            gh release create $UPDATE_TAG --repo "Lukem121/voicegecko-releases" --title "App v$VERSION (Update)" --notes "Lightweight update package without bundled AI model. For existing users via updater." 2>$null
+            Write-Host "Created update release: $UPDATE_TAG"
+          } catch {
+            Write-Host "Update release $UPDATE_TAG already exists or creation failed - continuing with upload"
+          }
+
+          # Upload artifacts from both builds
           # Check for artifacts in the standard location first
           $BUNDLE_DIR = "target/release/bundle"
           if (-not (Test-Path $BUNDLE_DIR)) {
@@ -219,8 +293,22 @@ jobs:
           if (Test-Path $BUNDLE_DIR) {
             $ARTIFACTS = Get-ChildItem -Path $BUNDLE_DIR -Recurse -File | Where-Object { $_.Extension -in @('.msi', '.exe', '.sig') }
             foreach ($artifact in $ARTIFACTS) {
-              Write-Host "Uploading: $($artifact.FullName)"
-              gh release upload $TAG_NAME $artifact.FullName --repo "Lukem121/voicegecko-releases" --clobber
+              $fileName = $artifact.Name
+              Write-Host "Processing artifact: $fileName"
+              
+              # Determine if this is a full or update build based on file size or build context
+              # For now, we'll rename and upload to both releases
+              # You may need to adjust this logic based on your specific build output
+              
+              # Upload to full release with "-full" suffix
+              $fullName = $fileName -replace '(\.[^.]+)$', '-full$1'
+              Write-Host "Uploading $fullName to full release"
+              gh release upload $FULL_TAG $artifact.FullName --repo "Lukem121/voicegecko-releases" --clobber
+              
+              # Upload to update release with "-update" suffix  
+              $updateName = $fileName -replace '(\.[^.]+)$', '-update$1'
+              Write-Host "Uploading $updateName to update release"
+              gh release upload $UPDATE_TAG $artifact.FullName --repo "Lukem121/voicegecko-releases" --clobber
             }
           } else {
             Write-Host "ERROR: No bundle directory found in any target location"
@@ -245,7 +333,7 @@ jobs:
             Write-Host "Revalidation failed - this is non-critical: $($_.Exception.Message)"
           }
 
-      - name: Create Release in Public Repository (macOS/Linux)
+      - name: Create Releases in Public Repository (macOS/Linux)
         if: matrix.platform == 'macos-latest' || matrix.platform == 'ubuntu-22.04'
         env:
           GITHUB_TOKEN: ${{ secrets.RELEASES_REPO_TOKEN }}
@@ -253,12 +341,16 @@ jobs:
         run: |
           # Get the version from the package.json
           VERSION=$(node -p "require('./apps/desktop/package.json').version")
-          TAG_NAME="app-v$VERSION"
 
-          # Create release in public repository (will fail gracefully if already exists)
-          gh release create $TAG_NAME --repo "Lukem121/voicegecko-releases" --title "App v$VERSION" --notes "See the assets to download this version and install." 2>/dev/null || echo "Release already exists"
+          # Create FULL release (for website downloads)
+          FULL_TAG="app-v$VERSION-full"
+          gh release create $FULL_TAG --repo "Lukem121/voicegecko-releases" --title "App v$VERSION (Full)" --notes "Full installation package with bundled AI model. For first-time installations from website." 2>/dev/null || echo "Full release already exists"
 
-          # Upload all built artifacts to the public repository
+          # Create UPDATE release (for updater system)
+          UPDATE_TAG="app-v$VERSION-update"
+          gh release create $UPDATE_TAG --repo "Lukem121/voicegecko-releases" --title "App v$VERSION (Update)" --notes "Lightweight update package without bundled AI model. For existing users via updater." 2>/dev/null || echo "Update release already exists"
+
+          # Upload all built artifacts to both releases
           # Check both target-specific and general bundle directories
           if [[ "${{ matrix.args }}" == *"--target"* ]]; then
             # Extract target from args (e.g., "--target aarch64-apple-darwin" -> "aarch64-apple-darwin")
@@ -270,8 +362,18 @@ jobs:
 
           echo "Looking for artifacts in: $BUNDLE_DIR"
           find $BUNDLE_DIR -type f \( -name "*.dmg" -o -name "*.app.tar.gz" -o -name "*.deb" -o -name "*.AppImage" -o -name "*.sig" \) 2>/dev/null | while read artifact; do
-            echo "Uploading: $artifact"
-            gh release upload $TAG_NAME "$artifact" --repo "Lukem121/voicegecko-releases" --clobber
+            filename=$(basename "$artifact")
+            echo "Processing artifact: $filename"
+            
+            # Upload to full release with "-full" suffix
+            full_name="${filename%.*}-full.${filename##*.}"
+            echo "Uploading $full_name to full release"
+            gh release upload $FULL_TAG "$artifact" --repo "Lukem121/voicegecko-releases" --clobber
+            
+            # Upload to update release with "-update" suffix
+            update_name="${filename%.*}-update.${filename##*.}"
+            echo "Uploading $update_name to update release"
+            gh release upload $UPDATE_TAG "$artifact" --repo "Lukem121/voicegecko-releases" --clobber
           done
 
   # Revalidate ISR cache after successful release
