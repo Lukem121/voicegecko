@@ -1,5 +1,6 @@
 import { log } from '@acme/observability/log';
 import { LazyStore } from '@tauri-apps/plugin-store';
+import { analytics } from '~/lib/analytics/posthog-analytics';
 import { CURRENT_SETTINGS_VERSION, getMigrationsToRun } from './registry';
 import type { MigrationResult, VersionedSettings } from './types';
 
@@ -29,10 +30,26 @@ export class SettingsMigrationManager {
 
       // Initialize _meta if it doesn't exist (new users)
       if (!settings._meta) {
+        const installationTimestamp = Date.now();
         settings._meta = {
           version: CURRENT_SETTINGS_VERSION,
-          timestamp: Date.now(),
+          timestamp: installationTimestamp,
         };
+
+        // Track app installation for new users
+        try {
+          analytics.track('app_installed', {
+            installation_timestamp: installationTimestamp,
+            first_run: true,
+          });
+
+          log.info(
+            '[Migration] 🎉 New installation detected! Tracked app_installed event'
+          );
+        } catch (error) {
+          log.warn('[Migration] Failed to track installation event:', error);
+          // Don't fail the migration if analytics tracking fails
+        }
 
         // Save the updated settings with version info
         await store.set('_meta', settings._meta);
