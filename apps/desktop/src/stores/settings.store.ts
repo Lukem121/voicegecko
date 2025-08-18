@@ -6,79 +6,40 @@ import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
 import { analytics } from '~/lib/analytics/posthog-analytics';
 import { CURRENT_SETTINGS_VERSION } from '~/lib/settings/migrations/registry';
+// Import versioned settings types
+import type {
+  SettingsV1AppSettings,
+  SettingsV1AudioSettings,
+  SettingsV1GeneralSettings,
+  SettingsV1Model,
+  SettingsV1ModelSettings,
+  SettingsV1ModelStatus,
+  SettingsV1OnboardingSettings,
+  SettingsV1PersonalizationSettings,
+  SettingsV1PrivacySettings,
+} from '~/lib/settings/migrations/versioned-schemas';
 import { recordingService } from '~/services/recording.service';
 import { transcriptionService } from '~/services/transcription.service';
 import type { HardwareInfo } from '~/types/models';
-
 import type {
   AudioDevice,
   NotificationSound,
   NotificationTiming,
 } from '~/types/settings';
 
-// Settings types
-type AudioSettings = {
-  selectedDevice: AudioDevice | null;
-  selectedSound: NotificationSound;
-  notificationTiming: NotificationTiming;
-  notificationVolume: number;
-  muteSystemAudio: boolean;
-};
+// Use versioned settings types for type safety
+type AudioSettings = SettingsV1AudioSettings;
+type GeneralSettings = SettingsV1GeneralSettings;
+type PrivacySettings = SettingsV1PrivacySettings;
+type PersonalizationSettings = SettingsV1PersonalizationSettings;
+type ModelSettings = SettingsV1ModelSettings;
+type OnboardingSettings = SettingsV1OnboardingSettings;
 
-type GeneralSettings = {
-  launchOnStartup: boolean;
-  showGeckoBar: boolean;
-  hideGeckoOnFullscreen: boolean;
-};
-
-type PrivacySettings = {
-  usageAnalytics: boolean;
-  crashReports: boolean;
-};
-
-type PersonalizationSettings = {
-  interactionSounds: boolean;
-  smartFormatting: boolean;
-  autoAddToDictionary: boolean;
-  autoPasteOnCompletion: boolean;
-  preventPasteNewlines: boolean;
-};
-
-export type OnboardingSettings = {
-  completed: boolean;
-};
-
-// Model types
-export type ModelStatus =
-  | 'NotDownloaded'
-  | { Downloading: number }
-  | 'Downloaded';
-
-export type Model = {
-  name: string;
-  description: string;
-  size: string;
-  ram: string;
-  status: ModelStatus;
-  sha: string;
-  url: string;
-  recommended: boolean;
-  tier: string;
-};
-
-type ModelSettings = {
-  selectedTier: string;
-  availableModels: Record<string, Model>;
-};
-
-export type AppSettings = {
-  audio: AudioSettings;
-  general: GeneralSettings;
-  privacy: PrivacySettings;
-  personalization: PersonalizationSettings;
-  models: ModelSettings;
-  onboarding: OnboardingSettings;
-};
+// Export types for external use (maintain backwards compatibility)
+export type { OnboardingSettings };
+export type ModelStatus = SettingsV1ModelStatus;
+export type Model = SettingsV1Model;
+export type AppSettings = SettingsV1AppSettings;
 
 type SettingsState = {
   // Settings data

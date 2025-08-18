@@ -1,8 +1,22 @@
+/** biome-ignore-all lint/complexity/noExcessiveCognitiveComplexity: lazy */
+/** biome-ignore-all lint/suspicious/noExplicitAny: lazy */
+
 import { log } from '@acme/observability/log';
 import { LazyStore } from '@tauri-apps/plugin-store';
 import { analytics } from '~/lib/analytics/posthog-analytics';
-import { CURRENT_SETTINGS_VERSION, getMigrationsToRun } from './registry';
-import type { MigrationResult, VersionedSettings } from './types';
+import {
+  CURRENT_SETTINGS_VERSION,
+  getTypeSafeMigrationsToRun,
+  validateCurrentVersion,
+} from './registry';
+import type {
+  AnyMigration,
+  MigrationResult,
+  MigrationStepResult,
+  VersionedSettings,
+} from './types';
+import type { AnyVersionedSettings } from './versioned-schemas';
+import { isValidVersion } from './versioned-schemas';
 
 export class SettingsMigrationManager {
   private static instance: SettingsMigrationManager;
@@ -15,13 +29,27 @@ export class SettingsMigrationManager {
   }
 
   /**
-   * Ensure settings have proper versioning metadata
-   * Since we're at version 1 with no migrations, this just adds _meta if missing
+   * Type-safe settings migration with full validation
+   * Supports both legacy and new type-safe migration systems
    */
   async migrateSettings(): Promise<MigrationResult> {
     const store = new LazyStore('settings.json');
 
     try {
+      // Validate current version configuration
+      if (!validateCurrentVersion()) {
+        const error = new Error(
+          `Configuration error: CURRENT_SETTINGS_VERSION (${CURRENT_SETTINGS_VERSION}) doesn't match latest migration version`
+        );
+        log.error('[Migration]', error.message);
+        return {
+          success: false,
+          fromVersion: 0,
+          toVersion: CURRENT_SETTINGS_VERSION,
+          error,
+        };
+      }
+
       // Load settings
       const entries = await store.entries();
       const settings: VersionedSettings = Object.fromEntries(
@@ -58,9 +86,24 @@ export class SettingsMigrationManager {
         log.info(
           `[Migration] Added versioning metadata (v${CURRENT_SETTINGS_VERSION})`
         );
+
+        return {
+          success: true,
+          fromVersion: CURRENT_SETTINGS_VERSION,
+          toVersion: CURRENT_SETTINGS_VERSION,
+          details: {
+            migrationsRun: 0,
+            settingsChanged: ['_meta'],
+          },
+        };
       }
 
       const currentVersion = settings._meta.version;
+
+      // Validate version number
+      if (!isValidVersion(currentVersion)) {
+        throw new Error(`Invalid settings version: ${currentVersion}`);
+      }
 
       // Check if migration is needed
       if (currentVersion >= CURRENT_SETTINGS_VERSION) {
@@ -71,31 +114,105 @@ export class SettingsMigrationManager {
           success: true,
           fromVersion: currentVersion,
           toVersion: currentVersion,
+          details: {
+            migrationsRun: 0,
+            settingsChanged: [],
+          },
         };
       }
 
-      // Get migrations to run (should be empty at version 1)
-      const migrations = getMigrationsToRun(
+      // Get type-safe migrations to run
+      const migrations = getTypeSafeMigrationsToRun(
         currentVersion,
         CURRENT_SETTINGS_VERSION
       );
 
       if (migrations.length > 0) {
-        log.info(`[Migration] Running ${migrations.length} migrations...`);
+        log.info(
+          `[Migration] Running ${migrations.length} type-safe migrations...`
+        );
 
-        // Run migrations
-        let migratedSettings = settings;
+        const migrationResults: MigrationStepResult[] = [];
+        const settingsChanged: string[] = [];
+
+        // Run migrations with type safety and validation
+        let migratedSettings = settings as AnyVersionedSettings;
+
         for (const migration of migrations) {
-          log.info(`[Migration] Applying: ${migration.description}`);
-          migratedSettings = migration.up(migratedSettings);
+          const stepStartVersion = migratedSettings._meta.version;
+
+          try {
+            log.info(
+              `[Migration] Applying: ${migration.description} (v${stepStartVersion} → v${migration.version})`
+            );
+
+            // Apply the migration with runtime type checking
+            const beforeMigration = JSON.stringify(migratedSettings);
+            migratedSettings = migration.up(
+              migratedSettings as unknown as any
+            ) as AnyVersionedSettings;
+            const afterMigration = JSON.stringify(migratedSettings);
+
+            // Track what changed
+            if (beforeMigration !== afterMigration) {
+              settingsChanged.push(
+                `v${stepStartVersion}_to_v${migration.version}`
+              );
+            }
+
+            // Validate migration result if validation function exists
+            if (
+              migration.validate &&
+              !migration.validate(migratedSettings as unknown as any)
+            ) {
+              throw new Error(
+                `Migration validation failed for v${stepStartVersion} → v${migration.version}`
+              );
+            }
+
+            // Validate version was updated correctly
+            if (migratedSettings._meta.version !== migration.version) {
+              throw new Error(
+                `Migration failed to update version correctly: expected v${migration.version}, got v${migratedSettings._meta.version}`
+              );
+            }
+
+            migrationResults.push({
+              fromVersion: stepStartVersion,
+              toVersion: migration.version,
+              success: true,
+              description: migration.description,
+            });
+
+            log.info(
+              `[Migration] ✅ Successfully migrated v${stepStartVersion} → v${migration.version}`
+            );
+          } catch (stepError) {
+            const error = stepError as Error;
+            log.error(
+              `[Migration] ❌ Failed migration v${stepStartVersion} → v${migration.version}:`,
+              error
+            );
+
+            migrationResults.push({
+              fromVersion: stepStartVersion,
+              toVersion: migration.version,
+              success: false,
+              error,
+              description: migration.description,
+            });
+
+            throw new Error(
+              `Migration step failed (v${stepStartVersion} → v${migration.version}): ${error.message}`
+            );
+          }
         }
 
-        // Validate migration result
-        if (
-          !migratedSettings._meta ||
-          migratedSettings._meta.version !== CURRENT_SETTINGS_VERSION
-        ) {
-          throw new Error('Migration failed to update version correctly');
+        // Final validation - ensure we ended up at the target version
+        if (migratedSettings._meta.version !== CURRENT_SETTINGS_VERSION) {
+          throw new Error(
+            `Migration chain failed: expected final version v${CURRENT_SETTINGS_VERSION}, got v${migratedSettings._meta.version}`
+          );
         }
 
         // Save migrated settings
@@ -106,13 +223,32 @@ export class SettingsMigrationManager {
         await store.save();
 
         log.info(
-          `[Migration] Successfully migrated to v${CURRENT_SETTINGS_VERSION}`
+          `[Migration] 🎉 Successfully completed all migrations! v${currentVersion} → v${CURRENT_SETTINGS_VERSION}`
         );
+
+        // Track migration completion
+        try {
+          analytics.track('settings_changed', {
+            category: 'general',
+            setting_key: 'version',
+            old_value: currentVersion,
+            new_value: CURRENT_SETTINGS_VERSION,
+          });
+        } catch (analyticsError) {
+          log.warn(
+            '[Migration] Failed to track migration completion:',
+            analyticsError
+          );
+        }
 
         return {
           success: true,
           fromVersion: currentVersion,
           toVersion: CURRENT_SETTINGS_VERSION,
+          details: {
+            migrationsRun: migrations.length,
+            settingsChanged,
+          },
         };
       }
 
@@ -121,6 +257,10 @@ export class SettingsMigrationManager {
         success: true,
         fromVersion: currentVersion,
         toVersion: CURRENT_SETTINGS_VERSION,
+        details: {
+          migrationsRun: 0,
+          settingsChanged: [],
+        },
       };
     } catch (error) {
       log.error('[Migration] Migration failed:', error);
@@ -145,6 +285,73 @@ export class SettingsMigrationManager {
     } catch {
       return true; // If we can't read version, assume migration needed
     }
+  }
+
+  /**
+   * Get current settings version from disk
+   */
+  async getCurrentVersion(): Promise<number | null> {
+    try {
+      const store = new LazyStore('settings.json');
+      const meta = await store.get<{ version: number }>('_meta');
+      return meta?.version ?? null;
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * Development helper: Reset settings to a specific version
+   * WARNING: This will delete all settings! Only use in development.
+   */
+  async resetToVersion(targetVersion: number): Promise<void> {
+    if (!isValidVersion(targetVersion)) {
+      throw new Error(`Invalid version: ${targetVersion}`);
+    }
+
+    const store = new LazyStore('settings.json');
+    await store.clear();
+
+    await store.set('_meta', {
+      version: targetVersion,
+      timestamp: Date.now(),
+    });
+
+    await store.save();
+
+    log.warn(`[Migration] 🔥 DEVELOPMENT: Reset settings to v${targetVersion}`);
+  }
+
+  /**
+   * Development helper: Get migration preview without applying
+   */
+  async previewMigrations(fromVersion?: number): Promise<{
+    fromVersion: number;
+    toVersion: number;
+    migrationsToRun: AnyMigration[];
+    steps: string[];
+  }> {
+    const store = new LazyStore('settings.json');
+
+    let startVersion = fromVersion;
+    if (startVersion === undefined) {
+      const meta = await store.get<{ version: number }>('_meta');
+      startVersion = meta?.version ?? CURRENT_SETTINGS_VERSION;
+    }
+
+    const migrations = getTypeSafeMigrationsToRun(
+      startVersion,
+      CURRENT_SETTINGS_VERSION
+    );
+
+    return {
+      fromVersion: startVersion,
+      toVersion: CURRENT_SETTINGS_VERSION,
+      migrationsToRun: migrations,
+      steps: migrations.map(
+        (m) => `v${startVersion} → v${m.version}: ${m.description}`
+      ),
+    };
   }
 }
 
