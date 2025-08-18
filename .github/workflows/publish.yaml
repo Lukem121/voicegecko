@@ -187,30 +187,39 @@ jobs:
           args: ${{ matrix.args }}
           projectPath: apps/desktop
 
-      # Backup original tauri config and create update config (without model) - Windows
-      - name: Create Update Build Config - Windows
+      # Temporarily move model file for update build (without model) - Windows
+      - name: Prepare Update Build - Windows
         if: matrix.platform == 'self-hosted' || contains(matrix.platform, 'windows')
         shell: powershell
         run: |
-          # PowerShell commands for Windows
-          Copy-Item "apps/desktop/src-tauri/tauri.conf.json" "apps/desktop/src-tauri/tauri.conf.json.backup"
-          $config = Get-Content "apps/desktop/src-tauri/tauri.conf.json" | ConvertFrom-Json
-          # Exclude the model file from resources
-          $config.bundle.resources = @("resources/**/*", "!resources/ggml-base.en.bin")
-          $config | ConvertTo-Json -Depth 10 | Set-Content "apps/desktop/src-tauri/tauri.conf.json"
-          Write-Host "Updated tauri config to exclude model file"
+          # Move the model file temporarily to exclude it from the build
+          $modelPath = "apps/desktop/src-tauri/resources/ggml-base.en.bin"
+          $backupPath = "apps/desktop/src-tauri/ggml-base.en.bin.backup"
 
-      # Backup original tauri config and create update config (without model) - Unix
-      - name: Create Update Build Config - Unix
+          if (Test-Path $modelPath) {
+            Write-Host "Moving model file for update build..."
+            Move-Item $modelPath $backupPath
+            Write-Host "Model file moved to backup location"
+          } else {
+            Write-Host "Model file not found at expected location: $modelPath"
+          }
+
+      # Temporarily move model file for update build (without model) - Unix
+      - name: Prepare Update Build - Unix
         if: matrix.platform == 'macos-latest' || matrix.platform == 'ubuntu-22.04'
         shell: bash
         run: |
-          # Bash commands for Unix
-          cp apps/desktop/src-tauri/tauri.conf.json apps/desktop/src-tauri/tauri.conf.json.backup
-          # Use jq to modify the JSON - exclude the model file
-          jq '.bundle.resources = ["resources/**/*", "!resources/ggml-base.en.bin"]' apps/desktop/src-tauri/tauri.conf.json > apps/desktop/src-tauri/tauri.conf.temp.json
-          mv apps/desktop/src-tauri/tauri.conf.temp.json apps/desktop/src-tauri/tauri.conf.json
-          echo "Updated tauri config to exclude model file"
+          # Move the model file temporarily to exclude it from the build
+          MODEL_PATH="apps/desktop/src-tauri/resources/ggml-base.en.bin"
+          BACKUP_PATH="apps/desktop/src-tauri/ggml-base.en.bin.backup"
+
+          if [ -f "$MODEL_PATH" ]; then
+            echo "Moving model file for update build..."
+            mv "$MODEL_PATH" "$BACKUP_PATH"
+            echo "Model file moved to backup location"
+          else
+            echo "Model file not found at expected location: $MODEL_PATH"
+          fi
 
       # Build UPDATE version (without model) for existing users
       - name: Build Update Version (without model)
@@ -232,21 +241,39 @@ jobs:
           args: ${{ matrix.args }}
           projectPath: apps/desktop
 
-      # Restore original tauri config - Windows
-      - name: Restore Original Config - Windows
-        if: matrix.platform == 'self-hosted' || contains(matrix.platform, 'windows')
+      # Restore model file after build - Windows (always run to ensure cleanup)
+      - name: Restore Model File - Windows
+        if: always() && (matrix.platform == 'self-hosted' || contains(matrix.platform, 'windows'))
         shell: powershell
         run: |
-          Move-Item "apps/desktop/src-tauri/tauri.conf.json.backup" "apps/desktop/src-tauri/tauri.conf.json" -Force
-          Write-Host "Restored original tauri config"
+          # Restore the model file after build
+          $modelPath = "apps/desktop/src-tauri/resources/ggml-base.en.bin"
+          $backupPath = "apps/desktop/src-tauri/ggml-base.en.bin.backup"
 
-      # Restore original tauri config - Unix
-      - name: Restore Original Config - Unix
-        if: matrix.platform == 'macos-latest' || matrix.platform == 'ubuntu-22.04'
+          if (Test-Path $backupPath) {
+            Write-Host "Restoring model file..."
+            Move-Item $backupPath $modelPath -Force
+            Write-Host "Model file restored"
+          } else {
+            Write-Host "No backup model file found to restore"
+          }
+
+      # Restore model file after build - Unix (always run to ensure cleanup)
+      - name: Restore Model File - Unix
+        if: always() && (matrix.platform == 'macos-latest' || matrix.platform == 'ubuntu-22.04')
         shell: bash
         run: |
-          mv apps/desktop/src-tauri/tauri.conf.json.backup apps/desktop/src-tauri/tauri.conf.json
-          echo "Restored original tauri config"
+          # Restore the model file after build
+          MODEL_PATH="apps/desktop/src-tauri/resources/ggml-base.en.bin"
+          BACKUP_PATH="apps/desktop/src-tauri/ggml-base.en.bin.backup"
+
+          if [ -f "$BACKUP_PATH" ]; then
+            echo "Restoring model file..."
+            mv "$BACKUP_PATH" "$MODEL_PATH"
+            echo "Model file restored"
+          else
+            echo "No backup model file found to restore"
+          fi
 
       # Publish to separate public releases repository
       - name: Create Releases in Public Repository (Windows/Self-hosted)
