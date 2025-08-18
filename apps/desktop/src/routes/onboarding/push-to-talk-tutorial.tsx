@@ -248,6 +248,11 @@ function RecordingTutorialStep() {
   const previousTranscriptionText = React.useRef<string | null>(null);
   const lastProcessedTranscriptionStatus = React.useRef<string | null>(null);
 
+  // Animation state for transcription text area
+  const [shouldAnimateTranscription, setShouldAnimateTranscription] =
+    useState(false);
+  const lastAnimatedTranscription = React.useRef<string>('');
+
   const {
     currentStep,
     isStepCompleted,
@@ -315,6 +320,9 @@ function RecordingTutorialStep() {
 
     // Reset previous transcription tracking for fresh detection
     previousTranscriptionText.current = null;
+
+    // Reset animation tracking for fresh animations on retry
+    lastAnimatedTranscription.current = '';
 
     // Reset the event store transcription state to break the useEffect loop
     useEventStore.getState().resetTranscriptionState();
@@ -468,6 +476,31 @@ function RecordingTutorialStep() {
     markStepCompleted,
     transcriptionText,
   ]);
+
+  // Trigger animation when new transcription text appears
+  useEffect(() => {
+    if (
+      transcriptionText &&
+      transcriptionText.trim() !== '' &&
+      transcriptionText !== lastAnimatedTranscription.current
+    ) {
+      log.info('[Tutorial Animation] Triggering transcription animation:', {
+        transcriptionText,
+        lastAnimatedTranscription: lastAnimatedTranscription.current,
+      });
+
+      // Update the ref immediately to prevent duplicate animations
+      lastAnimatedTranscription.current = transcriptionText;
+      setShouldAnimateTranscription(true);
+
+      // Reset animation state after animation completes
+      const timer = setTimeout(() => {
+        setShouldAnimateTranscription(false);
+      }, 1000);
+
+      return () => clearTimeout(timer);
+    }
+  }, [transcriptionText]);
 
   // Handle step completion messages with stable dependencies
   useEffect(() => {
@@ -651,12 +684,37 @@ function RecordingTutorialStep() {
                 </div>
               </CardHeader>
               <CardContent>
-                <Textarea
-                  className="min-h-[120px] resize-none focus-visible:ring-0"
-                  placeholder="Start the tutorial and your transcription will appear here..."
-                  readOnly
-                  value={transcriptionText || ''}
-                />
+                <motion.div
+                  animate={
+                    shouldAnimateTranscription
+                      ? {
+                          borderColor: [
+                            'hsl(var(--border))',
+                            'hsl(217, 91%, 60%)',
+                            'hsl(var(--border))',
+                          ],
+                          boxShadow: [
+                            '0 0 0 0 rgba(59, 130, 246, 0)',
+                            '0 0 0 3px rgba(59, 130, 246, 0.3), 0 0 8px rgba(59, 130, 246, 0.2)',
+                            '0 0 0 0 rgba(59, 130, 246, 0)',
+                          ],
+                        }
+                      : {}
+                  }
+                  className="rounded-md border border-input"
+                  transition={{
+                    duration: 1.2,
+                    ease: 'easeInOut',
+                    times: [0, 0.5, 1],
+                  }}
+                >
+                  <Textarea
+                    className="min-h-[120px] resize-none border-0 focus-visible:ring-0"
+                    placeholder="Start the tutorial and your transcription will appear here..."
+                    readOnly
+                    value={transcriptionText || ''}
+                  />
+                </motion.div>
                 {transcriptionText && (
                   <div className="mt-2 text-muted-foreground text-xs">
                     <span>✓ Automatically copied to clipboard</span>
