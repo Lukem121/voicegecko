@@ -73,7 +73,7 @@ const footerSections: FooterSection[] = [
     links: [
       {
         name: 'Discord',
-        href: 'https://discord.gg/BFxNQCzZjB',
+        href: APP_ROUTES.SOCIALS.DISCORD,
         icon: SiDiscord,
         openInNewTab: true,
       },

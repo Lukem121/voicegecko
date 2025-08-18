@@ -32,6 +32,9 @@ export const APP_ROUTES = {
     PRIVACY: '/terms/privacy-policy',
     SECURITY_POLICY: '/terms/security-policy',
   },
+  SOCIALS: {
+    DISCORD: 'https://discord.gg/BFxNQCzZjB',
+  },
 } as const;
 
 // Type-safe URL parameter builder
