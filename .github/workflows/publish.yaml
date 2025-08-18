@@ -30,6 +30,8 @@ jobs:
         shell: ${{ matrix.platform == 'self-hosted' && 'powershell' || (contains(matrix.platform, 'windows') && 'powershell' || 'bash') }}
     steps:
       - uses: actions/checkout@v4
+        with:
+          lfs: true
 
       - name: setup node
         uses: actions/setup-node@v4
