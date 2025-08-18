@@ -1,4 +1,5 @@
 import { log } from '@acme/observability/log';
+import { emit } from '@tauri-apps/api/event';
 import { useCallback, useEffect, useState } from 'react';
 import { TIMINGS } from '~/components/gecko-bar/gecko-bar-app.constants';
 import type {
@@ -7,9 +8,11 @@ import type {
 } from '~/components/gecko-bar/gecko-bar-app.types';
 import { isSafeToCollapse } from '~/components/gecko-bar/gecko-bar-app.utils';
 import { initializeGeckoBarEvents } from '~/lib/gecko-bar-events';
-import { initializeTauriEvents } from '~/lib/tauri-events';
-import { recordingService } from '~/services/recording.service';
 import { useEventStore } from '~/stores/event.store';
+import type {
+  RecordingStateChangedEvent,
+  TranscriptionProgressEvent,
+} from '~/types/events';
 import { useAudioProcessor } from './use-audio-processor';
 import { useGeckoBarDisplayState } from './use-gecko-bar-display-state';
 import { useTimeoutManager } from './use-timeout-manager';
@@ -93,22 +96,61 @@ export function useGeckoBarState(): UseGeckoBarStateReturn {
     }
   }, [isTranscribing, isTransitioning, timeoutManager]);
 
-  // Initialize event systems for gecko bar window
+  // Initialize minimal gecko bar events (UI-only, no business logic)
   useEffect(() => {
-    initializeTauriEvents({ isGeckoBar: true }).catch((error) => {
-      log.error('Failed to initialize main Tauri events in gecko bar:', error);
-    });
+    log.info('[GeckoBar] 🎨 Initializing UI-only event listeners');
 
-    initializeGeckoBarEvents().catch((error) => {
-      log.error('Failed to initialize Gecko Bar events:', error);
-    });
+    async function initializeGeckoBarUIEvents() {
+      try {
+        // Initialize gecko bar specific events (notifications, audio levels)
+        await initializeGeckoBarEvents();
 
-    // Initialize stores for gecko bar window
-    import('~/stores/store-registry').then(({ storeRegistry }) => {
-      storeRegistry.initializeAll().catch((error) => {
-        log.error('[GeckoBar] Failed to initialize stores:', error);
-      });
-    });
+        // Listen to recording state changes (UI updates only)
+        const { listen } = await import('@tauri-apps/api/event');
+
+        await listen('recording-state-changed', (event) => {
+          const payload = event.payload as RecordingStateChangedEvent;
+          log.info('[GeckoBar] 🎙️ Recording state changed (UI only):', payload);
+          useEventStore.getState().setRecordingStatus(payload);
+        });
+
+        // Listen to transcription progress (UI updates only - NO completion handling)
+        await listen('transcription-progress', (event) => {
+          const payload = event.payload as TranscriptionProgressEvent;
+          log.info(
+            '[GeckoBar] 📝 Transcription progress (UI only):',
+            payload.status
+          );
+
+          const store = useEventStore.getState();
+          const metadata = {
+            duration_seconds: payload.duration_seconds,
+            model_used: payload.model_used,
+            sample_rate: payload.sample_rate,
+          };
+
+          // Only update transcription progress state (NO completion business logic)
+          store.setTranscriptionProgress(
+            payload.status,
+            payload.data,
+            metadata
+          );
+
+          // NO completion handling - main window handles that!
+          if (payload.status === 'Complete') {
+            log.info(
+              '[GeckoBar] ✅ Transcription complete (UI updated, business logic handled by main window)'
+            );
+          }
+        });
+
+        log.info('[GeckoBar] ✅ UI-only event listeners initialized');
+      } catch (error) {
+        log.error('Failed to initialize Gecko Bar UI events:', error);
+      }
+    }
+
+    initializeGeckoBarUIEvents();
   }, []);
 
   // Event handlers - simplified since display state is managed centrally
@@ -125,20 +167,22 @@ export function useGeckoBarState(): UseGeckoBarStateReturn {
     timeoutManager.clearTimeout('expand');
   }, [timeoutManager]);
 
-  // Click handler for recording
+  // Click handler for recording - send event to main window instead of direct service call
   const handleClick = useCallback(() => {
     const eventState = useEventStore.getState();
 
     if (eventState.recordingStatus === 'idle' && !eventState.isRecording()) {
-      recordingService
-        .toggleRecording({ isKeyboardShortcut: false })
-        .catch((error) => {
-          log.error('Failed to toggle recording:', error);
-        });
+      log.info('[GeckoBar] 🎤 Sending start recording request to main window');
+      // Send event to main window to handle the business logic
+      emit('gecko-bar-recording-request', { action: 'toggle' }).catch(
+        (error) => {
+          log.error('[GeckoBar] Failed to emit recording request:', error);
+        }
+      );
     }
   }, []);
 
-  // Cancel button handler
+  // Cancel button handler - send event to main window
   const handleCancel = useCallback(
     async (e: React.MouseEvent<HTMLButtonElement>) => {
       e.stopPropagation();
@@ -146,12 +190,15 @@ export function useGeckoBarState(): UseGeckoBarStateReturn {
         return;
       }
 
+      log.info('[GeckoBar] 🚫 Sending cancel recording request to main window');
       setIsLoading(true);
       setIsTransitioning(false);
+
       try {
-        await recordingService.cancelRecording();
+        // Send event to main window to handle the business logic
+        await emit('gecko-bar-recording-request', { action: 'cancel' });
       } catch (error) {
-        log.error('Failed to cancel recording:', error);
+        log.error('[GeckoBar] Failed to emit cancel request:', error);
       } finally {
         setIsLoading(false);
       }
@@ -159,7 +206,7 @@ export function useGeckoBarState(): UseGeckoBarStateReturn {
     [isLoading, isRecording]
   );
 
-  // Finish button handler
+  // Finish button handler - send event to main window
   const handleFinish = useCallback(
     async (e: React.MouseEvent<HTMLButtonElement>) => {
       e.stopPropagation();
@@ -167,12 +214,15 @@ export function useGeckoBarState(): UseGeckoBarStateReturn {
         return;
       }
 
+      log.info('[GeckoBar] ✅ Sending finish recording request to main window');
       setIsTransitioning(true);
       setIsLoading(true);
+
       try {
-        await recordingService.toggleRecording();
+        // Send event to main window to handle the business logic
+        await emit('gecko-bar-recording-request', { action: 'finish' });
       } catch (error) {
-        log.error('Failed to finish recording:', error);
+        log.error('[GeckoBar] Failed to emit finish request:', error);
         setIsTransitioning(false);
       } finally {
         setIsLoading(false);

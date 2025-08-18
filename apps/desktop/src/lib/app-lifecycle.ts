@@ -276,9 +276,9 @@ class AppLifecycleManager {
       log.info('[AppLifecycle] 🗄️ Initializing stores...');
       await storeRegistry.initializeAll();
 
-      // Initialize Tauri event listeners
+      // Initialize Tauri event listeners (only for main window)
       log.info('[AppLifecycle] 📡 Initializing event listeners...');
-      await initializeTauriEvents();
+      await initializeTauriEvents({ isGeckoBar: false });
 
       this.isInitialized = true;
       log.info('[AppLifecycle] ✅ Core systems initialized successfully');

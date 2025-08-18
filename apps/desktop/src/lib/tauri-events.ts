@@ -165,9 +165,15 @@ export async function initializeTauriEvents(
       // Only handle completion business logic in main window
       if (!options.isGeckoBar && payload.status === 'Complete') {
         log.info(
-          '[TauriEvents] Handling transcription completion in main window'
+          '[TauriEvents] Handling transcription completion in main window',
+          { isGeckoBar: options.isGeckoBar, callerId: initializationId }
         );
         store.handleTranscriptionComplete(payload.data ?? '', metadata);
+      } else if (payload.status === 'Complete') {
+        log.info(
+          '[TauriEvents] Skipping transcription completion (gecko bar window)',
+          { isGeckoBar: options.isGeckoBar, callerId: initializationId }
+        );
       }
     });
 
@@ -200,6 +206,64 @@ export async function initializeTauriEvents(
       useEventStore.getState().setRecordingError(payload);
       toast.error('Recording error', { description: payload });
     });
+
+    // Listen for gecko bar recording requests (only in main window)
+    if (!options.isGeckoBar) {
+      await listen('gecko-bar-recording-request', (event) => {
+        const payload = event.payload as {
+          action: 'toggle' | 'cancel' | 'finish';
+        };
+        log.info(
+          '[TauriEvents] 🎛️ Gecko bar recording request:',
+          payload.action
+        );
+
+        // Import recording service dynamically to handle the request
+        import('~/services/recording.service')
+          .then(({ recordingService }) => {
+            // Handle the request using the recording service (business logic in main window only)
+            switch (payload.action) {
+              case 'toggle':
+                recordingService
+                  .toggleRecording({ isKeyboardShortcut: false })
+                  .catch((error) => {
+                    log.error(
+                      '[TauriEvents] Failed to toggle recording from gecko bar:',
+                      error
+                    );
+                  });
+                break;
+              case 'cancel':
+                recordingService.cancelRecording().catch((error) => {
+                  log.error(
+                    '[TauriEvents] Failed to cancel recording from gecko bar:',
+                    error
+                  );
+                });
+                break;
+              case 'finish':
+                recordingService.toggleRecording().catch((error) => {
+                  log.error(
+                    '[TauriEvents] Failed to finish recording from gecko bar:',
+                    error
+                  );
+                });
+                break;
+              default:
+                log.warn(
+                  '[TauriEvents] Unknown gecko bar action:',
+                  payload.action
+                );
+            }
+          })
+          .catch((error) => {
+            log.error(
+              '[TauriEvents] Failed to import recording service:',
+              error
+            );
+          });
+      });
+    }
 
     // Listen for audio level events
     await listen('audio-level', (event) => {

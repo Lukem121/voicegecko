@@ -160,10 +160,20 @@ function App() {
   return <InnerApp />;
 }
 
-// Initialize core systems BEFORE React starts (but not updates - that needs UI)
+// Initialize core systems BEFORE React starts (but only for main window)
 async function initializeApp() {
+  // Skip initialization entirely if this is the gecko bar window
+  if (isGeckoBarWindow()) {
+    log.info(
+      '[Main] 🎨 Gecko bar window detected, skipping core initialization'
+    );
+    return;
+  }
+
   try {
-    log.info('[Main] 🚀 Starting core systems initialization...');
+    log.info(
+      '[Main] 🚀 Starting core systems initialization (main window only)...'
+    );
 
     // Initialize core systems (but NOT updates - those need UI feedback)
     await appLifecycle.initializeCoreSystemsOnce();

@@ -19,7 +19,6 @@ import { Switch } from '@acme/ui/components/ui/switch';
 import { ThemeToggle } from '@acme/ui/components/ui/theme';
 import { createFileRoute, Link } from '@tanstack/react-router';
 import {
-  Cpu,
   Keyboard,
   Mic,
   Palette,
@@ -387,12 +386,6 @@ function SettingsPage() {
               <Button className="w-full justify-start gap-2" variant="outline">
                 <Keyboard className="h-4 w-4" />
                 Keyboard Shortcuts
-              </Button>
-            </Link>
-            <Link className="w-full" to="/settings/models">
-              <Button className="w-full justify-start gap-2" variant="outline">
-                <Cpu className="h-4 w-4" />
-                Model Settings
               </Button>
             </Link>
           </div>

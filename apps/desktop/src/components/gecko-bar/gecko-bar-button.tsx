@@ -82,7 +82,10 @@ export function GeckoBarButton({
               }}
             >
               <Square
-                className={cn(state.isEnabled ? 'fill-white' : 'fill-white/50')}
+                className={cn(
+                  state.isEnabled ? 'fill-white' : 'fill-white/50',
+                  'stroke-none'
+                )}
                 style={{
                   width: DIMENSIONS.BUTTON.FINISH_ICON_SIZE,
                   height: DIMENSIONS.BUTTON.FINISH_ICON_SIZE,
