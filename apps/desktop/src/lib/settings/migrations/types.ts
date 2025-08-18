@@ -11,19 +11,6 @@ import type {
   SettingsForVersion,
 } from './versioned-schemas';
 
-// Legacy types (kept for backwards compatibility)
-export type SettingsVersion = {
-  version: number;
-  timestamp: number;
-  appVersion?: string;
-};
-
-// Base structure that all settings must have (legacy)
-export type VersionedSettings = {
-  _meta: SettingsVersion;
-  [key: string]: unknown;
-};
-
 // =============================================================================
 // TYPE-SAFE MIGRATION INTERFACE
 // =============================================================================
@@ -69,17 +56,14 @@ export type TypeSafeMigration<
 };
 
 // =============================================================================
-// SPECIFIC MIGRATION TYPES
+// MIGRATION TYPES
 // =============================================================================
 
-// Migration from V0 to V1 (example historical migration)
-export type MigrationV0ToV1 = TypeSafeMigration<0, 1>;
-
-// Migration from V1 to V2 (example future migration)
+// Migration from V1 to V2 (test migration)
 export type MigrationV1ToV2 = TypeSafeMigration<1, 2>;
 
 // Union of all possible migrations
-export type AnyMigration = MigrationV0ToV1 | MigrationV1ToV2;
+export type AnyMigration = MigrationV1ToV2;
 
 // =============================================================================
 // MIGRATION RESULTS AND UTILITIES
@@ -107,48 +91,3 @@ export type MigrationStepResult = {
   error?: Error;
   description: string;
 };
-
-// =============================================================================
-// LEGACY COMPATIBILITY
-// =============================================================================
-
-/**
- * Legacy migration interface for backwards compatibility
- * @deprecated Use TypeSafeMigration instead
- */
-export type Migration<TFrom = VersionedSettings, TTo = VersionedSettings> = {
-  version: number;
-  description: string;
-  up: (settings: TFrom) => TTo;
-  down?: (settings: TTo) => TFrom;
-};
-
-// =============================================================================
-// TYPE HELPERS
-// =============================================================================
-
-/**
- * Extract the "from" version of a migration
- */
-export type GetFromVersion<T extends AnyMigration> =
-  T extends TypeSafeMigration<infer From, ExtractVersion<AnyVersionedSettings>>
-    ? From
-    : never;
-
-/**
- * Extract the "to" version of a migration
- */
-export type GetToVersion<T extends AnyMigration> = T extends TypeSafeMigration<
-  ExtractVersion<AnyVersionedSettings>,
-  infer To
->
-  ? To
-  : never;
-
-/**
- * Check if a migration can be applied to settings of a specific version
- */
-export type CanApplyMigration<
-  M extends AnyMigration,
-  SettingsVer extends ExtractVersion<AnyVersionedSettings>,
-> = SettingsVer extends GetFromVersion<M> ? true : false;

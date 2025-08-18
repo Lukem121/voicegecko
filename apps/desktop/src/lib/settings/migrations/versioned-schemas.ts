@@ -15,45 +15,6 @@ import type {
 } from '~/types/settings';
 
 // =============================================================================
-// SETTINGS VERSION 0 (Simulated Historical Version)
-// =============================================================================
-// This represents what settings might have looked like before the current system
-// Since you're in early development, this is simulated to demonstrate the system
-
-export type SettingsV0AudioSettings = {
-  selectedDevice: AudioDevice | null;
-  selectedSound: NotificationSound;
-  notificationVolume: number;
-  // Note: No muteSystemAudio or notificationTiming in V0
-};
-
-export type SettingsV0GeneralSettings = {
-  launchOnStartup: boolean;
-  // Note: No geckoBar settings in V0
-};
-
-export type SettingsV0PrivacySettings = {
-  usageAnalytics: boolean;
-  // Note: No crashReports in V0
-};
-
-// Note: No PersonalizationSettings or ModelSettings in V0
-
-export type SettingsV0AppSettings = {
-  audio: SettingsV0AudioSettings;
-  general: SettingsV0GeneralSettings;
-  privacy: SettingsV0PrivacySettings;
-};
-
-export type SettingsV0VersionedSettings = {
-  _meta: {
-    version: 0;
-    timestamp: number;
-    appVersion?: string;
-  };
-} & SettingsV0AppSettings;
-
-// =============================================================================
 // SETTINGS VERSION 1 (Current Version)
 // =============================================================================
 // This matches your current settings exactly
@@ -129,9 +90,9 @@ export type SettingsV1VersionedSettings = {
 } & SettingsV1AppSettings;
 
 // =============================================================================
-// SETTINGS VERSION 2 (Example Future Version)
+// SETTINGS VERSION 2 (Test Migration)
 // =============================================================================
-// This demonstrates how you'd add a new version in the future
+// This demonstrates the migration system in action
 
 // Most settings stay the same...
 export type SettingsV2AudioSettings = SettingsV1AudioSettings;
@@ -148,8 +109,8 @@ export type SettingsV2PersonalizationSettings = {
   autoPasteOnCompletion: boolean;
   preventPasteNewlines: boolean;
   // New in V2:
-  autoCorrectTypos: boolean;
-  customDictionary: string[];
+  testFeature: boolean;
+  testArray: string[];
 };
 
 export type SettingsV2AppSettings = {
@@ -173,9 +134,8 @@ export type SettingsV2VersionedSettings = {
 // TYPE UNIONS AND HELPERS
 // =============================================================================
 
-// Union of all possible settings versions
+// Union of all possible settings versions (now includes V2)
 export type AnyVersionedSettings =
-  | SettingsV0VersionedSettings
   | SettingsV1VersionedSettings
   | SettingsV2VersionedSettings;
 
@@ -184,23 +144,21 @@ export type ExtractVersion<T extends AnyVersionedSettings> =
   T['_meta']['version'];
 
 // Get settings type for specific version
-export type SettingsForVersion<V extends number> = V extends 0
-  ? SettingsV0VersionedSettings
-  : V extends 1
-    ? SettingsV1VersionedSettings
-    : V extends 2
-      ? SettingsV2VersionedSettings
-      : never;
+export type SettingsForVersion<V extends number> = V extends 1
+  ? SettingsV1VersionedSettings
+  : V extends 2
+    ? SettingsV2VersionedSettings
+    : never;
 
-// Current latest version (this should match the highest version defined above)
-export type CurrentSettings = SettingsV1VersionedSettings;
-export const CURRENT_VERSION = 1 as const;
+// Current latest version (now V2)
+export type CurrentSettings = SettingsV2VersionedSettings;
+export const CURRENT_VERSION = 2 as const;
 
 // Version validation helper
 export function isValidVersion(
   version: number
 ): version is ExtractVersion<AnyVersionedSettings> {
-  return version >= 0 && version <= CURRENT_VERSION;
+  return version === 1 || version === 2;
 }
 
 // Runtime type guard to check if settings match a specific version
