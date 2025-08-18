@@ -41,7 +41,6 @@ export function useSocialAuth(): UseSocialAuthReturn {
     const { error: signInError } = await signInSocial({
       authClient,
       provider,
-      errorCallbackURL: '/authentication-error',
       fetchOptions: {
         onError: ({ error: callbackError }) => setError(callbackError.message),
       },
