@@ -13,7 +13,6 @@ import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { nextCookies } from 'better-auth/next-js';
 import {
   admin as adminPlugin,
-  oAuthProxy,
   phoneNumber,
   twoFactor,
   username,
@@ -84,13 +83,6 @@ export const serverAuth = betterAuth({
           };
         },
       },
-    }),
-    oAuthProxy({
-      /**
-       * Auto-inference blocked by https://github.com/better-auth/better-auth/pull/2891
-       */
-      currentURL: authEnv().NEXT_PUBLIC_VOICEGECKO_URL,
-      productionURL: authEnv().NEXT_PUBLIC_VOICEGECKO_URL,
     }),
     tauri({
       scheme: 'voicegecko',

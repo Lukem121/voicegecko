@@ -40,7 +40,13 @@
           "url": "http://localhost:3000/*"
         },
         {
-          "url": "https://*.voicegecko.io"
+          "url": "http://localhost:1420/*"
+        },
+        {
+          "url": "https://*.voicegecko.io/*"
+        },
+        {
+          "url": "https://www.voicegecko.io/*"
         },
         {
           "url": "https://github.com/Lukem121/voicegecko-releases/*"
