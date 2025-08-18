@@ -33,6 +33,94 @@ jobs:
         with:
           lfs: true
 
+      - name: Setup Git LFS (Self-hosted)
+        if: matrix.platform == 'self-hosted'
+        shell: powershell
+        run: |
+          Write-Host "=== Setting up Git LFS on self-hosted runner ==="
+          git lfs version
+          git lfs install --force
+          git lfs pull
+
+      - name: Debug LFS files (PowerShell)
+        if: matrix.platform == 'self-hosted' || contains(matrix.platform, 'windows')
+        shell: powershell
+        run: |
+          Write-Host "=== Git LFS Status ==="
+          git lfs ls-files
+
+          Write-Host "`n=== Repository Structure ==="
+          Get-ChildItem -Recurse -Path "apps/desktop/src-tauri" -Include "*.bin", "*.dll", "*.exe" | Select-Object FullName, @{Name="Size(MB)";Expression={[math]::Round($_.Length/1MB, 2)}}, @{Name="Size(Bytes)";Expression={$_.Length}} | Format-Table -AutoSize
+
+          Write-Host "`n=== Resources Directory ==="
+          if (Test-Path "apps/desktop/src-tauri/resources/") {
+            Get-ChildItem "apps/desktop/src-tauri/resources/" -Recurse | Select-Object Name, @{Name="Size(MB)";Expression={[math]::Round($_.Length/1MB, 2)}}, @{Name="Size(Bytes)";Expression={$_.Length}}, FullName | Format-Table -AutoSize
+          } else {
+            Write-Host "Resources directory does not exist!"
+          }
+
+          Write-Host "`n=== Model File Specific Check ==="
+          $modelFile = "apps/desktop/src-tauri/resources/ggml-base.en.bin"
+          if (Test-Path $modelFile) {
+            $size = (Get-Item $modelFile).Length
+            Write-Host "✅ Model file exists!"
+            Write-Host "   Path: $modelFile"
+            Write-Host "   Size: $size bytes ($([math]::Round($size/1MB, 2)) MB)"
+            if ($size -lt 1000000) {
+              Write-Host "⚠️  WARNING: File is suspiciously small (less than 1MB) - likely an LFS pointer!"
+              Write-Host "File content preview (first 500 bytes):"
+              $content = Get-Content $modelFile -Raw -TotalCount 1
+              if ($content.Length -gt 500) { $content = $content.Substring(0, 500) }
+              Write-Host $content
+            } else {
+              Write-Host "✅ File size looks correct for the model file"
+            }
+          } else {
+            Write-Host "❌ ERROR: Model file does not exist at $modelFile"
+          }
+
+      - name: Debug LFS files (Unix)
+        if: matrix.platform == 'macos-latest' || matrix.platform == 'ubuntu-22.04'
+        shell: bash
+        run: |
+          echo "=== Git LFS Status ==="
+          git lfs ls-files
+
+          echo -e "\n=== Repository Structure ==="
+          find apps/desktop/src-tauri -name "*.bin" -o -name "*.dll" -o -name "*.exe" -o -name "*.dylib" -o -name "*.so" | while read file; do
+            if [ -f "$file" ]; then
+              size=$(stat -f%z "$file" 2>/dev/null || stat -c%s "$file" 2>/dev/null)
+              sizeMB=$(echo "scale=2; $size/1024/1024" | bc -l 2>/dev/null || echo "unknown")
+              printf "%-60s %10s bytes (%s MB)\n" "$file" "$size" "$sizeMB"
+            fi
+          done
+
+          echo -e "\n=== Resources Directory ==="
+          if [ -d "apps/desktop/src-tauri/resources/" ]; then
+            ls -lah apps/desktop/src-tauri/resources/
+          else
+            echo "Resources directory does not exist!"
+          fi
+
+          echo -e "\n=== Model File Specific Check ==="
+          modelFile="apps/desktop/src-tauri/resources/ggml-base.en.bin"
+          if [ -f "$modelFile" ]; then
+            size=$(stat -f%z "$modelFile" 2>/dev/null || stat -c%s "$modelFile" 2>/dev/null || echo "unknown")
+            sizeMB=$(echo "scale=2; $size/1024/1024" | bc -l 2>/dev/null || echo "unknown")
+            echo "✅ Model file exists!"
+            echo "   Path: $modelFile"
+            echo "   Size: $size bytes ($sizeMB MB)"
+            if [ "$size" != "unknown" ] && [ "$size" -lt 1000000 ]; then
+              echo "⚠️  WARNING: File is suspiciously small (less than 1MB) - likely an LFS pointer!"
+              echo "File content preview (first 500 bytes):"
+              head -c 500 "$modelFile" | od -c | head -10
+            else
+              echo "✅ File size looks correct for the model file"
+            fi
+          else
+            echo "❌ ERROR: Model file does not exist at $modelFile"
+          fi
+
       - name: setup node
         uses: actions/setup-node@v4
         with:
