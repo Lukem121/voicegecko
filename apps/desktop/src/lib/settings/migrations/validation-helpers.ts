@@ -4,7 +4,7 @@
  * This module provides utilities for validating settings data at runtime,
  * ensuring data integrity during migrations, and providing helpful debugging tools.
  */
-/** biome-ignore-all lint/complexity/noExcessiveCognitiveComplexity: <explanation> */
+/** biome-ignore-all lint/complexity/noExcessiveCognitiveComplexity: validation requires many checks */
 
 import type {
   AudioDevice,
@@ -13,7 +13,6 @@ import type {
 } from '~/types/settings';
 import type {
   AnyVersionedSettings,
-  SettingsV0VersionedSettings,
   SettingsV1ModelStatus,
   SettingsV1VersionedSettings,
   SettingsV2VersionedSettings,
@@ -22,15 +21,6 @@ import type {
 // =============================================================================
 // TYPE GUARDS FOR VERSION DETECTION
 // =============================================================================
-
-/**
- * Type guard to check if settings object is V0
- */
-export function isSettingsV0(
-  settings: AnyVersionedSettings
-): settings is SettingsV0VersionedSettings {
-  return settings._meta.version === 0;
-}
 
 /**
  * Type guard to check if settings object is V1
@@ -151,74 +141,16 @@ export function isValidModelStatus(
 // =============================================================================
 
 /**
- * Comprehensive validation for V0 settings
- */
-export function validateV0Settings(
-  settings: unknown
-): settings is SettingsV0VersionedSettings {
-  if (
-    !(validateVersionedSettingsStructure(settings) && isSettingsV0(settings))
-  ) {
-    return false;
-  }
-
-  try {
-    // Validate audio settings
-    const audio = settings.audio;
-    if (typeof audio !== 'object' || audio === null) {
-      return false;
-    }
-
-    if (
-      audio.selectedDevice !== null &&
-      !isValidAudioDevice(audio.selectedDevice)
-    ) {
-      return false;
-    }
-    if (!isValidNotificationSound(audio.selectedSound)) {
-      return false;
-    }
-    if (
-      typeof audio.notificationVolume !== 'number' ||
-      audio.notificationVolume < 0 ||
-      audio.notificationVolume > 1
-    ) {
-      return false;
-    }
-
-    // Validate general settings
-    const general = settings.general;
-    if (typeof general !== 'object' || general === null) {
-      return false;
-    }
-    if (typeof general.launchOnStartup !== 'boolean') {
-      return false;
-    }
-
-    // Validate privacy settings
-    const privacy = settings.privacy;
-    if (typeof privacy !== 'object' || privacy === null) {
-      return false;
-    }
-    if (typeof privacy.usageAnalytics !== 'boolean') {
-      return false;
-    }
-
-    return true;
-  } catch {
-    return false;
-  }
-}
-
-/**
- * Comprehensive validation for V1 settings
+ * Comprehensive validation for V1 settings (current version)
  */
 export function validateV1Settings(
   settings: unknown
 ): settings is SettingsV1VersionedSettings {
-  if (
-    !(validateVersionedSettingsStructure(settings) && isSettingsV1(settings))
-  ) {
+  if (!validateVersionedSettingsStructure(settings)) {
+    return false;
+  }
+
+  if (!isSettingsV1(settings)) {
     return false;
   }
 
@@ -375,9 +307,11 @@ export function validateV1Settings(
 export function validateV2Settings(
   settings: unknown
 ): settings is SettingsV2VersionedSettings {
-  if (
-    !(validateVersionedSettingsStructure(settings) && isSettingsV2(settings))
-  ) {
+  if (!validateVersionedSettingsStructure(settings)) {
+    return false;
+  }
+
+  if (!isSettingsV2(settings)) {
     return false;
   }
 
@@ -385,7 +319,15 @@ export function validateV2Settings(
   const v1ValidationSettings = {
     ...settings,
     _meta: { ...settings._meta, version: 1 },
+    personalization: {
+      interactionSounds: settings.personalization.interactionSounds,
+      smartFormatting: settings.personalization.smartFormatting,
+      autoAddToDictionary: settings.personalization.autoAddToDictionary,
+      autoPasteOnCompletion: settings.personalization.autoPasteOnCompletion,
+      preventPasteNewlines: settings.personalization.preventPasteNewlines,
+    },
   };
+
   if (!validateV1Settings(v1ValidationSettings)) {
     return false;
   }
@@ -396,16 +338,16 @@ export function validateV2Settings(
     if (typeof personalization !== 'object' || personalization === null) {
       return false;
     }
-    if (typeof personalization.autoCorrectTypos !== 'boolean') {
+    if (typeof personalization.testFeature !== 'boolean') {
       return false;
     }
-    if (!Array.isArray(personalization.customDictionary)) {
+    if (!Array.isArray(personalization.testArray)) {
       return false;
     }
 
-    // Validate custom dictionary entries are strings
-    for (const word of personalization.customDictionary) {
-      if (typeof word !== 'string') {
+    // Validate test array entries are strings
+    for (const item of personalization.testArray) {
+      if (typeof item !== 'string') {
         return false;
       }
     }
@@ -433,8 +375,6 @@ export function validateSettings(
   const version = (settings as AnyVersionedSettings)._meta.version;
 
   switch (version) {
-    case 0:
-      return validateV0Settings(settings);
     case 1:
       return validateV1Settings(settings);
     case 2:
@@ -480,13 +420,6 @@ export function getValidationReport(settings: unknown): {
 
   if (!isValid) {
     errors.push(`Settings validation failed for version ${version}`);
-  }
-
-  // Add warnings for deprecated versions
-  if (version === 0) {
-    warnings.push(
-      'Using deprecated settings version 0. Consider migrating to latest version.'
-    );
   }
 
   // Check for missing optional fields

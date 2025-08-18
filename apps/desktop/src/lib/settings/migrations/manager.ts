@@ -9,12 +9,7 @@ import {
   getTypeSafeMigrationsToRun,
   validateCurrentVersion,
 } from './registry';
-import type {
-  AnyMigration,
-  MigrationResult,
-  MigrationStepResult,
-  VersionedSettings,
-} from './types';
+import type { MigrationResult } from './types';
 import type { AnyVersionedSettings } from './versioned-schemas';
 import { isValidVersion } from './versioned-schemas';
 
@@ -52,9 +47,7 @@ export class SettingsMigrationManager {
 
       // Load settings
       const entries = await store.entries();
-      const settings: VersionedSettings = Object.fromEntries(
-        entries
-      ) as VersionedSettings;
+      const settings: Record<string, unknown> = Object.fromEntries(entries);
 
       // Initialize _meta if it doesn't exist (new users)
       if (!settings._meta) {
@@ -98,7 +91,8 @@ export class SettingsMigrationManager {
         };
       }
 
-      const currentVersion = settings._meta.version;
+      const meta = settings._meta as { version: number } | undefined;
+      const currentVersion = meta?.version ?? 1;
 
       // Validate version number
       if (!isValidVersion(currentVersion)) {
@@ -132,7 +126,6 @@ export class SettingsMigrationManager {
           `[Migration] Running ${migrations.length} type-safe migrations...`
         );
 
-        const migrationResults: MigrationStepResult[] = [];
         const settingsChanged: string[] = [];
 
         // Run migrations with type safety and validation
@@ -149,7 +142,7 @@ export class SettingsMigrationManager {
             // Apply the migration with runtime type checking
             const beforeMigration = JSON.stringify(migratedSettings);
             migratedSettings = migration.up(
-              migratedSettings as unknown as any
+              migratedSettings as any
             ) as AnyVersionedSettings;
             const afterMigration = JSON.stringify(migratedSettings);
 
@@ -163,7 +156,7 @@ export class SettingsMigrationManager {
             // Validate migration result if validation function exists
             if (
               migration.validate &&
-              !migration.validate(migratedSettings as unknown as any)
+              !migration.validate(migratedSettings as any)
             ) {
               throw new Error(
                 `Migration validation failed for v${stepStartVersion} → v${migration.version}`
@@ -177,13 +170,6 @@ export class SettingsMigrationManager {
               );
             }
 
-            migrationResults.push({
-              fromVersion: stepStartVersion,
-              toVersion: migration.version,
-              success: true,
-              description: migration.description,
-            });
-
             log.info(
               `[Migration] ✅ Successfully migrated v${stepStartVersion} → v${migration.version}`
             );
@@ -193,14 +179,6 @@ export class SettingsMigrationManager {
               `[Migration] ❌ Failed migration v${stepStartVersion} → v${migration.version}:`,
               error
             );
-
-            migrationResults.push({
-              fromVersion: stepStartVersion,
-              toVersion: migration.version,
-              success: false,
-              error,
-              description: migration.description,
-            });
 
             throw new Error(
               `Migration step failed (v${stepStartVersion} → v${migration.version}): ${error.message}`
@@ -328,7 +306,7 @@ export class SettingsMigrationManager {
   async previewMigrations(fromVersion?: number): Promise<{
     fromVersion: number;
     toVersion: number;
-    migrationsToRun: AnyMigration[];
+    migrationsToRun: any[];
     steps: string[];
   }> {
     const store = new LazyStore('settings.json');
