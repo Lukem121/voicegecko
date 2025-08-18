@@ -1,11 +1,10 @@
 import { Toaster } from '@acme/ui/components/ui/sonner';
 import { ThemeProvider } from '@acme/ui/components/ui/theme';
 import { cn } from '@acme/ui/lib/utils';
+import { GoogleTagManager } from '@next/third-parties/google';
 import type { Metadata, Viewport } from 'next';
 import { NuqsAdapter } from 'nuqs/adapters/next/app';
-
 import { TRPCReactProvider } from '~/trpc/react';
-
 import '@acme/ui/globals.css';
 import { CurrencyProvider } from '~/providers/currency';
 import { plusJakartaSans, roobert } from './fonts';
@@ -37,6 +36,7 @@ export const viewport: Viewport = {
 export default function RootLayout(props: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <GoogleTagManager gtmId="GTM-N623RRVD" />
       <body
         className={cn(
           'min-h-screen bg-background font-sans text-foreground antialiased',
