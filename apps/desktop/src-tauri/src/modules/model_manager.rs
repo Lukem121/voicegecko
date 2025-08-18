@@ -108,9 +108,9 @@ pub fn synchronize_models(app: AppHandle) -> Result<(), ModelManagerError> {
     std::fs::create_dir_all(&models_dir).map_err(|e| ModelManagerError::IoError(e.to_string()))?;
 
     // Check for bundled model and copy it if needed
-    let bundled_model_name = "ggml-base.en-q8_0.bin";
-    let bundled_model_id = "base.en-q8_0";
-    let target_path = models_dir.join("ggml-base.en-q8_0.bin");
+    let bundled_model_name = "ggml-base.en.bin";
+    let bundled_model_id = "base.en";
+    let target_path = models_dir.join("ggml-base.en.bin");
 
     println!(
         "[Sync] Target path for bundled model: {}",
@@ -884,36 +884,28 @@ pub fn delete_model(app: AppHandle, model_id: String) -> Result<(), ModelManager
 
 fn get_initial_models() -> HashMap<String, Model> {
     let models_data = vec![
+        // Minimal Tier - Smallest models for basic hardware
         (
-            "base.en-q8_0",
-            "Base Q8_0",
-            "Balanced performance with reliable accuracy for everyday use, using Q8_0 quantization.",
-            "78 MiB",
+            "base.en",
+            "Base",
+            "Bundled model with balanced performance and reliable accuracy for everyday use.",
+            "142 MiB",
             "~1.5 GB",
-            "bb1574182e9b924452bf0cd1510ac034d323e948",
-            true,
+            "137c40403d78fd54d454da0f9bd998f78703390c",
+            true, // This is the bundled model
             ModelTier::Minimal,
         ),
         (
             "tiny.en",
             "Tiny",
-            "Fastest processing, ideal for quick notes and simple commands.",
+            "Ultra-fast processing, ideal for quick notes and simple commands.",
             "75 MiB",
             "~1 GB",
             "c78c86eb1a8faa21b369bcd33207cc90d64ae9df",
             false,
             ModelTier::Minimal,
         ),
-        (
-            "base.en",
-            "Base",
-            "Balanced performance with reliable accuracy for everyday use.",
-            "142 MiB",
-            "~1.5 GB",
-            "137c40403d78fd54d454da0f9bd998f78703390c",
-            false,
-            ModelTier::Balanced,
-        ),
+        // Balanced Tier - Small quantized models for mid-range hardware
         (
             "small.en-q5_1",
             "Small Q5_1",
@@ -925,29 +917,41 @@ fn get_initial_models() -> HashMap<String, Model> {
             ModelTier::Balanced,
         ),
         (
-            "small.en",
-            "Small",
-            "Enhanced accuracy for meetings, interviews, and dictation.",
-            "466 MiB",
+            "small.en-q8_0",
+            "Small Q8_0",
+            "Enhanced accuracy with Q8_0 quantization, balancing quality and performance.",
+            "252 MiB",
             "~2 GB",
-            "db8a495a91d927739e50b3fc1cc4c6b8f6c2d022",
+            "9d75ff4ccfa0a8217870d7405cf8cef0a5579852",
+            false,
+            ModelTier::Balanced,
+        ),
+        // Quality Tier - Medium quantized models for good hardware
+        (
+            "medium.en-q5_0",
+            "Medium Q5_0",
+            "Superior accuracy with Q5_0 quantization, handling accents and background noise.",
+            "514 MiB",
+            "~4 GB",
+            "bb3b5281bddd61605d6fc76bc5b92d8f20284c3b",
             false,
             ModelTier::Quality,
         ),
         (
-            "medium.en",
-            "Medium",
-            "Superior accuracy handling accents, background noise, and technical terms.",
-            "1.5 GiB",
+            "medium.en-q8_0",
+            "Medium Q8_0",
+            "Highest quality medium model with Q8_0 quantization for professional use.",
+            "785 MiB",
             "~4 GB",
-            "8c30f0e44ce9560643ebd10bbe50cd20eafd3723",
+            "b1cf48c12c807e14881f634fb7b6c6ca867f6b38",
             false,
             ModelTier::Quality,
         ),
+        // Maximum Tier - Best models up to large-v3-turbo limit
         (
             "large-v3-turbo-q5_0",
             "Large Turbo Q5_0",
-            "Fastest processing with high accuracy for quick notes and commands, using Q5_0 quantization.",
+            "Best performance with Q5_0 quantization, advanced language understanding.",
             "547 MiB",
             "~8 GB",
             "e050f7970618a659205450ad97eb95a18d69c9ee",
@@ -957,20 +961,10 @@ fn get_initial_models() -> HashMap<String, Model> {
         (
             "large-v3-turbo",
             "Large Turbo",
-            "Fastest processing with high accuracy for quick notes and commands.",
+            "Maximum accuracy with advanced language understanding and punctuation.",
             "1.5 GiB",
             "~8 GB",
             "4af2b29d7ec73d781377bfd1758ca957a807e941",
-            false,
-            ModelTier::Maximum,
-        ),
-        (
-            "large-v3",
-            "Large",
-            "Maximum accuracy with advanced language understanding and punctuation.",
-            "2.9 GiB",
-            "~8 GB",
-            "ad82bf6a9043ceed055076d0fd39f5f186ff8062",
             false,
             ModelTier::Maximum,
         ),

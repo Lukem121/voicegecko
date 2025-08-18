@@ -153,6 +153,15 @@ export const useEventStore = create<EventState>()(
       },
 
       handleTranscriptionComplete: async (transcript: string, metadata) => {
+        log.info(
+          '[EventStore] 🔊 handleTranscriptionComplete called (main window only)',
+          {
+            transcript: transcript.substring(0, 50),
+            windowLabel:
+              typeof window !== 'undefined' ? window.location.href : 'unknown',
+          }
+        );
+
         // 1. Check API connectivity first - block transcription if API is down
         const connectivityState = useConnectivityStore.getState();
 

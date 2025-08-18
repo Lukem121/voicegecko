@@ -43,7 +43,6 @@ impl ModelTier {
             ModelTier::Maximum => "maximum",
         }
     }
-
     pub fn from_string(s: &str) -> Option<Self> {
         match s {
             "cloud" => Some(ModelTier::Cloud),
@@ -58,10 +57,14 @@ impl ModelTier {
     pub fn get_model_ids(&self) -> Vec<&'static str> {
         match self {
             ModelTier::Cloud => vec!["cloud"],
-            ModelTier::Minimal => vec!["base.en-q8_0", "tiny.en"],
-            ModelTier::Balanced => vec!["small.en-q5_1", "base.en"],
-            ModelTier::Quality => vec!["small.en", "medium.en"],
-            ModelTier::Maximum => vec!["large-v3-turbo-q5_0", "large-v3-turbo", "large-v3"],
+            // Minimal: Smallest models for basic hardware (75-142 MiB)
+            ModelTier::Minimal => vec!["base.en", "tiny.en"],
+            // Balanced: Small quantized models for mid-range hardware (181-252 MiB)
+            ModelTier::Balanced => vec!["small.en-q8_0", "small.en-q5_1"],
+            // Quality: Medium quantized models for good hardware (514-785 MiB)
+            ModelTier::Quality => vec!["medium.en-q8_0", "medium.en-q5_0"],
+            // Maximum: Best models up to large-v3-turbo limit (547 MiB - 1.5 GiB)
+            ModelTier::Maximum => vec!["large-v3-turbo", "large-v3-turbo-q8_0"],
         }
     }
 
@@ -85,7 +88,7 @@ impl ModelTier {
                 description: "Fast and lightweight for quick notes and basic transcription.",
                 icon: "⚡",
                 min_ram_gb: 2,
-                typical_model_size_mb: 79,
+                typical_model_size_mb: 142,
             },
             ModelTier::Balanced => TierDisplayInfo {
                 name: "Balanced",
@@ -100,7 +103,7 @@ impl ModelTier {
                     "Enhanced accuracy for professional needs, interviews, and complex audio.",
                 icon: "✨",
                 min_ram_gb: 8,
-                typical_model_size_mb: 466,
+                typical_model_size_mb: 514,
             },
             ModelTier::Maximum => TierDisplayInfo {
                 name: "Maximum",

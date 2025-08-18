@@ -248,7 +248,7 @@ export function TitleBar() {
 
           <div className="pointer-events-auto flex">
             <button
-              className="flex h-8 w-8 cursor-pointer items-center justify-center border-none bg-transparent text-foreground transition-colors duration-150 hover:bg-brand-blue active:bg-brand-blue/80"
+              className="flex h-8 w-8 cursor-pointer items-center justify-center border-none bg-transparent text-foreground transition-colors duration-150 hover:bg-accent active:bg-accent/80"
               onClick={toggleSidebar}
               title="Minimize"
               type="button"
@@ -256,7 +256,7 @@ export function TitleBar() {
               <PanelLeftIcon className="h-3 w-3" />
             </button>
             <button
-              className="flex h-8 w-8 cursor-pointer items-center justify-center border-none bg-transparent text-foreground transition-colors duration-150 hover:bg-brand-blue active:bg-brand-blue/80"
+              className="flex h-8 w-8 cursor-pointer items-center justify-center border-none bg-transparent text-foreground transition-colors duration-150 hover:bg-accent active:bg-accent/80"
               onClick={handleMinimize}
               title="Minimize"
               type="button"
@@ -272,7 +272,7 @@ export function TitleBar() {
               </svg>
             </button>
             <button
-              className="flex h-8 w-8 cursor-pointer items-center justify-center border-none bg-transparent text-foreground transition-colors duration-150 hover:bg-brand-blue active:bg-brand-blue/80"
+              className="flex h-8 w-8 cursor-pointer items-center justify-center border-none bg-transparent text-foreground transition-colors duration-150 hover:bg-accent active:bg-accent/80"
               onClick={handleMaximize}
               title={isMaximized ? 'Restore' : 'Maximize'}
               type="button"
