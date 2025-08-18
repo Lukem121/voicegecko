@@ -83,22 +83,43 @@ jobs:
         if: matrix.platform == 'macos-latest' || matrix.platform == 'ubuntu-22.04'
         shell: bash
         run: |
-          echo "=== Checking LFS file on Unix ==="
-          ls -la apps/desktop/src-tauri/resources/ || echo "Resources directory not found"
+          echo "=== Git LFS Status ==="
+          git lfs ls-files
+
+          echo -e "\n=== Repository Structure ==="
+          find apps/desktop/src-tauri -name "*.bin" -o -name "*.dll" -o -name "*.exe" -o -name "*.dylib" -o -name "*.so" | while read file; do
+            if [ -f "$file" ]; then
+              size=$(stat -f%z "$file" 2>/dev/null || stat -c%s "$file" 2>/dev/null)
+              sizeMB=$(echo "scale=2; $size/1024/1024" | bc -l 2>/dev/null || echo "unknown")
+              printf "%-60s %10s bytes (%s MB)\n" "$file" "$size" "$sizeMB"
+            fi
+          done
+
+          echo -e "\n=== Resources Directory ==="
+          if [ -d "apps/desktop/src-tauri/resources/" ]; then
+            ls -lah apps/desktop/src-tauri/resources/
+          else
+            echo "Resources directory does not exist!"
+          fi
+
+          echo -e "\n=== Model File Specific Check ==="
           modelFile="apps/desktop/src-tauri/resources/ggml-base.en.bin"
           if [ -f "$modelFile" ]; then
             size=$(stat -f%z "$modelFile" 2>/dev/null || stat -c%s "$modelFile" 2>/dev/null || echo "unknown")
-            echo "Model file exists, size: $size bytes"
+            sizeMB=$(echo "scale=2; $size/1024/1024" | bc -l 2>/dev/null || echo "unknown")
+            echo "✅ Model file exists!"
+            echo "   Path: $modelFile"
+            echo "   Size: $size bytes ($sizeMB MB)"
             if [ "$size" != "unknown" ] && [ "$size" -lt 1000000 ]; then
-              echo "WARNING: File is suspiciously small (less than 1MB)!"
-              echo "File content preview:"
-              head -c 200 "$modelFile" | od -c
+              echo "⚠️  WARNING: File is suspiciously small (less than 1MB) - likely an LFS pointer!"
+              echo "File content preview (first 500 bytes):"
+              head -c 500 "$modelFile" | od -c | head -10
+            else
+              echo "✅ File size looks correct for the model file"
             fi
           else
-            echo "ERROR: Model file does not exist!"
+            echo "❌ ERROR: Model file does not exist at $modelFile"
           fi
-          echo "LFS tracked files:"
-          git lfs ls-files
 
       - name: setup node
         uses: actions/setup-node@v4
