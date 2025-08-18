@@ -33,6 +33,73 @@ jobs:
         with:
           lfs: true
 
+      - name: Setup Git LFS (Self-hosted)
+        if: matrix.platform == 'self-hosted'
+        shell: powershell
+        run: |
+          Write-Host "=== Setting up Git LFS on self-hosted runner ==="
+          git lfs version
+          git lfs install --force
+          git lfs pull
+
+      - name: Debug LFS files (PowerShell)
+        if: matrix.platform == 'self-hosted' || contains(matrix.platform, 'windows')
+        shell: powershell
+        run: |
+          Write-Host "=== Git LFS Status ==="
+          git lfs ls-files
+
+          Write-Host "`n=== Repository Structure ==="
+          Get-ChildItem -Recurse -Path "apps/desktop/src-tauri" -Include "*.bin", "*.dll", "*.exe" | Select-Object FullName, @{Name="Size(MB)";Expression={[math]::Round($_.Length/1MB, 2)}}, @{Name="Size(Bytes)";Expression={$_.Length}} | Format-Table -AutoSize
+
+          Write-Host "`n=== Resources Directory ==="
+          if (Test-Path "apps/desktop/src-tauri/resources/") {
+            Get-ChildItem "apps/desktop/src-tauri/resources/" -Recurse | Select-Object Name, @{Name="Size(MB)";Expression={[math]::Round($_.Length/1MB, 2)}}, @{Name="Size(Bytes)";Expression={$_.Length}}, FullName | Format-Table -AutoSize
+          } else {
+            Write-Host "Resources directory does not exist!"
+          }
+
+          Write-Host "`n=== Model File Specific Check ==="
+          $modelFile = "apps/desktop/src-tauri/resources/ggml-base.en.bin"
+          if (Test-Path $modelFile) {
+            $size = (Get-Item $modelFile).Length
+            Write-Host "✅ Model file exists!"
+            Write-Host "   Path: $modelFile"
+            Write-Host "   Size: $size bytes ($([math]::Round($size/1MB, 2)) MB)"
+            if ($size -lt 1000000) {
+              Write-Host "⚠️  WARNING: File is suspiciously small (less than 1MB) - likely an LFS pointer!"
+              Write-Host "File content preview (first 500 bytes):"
+              $content = Get-Content $modelFile -Raw -TotalCount 1
+              if ($content.Length -gt 500) { $content = $content.Substring(0, 500) }
+              Write-Host $content
+            } else {
+              Write-Host "✅ File size looks correct for the model file"
+            }
+          } else {
+            Write-Host "❌ ERROR: Model file does not exist at $modelFile"
+          }
+
+      - name: Debug LFS files (Unix)
+        if: matrix.platform == 'macos-latest' || matrix.platform == 'ubuntu-22.04'
+        shell: bash
+        run: |
+          echo "=== Checking LFS file on Unix ==="
+          ls -la apps/desktop/src-tauri/resources/ || echo "Resources directory not found"
+          modelFile="apps/desktop/src-tauri/resources/ggml-base.en.bin"
+          if [ -f "$modelFile" ]; then
+            size=$(stat -f%z "$modelFile" 2>/dev/null || stat -c%s "$modelFile" 2>/dev/null || echo "unknown")
+            echo "Model file exists, size: $size bytes"
+            if [ "$size" != "unknown" ] && [ "$size" -lt 1000000 ]; then
+              echo "WARNING: File is suspiciously small (less than 1MB)!"
+              echo "File content preview:"
+              head -c 200 "$modelFile" | od -c
+            fi
+          else
+            echo "ERROR: Model file does not exist!"
+          fi
+          echo "LFS tracked files:"
+          git lfs ls-files
+
       - name: setup node
         uses: actions/setup-node@v4
         with:
