@@ -48,10 +48,12 @@ import {
   ExternalLink,
   FileText,
   HelpCircle,
+  Keyboard,
   LogOut,
   MessageCircle,
   Mic,
   Settings2,
+  Sliders,
   Wand2,
 } from 'lucide-react';
 import { useState } from 'react';
@@ -146,12 +148,18 @@ const data: NavigationData = {
       title: 'Settings',
       url: '/settings',
       icon: Settings2,
-      items: [
-        {
-          title: 'Keyboard Shortcuts',
-          url: '/settings/shortcuts',
-        },
-      ],
+      // Keeping sub-item structure for future use if needed
+      // items: [
+      //   {
+      //     title: 'Keyboard Shortcuts',
+      //     url: '/settings/shortcuts',
+      //   },
+      // ],
+    },
+    {
+      title: 'Keyboard Shortcuts',
+      url: '/settings/shortcuts',
+      icon: Keyboard,
     },
     {
       title: 'Help & Support',
@@ -164,9 +172,11 @@ const data: NavigationData = {
 const isDev = import.meta.env.DEV;
 
 if (isDev) {
-  data.navSecondary[2]?.items?.push({
+  // Add Quality as a top-level menu item for development
+  data.navSecondary.splice(4, 0, {
     title: 'Quality',
     url: '/settings/models',
+    icon: Sliders,
   });
 }
 
