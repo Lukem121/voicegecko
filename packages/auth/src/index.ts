@@ -136,6 +136,10 @@ export const serverAuth = betterAuth({
         };
       },
     },
+    google: {
+      clientId: authEnv().AUTH_GOOGLE_CLIENT_ID,
+      clientSecret: authEnv().AUTH_GOOGLE_CLIENT_SECRET,
+    },
   },
   trustedOrigins: [
     'voicegecko://',
