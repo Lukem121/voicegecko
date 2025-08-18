@@ -45,10 +45,7 @@
         "x": -1000,
         "y": -1000
       }
-    ],
-    "security": {
-      "csp": null
-    }
+    ]
   },
   "plugins": {
     "deep-link": {
