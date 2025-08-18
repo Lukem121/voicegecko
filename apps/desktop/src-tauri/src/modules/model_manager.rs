@@ -305,16 +305,22 @@ pub fn synchronize_models(app: AppHandle) -> Result<(), ModelManagerError> {
 }
 
 #[tauri::command]
-pub fn get_active_model_id(app: AppHandle) -> Result<String, ModelManagerError> {
+pub fn get_active_model_id(_app: AppHandle) -> Result<String, ModelManagerError> {
+    // TEMPORARY: Always use base model for now
+    // TODO: Restore hardware-based model selection in the future
+    return Ok("base.en".to_string());
+
+    // Original logic preserved for future use:
+    /*
     // Get the selected tier
-    if let Some(selected_tier) = get_selected_tier(app.clone())? {
+    if let Some(selected_tier) = get_selected_tier(_app.clone())? {
         if selected_tier == "cloud" {
             return Ok("cloud".to_string());
         }
 
         // Get the best available model for the selected tier
         if let Some(tier) = ModelTier::from_string(&selected_tier) {
-            if let Ok(model_id) = get_best_model_for_tier(app, tier) {
+            if let Ok(model_id) = get_best_model_for_tier(_app, tier) {
                 return Ok(model_id);
             }
         }
@@ -322,10 +328,61 @@ pub fn get_active_model_id(app: AppHandle) -> Result<String, ModelManagerError> 
 
     // Default to cloud if no tier is selected
     Ok("cloud".to_string())
+    */
 }
 
 #[tauri::command]
 pub async fn auto_download_recommended_model(app: AppHandle) -> Result<(), ModelManagerError> {
+    // TEMPORARY: Always ensure base model is available instead of hardware-based selection
+    let base_model_id = "base.en";
+
+    let app_data_dir = app
+        .path()
+        .app_data_dir()
+        .map_err(|e| ModelManagerError::PathError(e.to_string()))?;
+    let models_dir = app_data_dir.join("models");
+
+    // Check if base model exists on disk
+    let file_path = models_dir.join(format!("ggml-{}.bin", base_model_id));
+    let mut base_model_available = false;
+
+    if file_path.exists() {
+        if let Ok(metadata) = std::fs::metadata(&file_path) {
+            if metadata.len() > 1_000_000 {
+                // File must be > 1MB
+                base_model_available = true;
+                // Ensure status is correct
+                let _ = set_model_status(&app, base_model_id, ModelStatus::Downloaded);
+            } else {
+                // File is too small, mark as not downloaded
+                let _ = set_model_status(&app, base_model_id, ModelStatus::NotDownloaded);
+            }
+        }
+    } else {
+        // File doesn't exist
+        let _ = set_model_status(&app, base_model_id, ModelStatus::NotDownloaded);
+    }
+
+    // If base model is not available, download it
+    if !base_model_available {
+        let result = download_model(app.clone(), base_model_id.to_string()).await;
+        match result {
+            Ok(_) => {
+                println!("[Auto Download] Successfully downloaded base model");
+            }
+            Err(e) => {
+                let error_msg = e.to_string();
+                if !error_msg.contains("already downloaded") {
+                    println!("[Auto Download] Base model download failed: {}", e);
+                }
+            }
+        }
+    }
+
+    Ok(())
+
+    // Original hardware-based logic preserved for future use:
+    /*
     // Get hardware info to determine recommended tier
     let hardware_info = crate::modules::hardware_info::detect_hardware();
     let recommended_tier = hardware_info.recommended_tier;
@@ -413,6 +470,7 @@ pub async fn auto_download_recommended_model(app: AppHandle) -> Result<(), Model
     }
 
     Ok(())
+    */
 }
 
 #[tauri::command]
