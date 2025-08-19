@@ -28,6 +28,9 @@ export const env = createEnv({
     REVALIDATE_SECRET: z
       .string()
       .min(1, 'Revalidation secret is required for ISR'),
+    // Google Tag Manager server-side configuration
+    GTM_GCP_PROJECT_ID: z.string().min(1),
+    GTM_CONTAINER_ENDPOINT: z.string().url(),
   },
 
   /**

@@ -7,13 +7,13 @@
     "typecheck": "tsc --noEmit --emitDeclarationOnly false"
   },
   "dependencies": {
-    "@t3-oss/env-nextjs": "^0.13.8",
+    "@t3-oss/env-nextjs": "catalog:",
     "@upstash/ratelimit": "^2.0.6",
     "@upstash/redis": "^1.35.3",
     "zod": "catalog:"
   },
   "devDependencies": {
     "@acme/tsconfig": "workspace:*",
-    "typescript": "^5.9.2"
+    "typescript": "catalog:"
   }
 }

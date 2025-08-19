@@ -1,18 +1,15 @@
 {
-  "name": "@acme/notifications",
-  "version": "0.0.14",
+  "name": "@acme/gtm",
   "private": true,
+  "version": "0.1.0",
   "type": "module",
   "exports": {
-    "./discord-adapter": {
-      "default": "./src/discord-adapter.ts"
-    }
+    "./service": "./src/service.ts",
+    "./types": "./src/types.ts",
+    "./utils": "./src/utils.ts"
   },
   "scripts": {
-    "build": "tsc",
-    "dev": "tsc --watch",
-    "lint": "ultracite lint",
-    "format": "ultracite format",
+    "clean": "rm -rf .turbo node_modules",
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
@@ -22,8 +19,6 @@
   },
   "devDependencies": {
     "@acme/tsconfig": "workspace:*",
-    "@biomejs/biome": "catalog:",
-    "@types/minimatch": "^6.0.0",
     "typescript": "catalog:"
   }
 }
