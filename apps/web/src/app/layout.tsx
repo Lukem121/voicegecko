@@ -11,13 +11,13 @@ import { plusJakartaSans, roobert } from './fonts';
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://www.voicegecko.io'),
-  title: 'VoiceGecko | Fast Voice-to-Text Dictation for Desktop',
+  title: 'VoiceGecko | Instant Voice-to-Text for Desktop',
   description:
-    'VoiceGecko is a lightning-fast voice-to-text dictation app for desktop. Press a shortcut, speak, and instantly get accurate text on your clipboard—perfect for emails, coding, AI prompts, or brain dumps.',
+    'Instant dictation for desktop. Press a shortcut, speak, and instantly get accurate text on your clipboard—perfect for emails, coding, AI prompts, or brain dumps.',
   openGraph: {
-    title: 'VoiceGecko | Fast Voice-to-Text Dictation for Desktop',
+    title: 'VoiceGecko | Instant Voice-to-Text for Desktop',
     description:
-      'Turn your voice into text instantly. VoiceGecko makes dictation effortless, accurate, and fast—built for developers, professionals, and anyone who types too much.',
+      'Instant voice-to-text dictation for desktop. Press a shortcut, speak, and instantly get accurate text on your clipboard—perfect for emails, coding, AI prompts, or brain dumps.',
     url: 'https://www.voicegecko.io',
     siteName: 'VoiceGecko',
     images: [
@@ -35,9 +35,9 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     site: '@voicegecko',
     creator: '@voicegecko',
-    title: 'VoiceGecko | Fast Voice-to-Text Dictation for Desktop',
+    title: 'VoiceGecko | Instant Voice-to-Text for Desktop',
     description:
-      'Dictate emails, code, or AI prompts at lightning speed. With VoiceGecko, your words become text instantly.',
+      'Instant voice-to-text dictation for desktop. Press a shortcut, speak, and instantly get accurate text on your clipboard—perfect for emails, coding, AI prompts, or brain dumps.',
     images: ['https://www.voicegecko.io/opengraph-image'], // update with your image
   },
 };
