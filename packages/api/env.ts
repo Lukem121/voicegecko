@@ -13,6 +13,9 @@ export function apiEnv() {
       STRIPE_PRICE_ID_TEAM_YEARLY: z.string().min(1),
       VOICEGECKO_APP_URL: z.url().optional().default('http://localhost:3000'),
       IPFLARE_API_KEY: z.string().min(1),
+      // Google Tag Manager server-side configuration
+      GTM_GCP_PROJECT_ID: z.string().min(1),
+      GTM_CONTAINER_ENDPOINT: z.string().url(),
     },
     experimental__runtimeEnv: {},
     skipValidation:

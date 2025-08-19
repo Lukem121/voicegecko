@@ -1,4 +1,9 @@
 import { sendSubscriptionCancelledEmail } from '@acme/email/send/subscription-cancelled';
+import { gtmService } from '@acme/gtm/service';
+import {
+  createSubscriptionEvent,
+  generateTransactionId,
+} from '@acme/gtm/utils';
 import { log } from '@acme/observability/log';
 import type { Subscription } from '@better-auth/stripe';
 import type { Stripe } from 'stripe';
@@ -25,6 +30,41 @@ export const onSubscriptionCancel = async ({
     cancellationReason: cancellationDetails?.reason,
     cancellationFeedback: cancellationDetails?.feedback,
   });
+
+  // Track subscription cancellation in Google Tag Manager
+  try {
+    const cancellationEvent = createSubscriptionEvent({
+      eventType: 'subscription_cancel',
+      transactionId: generateTransactionId(subscription.id),
+      userId: subscription.referenceId,
+      subscriptionStatus: 'cancelled',
+      planName: subscription.plan,
+      customParameters: {
+        cancel_at_period_end: subscription.cancelAtPeriodEnd?.toString(),
+        period_end: subscription.periodEnd?.toString(),
+        cancellation_reason: cancellationDetails?.reason,
+        cancellation_feedback: cancellationDetails?.feedback,
+      },
+    });
+
+    const gtmResult = await gtmService.sendEvent(cancellationEvent);
+
+    if (gtmResult.success) {
+      log.info(
+        `[GTM] Subscription cancel event sent successfully for ${subscription.id}`
+      );
+    } else {
+      log.error(
+        `[GTM] Failed to send subscription cancel event for ${subscription.id}:`,
+        gtmResult.error
+      );
+    }
+  } catch (error) {
+    log.error(
+      `[GTM] Error tracking subscription cancellation for ${subscription.id}:`,
+      error
+    );
+  }
 
   // Send subscription cancelled email to the user
   try {

@@ -14,6 +14,7 @@ catalog:
   tailwindcss: 4.1.11
   typescript: ^5.8.3
   zod: ^4.0.14
+  "@t3-oss/env-nextjs": ^0.13.8
 
 catalogs:
   react19:
