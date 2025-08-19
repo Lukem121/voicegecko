@@ -64,10 +64,6 @@ export function GTMTestDebug() {
     log.info('Test user identification sent!');
   };
 
-  if (process.env.NODE_ENV !== 'development') {
-    return null;
-  }
-
   return (
     <div className="fixed right-4 bottom-4 z-50 space-y-2 rounded-lg bg-red-500 p-4 text-white">
       <h3 className="font-bold">GTM Debug Panel</h3>
