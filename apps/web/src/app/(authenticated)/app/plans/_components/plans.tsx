@@ -141,7 +141,7 @@ export default function Plans({ prices, subscription, error }: PlansProps) {
         'Cloud sync',
         'Advanced features',
       ],
-      cta: 'Get started',
+      cta: 'Upgrade',
       variant: 'outline',
     },
   ];
