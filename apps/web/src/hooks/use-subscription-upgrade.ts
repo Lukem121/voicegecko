@@ -1,4 +1,5 @@
 import { toast } from '@acme/ui/components/ui/sonner';
+import { usePaymentRedirection } from '@acme/ui/hooks/use-redirection';
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { parseAsBoolean, useQueryState } from 'nuqs';
@@ -40,6 +41,7 @@ export function useSubscriptionUpgrade(
   const [isUpgrading, setIsUpgrading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
   const { trackEvent: trackPostHogEvent } = usePostHog();
+  const paymentRedirection = usePaymentRedirection();
 
   const [purchaseSuccess] = useQueryState('sub_success', parseAsBoolean);
 
@@ -52,8 +54,8 @@ export function useSubscriptionUpgrade(
   const purchase = recentPurchase.data;
 
   const {
-    successUrl = '/app/plans?sub_success=true',
-    cancelUrl = '/app/plans',
+    successUrl: optionsSuccessUrl = '/app/plans?sub_success=true',
+    cancelUrl: optionsCancelUrl = '/app/plans',
     onSuccess,
     onError,
     subscriptionId,
@@ -106,6 +108,16 @@ export function useSubscriptionUpgrade(
     }
   }, [purchaseSuccess, purchase]);
 
+  // Handle payment success redirect with preserved intent
+  useEffect(() => {
+    if (purchaseSuccess) {
+      // Small delay to ensure tracking is complete
+      setTimeout(() => {
+        paymentRedirection.handlePaymentSuccess();
+      }, 100);
+    }
+  }, [purchaseSuccess, paymentRedirection]);
+
   // Helper function to track begin checkout event
   const trackBeginCheckout = (isAnnual: boolean) => {
     trackEvent({
@@ -135,6 +147,13 @@ export function useSubscriptionUpgrade(
       setError(null);
 
       trackBeginCheckout(isAnnual);
+
+      // Create dynamic success/cancel URLs that preserve user intent
+      const { successUrl, cancelUrl } = paymentRedirection.createPaymentUrls(
+        optionsSuccessUrl,
+        optionsCancelUrl,
+        true // Always preserve intent for upgrades
+      );
 
       // Show loading toast
       const loadingToast = toast.loading('Processing your upgrade...');

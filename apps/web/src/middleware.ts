@@ -43,10 +43,36 @@ export default function middleware(request: NextRequest) {
 
   if (!(sessionCookie || isUnprotectedRoute)) {
     log.info('🚨 Blocked in middleware:', pathname);
-    return NextResponse.redirect(new URL(APP_ROUTES.AUTH.SIGN_IN, request.url));
+
+    // Preserve the original URL the user was trying to access
+    const signInUrl = new URL(APP_ROUTES.AUTH.SIGN_IN, request.url);
+    signInUrl.searchParams.set('redirect', request.url);
+
+    // Add intent context for better user experience
+    signInUrl.searchParams.set('intent_type', 'auth');
+    signInUrl.searchParams.set('intent_source', 'middleware');
+
+    return NextResponse.redirect(signInUrl);
   }
 
   if (sessionCookie && pathname === APP_ROUTES.AUTH.SIGN_IN) {
+    // Check if there's a redirect parameter for authenticated users
+    const redirectParam = request.nextUrl.searchParams.get('redirect');
+
+    if (redirectParam) {
+      try {
+        const redirectUrl = new URL(redirectParam);
+        // Validate that the redirect URL is safe (same origin)
+        if (redirectUrl.origin === request.nextUrl.origin) {
+          log.info('🔄 Redirecting authenticated user to:', redirectParam);
+          return NextResponse.redirect(redirectUrl);
+        }
+      } catch {
+        log.warn('⚠️ Invalid redirect parameter:', redirectParam);
+      }
+    }
+
+    // Default redirect for authenticated users on sign-in page
     return NextResponse.redirect(new URL(APP_ROUTES.APP.ROOT, request.url));
   }
 
