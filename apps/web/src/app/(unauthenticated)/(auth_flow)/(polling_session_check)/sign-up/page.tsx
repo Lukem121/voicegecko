@@ -27,7 +27,9 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import type { z } from 'zod/v4';
 import { useGTM } from '~/hooks/use-gtm';
+import { usePostHog } from '~/hooks/use-posthog';
 import { authClient } from '~/lib/auth/client';
+import { POSTHOG_SOURCES } from '~/lib/posthog/constants';
 import { APP_ROUTES, buildUrl } from '~/utils/app-routes';
 import { SocialSignInButton } from '../../../components/social-sign-in-button';
 import TermsAndPrivacyNotice from '../../../components/terms-and-privacy-notice';
@@ -59,6 +61,7 @@ export default function SignUp() {
   const searchParams = useSearchParams();
   const callbackURL = searchParams.get('redirect') ?? APP_ROUTES.HOME;
   const { trackEvent } = useGTM();
+  const { trackEvent: trackPostHogEvent } = usePostHog();
 
   const [isLoading, setIsLoading] = useState<LoadingState>({
     email: false,
@@ -81,6 +84,16 @@ export default function SignUp() {
       method: provider as 'google' | 'github' | 'email',
       timestamp: new Date().toISOString(),
     });
+
+    // PostHog tracking
+    trackPostHogEvent({
+      event: 'signup_initiated',
+      form_location: 'sign-up-page',
+      method: provider,
+      source: POSTHOG_SOURCES.ORGANIC,
+      timestamp: new Date().toISOString(),
+    });
+
     await socialSignIn(provider);
   };
 
@@ -92,7 +105,16 @@ export default function SignUp() {
       method: 'email',
       timestamp: new Date().toISOString(),
     });
-  }, [trackEvent]);
+
+    // PostHog tracking
+    trackPostHogEvent({
+      event: 'signup_initiated',
+      form_location: 'sign-up-page',
+      method: 'email',
+      source: POSTHOG_SOURCES.ORGANIC,
+      timestamp: new Date().toISOString(),
+    });
+  }, [trackEvent, trackPostHogEvent]);
 
   const loading = isLoading.email || isSocialLoading;
 
@@ -133,6 +155,25 @@ export default function SignUp() {
             user_id: `temp_user_${Date.now()}`,
             value: 0,
             currency: 'USD',
+            timestamp: new Date().toISOString(),
+          });
+
+          // PostHog tracking
+          trackPostHogEvent({
+            event: 'signup_completed',
+            method: 'email',
+            plan_type: 'free',
+            source: POSTHOG_SOURCES.ORGANIC,
+            user_id: `temp_user_${Date.now()}`,
+            timestamp: new Date().toISOString(),
+          });
+
+          trackPostHogEvent({
+            event: 'generate_lead',
+            value: 0,
+            currency: 'USD',
+            source: POSTHOG_SOURCES.ORGANIC,
+            user_id: `temp_user_${Date.now()}`,
             timestamp: new Date().toISOString(),
           });
 

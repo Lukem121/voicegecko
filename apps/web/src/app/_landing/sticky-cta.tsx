@@ -2,17 +2,41 @@
 
 import { buttonVariants } from '@acme/ui/components/ui/button';
 import { cn } from '@acme/ui/lib/utils';
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, motion } from 'motion/react';
 import Image from 'next/image';
 import GeckoInvisibleWall from 'public/assets/images/geckos/gecko-invisible-wall.png';
 import React from 'react';
 import { FaWindows } from 'react-icons/fa';
 import { HiX } from 'react-icons/hi';
+import { usePostHog } from '~/hooks/use-posthog';
+import { POSTHOG_SOURCES } from '~/lib/posthog/constants';
 import { APP_ROUTES } from '~/utils/app-routes';
 
 export default function StickyCta() {
   const [show, setShow] = React.useState(false);
   const [dismissed, setDismissed] = React.useState(false);
+  const { trackEvent } = usePostHog();
+
+  const handleStickyCTAClick = () => {
+    trackEvent({
+      event: 'hero_cta_clicked',
+      cta_text: 'Download for Windows',
+      cta_location: 'sticky',
+      source: POSTHOG_SOURCES.STICKY_CTA,
+      timestamp: new Date().toISOString(),
+    });
+  };
+
+  const handleDismiss = () => {
+    trackEvent({
+      event: 'modal_closed',
+      modal_name: 'sticky_cta',
+      close_method: 'x_button',
+      source: POSTHOG_SOURCES.STICKY_CTA,
+      timestamp: new Date().toISOString(),
+    });
+    setDismissed(true);
+  };
   React.useEffect(() => {
     const onScroll = () => {
       const scrolled = window.scrollY;
@@ -39,7 +63,7 @@ export default function StickyCta() {
             <button
               aria-label="Dismiss download bar"
               className="-top-1 -right-1 absolute rounded-full p-2 text-muted-foreground hover:text-foreground sm:static sm:order-last sm:rounded-md sm:px-2 sm:py-1"
-              onClick={() => setDismissed(true)}
+              onClick={handleDismiss}
               type="button"
             >
               <HiX className="h-4 w-4" />
@@ -65,6 +89,7 @@ export default function StickyCta() {
                   'w-full gap-2 px-4 py-2.5 text-white sm:w-auto sm:px-6 sm:text-base'
                 )}
                 href={APP_ROUTES.MARKETING.DOWNLOAD}
+                onClick={handleStickyCTAClick}
               >
                 <FaWindows aria-hidden className="h-4 w-4" />
                 <span>Download for Windows</span>

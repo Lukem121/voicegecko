@@ -8,10 +8,12 @@ import { useState } from 'react';
 
 import { StudentDiscountModal } from '~/components/student-discount-modal';
 import { useGTM } from '~/hooks/use-gtm';
+import { usePostHog } from '~/hooks/use-posthog';
 import { useStudentDiscountModal } from '~/hooks/use-student-discount-modal';
 import { useSubscriptionUpgrade } from '~/hooks/use-subscription-upgrade';
 import { authClient } from '~/lib/auth/client';
 import { SOURCES } from '~/lib/gtm/constants';
+import { POSTHOG_SOURCES } from '~/lib/posthog/constants';
 import { useCurrency } from '~/providers/currency';
 import { useTRPC } from '~/trpc/react';
 import { useCreateBillingPortalSession } from '../../_hooks/use-create-billing-portal-session';
@@ -49,6 +51,7 @@ export default function Plans({ prices, subscription, error }: PlansProps) {
   const [billingPeriod, setBillingPeriod] = useState<BillingPeriod>('annual');
   const { currency } = useCurrency();
   const { trackEvent } = useGTM();
+  const { trackEvent: trackPostHogEvent } = usePostHog();
   const [alertState, setAlertState] = useState<AlertState>({
     show: false,
     variant: 'default',
@@ -173,6 +176,15 @@ export default function Plans({ prices, subscription, error }: PlansProps) {
       plan_type: plan.isFree ? 'free' : 'pro',
       billing_period: isYearly ? 'yearly' : 'monthly',
       source: SOURCES.PLANS_PAGE,
+      timestamp: new Date().toISOString(),
+    });
+
+    // PostHog tracking
+    trackPostHogEvent({
+      event: 'plan_selected',
+      plan_type: plan.isFree ? 'free' : 'pro',
+      billing_period: isYearly ? 'yearly' : 'monthly',
+      source: POSTHOG_SOURCES.PLANS_PAGE,
       timestamp: new Date().toISOString(),
     });
 

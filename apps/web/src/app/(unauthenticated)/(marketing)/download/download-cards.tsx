@@ -17,15 +17,18 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@acme/ui/components/ui/dialog';
-import { motion } from 'framer-motion';
+import { motion } from 'motion/react';
+import posthog from 'posthog-js';
 import { useState } from 'react';
 import { FaAndroid, FaApple, FaLinux, FaWindows } from 'react-icons/fa';
 import { HiInformationCircle } from 'react-icons/hi';
 import { HiGlobeAlt } from 'react-icons/hi2';
 import { SiApple } from 'react-icons/si';
 import { useGTM } from '~/hooks/use-gtm';
+import { usePostHog } from '~/hooks/use-posthog';
 import type { DownloadsData } from '~/lib/downloads-utils';
 import { SOURCES } from '~/lib/gtm/constants';
+import { MODAL_NAMES, POSTHOG_SOURCES } from '~/lib/posthog/constants';
 
 type PlatformCardProps = {
   title: string;
@@ -115,11 +118,16 @@ function VotingCard({ title, description }: VotingCardProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [hasVoted, setHasVoted] = useState(false);
   const [showVoteAnimation, setShowVoteAnimation] = useState(false);
+  const { trackEvent } = usePostHog();
 
   const handleVote = () => {
     if (hasVoted) {
       return;
     }
+
+    posthog?.capture('platform_vote_cast', {
+      platform: title.toLowerCase(),
+    });
 
     setHasVoted(true);
     setShowVoteAnimation(true);
@@ -133,6 +141,34 @@ function VotingCard({ title, description }: VotingCardProps) {
   const requirements =
     systemRequirements[title as keyof typeof systemRequirements];
 
+  const handleDialogChange = (open: boolean) => {
+    setIsDialogOpen(open);
+    if (open) {
+      trackEvent({
+        event: 'modal_opened',
+        modal_name: MODAL_NAMES.SYSTEM_REQUIREMENTS,
+        source: POSTHOG_SOURCES.DOWNLOAD_PAGE,
+        trigger_location: 'voting_card',
+        timestamp: new Date().toISOString(),
+      });
+
+      trackEvent({
+        event: 'system_requirements_viewed',
+        platform: title.toLowerCase(),
+        source: POSTHOG_SOURCES.DOWNLOAD_PAGE,
+        timestamp: new Date().toISOString(),
+      });
+    } else {
+      trackEvent({
+        event: 'modal_closed',
+        modal_name: MODAL_NAMES.SYSTEM_REQUIREMENTS,
+        close_method: 'overlay',
+        source: POSTHOG_SOURCES.DOWNLOAD_PAGE,
+        timestamp: new Date().toISOString(),
+      });
+    }
+  };
+
   return (
     <Card className="flex h-48 flex-col bg-neutral-50 text-foreground">
       <CardHeader>
@@ -143,7 +179,7 @@ function VotingCard({ title, description }: VotingCardProps) {
           {description}
         </CardDescription>
         <CardAction>
-          <Dialog onOpenChange={setIsDialogOpen} open={isDialogOpen}>
+          <Dialog onOpenChange={handleDialogChange} open={isDialogOpen}>
             <DialogTrigger asChild>
               <button
                 className="cursor-pointer rounded-full p-1 text-muted-foreground/60 transition-colors hover:text-muted-foreground"
@@ -210,6 +246,7 @@ function PlatformCard({
 }: PlatformCardProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { trackEvent } = useGTM();
+  const { trackEvent: trackPostHogEvent } = usePostHog();
 
   const handleDownload = (download: {
     name: string;
@@ -229,6 +266,15 @@ function PlatformCard({
     trackEvent({
       event: 'download_completed',
       source: SOURCES.DOWNLOAD_PAGE,
+      os_type: osType,
+      file_name: download.name,
+      timestamp: new Date().toISOString(),
+    });
+
+    // PostHog tracking
+    trackPostHogEvent({
+      event: 'download_completed',
+      source: POSTHOG_SOURCES.DOWNLOAD_PAGE,
       os_type: osType,
       file_name: download.name,
       timestamp: new Date().toISOString(),
@@ -270,6 +316,34 @@ function PlatformCard({
   const requirements =
     systemRequirements[title as keyof typeof systemRequirements];
 
+  const handlePlatformDialogChange = (open: boolean) => {
+    setIsDialogOpen(open);
+    if (open) {
+      trackPostHogEvent({
+        event: 'modal_opened',
+        modal_name: MODAL_NAMES.SYSTEM_REQUIREMENTS,
+        source: POSTHOG_SOURCES.DOWNLOAD_PAGE,
+        trigger_location: 'platform_card',
+        timestamp: new Date().toISOString(),
+      });
+
+      trackPostHogEvent({
+        event: 'system_requirements_viewed',
+        platform: title.toLowerCase(),
+        source: POSTHOG_SOURCES.DOWNLOAD_PAGE,
+        timestamp: new Date().toISOString(),
+      });
+    } else {
+      trackPostHogEvent({
+        event: 'modal_closed',
+        modal_name: MODAL_NAMES.SYSTEM_REQUIREMENTS,
+        close_method: 'overlay',
+        source: POSTHOG_SOURCES.DOWNLOAD_PAGE,
+        timestamp: new Date().toISOString(),
+      });
+    }
+  };
+
   return (
     <Card className="flex h-64 flex-col border-neutral-800 bg-neutral-900 text-white">
       <CardHeader className="">
@@ -278,7 +352,7 @@ function PlatformCard({
           {description}
         </CardDescription>
         <CardAction>
-          <Dialog onOpenChange={setIsDialogOpen} open={isDialogOpen}>
+          <Dialog onOpenChange={handlePlatformDialogChange} open={isDialogOpen}>
             <DialogTrigger asChild>
               <button
                 className="cursor-pointer rounded-full p-1 text-white/60 transition-colors hover:text-white"

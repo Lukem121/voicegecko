@@ -1,5 +1,5 @@
 import { cn } from '@acme/ui/lib/utils';
-import { motion } from 'framer-motion';
+import { motion } from 'motion/react';
 
 type BillingPeriod = 'monthly' | 'annual';
 

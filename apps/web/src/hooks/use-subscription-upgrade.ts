@@ -5,8 +5,10 @@ import { parseAsBoolean, useQueryState } from 'nuqs';
 import { useEffect, useState } from 'react';
 import { authClient } from '~/lib/auth/client';
 import { trackEvent } from '~/lib/gtm/client';
+import { POSTHOG_SOURCES } from '~/lib/posthog/constants';
 import { useTRPC } from '~/trpc/react';
 import { useCurrency } from '../providers/currency';
+import { usePostHog } from './use-posthog';
 
 export type SubscriptionPlan = 'voice gecko pro';
 
@@ -37,6 +39,7 @@ export function useSubscriptionUpgrade(
   const router = useRouter();
   const [isUpgrading, setIsUpgrading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
+  const { trackEvent: trackPostHogEvent } = usePostHog();
 
   const [purchaseSuccess] = useQueryState('sub_success', parseAsBoolean);
 
@@ -81,6 +84,19 @@ export function useSubscriptionUpgrade(
         timestamp: new Date().toISOString(),
       });
 
+      // PostHog tracking
+      trackPostHogEvent({
+        event: 'purchase',
+        transaction_id: purchase.transactionId,
+        value: purchase.value,
+        currency: purchase.currency,
+        user_id: purchase.userId,
+        plan_type: 'pro',
+        billing_period: purchase.billingPeriod,
+        source: POSTHOG_SOURCES.PLANS_PAGE,
+        timestamp: new Date().toISOString(),
+      });
+
       // Clean up URL parameter
       const cleanUrl = new URL(window.location.href);
       cleanUrl.searchParams.delete('sub_success');
@@ -99,6 +115,17 @@ export function useSubscriptionUpgrade(
       billing_period: isAnnual ? ('yearly' as const) : ('monthly' as const),
       value: 0, // We'll get the real value after purchase
       currency,
+    });
+
+    // PostHog tracking
+    trackPostHogEvent({
+      event: 'begin_checkout',
+      plan_type: 'pro',
+      billing_period: isAnnual ? 'yearly' : 'monthly',
+      value: 0,
+      currency,
+      source: POSTHOG_SOURCES.PLANS_PAGE,
+      timestamp: new Date().toISOString(),
     });
   };
 

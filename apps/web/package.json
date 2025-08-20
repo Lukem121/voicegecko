@@ -43,6 +43,7 @@
     "nuqs": "^2.4.3",
     "ogl": "^1.0.11",
     "pnpm": "^10.14.0",
+    "posthog-js": "^1.260.1",
     "react": "catalog:react19",
     "react-dom": "catalog:react19",
     "react-fast-marquee": "^1.6.5",
