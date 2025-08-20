@@ -7,9 +7,11 @@ import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
 import { StudentDiscountModal } from '~/components/student-discount-modal';
+import { useGTM } from '~/hooks/use-gtm';
 import { useStudentDiscountModal } from '~/hooks/use-student-discount-modal';
 import { useSubscriptionUpgrade } from '~/hooks/use-subscription-upgrade';
 import { authClient } from '~/lib/auth/client';
+import { SOURCES } from '~/lib/gtm/constants';
 import { useCurrency } from '~/providers/currency';
 import { useTRPC } from '~/trpc/react';
 import { useCreateBillingPortalSession } from '../../_hooks/use-create-billing-portal-session';
@@ -46,6 +48,7 @@ export default function Plans({ prices, subscription, error }: PlansProps) {
   const createBillingPortalSessionMutation = useCreateBillingPortalSession();
   const [billingPeriod, setBillingPeriod] = useState<BillingPeriod>('annual');
   const { currency } = useCurrency();
+  const { trackEvent } = useGTM();
   const [alertState, setAlertState] = useState<AlertState>({
     show: false,
     variant: 'default',
@@ -74,8 +77,6 @@ export default function Plans({ prices, subscription, error }: PlansProps) {
   };
 
   const { upgrade, isUpgrading } = useSubscriptionUpgrade({
-    successUrl: '/app/plans',
-    cancelUrl: '/app/plans',
     subscriptionId: subscription?.stripeSubscriptionId,
     onError: (upgradeError) => {
       showAlert(
@@ -145,28 +146,44 @@ export default function Plans({ prices, subscription, error }: PlansProps) {
     },
   ];
 
+  const handleFreePlanWithSubscription = async () => {
+    const result = await createBillingPortalSessionMutation.mutateAsync({
+      returnUrl: '/app/plans',
+    });
+    if (result.url) {
+      router.push(result.url);
+    }
+  };
+
+  const handlePaidPlan = async (plan: Plan) => {
+    if (plan.stripeId) {
+      await upgrade(plan.stripeId as 'voice gecko pro', isYearly);
+    }
+  };
+
   const handlePlanClick = async (plan: Plan) => {
     if (!session?.user) {
       router.push('/sign-in');
       return;
     }
 
-    try {
-      // If it's the free plan and user has a subscription, redirect to billing portal
-      if (plan.isFree && subscription) {
-        const result = await createBillingPortalSessionMutation.mutateAsync({
-          returnUrl: '/app/plans',
-        });
+    // Track plan selection
+    trackEvent({
+      event: 'plan_selected',
+      plan_type: plan.isFree ? 'free' : 'pro',
+      billing_period: isYearly ? 'yearly' : 'monthly',
+      source: SOURCES.PLANS_PAGE,
+      timestamp: new Date().toISOString(),
+    });
 
-        if (result.url) {
-          router.push(result.url);
-        }
+    try {
+      if (plan.isFree && subscription) {
+        await handleFreePlanWithSubscription();
         return;
       }
 
-      // If it's a paid plan, use the subscription upgrade hook
-      if (plan.stripeId) {
-        await upgrade(plan.stripeId as 'voice gecko pro', isYearly);
+      if (!plan.isFree) {
+        await handlePaidPlan(plan);
       }
     } catch (unknownError) {
       log.error('Error handling plan:', unknownError);

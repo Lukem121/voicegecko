@@ -1,10 +1,10 @@
+import { db } from '@acme/db/client';
 import { sendStudentDiscountEmail } from '@acme/email/send/student-discount';
 import { log } from '@acme/observability/log';
 import { stripeClient } from '@acme/payment/stripe';
 import { createRateLimiter, slidingWindow } from '@acme/rate-limit';
 import type { TRPCRouterRecord } from '@trpc/server';
 import { z } from 'zod/v4';
-
 import { apiEnv } from '../../env';
 import { EDUCATIONAL_DOMAINS } from '../consts/educational-domains';
 import { stripeService } from '../services/stripe/stripe.service';
@@ -22,7 +22,10 @@ export const stripeRouter = {
       })
     )
     .mutation(async ({ input, ctx }) => {
-      const customerId = ctx.session.user.stripeCustomerId;
+      const user = ctx.session.user as typeof ctx.session.user & {
+        stripeCustomerId?: string;
+      };
+      const customerId = user.stripeCustomerId;
 
       if (!customerId) {
         throw new Error('No Stripe customer found for user');
@@ -69,6 +72,68 @@ export const stripeRouter = {
         throw new Error('Failed to restore subscription');
       }
     }),
+
+  getRecentPurchase: protectedProcedure.query(async ({ ctx }) => {
+    try {
+      // Get the user's most recent active subscription from the database
+      const userSubscription = await db.query.subscription.findFirst({
+        where: (table, { eq, and }) =>
+          and(
+            eq(table.referenceId, ctx.session.user.id),
+            eq(table.status, 'active')
+          ),
+        orderBy: (table, { desc }) => desc(table.periodStart),
+      });
+
+      if (!userSubscription?.stripeSubscriptionId) {
+        return null;
+      }
+
+      // Get the full subscription details from Stripe
+      const stripeSubscription = await stripeClient.subscriptions.retrieve(
+        userSubscription.stripeSubscriptionId,
+        {
+          expand: ['latest_invoice'],
+        }
+      );
+
+      if (!stripeSubscription || stripeSubscription.status !== 'active') {
+        return null;
+      }
+
+      // Use the latest invoice for accurate payment data (actual currency/amount paid)
+      const latestInvoice = stripeSubscription.latest_invoice;
+      if (!latestInvoice || typeof latestInvoice === 'string') {
+        return null;
+      }
+
+      const priceId = stripeSubscription.items.data[0]?.price.id;
+      const isAnnual =
+        stripeSubscription.items.data[0]?.price.recurring?.interval === 'year';
+
+      // Use actual amounts and currency from the invoice (what customer actually paid)
+      const actualAmountPaid = latestInvoice.amount_paid; // Amount in the smallest currency unit
+      const actualCurrency = latestInvoice.currency;
+
+      return {
+        userId: ctx.session.user.id,
+        transactionId: stripeSubscription.id, // Use subscription ID as transaction ID
+        value: actualAmountPaid / 100, // Convert from smallest currency unit to main unit
+        currency: actualCurrency.toUpperCase(),
+        planType: 'pro' as const,
+        billingPeriod: isAnnual ? ('yearly' as const) : ('monthly' as const),
+        priceId,
+        subscriptionId: stripeSubscription.id,
+        createdAt: stripeSubscription.created,
+        // Additional useful data
+        invoiceId: latestInvoice.id,
+        invoiceNumber: latestInvoice.number,
+      };
+    } catch (error) {
+      log.error('Error getting recent purchase:', error);
+      return null;
+    }
+  }),
 
   requestStudentDiscount: publicProcedure
     .input(

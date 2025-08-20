@@ -40,15 +40,14 @@ export default function HeroSection() {
           }}
         />
       </div>
-
       {/* Main Hero Content */}
       <div className="relative z-10 w-full rounded-3xl bg-[#F9F8F6] p-6 text-center md:p-12 lg:p-16 dark:bg-zinc-900">
         <HeroHeading className="z-30 mx-auto mb-[0.3em] max-w-4xl">
-          Instant voice transcription at your fingertips — type less, say more.
+          Instant voice dictation at your fingertips — type less, say more.
         </HeroHeading>
         <HeroSubheading className="z-30 mx-auto max-w-[60%]">
-          Accurate voice-to-text transcription straight to your clipboard,
-          saving time and replacing slow typing with fast, natural speech.
+          Accurate voice-to-text dictation straight to your clipboard, saving
+          time and replacing slow typing with fast, natural speech.
         </HeroSubheading>
         <div className="z-30 mt-8 flex items-center justify-center">
           <a
