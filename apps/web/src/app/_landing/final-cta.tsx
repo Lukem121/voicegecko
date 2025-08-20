@@ -5,11 +5,25 @@ import { cn } from '@acme/ui/lib/utils';
 import { motion } from 'motion/react';
 import Image from 'next/image';
 import { FaWindows } from 'react-icons/fa';
+import { usePostHog } from '~/hooks/use-posthog';
+import { POSTHOG_SOURCES } from '~/lib/posthog/constants';
 import { APP_ROUTES } from '~/utils/app-routes';
 import SectionWrapper from './section-wrapper';
 import Logo from './svgs/logo';
 
 export default function FinalCtaSection() {
+  const { trackEvent } = usePostHog();
+
+  const handleFinalCTAClick = () => {
+    trackEvent({
+      event: 'hero_cta_clicked',
+      cta_text: 'Download for Windows',
+      cta_location: 'final',
+      source: POSTHOG_SOURCES.FINAL_CTA,
+      timestamp: new Date().toISOString(),
+    });
+  };
+
   return (
     <SectionWrapper className="max-w-5xl">
       <div className="relative overflow-hidden rounded-3xl bg-black px-6 pt-12 md:pb-20 lg:px-12">
@@ -60,6 +74,7 @@ export default function FinalCtaSection() {
                   'gap-2 bg-primary px-6 py-3 text-white'
                 )}
                 href={APP_ROUTES.MARKETING.DOWNLOAD}
+                onClick={handleFinalCTAClick}
               >
                 <FaWindows aria-hidden className="h-4 w-4" />
                 <span>Download for Windows</span>

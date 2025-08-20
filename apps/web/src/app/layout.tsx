@@ -9,6 +9,7 @@ import { TRPCReactProvider } from '~/trpc/react';
 import { plusJakartaSans, roobert } from './fonts';
 
 import '@acme/ui/globals.css';
+import { PostHogUserIdentifier } from '~/components/posthog';
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://www.voicegecko.io'),
@@ -64,7 +65,10 @@ export default function RootLayout(props: { children: React.ReactNode }) {
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <NuqsAdapter>
             <TRPCReactProvider>
-              <CurrencyProvider>{props.children}</CurrencyProvider>
+              <CurrencyProvider>
+                <PostHogUserIdentifier />
+                {props.children}
+              </CurrencyProvider>
             </TRPCReactProvider>
             <Toaster />
           </NuqsAdapter>
