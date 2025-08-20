@@ -1,8 +1,0 @@
-{
-  "extends": "@acme/tsconfig/base.json",
-  "compilerOptions": {
-    "outDir": "dist"
-  },
-  "include": ["./**/*.ts", "./**/*.tsx"],
-  "exclude": ["dist", "node_modules"]
-}
