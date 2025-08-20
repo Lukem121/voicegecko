@@ -24,7 +24,7 @@
     "@acme/gtm": "workspace:*",
     "@acme/observability": "workspace:*",
     "@acme/validators": "workspace:*",
-    "@better-auth/stripe": "^1.3.6",
+    "@better-auth/stripe": "^1.3.7",
     "stripe": "^18.4.0",
     "zod": "catalog:"
   },
