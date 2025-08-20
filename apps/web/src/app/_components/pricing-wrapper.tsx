@@ -11,7 +11,7 @@ type PricingWrapperProps = {
 
 function PricingSkeleton() {
   return (
-    <div className="animate-pulse">
+    <div className="mx-auto max-w-6xl animate-pulse">
       <div className="flex items-end justify-between gap-4">
         <div className="text-left">
           <div className="h-4 w-32 rounded bg-muted" />
