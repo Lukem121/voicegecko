@@ -1,5 +1,3 @@
-'use client';
-
 import { toast } from '@acme/ui/components/ui/sonner';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
@@ -13,6 +11,7 @@ export type UseSubscriptionUpgradeOptions = {
   cancelUrl?: string;
   onSuccess?: () => void;
   onError?: (error: Error) => void;
+  subscriptionId?: string; // For plan switching on existing subscriptions
 };
 
 export type UseSubscriptionUpgradeReturn = {
@@ -39,6 +38,7 @@ export function useSubscriptionUpgrade(
     cancelUrl = '/app/plans',
     onSuccess,
     onError,
+    subscriptionId,
   } = options;
 
   const upgrade = async (plan: SubscriptionPlan, isAnnual = false) => {
@@ -54,6 +54,8 @@ export function useSubscriptionUpgrade(
         successUrl,
         cancelUrl,
         annual: isAnnual,
+        // If subscriptionId is provided, include it for plan switching
+        ...(subscriptionId && { subscriptionId }),
         fetchOptions: {
           headers: {
             'x-currency': currency,

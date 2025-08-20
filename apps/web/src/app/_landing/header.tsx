@@ -15,7 +15,7 @@ export default function Header() {
   const pathname = usePathname();
   const isHome = pathname === '/';
   return (
-    <header>
+    <header className="relative z-20">
       {isHome && (
         <div
           aria-atomic="true"
