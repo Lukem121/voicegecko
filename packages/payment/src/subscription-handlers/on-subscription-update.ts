@@ -1,9 +1,5 @@
 import { sendPaymentFailedEmail } from '@acme/email/send/payment-failed';
-import { gtmService } from '@acme/gtm/service';
-import {
-  createSubscriptionEvent,
-  generateTransactionId,
-} from '@acme/gtm/utils';
+
 import { log } from '@acme/observability/log';
 import type { Subscription } from '@better-auth/stripe';
 import type { Stripe } from 'stripe';
@@ -27,39 +23,6 @@ export const onSubscriptionUpdate = async ({
     cancelAtPeriodEnd: subscription.cancelAtPeriodEnd,
     periodEnd: subscription.periodEnd,
   });
-
-  // Track subscription update in Google Tag Manager
-  try {
-    const updateEvent = createSubscriptionEvent({
-      eventType: 'subscription_update',
-      transactionId: generateTransactionId(subscription.id),
-      userId: subscription.referenceId,
-      subscriptionStatus: subscription.status,
-      planName: subscription.plan,
-      customParameters: {
-        cancel_at_period_end: subscription.cancelAtPeriodEnd?.toString(),
-        period_end: subscription.periodEnd?.toString(),
-      },
-    });
-
-    const gtmResult = await gtmService.sendEvent(updateEvent);
-
-    if (gtmResult.success) {
-      log.info(
-        `[GTM] Subscription update event sent successfully for ${subscription.id}`
-      );
-    } else {
-      log.error(
-        `[GTM] Failed to send subscription update event for ${subscription.id}:`,
-        gtmResult.error
-      );
-    }
-  } catch (error) {
-    log.error(
-      `[GTM] Error tracking subscription update for ${subscription.id}:`,
-      error
-    );
-  }
 
   // Check if this update indicates a payment failure
   const isPaymentFailure =

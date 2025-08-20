@@ -8,6 +8,7 @@ import { useState } from 'react';
 
 import { StudentDiscountModal } from '~/components/student-discount-modal';
 import { useStudentDiscountModal } from '~/hooks/use-student-discount-modal';
+import { useSubscriptionUpgrade } from '~/hooks/use-subscription-upgrade';
 import { authClient } from '~/lib/auth/client';
 import { useCurrency } from '~/providers/currency';
 import { useTRPC } from '~/trpc/react';
@@ -45,7 +46,6 @@ export default function Plans({ prices, subscription, error }: PlansProps) {
   const createBillingPortalSessionMutation = useCreateBillingPortalSession();
   const [billingPeriod, setBillingPeriod] = useState<BillingPeriod>('annual');
   const { currency } = useCurrency();
-  const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
   const [alertState, setAlertState] = useState<AlertState>({
     show: false,
     variant: 'default',
@@ -72,6 +72,18 @@ export default function Plans({ prices, subscription, error }: PlansProps) {
       message,
     });
   };
+
+  const { upgrade, isUpgrading } = useSubscriptionUpgrade({
+    successUrl: '/app/plans',
+    cancelUrl: '/app/plans',
+    subscriptionId: subscription?.stripeSubscriptionId,
+    onError: (upgradeError) => {
+      showAlert(
+        'Subscription Error',
+        upgradeError.message ?? 'Failed to process subscription'
+      );
+    },
+  });
 
   const hideAlert = () => {
     setAlertState((prev) => ({ ...prev, show: false }));
@@ -133,7 +145,6 @@ export default function Plans({ prices, subscription, error }: PlansProps) {
     },
   ];
 
-  // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: This is a complex function
   const handlePlanClick = async (plan: Plan) => {
     if (!session?.user) {
       router.push('/sign-in');
@@ -141,8 +152,6 @@ export default function Plans({ prices, subscription, error }: PlansProps) {
     }
 
     try {
-      setLoadingPlan(plan.id);
-
       // If it's the free plan and user has a subscription, redirect to billing portal
       if (plan.isFree && subscription) {
         const result = await createBillingPortalSessionMutation.mutateAsync({
@@ -155,37 +164,13 @@ export default function Plans({ prices, subscription, error }: PlansProps) {
         return;
       }
 
-      // If it's a paid plan
+      // If it's a paid plan, use the subscription upgrade hook
       if (plan.stripeId) {
-        const { error: upgradeError } = await authClient.subscription.upgrade({
-          plan: plan.stripeId,
-          successUrl: '/app/plans',
-          cancelUrl: '/app/plans',
-          annual: isYearly,
-          // If user has an active subscription, provide the subscription ID for plan switching
-          ...(subscription?.stripeSubscriptionId && {
-            subscriptionId: subscription.stripeSubscriptionId,
-          }),
-          fetchOptions: {
-            headers: {
-              'x-currency': currency,
-            },
-          },
-        });
-
-        if (upgradeError) {
-          log.error('Subscription error:', upgradeError);
-          showAlert(
-            'Subscription Error',
-            upgradeError.message ?? 'Failed to process subscription'
-          );
-        }
+        await upgrade(plan.stripeId as 'voice gecko pro', isYearly);
       }
     } catch (unknownError) {
       log.error('Error handling plan:', unknownError);
       showAlert('Error', 'An error occurred. Please try again.');
-    } finally {
-      setLoadingPlan(null);
     }
   };
 
@@ -228,7 +213,8 @@ export default function Plans({ prices, subscription, error }: PlansProps) {
       <div className="mb-8 grid gap-6 md:grid-cols-2">
         {plans.map((plan) => {
           const isCurrent = getCurrentPlanStatus(plan.id) === 'current';
-          const isLoading = loadingPlan === plan.id;
+          // Use the hook's isUpgrading state for all plans
+          const isLoading = isUpgrading;
 
           return (
             <PlanCard
