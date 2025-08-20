@@ -23,6 +23,7 @@ import { AlertTriangle, Loader2, RefreshCw, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
+import { DesktopRedirectHandler } from '~/components/desktop-redirect-handler';
 import { useCurrency } from '~/providers/currency';
 import { useTRPC } from '~/trpc/react';
 import { useCreateBillingPortalSession } from '../../_hooks/use-create-billing-portal-session';
@@ -90,6 +91,19 @@ function BillingErrorState({
 
   return (
     <div className="space-y-8">
+      {/* Handle desktop app redirects for cross-platform flows */}
+      <DesktopRedirectHandler
+        onNoRedirectNeeded={() =>
+          log.info('ℹ️ No desktop redirect needed for billing')
+        }
+        onRedirectFailed={() =>
+          log.warn('⚠️ Desktop billing redirect failed, staying on web')
+        }
+        onRedirectStart={() =>
+          log.info('🔄 Redirecting back to desktop app from billing...')
+        }
+      />
+
       <div className="mb-8">
         <h1 className="mb-2 font-semibold text-2xl tracking-tight">Billing</h1>
         <p className="text-muted-foreground">

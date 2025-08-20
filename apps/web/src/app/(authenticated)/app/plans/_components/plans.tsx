@@ -6,6 +6,7 @@ import type { Subscription } from '@better-auth/stripe';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
+import { DesktopRedirectHandler } from '~/components/desktop-redirect-handler';
 import { StudentDiscountModal } from '~/components/student-discount-modal';
 import { useGTM } from '~/hooks/use-gtm';
 import { usePostHog } from '~/hooks/use-posthog';
@@ -215,6 +216,17 @@ export default function Plans({ prices, subscription, error }: PlansProps) {
 
   return (
     <div>
+      {/* Handle desktop app redirects for cross-platform flows */}
+      <DesktopRedirectHandler
+        onNoRedirectNeeded={() => log.info('ℹ️ No desktop redirect needed')}
+        onRedirectFailed={() =>
+          log.warn('⚠️ Desktop redirect failed, staying on web')
+        }
+        onRedirectStart={() =>
+          log.info('🔄 Redirecting back to desktop app...')
+        }
+      />
+
       <div className="mb-8 flex items-center justify-between">
         <div className="">
           <h1 className="mb-2 font-semibold text-2xl tracking-tight">Plans</h1>
