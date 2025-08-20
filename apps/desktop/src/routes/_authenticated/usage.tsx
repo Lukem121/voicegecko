@@ -129,9 +129,9 @@ function UsagePage() {
                 {stats.current.wordsLimit.toLocaleString()}
               </span>
             </div>
-            <Progress className="h-2" value={usagePercentage} />
+            <Progress className="mt-2 h-2" value={usagePercentage} />
             {usagePercentage >= 90 && (
-              <p className="text-amber-600 text-sm">
+              <p className="mt-2 text-amber-600 text-sm">
                 {usagePercentage >= 100
                   ? 'Usage limit reached. Upgrade to Pro for unlimited words.'
                   : 'Approaching usage limit'}
