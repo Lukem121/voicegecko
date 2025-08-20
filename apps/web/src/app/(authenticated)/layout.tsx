@@ -2,7 +2,6 @@ import { getServerSession } from '@acme/auth/utils/get-session';
 import { redirect } from 'next/navigation';
 import type { ReactNode } from 'react';
 
-import { GTMUserIdentification } from '~/components/gtm-user-identification';
 import { APP_ROUTES } from '~/utils/app-routes';
 import Footer from '../_landing/footer';
 import Header from '../_landing/header';
@@ -20,7 +19,6 @@ const AppLayout = async ({ children }: AppLayoutProperties) => {
 
   return (
     <div className="relative">
-      <GTMUserIdentification />
       <Header />
       {children}
       <Footer />
