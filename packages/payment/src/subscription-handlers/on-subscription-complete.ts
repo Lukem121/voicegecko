@@ -1,11 +1,4 @@
 import { sendWelcomeProEmail } from '@acme/email/send/welcome-pro';
-import { gtmService } from '@acme/gtm/service';
-import {
-  createPurchaseEvent,
-  determinePlanType,
-  formatCurrency,
-  generateTransactionId,
-} from '@acme/gtm/utils';
 import { log } from '@acme/observability/log';
 import type { StripePlan, Subscription } from '@better-auth/stripe';
 import type Stripe from 'stripe';
@@ -21,7 +14,6 @@ type SubscriptionCompleteParams = {
 export const onSubscriptionComplete = async ({
   subscription,
   plan,
-  stripeSubscription,
 }: SubscriptionCompleteParams) => {
   log.info('[Subscription] New subscription created:', {
     subscriptionId: subscription.id,
@@ -42,60 +34,13 @@ export const onSubscriptionComplete = async ({
     );
   }
 
-  // Track purchase conversion in Google Tag Manager
-  try {
-    // Get the actual price and currency from the Stripe subscription
-    const stripePrice = stripeSubscription.items.data[0]?.price;
-    if (stripePrice) {
-      const purchaseEvent = createPurchaseEvent({
-        transactionId: generateTransactionId(subscription.id),
-        currency: formatCurrency(stripePrice.currency),
-        value: stripePrice.unit_amount || 0,
-        userId: subscription.referenceId,
-        planName: plan.name,
-        planType: determinePlanType(stripePrice.id, plan.name),
-        priceId: stripePrice.id,
-        // Enhanced Conversions data for Google Ads attribution
-        userEmail: user?.email,
-        customParameters: {
-          subscription_id: subscription.id,
-          subscription_status: subscription.status,
-          period_start: subscription.periodStart?.toString() ?? '',
-          period_end: subscription.periodEnd?.toString() ?? '',
-        },
-      });
-
-      const gtmResult = await gtmService.sendEvent(purchaseEvent);
-
-      if (gtmResult.success) {
-        log.info(
-          `[GTM] Purchase event with enhanced conversions sent successfully for subscription ${subscription.id}`
-        );
-      } else {
-        log.error(
-          `[GTM] Failed to send purchase event for subscription ${subscription.id}:`,
-          gtmResult.error
-        );
-      }
-    } else {
-      log.warn(
-        `[GTM] Could not find Stripe price information for subscription ${subscription.id}`
-      );
-    }
-  } catch (error) {
-    // Don't fail the entire process if GTM tracking fails
-    log.error(
-      `[GTM] Error tracking purchase for subscription ${subscription.id}:`,
-      error
-    );
-  }
-
   // Send welcome pro email to the user
   try {
     // Reuse the user we already fetched, or fetch again if needed
     if (!user) {
       user = await getUserForEmail(subscription.referenceId);
     }
+
     if (user) {
       await sendWelcomeProEmail({
         user,
