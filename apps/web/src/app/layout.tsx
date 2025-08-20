@@ -1,6 +1,5 @@
 import { Toaster } from '@acme/ui/components/ui/sonner';
 import { ThemeProvider } from '@acme/ui/components/ui/theme';
-import '@acme/ui/globals.css';
 import { cn } from '@acme/ui/lib/utils';
 import { GoogleTagManager } from '@next/third-parties/google';
 import type { Metadata, Viewport } from 'next';
@@ -8,6 +7,8 @@ import { NuqsAdapter } from 'nuqs/adapters/next/app';
 import { CurrencyProvider } from '~/providers/currency';
 import { TRPCReactProvider } from '~/trpc/react';
 import { plusJakartaSans, roobert } from './fonts';
+
+import '@acme/ui/globals.css';
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://www.voicegecko.io'),
