@@ -43,7 +43,7 @@ export const WelcomeProTemplate = ({
               className="inline-block align-middle"
               height="32"
             />{' '}
-            Pro!
+            pro!
           </Heading>
 
           {/* Thank You Gecko Mascot */}
