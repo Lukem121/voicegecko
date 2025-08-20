@@ -23,7 +23,9 @@ import { FaAndroid, FaApple, FaLinux, FaWindows } from 'react-icons/fa';
 import { HiInformationCircle } from 'react-icons/hi';
 import { HiGlobeAlt } from 'react-icons/hi2';
 import { SiApple } from 'react-icons/si';
+import { useGTM } from '~/hooks/use-gtm';
 import type { DownloadsData } from '~/lib/downloads-utils';
+import { SOURCES } from '~/lib/gtm/constants';
 
 type PlatformCardProps = {
   title: string;
@@ -36,6 +38,7 @@ type PlatformCardProps = {
     size: number;
   }>;
   downloadError?: string;
+  osType: 'windows' | 'mac' | 'linux' | 'unknown';
 };
 
 type VotingCardProps = {
@@ -203,8 +206,10 @@ function PlatformCard({
   available,
   downloads,
   downloadError,
+  osType,
 }: PlatformCardProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const { trackEvent } = useGTM();
 
   const handleDownload = (download: {
     name: string;
@@ -220,6 +225,14 @@ function PlatformCard({
       alert(downloadError);
       return;
     }
+
+    trackEvent({
+      event: 'download_completed',
+      source: SOURCES.DOWNLOAD_PAGE,
+      os_type: osType,
+      file_name: download.name,
+      timestamp: new Date().toISOString(),
+    });
 
     const link = document.createElement('a');
     link.href = download.url;
@@ -345,6 +358,7 @@ export default function DownloadCards({
       description:
         'The easiest way to dictate on Windows — no typos, no slowdown, just your words.',
       icon: <FaWindows />,
+      osType: 'windows' as const,
     },
   ];
 
@@ -414,6 +428,7 @@ export default function DownloadCards({
                   downloads={platformData.assets}
                   icon={platform.icon}
                   key={platform.key}
+                  osType={platform.osType}
                   title={platform.title}
                 />
               );
