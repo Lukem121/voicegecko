@@ -1,7 +1,6 @@
 import { cn } from '@acme/ui/lib/utils';
 import { motion } from 'motion/react';
 import { useCallback, useMemo } from 'react';
-
 import { useGeckoBarState } from '~/hooks/use-gecko-bar-state';
 import { analytics } from '~/lib/analytics/posthog-analytics';
 import { useEventStore } from '~/stores/event.store';
