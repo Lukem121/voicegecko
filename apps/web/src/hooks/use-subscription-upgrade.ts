@@ -71,6 +71,7 @@ export function useSubscriptionUpgrade(
         value: purchase.value,
         currency: purchase.currency,
         user_id: purchase.userId,
+        email_address: purchase.email,
         items: [
           {
             item_id: 'pro_monthly',

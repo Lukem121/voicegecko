@@ -128,6 +128,7 @@ export const stripeRouter = {
         // Additional useful data
         invoiceId: latestInvoice.id,
         invoiceNumber: latestInvoice.number,
+        email: ctx.session.user.email,
       };
     } catch (error) {
       log.error('Error getting recent purchase:', error);
