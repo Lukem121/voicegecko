@@ -24,6 +24,8 @@ const WORD_SPLIT_REGEX = /\s+/;
 type BaseEventProperties = {
   timestamp?: number;
   platform: 'desktop';
+  app_name?: string;
+  source?: string;
   app_version?: string;
 };
 
@@ -344,6 +346,8 @@ class PostHogAnalyticsService {
     return {
       timestamp: Date.now(),
       platform: 'desktop' as const,
+      app_name: 'voicegecko-desktop',
+      source: 'desktop-app',
     };
   }
 

@@ -9,6 +9,8 @@
 export type BasePostHogEvent = {
   event: string;
   timestamp?: string;
+  platform?: 'web' | 'desktop';
+  app_name?: string;
   source?: string;
   user_id?: string;
 };
