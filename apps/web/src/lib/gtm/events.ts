@@ -52,6 +52,7 @@ export type PurchaseEvent = BaseGTMEvent & {
   value: number;
   currency: string;
   user_id: string;
+  email_address: string;
   items: Array<{
     item_id: string;
     item_name: string;
