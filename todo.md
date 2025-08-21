@@ -1,6 +1,5 @@
 Todo
 
-- [ ] Like, since we can't click through the gecko bar, let's have a system so that if they just right-click on the gecko bar, it will let the user show some options like a context menu such as click to hide for 10 seconds or something like that.
 - [ ] Geckobar works even if we are not logged in.
 - [ ] Burger menu on mobile not implemented
 
@@ -16,6 +15,7 @@ After MVP
 - [ ] Turn off the audio processing logs 'audio_debug'
 - [ ] Post processing, fix grammer, change style.
 - [ ] I notice whisper when it can mute the audio without having to just mute the whole It can like mute everything else. It can just like isolate its own audio.
+- [ ] Add a context menu to the gecko bar so we can do things like hide it and other things.
 
 🪳 After MVP Bugs
 
