@@ -1,10 +1,15 @@
 import { sendSubscriptionCancelledEmail } from '@acme/email/send/subscription-cancelled';
+import { DiscordAdapter } from '@acme/notifications/discord-adapter';
 import { log } from '@acme/observability/log';
 import type { Subscription } from '@better-auth/stripe';
 import type { Stripe } from 'stripe';
 
 import { paymentEnv } from '../../env';
-import { getUserForEmail } from './user-lookup';
+import {
+  extractSubscriptionPricing,
+  getUserForEmail,
+  type UserForEmail,
+} from './user-lookup';
 
 type SubscriptionCancelParams = {
   event?: Stripe.Event;
@@ -15,6 +20,7 @@ type SubscriptionCancelParams = {
 
 export const onSubscriptionCancel = async ({
   subscription,
+  stripeSubscription,
   cancellationDetails,
 }: SubscriptionCancelParams) => {
   log.info('[Subscription] Subscription cancelled:', {
@@ -26,9 +32,16 @@ export const onSubscriptionCancel = async ({
     cancellationFeedback: cancellationDetails?.feedback,
   });
 
+  // Get user information for both email and Discord notification
+  let user: UserForEmail | null = null;
+  try {
+    user = await getUserForEmail(subscription.referenceId);
+  } catch (error) {
+    log.error('[Subscription] Error fetching user for notifications:', error);
+  }
+
   // Send subscription cancelled email to the user
   try {
-    const user = await getUserForEmail(subscription.referenceId);
     if (user && subscription.periodEnd) {
       const accessUntilDate = new Date(
         subscription.periodEnd
@@ -62,6 +75,43 @@ export const onSubscriptionCancel = async ({
     }
   } catch (error) {
     log.error('[Subscription] Error sending cancellation email:', error);
+  }
+
+  // Send Discord notification for subscription cancellation
+  try {
+    const discordAdapter = new DiscordAdapter();
+    const pricing = extractSubscriptionPricing(stripeSubscription);
+
+    await discordAdapter.sendSubscriptionEvent({
+      subscriptionId: subscription.id,
+      eventType: 'cancelled',
+      userId: subscription.referenceId,
+      planName: 'VoiceGecko Pro',
+      status: subscription.status,
+      email: user?.email,
+      username: user?.name,
+      cancelAtPeriodEnd: subscription.cancelAtPeriodEnd,
+      periodEnd: subscription.periodEnd
+        ? new Date(subscription.periodEnd).toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+          })
+        : undefined,
+      cancellationReason: cancellationDetails?.reason || undefined,
+      cancellationFeedback: cancellationDetails?.feedback || undefined,
+      // Add pricing information
+      amount: pricing?.amount,
+      currency: pricing?.currency,
+      interval: pricing?.interval,
+      intervalCount: pricing?.intervalCount,
+      timestamp: new Date().toISOString(),
+    });
+    log.info(
+      `[Subscription] Discord notification sent for cancelled subscription ${subscription.id}`
+    );
+  } catch (error) {
+    log.error('[Subscription] Error sending Discord notification:', error);
   }
 
   // No special handling needed - the subscription remains active until periodEnd

@@ -1,8 +1,13 @@
 import { sendWelcomeProEmail } from '@acme/email/send/welcome-pro';
+import { DiscordAdapter } from '@acme/notifications/discord-adapter';
 import { log } from '@acme/observability/log';
 import type { StripePlan, Subscription } from '@better-auth/stripe';
 import type Stripe from 'stripe';
-import { getUserForEmail, type UserForEmail } from './user-lookup';
+import {
+  extractSubscriptionPricing,
+  getUserForEmail,
+  type UserForEmail,
+} from './user-lookup';
 
 type SubscriptionCompleteParams = {
   event: Stripe.Event;
@@ -13,6 +18,7 @@ type SubscriptionCompleteParams = {
 
 export const onSubscriptionComplete = async ({
   subscription,
+  stripeSubscription,
   plan,
 }: SubscriptionCompleteParams) => {
   log.info('[Subscription] New subscription created:', {
@@ -56,6 +62,47 @@ export const onSubscriptionComplete = async ({
     }
   } catch (error) {
     log.error('[Subscription] Error sending welcome email:', error);
+  }
+
+  // Send Discord notification for new subscription
+  try {
+    const discordAdapter = new DiscordAdapter();
+    const pricing = extractSubscriptionPricing(stripeSubscription);
+
+    await discordAdapter.sendSubscriptionEvent({
+      subscriptionId: subscription.id,
+      eventType: 'created',
+      userId: subscription.referenceId,
+      planName: plan.name,
+      status: subscription.status,
+      email: user?.email,
+      username: user?.name,
+      periodStart: subscription.periodStart
+        ? new Date(subscription.periodStart).toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+          })
+        : undefined,
+      periodEnd: subscription.periodEnd
+        ? new Date(subscription.periodEnd).toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+          })
+        : undefined,
+      // Add pricing information
+      amount: pricing?.amount,
+      currency: pricing?.currency,
+      interval: pricing?.interval,
+      intervalCount: pricing?.intervalCount,
+      timestamp: new Date().toISOString(),
+    });
+    log.info(
+      `[Subscription] Discord notification sent for new subscription ${subscription.id}`
+    );
+  } catch (error) {
+    log.error('[Subscription] Error sending Discord notification:', error);
   }
 
   // No special handling needed - our usage service already checks
