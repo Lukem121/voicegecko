@@ -5,7 +5,7 @@ import { Separator } from '@acme/ui/components/ui/separator';
 import type { Metadata } from 'next';
 import { unstable_cache } from 'next/cache';
 import Link from 'next/link';
-import PricingSection from '~/app/_components/pricing';
+import PricingWrapper from '~/app/_components/pricing-wrapper';
 import Section from '~/app/_components/section';
 
 export const metadata: Metadata = {
@@ -38,7 +38,7 @@ export default async function PricingPage() {
   return (
     <>
       {/* Primary pricing cards reused from landing, with live prices when available */}
-      <PricingSection prices={prices} />
+      <PricingWrapper prices={prices} />
       <Section className="py-6 md:py-12">
         {/* Plan comparison */}
         <section className="">

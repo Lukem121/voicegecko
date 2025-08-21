@@ -160,7 +160,7 @@ export class DiscordAdapter {
 
   async sendUserSignup(report: UserSignup) {
     const embed: DiscordEmbed = {
-      title: '🎉 New User Signup',
+      title: `🎉 New User Signup: ${report.username ?? report.email.split('@')[0]}`,
       color: 0x72_89_da, // Discord blue
       timestamp: report.timestamp ?? new Date().toISOString(),
       fields: [

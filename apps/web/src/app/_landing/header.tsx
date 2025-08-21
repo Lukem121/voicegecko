@@ -1,10 +1,11 @@
 'use client';
-
 import { cn } from '@acme/ui/lib/utils';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { TfiMenu } from 'react-icons/tfi';
+import { usePostHog } from '~/hooks/use-posthog';
 import { authClient } from '~/lib/auth/client';
+import { POSTHOG_SOURCES } from '~/lib/posthog/constants';
 import { APP_ROUTES } from '~/utils/app-routes';
 import Section from '../_components/section';
 import DownloadButton from './download-button';
@@ -14,8 +15,20 @@ export default function Header() {
   const session = authClient.useSession();
   const pathname = usePathname();
   const isHome = pathname === '/';
+  const { trackEvent } = usePostHog();
+
+  const handleNavigationClick = (linkText: string, linkUrl: string) => {
+    trackEvent({
+      event: 'navigation_click',
+      link_text: linkText,
+      link_url: linkUrl,
+      location: 'header',
+      source: POSTHOG_SOURCES.HEADER,
+      timestamp: new Date().toISOString(),
+    });
+  };
   return (
-    <header>
+    <header className="relative z-20">
       {isHome && (
         <div
           aria-atomic="true"
@@ -44,6 +57,7 @@ export default function Header() {
               <Link
                 className="font-medium text-foreground/80 text-sm transition-colors hover:text-foreground"
                 href="/pricing"
+                onClick={() => handleNavigationClick('Pricing', '/pricing')}
               >
                 Pricing
               </Link>
@@ -52,6 +66,9 @@ export default function Header() {
                 <Link
                   className="font-medium text-foreground/80 text-sm transition-colors hover:text-foreground"
                   href={APP_ROUTES.APP.USAGE}
+                  onClick={() =>
+                    handleNavigationClick('Account', APP_ROUTES.APP.USAGE)
+                  }
                 >
                   Account
                 </Link>
@@ -59,6 +76,7 @@ export default function Header() {
                 <Link
                   className="font-medium text-foreground/80 text-sm transition-colors hover:text-foreground"
                   href="/sign-in"
+                  onClick={() => handleNavigationClick('Login', '/sign-in')}
                 >
                   Login
                 </Link>

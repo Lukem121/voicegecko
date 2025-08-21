@@ -6,9 +6,15 @@ import type { Subscription } from '@better-auth/stripe';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 
+import { DesktopRedirectHandler } from '~/components/desktop-redirect-handler';
 import { StudentDiscountModal } from '~/components/student-discount-modal';
+import { useGTM } from '~/hooks/use-gtm';
+import { usePostHog } from '~/hooks/use-posthog';
 import { useStudentDiscountModal } from '~/hooks/use-student-discount-modal';
+import { useSubscriptionUpgrade } from '~/hooks/use-subscription-upgrade';
 import { authClient } from '~/lib/auth/client';
+import { SOURCES } from '~/lib/gtm/constants';
+import { POSTHOG_SOURCES } from '~/lib/posthog/constants';
 import { useCurrency } from '~/providers/currency';
 import { useTRPC } from '~/trpc/react';
 import { useCreateBillingPortalSession } from '../../_hooks/use-create-billing-portal-session';
@@ -45,7 +51,8 @@ export default function Plans({ prices, subscription, error }: PlansProps) {
   const createBillingPortalSessionMutation = useCreateBillingPortalSession();
   const [billingPeriod, setBillingPeriod] = useState<BillingPeriod>('annual');
   const { currency } = useCurrency();
-  const [loadingPlan, setLoadingPlan] = useState<string | null>(null);
+  const { trackEvent } = useGTM();
+  const { trackEvent: trackPostHogEvent } = usePostHog();
   const [alertState, setAlertState] = useState<AlertState>({
     show: false,
     variant: 'default',
@@ -72,6 +79,16 @@ export default function Plans({ prices, subscription, error }: PlansProps) {
       message,
     });
   };
+
+  const { upgrade, isUpgrading } = useSubscriptionUpgrade({
+    subscriptionId: subscription?.stripeSubscriptionId,
+    onError: (upgradeError) => {
+      showAlert(
+        'Subscription Error',
+        upgradeError.message ?? 'Failed to process subscription'
+      );
+    },
+  });
 
   const hideAlert = () => {
     setAlertState((prev) => ({ ...prev, show: false }));
@@ -128,64 +145,62 @@ export default function Plans({ prices, subscription, error }: PlansProps) {
         'Cloud sync',
         'Advanced features',
       ],
-      cta: 'Get started',
+      cta: 'Upgrade',
       variant: 'outline',
     },
   ];
 
-  // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: This is a complex function
+  const handleFreePlanWithSubscription = async () => {
+    const result = await createBillingPortalSessionMutation.mutateAsync({
+      returnUrl: '/app/plans',
+    });
+    if (result.url) {
+      router.push(result.url);
+    }
+  };
+
+  const handlePaidPlan = async (plan: Plan) => {
+    if (plan.stripeId) {
+      await upgrade(plan.stripeId as 'voice gecko pro', isYearly);
+    }
+  };
+
   const handlePlanClick = async (plan: Plan) => {
     if (!session?.user) {
       router.push('/sign-in');
       return;
     }
 
+    // Track plan selection
+    trackEvent({
+      event: 'plan_selected',
+      plan_type: plan.isFree ? 'free' : 'pro',
+      billing_period: isYearly ? 'yearly' : 'monthly',
+      source: SOURCES.PLANS_PAGE,
+      timestamp: new Date().toISOString(),
+    });
+
+    // PostHog tracking
+    trackPostHogEvent({
+      event: 'plan_selected',
+      plan_type: plan.isFree ? 'free' : 'pro',
+      billing_period: isYearly ? 'yearly' : 'monthly',
+      source: POSTHOG_SOURCES.PLANS_PAGE,
+      timestamp: new Date().toISOString(),
+    });
+
     try {
-      setLoadingPlan(plan.id);
-
-      // If it's the free plan and user has a subscription, redirect to billing portal
       if (plan.isFree && subscription) {
-        const result = await createBillingPortalSessionMutation.mutateAsync({
-          returnUrl: '/app/plans',
-        });
-
-        if (result.url) {
-          router.push(result.url);
-        }
+        await handleFreePlanWithSubscription();
         return;
       }
 
-      // If it's a paid plan
-      if (plan.stripeId) {
-        const { error: upgradeError } = await authClient.subscription.upgrade({
-          plan: plan.stripeId,
-          successUrl: '/app/plans',
-          cancelUrl: '/app/plans',
-          annual: isYearly,
-          // If user has an active subscription, provide the subscription ID for plan switching
-          ...(subscription?.stripeSubscriptionId && {
-            subscriptionId: subscription.stripeSubscriptionId,
-          }),
-          fetchOptions: {
-            headers: {
-              'x-currency': currency,
-            },
-          },
-        });
-
-        if (upgradeError) {
-          log.error('Subscription error:', upgradeError);
-          showAlert(
-            'Subscription Error',
-            upgradeError.message ?? 'Failed to process subscription'
-          );
-        }
+      if (!plan.isFree) {
+        await handlePaidPlan(plan);
       }
     } catch (unknownError) {
       log.error('Error handling plan:', unknownError);
       showAlert('Error', 'An error occurred. Please try again.');
-    } finally {
-      setLoadingPlan(null);
     }
   };
 
@@ -201,6 +216,17 @@ export default function Plans({ prices, subscription, error }: PlansProps) {
 
   return (
     <div>
+      {/* Handle desktop app redirects for cross-platform flows */}
+      <DesktopRedirectHandler
+        onNoRedirectNeeded={() => log.info('ℹ️ No desktop redirect needed')}
+        onRedirectFailed={() =>
+          log.warn('⚠️ Desktop redirect failed, staying on web')
+        }
+        onRedirectStart={() =>
+          log.info('🔄 Redirecting back to desktop app...')
+        }
+      />
+
       <div className="mb-8 flex items-center justify-between">
         <div className="">
           <h1 className="mb-2 font-semibold text-2xl tracking-tight">Plans</h1>
@@ -228,7 +254,8 @@ export default function Plans({ prices, subscription, error }: PlansProps) {
       <div className="mb-8 grid gap-6 md:grid-cols-2">
         {plans.map((plan) => {
           const isCurrent = getCurrentPlanStatus(plan.id) === 'current';
-          const isLoading = loadingPlan === plan.id;
+          // Use the hook's isUpgrading state for all plans
+          const isLoading = isUpgrading;
 
           return (
             <PlanCard

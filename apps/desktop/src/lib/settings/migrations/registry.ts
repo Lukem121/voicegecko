@@ -1,19 +1,50 @@
-import type { Migration } from './types';
+/**
+ * Type-Safe Migration Registry
+ *
+ * This file registers all migrations in order and provides utilities
+ * to determine which migrations need to run for a given version upgrade.
+ */
 
-// Registry of all migrations in order
-export const MIGRATIONS: Migration[] = [
-  // Future migrations will be added here
-];
+import { migrationV1ToV2 } from './migrations/001-v1-to-v2';
+import type { AnyMigration } from './types';
 
-// Current settings version
-export const CURRENT_SETTINGS_VERSION = 1;
+// =============================================================================
+// TYPE-SAFE MIGRATIONS REGISTRY
+// =============================================================================
 
-// Get migrations needed to upgrade from one version to another
-export function getMigrationsToRun(
+/**
+ * Registry of all type-safe migrations in chronological order
+ * Each migration is fully type-checked at compile time
+ */
+export const TYPE_SAFE_MIGRATIONS: AnyMigration[] = [migrationV1ToV2];
+
+/**
+ * Get type-safe migrations needed to upgrade from one version to another
+ */
+export function getTypeSafeMigrationsToRun(
   fromVersion: number,
   toVersion: number
-): Migration[] {
-  return MIGRATIONS.filter(
+): AnyMigration[] {
+  return TYPE_SAFE_MIGRATIONS.filter(
     (m) => m.version > fromVersion && m.version <= toVersion
   );
+}
+
+// =============================================================================
+// CURRENT VERSION AND VALIDATION
+// =============================================================================
+
+// Current settings version - now V2 for testing
+export const CURRENT_SETTINGS_VERSION = 2;
+
+/**
+ * Validate that the current version matches the latest migration
+ * This helps catch configuration errors during development
+ */
+export function validateCurrentVersion(): boolean {
+  const latestMigrationVersion = Math.max(
+    ...TYPE_SAFE_MIGRATIONS.map((m) => m.version)
+  );
+
+  return CURRENT_SETTINGS_VERSION === latestMigrationVersion;
 }

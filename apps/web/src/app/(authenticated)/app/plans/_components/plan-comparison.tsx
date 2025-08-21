@@ -122,16 +122,16 @@ export const PlanComparison = () => {
       </div>
 
       <ComparisonTable
-        data={devicePlatformData}
-        firstColumnHeader="Device and Platform"
-      />
-      <ComparisonTable
         data={voiceTypingData}
         firstColumnHeader="Effortless Voice Typing"
       />
       <ComparisonTable
         data={teamCollaborationData}
         firstColumnHeader="Support"
+      />
+      <ComparisonTable
+        data={devicePlatformData}
+        firstColumnHeader="Device and Platform"
       />
     </div>
   );

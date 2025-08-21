@@ -1,7 +1,7 @@
 'use client';
 
 import { cn } from '@acme/ui/lib/utils';
-import { motion } from 'framer-motion';
+import { motion } from 'motion/react';
 import { HiCheck, HiX } from 'react-icons/hi';
 import { UpgradeButton } from './upgrade-button';
 

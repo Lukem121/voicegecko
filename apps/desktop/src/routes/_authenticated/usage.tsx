@@ -7,6 +7,7 @@ import {
 } from '@acme/ui/components/ui/card';
 import { Progress } from '@acme/ui/components/ui/progress';
 import { Skeleton } from '@acme/ui/components/ui/skeleton';
+import { createCrossPlatformUrl } from '@acme/ui/lib/redirection';
 import { useQuery } from '@tanstack/react-query';
 import { createFileRoute } from '@tanstack/react-router';
 import { open } from '@tauri-apps/plugin-shell';
@@ -129,9 +130,9 @@ function UsagePage() {
                 {stats.current.wordsLimit.toLocaleString()}
               </span>
             </div>
-            <Progress className="h-2" value={usagePercentage} />
+            <Progress className="mt-2 h-2" value={usagePercentage} />
             {usagePercentage >= 90 && (
-              <p className="text-amber-600 text-sm">
+              <p className="mt-2 text-amber-600 text-sm">
                 {usagePercentage >= 100
                   ? 'Usage limit reached. Upgrade to Pro for unlimited words.'
                   : 'Approaching usage limit'}
@@ -262,7 +263,21 @@ function UsagePage() {
                 const websiteUrl =
                   import.meta.env.VITE_PUBLIC_VOICEGECKO_URL ||
                   'https://www.voicegecko.io';
-                await open(`${websiteUrl}/app/plans`);
+
+                // Create cross-platform URL that preserves desktop context
+                const upgradeUrl = createCrossPlatformUrl(
+                  `${websiteUrl}/app/plans`,
+                  {
+                    feature: 'upgrade',
+                    source: 'usage_page',
+                    metadata: {
+                      trigger: 'upgrade_button',
+                      plan_suggested: 'pro',
+                    },
+                  }
+                );
+
+                await open(upgradeUrl);
               }}
               variant="outline"
             >

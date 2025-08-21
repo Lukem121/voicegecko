@@ -1,9 +1,8 @@
 import { sendWelcomeProEmail } from '@acme/email/send/welcome-pro';
 import { log } from '@acme/observability/log';
 import type { StripePlan, Subscription } from '@better-auth/stripe';
-import type { Stripe } from 'stripe';
-
-import { getUserForEmail } from './user-lookup';
+import type Stripe from 'stripe';
+import { getUserForEmail, type UserForEmail } from './user-lookup';
 
 type SubscriptionCompleteParams = {
   event: Stripe.Event;
@@ -25,9 +24,23 @@ export const onSubscriptionComplete = async ({
     periodEnd: subscription.periodEnd,
   });
 
+  // Get user data for Enhanced Conversions
+  let user: UserForEmail | null = null;
+  try {
+    user = await getUserForEmail(subscription.referenceId);
+  } catch {
+    log.warn(
+      `[GTM] Could not find user ${subscription.referenceId} for enhanced conversions`
+    );
+  }
+
   // Send welcome pro email to the user
   try {
-    const user = await getUserForEmail(subscription.referenceId);
+    // Reuse the user we already fetched, or fetch again if needed
+    if (!user) {
+      user = await getUserForEmail(subscription.referenceId);
+    }
+
     if (user) {
       await sendWelcomeProEmail({
         user,

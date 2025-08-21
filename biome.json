@@ -21,6 +21,9 @@
       },
       "style": {
         "noMagicNumbers": "off"
+      },
+      "complexity": {
+        "noExcessiveCognitiveComplexity": "off"
       }
     }
   }

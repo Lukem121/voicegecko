@@ -15,7 +15,7 @@ export const onSubscriptionDeleted = async ({
 
   log.info('[Subscription] Subscription deleted:', {
     subscriptionId: subscription.id,
-    userId: subscription.id,
+    userId: subscription.referenceId,
     deletedAt: new Date().toISOString(),
   });
 

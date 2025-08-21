@@ -24,6 +24,8 @@ const WORD_SPLIT_REGEX = /\s+/;
 type BaseEventProperties = {
   timestamp?: number;
   platform: 'desktop';
+  app_name?: string;
+  source?: string;
   app_version?: string;
 };
 
@@ -232,6 +234,10 @@ type GeckoBarEvents = {
 
 // Performance Events
 type PerformanceEvents = {
+  app_installed: {
+    installation_timestamp: number;
+    first_run: boolean;
+  };
   app_startup: {
     startup_time_seconds: number;
     initialization_steps: string[];
@@ -340,6 +346,8 @@ class PostHogAnalyticsService {
     return {
       timestamp: Date.now(),
       platform: 'desktop' as const,
+      app_name: 'voicegecko-desktop',
+      source: 'desktop-app',
     };
   }
 

@@ -24,10 +24,12 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Loader } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { z } from 'zod/v4';
-
+import { useGTM } from '~/hooks/use-gtm';
+import { usePostHog } from '~/hooks/use-posthog';
 import { authClient } from '~/lib/auth/client';
+import { POSTHOG_SOURCES } from '~/lib/posthog/constants';
 import { APP_ROUTES, buildUrl } from '~/utils/app-routes';
 import { SocialSignInButton } from '../../../components/social-sign-in-button';
 import TermsAndPrivacyNotice from '../../../components/terms-and-privacy-notice';
@@ -58,19 +60,61 @@ export default function SignUp() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const callbackURL = searchParams.get('redirect') ?? APP_ROUTES.HOME;
+  const { trackEvent } = useGTM();
+  const { trackEvent: trackPostHogEvent } = usePostHog();
 
   const [isLoading, setIsLoading] = useState<LoadingState>({
     email: false,
   });
 
   const {
-    signIn: handleSocialSignIn,
+    signIn: socialSignIn,
     isLoading: socialLoading,
     error: providerError,
     loading: isSocialLoading,
   } = useSocialAuth({
     callbackURL,
   });
+
+  // Enhanced social sign in with tracking
+  const handleSocialSignIn = async (provider: 'discord' | 'google') => {
+    trackEvent({
+      event: 'signup_initiated',
+      form_location: 'sign-up-page',
+      method: provider as 'google' | 'github' | 'email',
+      timestamp: new Date().toISOString(),
+    });
+
+    // PostHog tracking
+    trackPostHogEvent({
+      event: 'signup_initiated',
+      form_location: 'sign-up-page',
+      method: provider,
+      source: POSTHOG_SOURCES.ORGANIC,
+      timestamp: new Date().toISOString(),
+    });
+
+    await socialSignIn(provider);
+  };
+
+  // Track signup initiated when component loads
+  useEffect(() => {
+    trackEvent({
+      event: 'signup_initiated',
+      form_location: 'sign-up-page',
+      method: 'email',
+      timestamp: new Date().toISOString(),
+    });
+
+    // PostHog tracking
+    trackPostHogEvent({
+      event: 'signup_initiated',
+      form_location: 'sign-up-page',
+      method: 'email',
+      source: POSTHOG_SOURCES.ORGANIC,
+      timestamp: new Date().toISOString(),
+    });
+  }, [trackEvent, trackPostHogEvent]);
 
   const loading = isLoading.email || isSocialLoading;
 
@@ -96,6 +140,43 @@ export default function SignUp() {
       password: values.password,
       fetchOptions: {
         onSuccess: () => {
+          // Track successful signup completion
+          trackEvent({
+            event: 'signup_completed',
+            user_id: `temp_user_${Date.now()}`,
+            method: 'email',
+            plan_type: 'free',
+            timestamp: new Date().toISOString(),
+          });
+
+          // Also track generate_lead for Google Ads
+          trackEvent({
+            event: 'generate_lead',
+            user_id: `temp_user_${Date.now()}`,
+            value: 0,
+            currency: 'USD',
+            timestamp: new Date().toISOString(),
+          });
+
+          // PostHog tracking
+          trackPostHogEvent({
+            event: 'signup_completed',
+            method: 'email',
+            plan_type: 'free',
+            source: POSTHOG_SOURCES.ORGANIC,
+            user_id: `temp_user_${Date.now()}`,
+            timestamp: new Date().toISOString(),
+          });
+
+          trackPostHogEvent({
+            event: 'generate_lead',
+            value: 0,
+            currency: 'USD',
+            source: POSTHOG_SOURCES.ORGANIC,
+            user_id: `temp_user_${Date.now()}`,
+            timestamp: new Date().toISOString(),
+          });
+
           router.push(
             buildUrl(APP_ROUTES.AUTH.VERIFY_EMAIL, { email: values.email })
           );

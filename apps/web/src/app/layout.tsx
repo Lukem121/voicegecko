@@ -1,30 +1,46 @@
 import { Toaster } from '@acme/ui/components/ui/sonner';
 import { ThemeProvider } from '@acme/ui/components/ui/theme';
 import { cn } from '@acme/ui/lib/utils';
+import { GoogleTagManager } from '@next/third-parties/google';
 import type { Metadata, Viewport } from 'next';
-import { Plus_Jakarta_Sans } from 'next/font/google';
-import localFont from 'next/font/local';
 import { NuqsAdapter } from 'nuqs/adapters/next/app';
-
+import { CurrencyProvider } from '~/providers/currency';
 import { TRPCReactProvider } from '~/trpc/react';
+import { plusJakartaSans, roobert } from './fonts';
 
 import '@acme/ui/globals.css';
-import { CurrencyProvider } from '~/providers/currency';
+import { PostHogUserIdentifier } from '~/components/posthog';
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://www.voicegecko.io'),
-  title: 'Voice Gecko',
-  description: 'Voice Gecko is a voice to text platform.',
+  title: 'VoiceGecko | Instant Voice-to-Text for Desktop',
+  description:
+    'Instant dictation for desktop. Press a shortcut, speak, and instantly get accurate text on your clipboard—perfect for emails, coding, AI prompts, or brain dumps.',
   openGraph: {
-    title: 'Voice Gecko',
-    description: 'Voice Gecko is a voice to text platform.',
+    title: 'VoiceGecko | Instant Voice-to-Text for Desktop',
+    description:
+      'Instant voice-to-text dictation for desktop. Press a shortcut, speak, and instantly get accurate text on your clipboard—perfect for emails, coding, AI prompts, or brain dumps.',
     url: 'https://www.voicegecko.io',
-    siteName: 'Voice Gecko',
+    siteName: 'VoiceGecko',
+    images: [
+      {
+        url: 'https://www.voicegecko.io/opengraph-image', // update with your OG image
+        width: 1200,
+        height: 630,
+        alt: 'VoiceGecko App Preview',
+      },
+    ],
+    locale: 'en_US',
+    type: 'website',
   },
   twitter: {
     card: 'summary_large_image',
     site: '@voicegecko',
     creator: '@voicegecko',
+    title: 'VoiceGecko | Instant Voice-to-Text for Desktop',
+    description:
+      'Instant voice-to-text dictation for desktop. Press a shortcut, speak, and instantly get accurate text on your clipboard—perfect for emails, coding, AI prompts, or brain dumps.',
+    images: ['https://www.voicegecko.io/opengraph-image'], // update with your image
   },
 };
 
@@ -35,36 +51,10 @@ export const viewport: Viewport = {
   ],
 };
 
-const plusJakartaSans = Plus_Jakarta_Sans({
-  subsets: ['latin'],
-  variable: '--font-plus-jakarta-sans',
-  weight: 'variable',
-});
-
-const roobert = localFont({
-  src: [
-    {
-      path: './fonts/Roobert/roobert-regular.woff2',
-      weight: '400',
-      style: 'normal',
-    },
-    {
-      path: './fonts/Roobert/roobert-medium.woff2',
-      weight: '500',
-      style: 'normal',
-    },
-    {
-      path: './fonts/Roobert/roobert-semibold.woff2',
-      weight: '600',
-      style: 'normal',
-    },
-  ],
-  variable: '--font-sans',
-});
-
 export default function RootLayout(props: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <GoogleTagManager gtmId="GTM-N623RRVD" />
       <body
         className={cn(
           'min-h-screen bg-background font-sans text-foreground antialiased',
@@ -75,7 +65,10 @@ export default function RootLayout(props: { children: React.ReactNode }) {
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <NuqsAdapter>
             <TRPCReactProvider>
-              <CurrencyProvider>{props.children}</CurrencyProvider>
+              <CurrencyProvider>
+                <PostHogUserIdentifier />
+                {props.children}
+              </CurrencyProvider>
             </TRPCReactProvider>
             <Toaster />
           </NuqsAdapter>

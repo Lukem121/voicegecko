@@ -25,9 +25,10 @@ import { useMutation } from '@tanstack/react-query';
 import { Loader } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { useState } from 'react';
-
+import { useEffect, useState } from 'react';
+import { usePostHog } from '~/hooks/use-posthog';
 import { authClient } from '~/lib/auth/client';
+import { POSTHOG_SOURCES } from '~/lib/posthog/constants';
 import { useTRPC } from '~/trpc/react';
 import { APP_ROUTES } from '~/utils/app-routes';
 import { countdown } from '~/utils/countdown';
@@ -50,6 +51,7 @@ export default function SignIn() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const callbackURL = searchParams.get('redirect') ?? APP_ROUTES.HOME;
+  const { trackEvent } = usePostHog();
 
   const getBanStatus = useMutation(trpc.auth.getBanStatus.mutationOptions());
 
@@ -59,13 +61,36 @@ export default function SignIn() {
   const [error, setError] = useState<string | null>(null);
 
   const {
-    signIn: handleSocialSignIn,
+    signIn: socialSignIn,
     isLoading: socialLoading,
     error: providerError,
     loading: isSocialLoading,
   } = useSocialAuth({
     callbackURL,
   });
+
+  // Enhanced social sign in with tracking
+  const handleSocialSignIn = async (provider: 'discord' | 'google') => {
+    trackEvent({
+      event: 'login_initiated',
+      form_location: 'sign-in-page',
+      method: provider,
+      source: POSTHOG_SOURCES.ORGANIC,
+      timestamp: new Date().toISOString(),
+    });
+    await socialSignIn(provider);
+  };
+
+  // Track login initiated when component loads
+  useEffect(() => {
+    trackEvent({
+      event: 'login_initiated',
+      form_location: 'sign-in-page',
+      method: 'email',
+      source: POSTHOG_SOURCES.ORGANIC,
+      timestamp: new Date().toISOString(),
+    });
+  }, [trackEvent]);
 
   const loading = isLoading.email || isSocialLoading;
 
@@ -85,7 +110,18 @@ export default function SignIn() {
       email: values.email,
       password: values.password,
       fetchOptions: {
-        onSuccess: () => router.push(callbackURL),
+        onSuccess: () => {
+          // Track successful login completion
+          trackEvent({
+            event: 'login_completed',
+            method: 'email',
+            source: POSTHOG_SOURCES.ORGANIC,
+            user_id: `user_${Date.now()}`, // This will be replaced by PostHog's identify
+            timestamp: new Date().toISOString(),
+          });
+
+          router.push(callbackURL);
+        },
       },
     });
 

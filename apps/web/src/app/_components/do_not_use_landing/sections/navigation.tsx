@@ -10,7 +10,7 @@ import {
   navigationMenuTriggerStyle,
 } from '@acme/ui/components/ui/navigation-menu';
 import { cn } from '@acme/ui/lib/utils';
-import { AnimatePresence, motion } from 'framer-motion';
+import { AnimatePresence, motion } from 'motion/react';
 import Link from 'next/link';
 import type React from 'react';
 import { useState } from 'react';

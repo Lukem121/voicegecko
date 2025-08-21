@@ -86,25 +86,34 @@ export default function TalkToAISection() {
             >
               {/* Gradient background */}
               <div
-                className="relative flex aspect-square items-center justify-center rounded-3xl p-4 md:p-6"
+                className="relative flex aspect-square items-center justify-center rounded-3xl bg-white"
                 style={{
                   maxWidth: 'clamp(18rem, 35vw, 26rem)',
                   margin: '0 auto',
                 }}
               >
-                <Image
+                {/* <Image
                   alt=""
                   className="absolute inset-0 h-full w-full rounded-3xl object-cover object-left"
                   height={400}
                   src="/assets/images/landing-page/gradient-1.png"
                   width={400}
-                />
-                <Image
+                /> */}
+                {/* <Image
                   alt="Gecko with laptop and microphone for voice input"
                   className="relative z-10 h-auto max-w-[85%] md:max-w-[90%]"
                   height={250}
                   src="/assets/images/geckos/gecko-laptop-w-mic.png"
                   width={250}
+                /> */}
+                <video
+                  autoPlay
+                  className="h-full w-full rounded-3xl object-cover"
+                  height={960}
+                  loop
+                  muted
+                  src="/assets/images/geckos/gecko-talking.mp4"
+                  width={960}
                 />
               </div>
             </motion.div>
