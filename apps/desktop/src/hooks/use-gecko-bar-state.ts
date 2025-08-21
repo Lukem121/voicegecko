@@ -1,4 +1,5 @@
 import { log } from '@acme/observability/log';
+import { invoke } from '@tauri-apps/api/core';
 import { emit } from '@tauri-apps/api/event';
 import { useCallback, useEffect, useState } from 'react';
 import { TIMINGS } from '~/components/gecko-bar/gecko-bar-app.constants';
@@ -24,6 +25,10 @@ export function useGeckoBarState(): UseGeckoBarStateReturn {
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [wasRecentlyRecording, setWasRecentlyRecording] = useState(false);
 
+  // Pass-through mode state
+  const [isPassthroughMode, setIsPassthroughMode] = useState(false);
+  const [passthroughTimeRemaining, setPassthroughTimeRemaining] = useState(0);
+
   // External state from main event store
   const recordingStatus = useEventStore(
     (recordingState) => recordingState.recordingStatus
@@ -36,7 +41,12 @@ export function useGeckoBarState(): UseGeckoBarStateReturn {
   );
 
   // Centralized display state machine (single source of truth)
-  const { displayState } = useGeckoBarDisplayState(isHovered, isLoading);
+  const { displayState } = useGeckoBarDisplayState(
+    isHovered,
+    isLoading,
+    isPassthroughMode,
+    `Can click apps behind (${passthroughTimeRemaining}s)`
+  );
 
   // Other hooks
   const timeoutManager = useTimeoutManager();
@@ -231,10 +241,69 @@ export function useGeckoBarState(): UseGeckoBarStateReturn {
     [isLoading, isRecording]
   );
 
+  // Right-click handler for pass-through mode
+  const handleRightClick = useCallback(
+    async (e: React.MouseEvent<HTMLElement>) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      if (isPassthroughMode || isLoading) {
+        return;
+      }
+
+      log.info('[GeckoBar] 👆 Activating pass-through mode for 5 seconds');
+
+      try {
+        // Enable pass-through mode in Tauri
+        await invoke('set_gecko_bar_cursor_passthrough', { ignore: true });
+
+        setIsPassthroughMode(true);
+        setPassthroughTimeRemaining(5);
+
+        // Start countdown timer
+        let timeLeft = 5;
+        const countdownInterval = setInterval(() => {
+          timeLeft -= 1;
+          setPassthroughTimeRemaining(timeLeft);
+
+          if (timeLeft <= 0) {
+            clearInterval(countdownInterval);
+          }
+        }, 1000);
+
+        // Set timeout to disable pass-through after 5 seconds
+        timeoutManager.setTimeout(
+          'passthrough',
+          async () => {
+            try {
+              await invoke('set_gecko_bar_cursor_passthrough', {
+                ignore: false,
+              });
+              setIsPassthroughMode(false);
+              setPassthroughTimeRemaining(0);
+              clearInterval(countdownInterval);
+              log.info('[GeckoBar] ✋ Pass-through mode disabled');
+            } catch (error) {
+              log.error(
+                '[GeckoBar] Failed to disable pass-through mode:',
+                error
+              );
+            }
+          },
+          5000
+        );
+      } catch (error) {
+        log.error('[GeckoBar] Failed to enable pass-through mode:', error);
+      }
+    },
+    [isPassthroughMode, isLoading, timeoutManager]
+  );
+
   const handlers: GeckoBarEventHandlers = {
     onMouseEnter: handleMouseEnter,
     onMouseLeave: handleMouseLeave,
     onClick: handleClick,
+    onRightClick: handleRightClick,
     onCancel: handleCancel,
     onFinish: handleFinish,
   };
@@ -250,6 +319,8 @@ export function useGeckoBarState(): UseGeckoBarStateReturn {
     visualizerActive: audioProcessor.isActive,
     audioLevel: audioProcessor.audioLevel,
     tooltipMessage: displayState.tooltipMessage,
+    isPassthroughMode,
+    passthroughTimeRemaining,
   };
 
   return { state, handlers, safeToCollapse };

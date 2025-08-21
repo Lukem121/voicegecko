@@ -6,6 +6,7 @@ export type TimeoutState = {
   collapse: number | null;
   tooltip: number | null;
   cleanup: number | null;
+  passthrough: number | null;
 };
 
 export type TimeoutManager = {
@@ -45,6 +46,8 @@ export type GeckoBarState = {
   visualizerActive: boolean;
   audioLevel: AudioLevelEvent;
   tooltipMessage?: string;
+  isPassthroughMode: boolean;
+  passthroughTimeRemaining: number;
 };
 
 // Event handler types
@@ -52,6 +55,7 @@ export type GeckoBarEventHandlers = {
   onMouseEnter: () => void;
   onMouseLeave: () => void;
   onClick: () => void | Promise<void>;
+  onRightClick: (e: React.MouseEvent<HTMLElement>) => Promise<void>;
   onCancel: (e: React.MouseEvent<HTMLButtonElement>) => Promise<void>;
   onFinish: (e: React.MouseEvent<HTMLButtonElement>) => Promise<void>;
 };
@@ -92,6 +96,7 @@ export type GeckoBarTooltipProps = {
   show: boolean;
   isRecording: boolean;
   message?: string;
+  isPassthroughMode?: boolean;
 };
 
 export type GeckoBarButtonProps = {
