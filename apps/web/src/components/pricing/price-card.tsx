@@ -1,7 +1,6 @@
 'use client';
 
 import { cn } from '@acme/ui/lib/utils';
-import { motion } from 'motion/react';
 import { HiCheck, HiX } from 'react-icons/hi';
 import { UpgradeButton } from './upgrade-button';
 
@@ -25,6 +24,7 @@ export type PriceCardProps = {
   subtitle?: string;
   popular?: boolean;
   period?: string;
+  loading?: boolean;
 };
 
 function PriceCardHeader({
@@ -35,6 +35,7 @@ function PriceCardHeader({
   price,
   highlight,
   subtitle,
+  loading = false,
 }: {
   name: string;
   popular?: boolean;
@@ -43,6 +44,7 @@ function PriceCardHeader({
   price: string;
   highlight?: boolean;
   subtitle?: string;
+  loading?: boolean;
 }) {
   return (
     <div
@@ -60,30 +62,40 @@ function PriceCardHeader({
         )}
       </div>
       <div className="flex items-end gap-2 pt-1">
-        {originalPrice && (
-          <span className="font-medium text-muted-foreground/70 text-sm line-through">
-            {originalPrice}/{period}
-          </span>
+        {loading && highlight ? (
+          <div className="h-4 w-16 animate-pulse rounded bg-muted" />
+        ) : (
+          originalPrice && (
+            <span className="font-medium text-muted-foreground/70 text-sm line-through">
+              {originalPrice}/{period}
+            </span>
+          )
         )}
       </div>
       <div className={cn('flex items-baseline pt-1', originalPrice && 'pt-0')}>
-        <span
-          className={cn(
-            'font-bold text-3xl',
-            highlight ? 'text-foreground' : 'text-foreground'
-          )}
-        >
-          {price === '$0' ? 'Free' : price}
-        </span>
-        {price !== '$0' && (
-          <span className="ml-1 font-medium text-muted-foreground text-sm">
-            /{period}
-          </span>
-        )}
-        {highlight && originalPrice && (
-          <span className="ml-2 inline-flex items-center rounded-md bg-emerald-500/10 px-1.5 py-0.5 font-semibold text-[11px] text-emerald-600 ring-1 ring-emerald-500/20">
-            Save
-          </span>
+        {loading && price !== '$0' ? (
+          <div className="h-9 w-24 animate-pulse rounded-md bg-muted" />
+        ) : (
+          <>
+            <span
+              className={cn(
+                'font-bold text-3xl',
+                highlight ? 'text-foreground' : 'text-foreground'
+              )}
+            >
+              {price === '$0' ? 'Free' : price}
+            </span>
+            {price !== '$0' && (
+              <span className="ml-1 font-medium text-muted-foreground text-sm">
+                /{period}
+              </span>
+            )}
+            {highlight && originalPrice && (
+              <span className="ml-2 inline-flex items-center rounded-md bg-emerald-500/10 px-1.5 py-0.5 font-semibold text-[11px] text-emerald-600 ring-1 ring-emerald-500/20">
+                Save
+              </span>
+            )}
+          </>
         )}
       </div>
       <p className="pt-1 pb-1.5 font-medium text-[15px] text-muted-foreground">
@@ -152,10 +164,10 @@ export function PriceCard({
   subtitle,
   popular,
   period = 'month',
+  loading = false,
 }: PriceCardProps) {
   return (
-    <motion.div
-      animate={{ opacity: 1, y: 0 }}
+    <div
       className={cn(
         'relative grid h-full w-full grid-rows-[170px_1fr_auto] overflow-hidden rounded-2xl bg-card shadow-sm transition-all',
         highlight
@@ -163,11 +175,10 @@ export function PriceCard({
           : 'ring-1 ring-border/70',
         highlight && 'border-2 border-primary'
       )}
-      initial={{ opacity: 0, y: 20 }}
-      transition={{ duration: 0.4, delay: highlight ? 0.08 : 0 }}
     >
       <PriceCardHeader
         highlight={highlight}
+        loading={loading}
         name={name}
         originalPrice={originalPrice}
         period={period}
@@ -200,6 +211,6 @@ export function PriceCard({
           <div className="absolute inset-0 rounded-2xl bg-primary/10" />
         </div>
       )}
-    </motion.div>
+    </div>
   );
 }

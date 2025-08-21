@@ -24,9 +24,11 @@ type BillingPeriod = 'monthly' | 'yearly';
 export default function PricingSection({
   prices,
   pricingError,
+  loading = false,
 }: {
   prices: Record<string, PriceWithMetadata> | null;
   pricingError?: string;
+  loading?: boolean;
 }) {
   const { data: session } = authClient.useSession();
   const [billingPeriod, setBillingPeriod] = useState<BillingPeriod>('yearly');
@@ -76,7 +78,7 @@ export default function PricingSection({
         </div>
       </div>
       <div>
-        <div className="mt-6 grid gap-6 md:grid-cols-2">
+        <div className="mt-6 grid h-[33rem] gap-6 md:grid-cols-2">
           <PriceCard
             cta={isLoggedIn ? 'Download App' : 'Get Started'}
             features={
@@ -129,6 +131,7 @@ export default function PricingSection({
             highlight
             isAnnual={isYearly}
             isLoggedIn={isLoggedIn}
+            loading={loading}
             name="Pro"
             originalPrice={
               isYearly

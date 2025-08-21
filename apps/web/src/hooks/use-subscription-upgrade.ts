@@ -1,5 +1,4 @@
 import { toast } from '@acme/ui/components/ui/sonner';
-import { usePaymentRedirection } from '@acme/ui/hooks/use-redirection';
 import { useQuery } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { parseAsBoolean, useQueryState } from 'nuqs';
@@ -10,6 +9,7 @@ import { POSTHOG_SOURCES } from '~/lib/posthog/constants';
 import { useTRPC } from '~/trpc/react';
 import { useCurrency } from '../providers/currency';
 import { usePostHog } from './use-posthog';
+import { usePaymentRedirection } from './use-redirection-nextjs';
 
 export type SubscriptionPlan = 'voice gecko pro';
 
