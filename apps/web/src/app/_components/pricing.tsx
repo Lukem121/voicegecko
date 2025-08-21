@@ -24,11 +24,9 @@ type BillingPeriod = 'monthly' | 'yearly';
 export default function PricingSection({
   prices,
   pricingError,
-  loading = false,
 }: {
   prices: Record<string, PriceWithMetadata> | null;
   pricingError?: string;
-  loading?: boolean;
 }) {
   const { data: session } = authClient.useSession();
   const [billingPeriod, setBillingPeriod] = useState<BillingPeriod>('yearly');
@@ -131,7 +129,6 @@ export default function PricingSection({
             highlight
             isAnnual={isYearly}
             isLoggedIn={isLoggedIn}
-            loading={loading}
             name="Pro"
             originalPrice={
               isYearly

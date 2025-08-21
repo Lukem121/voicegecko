@@ -623,6 +623,9 @@ importers:
       '@acme/email':
         specifier: workspace:*
         version: link:../email
+      '@acme/notifications':
+        specifier: workspace:*
+        version: link:../notifications
       '@acme/observability':
         specifier: workspace:*
         version: link:../observability
