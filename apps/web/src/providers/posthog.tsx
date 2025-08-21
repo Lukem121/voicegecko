@@ -7,6 +7,13 @@ posthog.init(env.NEXT_PUBLIC_POSTHOG_KEY, {
   defaults: '2025-05-24',
 });
 
+// Set global properties to identify web app events
+posthog.register({
+  platform: 'web',
+  app_name: 'voicegecko-web',
+  source: 'web-app',
+});
+
 export default function PostHogProvider({
   children,
 }: {
