@@ -7,7 +7,7 @@ import {
 } from '@acme/ui/components/ui/card';
 import { Progress } from '@acme/ui/components/ui/progress';
 import { Skeleton } from '@acme/ui/components/ui/skeleton';
-import { createCrossPlatformUrl } from '@acme/ui/lib/redirection';
+import { createCrossPlatformUrl } from '@acme/utils/redirection';
 import { useQuery } from '@tanstack/react-query';
 import { createFileRoute } from '@tanstack/react-router';
 import { open } from '@tauri-apps/plugin-shell';
@@ -269,7 +269,7 @@ function UsagePage() {
                   `${websiteUrl}/app/plans`,
                   {
                     feature: 'upgrade',
-                    source: 'usage_page',
+                    source: 'desktop',
                     metadata: {
                       trigger: 'upgrade_button',
                       plan_suggested: 'pro',

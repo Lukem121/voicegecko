@@ -1,11 +1,11 @@
 import { sendPaymentFailedEmail } from '@acme/email/send/payment-failed';
-
+import { DiscordAdapter } from '@acme/notifications/discord-adapter';
 import { log } from '@acme/observability/log';
 import type { Subscription } from '@better-auth/stripe';
 import type { Stripe } from 'stripe';
 
 import { paymentEnv } from '../../env';
-import { getUserForEmail } from './user-lookup';
+import { getUserForEmail, type UserForEmail } from './user-lookup';
 
 type SubscriptionUpdateParams = {
   event: Stripe.Event;
@@ -28,6 +28,14 @@ export const onSubscriptionUpdate = async ({
   const isPaymentFailure =
     subscription.status === 'past_due' || subscription.status === 'unpaid';
 
+  // Get user information for both email and Discord notification
+  let user: UserForEmail | null = null;
+  try {
+    user = await getUserForEmail(subscription.referenceId);
+  } catch (error) {
+    log.error('[Subscription] Error fetching user for notifications:', error);
+  }
+
   if (isPaymentFailure) {
     log.info(
       `[Subscription] Payment failure detected for subscription ${subscription.id} with status: ${subscription.status}`
@@ -35,7 +43,6 @@ export const onSubscriptionUpdate = async ({
 
     // Send payment failed email to the user
     try {
-      const user = await getUserForEmail(subscription.referenceId);
       if (user) {
         // Create retry payment URL - user can manage subscription through billing portal
         const retryPaymentUrl = `${paymentEnv().NEXT_PUBLIC_VOICEGECKO_URL || 'https://voicegecko.io'}/app/billing`;
@@ -58,6 +65,37 @@ export const onSubscriptionUpdate = async ({
     } catch (error) {
       log.error('[Subscription] Error sending payment failed email:', error);
     }
+  }
+
+  // Send Discord notification for subscription update
+  try {
+    const discordAdapter = new DiscordAdapter();
+    await discordAdapter.sendSubscriptionEvent({
+      subscriptionId: subscription.id,
+      eventType: 'updated',
+      userId: subscription.referenceId,
+      planName: subscription.plan || 'VoiceGecko Pro',
+      status: subscription.status,
+      email: user?.email,
+      username: user?.name,
+      cancelAtPeriodEnd: subscription.cancelAtPeriodEnd,
+      periodEnd: subscription.periodEnd
+        ? new Date(subscription.periodEnd).toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+          })
+        : undefined,
+      additionalContext: isPaymentFailure
+        ? { paymentFailure: true, failureType: subscription.status }
+        : undefined,
+      timestamp: new Date().toISOString(),
+    });
+    log.info(
+      `[Subscription] Discord notification sent for updated subscription ${subscription.id}`
+    );
+  } catch (error) {
+    log.error('[Subscription] Error sending Discord notification:', error);
   }
 
   // No special handling needed - our usage service already checks

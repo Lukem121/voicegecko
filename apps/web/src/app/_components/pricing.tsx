@@ -76,7 +76,7 @@ export default function PricingSection({
         </div>
       </div>
       <div>
-        <div className="mt-6 grid gap-6 md:grid-cols-2">
+        <div className="mt-6 grid h-[33rem] gap-6 md:grid-cols-2">
           <PriceCard
             cta={isLoggedIn ? 'Download App' : 'Get Started'}
             features={

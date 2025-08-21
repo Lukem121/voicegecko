@@ -1,7 +1,6 @@
 'use client';
 
 import { cn } from '@acme/ui/lib/utils';
-import { motion } from 'motion/react';
 import { HiCheck, HiX } from 'react-icons/hi';
 import { UpgradeButton } from './upgrade-button';
 
@@ -154,8 +153,7 @@ export function PriceCard({
   period = 'month',
 }: PriceCardProps) {
   return (
-    <motion.div
-      animate={{ opacity: 1, y: 0 }}
+    <div
       className={cn(
         'relative grid h-full w-full grid-rows-[170px_1fr_auto] overflow-hidden rounded-2xl bg-card shadow-sm transition-all',
         highlight
@@ -163,8 +161,6 @@ export function PriceCard({
           : 'ring-1 ring-border/70',
         highlight && 'border-2 border-primary'
       )}
-      initial={{ opacity: 0, y: 20 }}
-      transition={{ duration: 0.4, delay: highlight ? 0.08 : 0 }}
     >
       <PriceCardHeader
         highlight={highlight}
@@ -200,6 +196,6 @@ export function PriceCard({
           <div className="absolute inset-0 rounded-2xl bg-primary/10" />
         </div>
       )}
-    </motion.div>
+    </div>
   );
 }
