@@ -6,13 +6,15 @@ import { motion } from 'motion/react';
 import Image from 'next/image';
 import { FaWindows } from 'react-icons/fa';
 import { usePostHog } from '~/hooks/use-posthog';
+import { useStartDownload } from '~/hooks/use-start-download';
 import { POSTHOG_SOURCES } from '~/lib/posthog/constants';
-import { APP_ROUTES } from '~/utils/app-routes';
+// import { APP_ROUTES } from '~/utils/app-routes';
 import SectionWrapper from './section-wrapper';
 import Logo from './svgs/logo';
 
 export default function FinalCtaSection() {
   const { trackEvent } = usePostHog();
+  const { startDownload } = useStartDownload();
 
   const handleFinalCTAClick = () => {
     trackEvent({
@@ -68,17 +70,20 @@ export default function FinalCtaSection() {
 
             {/* CTA Button */}
             <div className="mt-8">
-              <a
+              <button
                 className={cn(
                   buttonVariants({ variant: 'default', size: 'lg' }),
                   'gap-2 bg-primary px-6 py-3 text-white'
                 )}
-                href={APP_ROUTES.MARKETING.DOWNLOAD}
-                onClick={handleFinalCTAClick}
+                onClick={() => {
+                  handleFinalCTAClick();
+                  startDownload({ source: 'final_cta' });
+                }}
+                type="button"
               >
                 <FaWindows aria-hidden className="h-4 w-4" />
                 <span>Download for Windows</span>
-              </a>
+              </button>
             </div>
           </motion.div>
 

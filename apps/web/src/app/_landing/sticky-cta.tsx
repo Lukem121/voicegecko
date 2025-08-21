@@ -9,13 +9,15 @@ import React from 'react';
 import { FaWindows } from 'react-icons/fa';
 import { HiX } from 'react-icons/hi';
 import { usePostHog } from '~/hooks/use-posthog';
+// import { APP_ROUTES } from '~/utils/app-routes';
+import { useStartDownload } from '~/hooks/use-start-download';
 import { POSTHOG_SOURCES } from '~/lib/posthog/constants';
-import { APP_ROUTES } from '~/utils/app-routes';
 
 export default function StickyCta() {
   const [show, setShow] = React.useState(false);
   const [dismissed, setDismissed] = React.useState(false);
   const { trackEvent } = usePostHog();
+  const { startDownload } = useStartDownload();
 
   const handleStickyCTAClick = () => {
     trackEvent({
@@ -83,17 +85,20 @@ export default function StickyCta() {
 
             {/* CTA button */}
             <div className="ml-auto w-full sm:w-auto">
-              <a
+              <button
                 className={cn(
                   buttonVariants({ variant: 'default', size: 'default' }),
                   'w-full gap-2 px-4 py-2.5 text-white sm:w-auto sm:px-6 sm:text-base'
                 )}
-                href={APP_ROUTES.MARKETING.DOWNLOAD}
-                onClick={handleStickyCTAClick}
+                onClick={() => {
+                  handleStickyCTAClick();
+                  startDownload({ source: 'sticky_cta' });
+                }}
+                type="button"
               >
                 <FaWindows aria-hidden className="h-4 w-4" />
                 <span>Download for Windows</span>
-              </a>
+              </button>
             </div>
           </div>
         </motion.div>
