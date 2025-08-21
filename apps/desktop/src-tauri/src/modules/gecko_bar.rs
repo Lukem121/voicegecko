@@ -290,6 +290,18 @@ pub fn reposition_gecko_bar(app: AppHandle) -> Result<(), String> {
 }
 
 #[tauri::command]
+pub fn set_gecko_bar_cursor_passthrough(app: AppHandle, ignore: bool) -> Result<(), String> {
+    if let Some(window) = app.get_webview_window("gecko-bar") {
+        window
+            .set_ignore_cursor_events(ignore)
+            .map_err(|e| e.to_string())?;
+        Ok(())
+    } else {
+        Err("Gecko bar window not found".to_string())
+    }
+}
+
+#[tauri::command]
 pub fn is_fullscreen_app_active(_app: AppHandle) -> Result<bool, String> {
     #[cfg(target_os = "windows")]
     {

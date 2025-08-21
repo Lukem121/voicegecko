@@ -1,3 +1,4 @@
+import { cn } from '@acme/ui/lib/utils';
 import { motion } from 'motion/react';
 import { ANIMATIONS } from './gecko-bar-app.constants';
 import type { GeckoBarTooltipProps } from './gecko-bar-app.types';
@@ -6,6 +7,7 @@ export function GeckoBarTooltip({
   show,
   isRecording,
   message,
+  isPassthroughMode = false,
 }: GeckoBarTooltipProps) {
   if (!show || isRecording) {
     return null;
@@ -30,7 +32,12 @@ export function GeckoBarTooltip({
         duration: ANIMATIONS.TOOLTIP.DURATION,
       }}
     >
-      <div className="whitespace-nowrap rounded-full border border-border bg-background px-3 py-1.5 text-foreground text-sm shadow-lg">
+      <div
+        className={cn(
+          'whitespace-nowrap rounded-full border border-border bg-background px-3 py-1.5 text-foreground text-sm shadow-lg',
+          isPassthroughMode && 'opacity-50'
+        )}
+      >
         {displayMessage}
       </div>
     </motion.div>
