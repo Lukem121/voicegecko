@@ -4,6 +4,7 @@ import { shortcutManager } from '~/lib/shortcuts/manager';
 import type { ShortcutCategory } from '~/lib/shortcuts/types';
 import { useShortcutStore } from '~/lib/stores/shortcut-store';
 import { isGeckoBarWindow } from '~/lib/window-detection';
+import { subscribeToSessionChanges, useAuthStore } from './auth.store';
 import { useConnectivityStore } from './connectivity.store';
 import { useSettingsStore } from './settings.store';
 
@@ -104,8 +105,18 @@ storeRegistry.register({
 });
 
 storeRegistry.register({
+  name: 'Auth Store',
+  priority: 2, // Initialize after settings, before connectivity
+  initialize: async () => {
+    await useAuthStore.getState().initialize();
+    // Subscribe to TanStack Query session changes
+    subscribeToSessionChanges();
+  },
+});
+
+storeRegistry.register({
   name: 'Connectivity Store',
-  priority: 2, // Initialize after settings, before shortcuts
+  priority: 3, // Initialize after auth, before shortcuts
   initialize: async () => {
     await Promise.resolve();
     // Activate connectivity monitoring for transcription blocking
@@ -116,7 +127,7 @@ storeRegistry.register({
 
 storeRegistry.register({
   name: 'Shortcuts',
-  priority: 3, // Initialize after connectivity
+  priority: 4, // Initialize after connectivity
   initialize: async () => {
     // Load shortcuts from disk into the store (for UI display)
     const store = shortcutManager.getStore();

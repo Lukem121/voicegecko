@@ -1,12 +1,12 @@
 import { log } from '@acme/observability/log';
 import { invoke } from '@tauri-apps/api/core';
-import { toast } from 'sonner';
 
 import {
   showNoInternetNotification,
   showUsageLimitNotification,
 } from '~/lib/gecko-bar-notifications';
 import { performanceTracker } from '~/lib/performance-tracker';
+import { useAuthStore } from '~/stores/auth.store';
 import { useConnectivityStore } from '~/stores/connectivity.store';
 import { useEventStore } from '~/stores/event.store';
 import { useSettingsStore } from '~/stores/settings.store';
@@ -127,18 +127,29 @@ export class RecordingService {
    */
   private async startRecording(options: RecordingOptions): Promise<void> {
     try {
-      // Check connectivity first - block recording if API is unavailable
+      // Check authentication first - block recording if user is not authenticated
+      const authState = useAuthStore.getState();
+
+      if (!authState.isAuthenticated) {
+        log.info(
+          '[RecordingService] User not authenticated - blocking recording'
+        );
+
+        // Show notification for keyboard shortcuts
+        if (options.isKeyboardShortcut) {
+          log.info('Sign in required');
+        }
+
+        return; // Don't start recording
+      }
+
+      // Check connectivity second - block recording if API is unavailable
       const connectivityState = useConnectivityStore.getState();
 
       if (!connectivityState.canSaveTranscriptions) {
         // Show gecko bar notification for all blocked attempts
         // (both keyboard shortcuts and manual clicks should get feedback)
         await showNoInternetNotification();
-
-        // Show toast for all cases
-        toast.error('No internet connection', {
-          description: 'Internet connection required for transcriptions',
-        });
 
         return; // Don't start recording
       }
@@ -161,11 +172,6 @@ export class RecordingService {
         if (options.isKeyboardShortcut) {
           await showUsageLimitNotification();
         }
-
-        // Show toast for all cases
-        toast.error('Usage limit reached', {
-          description: 'Upgrade to Pro for unlimited transcriptions',
-        });
 
         return; // Don't start recording
       }
@@ -194,7 +200,6 @@ export class RecordingService {
       await invoke('start_recording', { device: deviceName });
     } catch (error) {
       log.error('Failed to start recording:', error);
-      toast.error('Failed to start recording');
       throw error;
     }
   }
@@ -250,7 +255,6 @@ export class RecordingService {
     } catch (error) {
       log.error('Failed to stop recording:', error);
 
-      toast.error('Failed to stop recording');
       throw error;
     }
   }
@@ -278,7 +282,6 @@ export class RecordingService {
       log.info('[RecordingService] Recording canceled successfully');
     } catch (error) {
       log.error('Failed to cancel recording:', error);
-      toast.error('Failed to cancel recording');
       throw error;
     }
   }

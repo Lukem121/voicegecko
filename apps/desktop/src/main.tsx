@@ -12,7 +12,7 @@ import ReactDOM from 'react-dom/client';
 
 import { AppLauncher } from '~/components/app-launcher';
 import { FullscreenDetector } from '~/components/fullscreen-detector';
-import { GeckoBarApp } from '~/components/gecko-bar/gecko-bar-app';
+import { GeckoBarWindow } from '~/components/gecko-bar-window';
 import { useAuthWithConnectivity } from '~/hooks/use-auth-with-connectivity';
 import { appLifecycle } from '~/lib/app-lifecycle';
 import { isGeckoBarWindow } from '~/lib/window-detection';
@@ -147,9 +147,9 @@ function App() {
     }
   }, [isGeckoBar]);
 
-  // If this is the gecko bar window, render the gecko bar app directly
+  // If this is the gecko bar window, render the gecko bar app with essential initialization
   if (isGeckoBar) {
-    return <GeckoBarApp />;
+    return <GeckoBarWindow />;
   }
 
   // Otherwise, this is the main window

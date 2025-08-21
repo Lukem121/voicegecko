@@ -170,6 +170,7 @@ export function useGeckoBarDisplayState(
     refetchInterval: 30_000,
   });
 
+  // Check usage limits (auth is now enforced at service level)
   const canTranscribe = !usageStatus || usageStatus.canTranscribe;
 
   // Helper functions for state management
