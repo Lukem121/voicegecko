@@ -1,7 +1,7 @@
 'use client';
 
 import { log } from '@acme/observability/log';
-import { clearUserIntent, retrieveUserIntent } from '@acme/ui/lib/redirection';
+import { clearUserIntent, retrieveUserIntent } from '@acme/utils/redirection';
 import { useEffect, useState } from 'react';
 
 export type DesktopRedirectHandlerProps = {

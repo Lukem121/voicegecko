@@ -5,7 +5,8 @@ import { Separator } from '@acme/ui/components/ui/separator';
 import type { Metadata } from 'next';
 import { unstable_cache } from 'next/cache';
 import Link from 'next/link';
-import PricingWrapper from '~/app/_components/pricing-wrapper';
+import { Suspense } from 'react';
+import PricingSection from '~/app/_components/pricing';
 import Section from '~/app/_components/section';
 
 export const metadata: Metadata = {
@@ -27,6 +28,14 @@ const getCachedPricingData = unstable_cache(
   { revalidate: 7200, tags: ['pricing', 'marketing'] }
 );
 
+function PricingSectionWithLoading({
+  prices,
+}: {
+  prices: Record<string, PriceWithMetadata> | null;
+}) {
+  return <PricingSection loading={!prices} prices={prices} />;
+}
+
 export default async function PricingPage() {
   let prices: Record<string, PriceWithMetadata> | null = null;
   try {
@@ -38,7 +47,9 @@ export default async function PricingPage() {
   return (
     <>
       {/* Primary pricing cards reused from landing, with live prices when available */}
-      <PricingWrapper prices={prices} />
+      <Suspense fallback={<PricingSectionWithLoading prices={null} />}>
+        <PricingSectionWithLoading prices={prices} />
+      </Suspense>
       <Section className="py-6 md:py-12">
         {/* Plan comparison */}
         <section className="">

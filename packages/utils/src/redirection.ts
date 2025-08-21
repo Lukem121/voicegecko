@@ -18,6 +18,8 @@ export type UserIntent = {
     feature?: string;
     /** Any additional metadata */
     metadata?: Record<string, unknown>;
+    /** Flag indicating this is a post-payment flow */
+    postPaymentFlow?: boolean;
   };
   /** Timestamp when intent was stored */
   timestamp: number;
@@ -232,7 +234,7 @@ export function createCrossPlatformUrl(
   webUrl: string,
   desktopContext: {
     feature?: string;
-    source?: string;
+    source?: 'desktop' | 'web' | 'direct' | 'external';
     metadata?: Record<string, unknown>;
   } = {}
 ): string {

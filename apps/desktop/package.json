@@ -23,6 +23,7 @@
     "@acme/auth": "workspace:*",
     "@acme/observability": "workspace:*",
     "@acme/ui": "workspace:*",
+    "@acme/utils": "workspace:*",
     "@daveyplate/better-auth-tauri": "^0.0.24",
     "@hookform/resolvers": "^5.2.1",
     "@tailwindcss/vite": "^4.1.12",
