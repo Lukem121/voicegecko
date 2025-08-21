@@ -78,6 +78,7 @@ export default function FinalCtaSection() {
                 onClick={() => {
                   handleFinalCTAClick();
                   startDownload({ source: 'final_cta' });
+                  // Success page no longer needs query params
                 }}
                 type="button"
               >
