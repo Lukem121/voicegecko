@@ -76,6 +76,7 @@ export default function HeroSection() {
             onClick={() => {
               handleHeroCTAClick();
               startDownload({ source: 'landing_page' });
+              // Success page no longer needs query params
             }}
             type="button"
           >

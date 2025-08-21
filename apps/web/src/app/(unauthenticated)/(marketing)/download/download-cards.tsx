@@ -264,16 +264,10 @@ function PlatformCard({
     document.body.removeChild(link);
     log.info(`Download initiated: ${download.name}`);
 
-    // Navigate to success page with file metadata
+    // Navigate to success page (Windows-only flow; no query params needed)
     try {
-      const params = new URLSearchParams({
-        os: osType,
-        file_name: download.name,
-        file_url: download.url,
-      });
-      // Small timeout to allow the browser to register the download click
       setTimeout(() => {
-        router.push(`/download/success?${params.toString()}`);
+        router.push('/download/success');
       }, 50);
     } catch {
       // no-op

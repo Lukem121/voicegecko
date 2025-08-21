@@ -93,6 +93,7 @@ export default function StickyCta() {
                 onClick={() => {
                   handleStickyCTAClick();
                   startDownload({ source: 'sticky_cta' });
+                  // Success page no longer needs query params
                 }}
                 type="button"
               >

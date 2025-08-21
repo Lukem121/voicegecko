@@ -76,16 +76,7 @@ export function useStartDownload() {
         a.click();
         document.body.removeChild(a);
 
-        // Redirect to success page with metadata
-        const params = new URLSearchParams({
-          os: 'windows',
-          file_name: primary.name,
-          file_url: primary.url,
-        });
-        setTimeout(
-          () => router.push(`/download/success?${params.toString()}`),
-          50
-        );
+        setTimeout(() => router.push('/download/success'), 50);
       } catch (error) {
         log.error('Failed to start download from landing CTA', error);
         // As a fallback, go to the regular download page

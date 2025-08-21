@@ -1,10 +1,12 @@
 Todo
 
-- [ ]
+- [ ] Like, since we can't click through the gecko bar, let's have a system so that if they just right-click on the gecko bar, it will let the user show some options like a context menu such as click to hide for 10 seconds or something like that.
+- [ ] Geckobar works even if we are not logged in.
+- [ ] Burger menu on mobile not implemented
 
 Pre Launch Checks
 
-- [ ] Check added stripe student coupon code: RYGALTMSXJAAWould it be better if instead we had a specific point that I would position manually where the actual eyes are? I imagine part of this is because we are trying to do this relative to the component, but the component is kind of bigger or we've centred it. We're doing it from the middle of the component, which is like the belly and not the eyes.
+- [ ] Check added stripe student coupon code: RYGALTMSXJAA
 - [ ] Inside BetterAuth we are only allowing MY emails to sign up. We need to remove that.
 - [ ] Check all links are working including in emails.
 
