@@ -3,6 +3,7 @@
 import { buttonVariants } from '@acme/ui/components/ui/button';
 import { cn } from '@acme/ui/lib/utils';
 import Link from 'next/link';
+// import { useRouter } from 'next/navigation';
 import { usePathname } from 'next/navigation';
 import { FaWindows } from 'react-icons/fa';
 import { useGTM } from '~/hooks/use-gtm';
@@ -16,6 +17,7 @@ export default function DownloadButton() {
   const { trackEvent } = useGTM();
   const { trackEvent: trackPostHogEvent } = usePostHog();
   const isDownload = pathname === APP_ROUTES.MARKETING.DOWNLOAD;
+  // const router = useRouter();
 
   const handleDownloadClick = () => {
     const source = pathname === '/' ? SOURCES.LANDING_PAGE : SOURCES.HEADER;
@@ -41,17 +43,17 @@ export default function DownloadButton() {
 
   if (isDownload) {
     return (
-      <button
+      <Link
         className={cn(
           buttonVariants({ variant: 'default' }),
           'text-white',
           'px-3 py-2 text-sm md:px-6 md:py-3 md:text-base'
         )}
+        href={APP_ROUTES.MARKETING.DOWNLOAD}
         onClick={handleDownloadClick}
-        type="button"
       >
         Let's go!
-      </button>
+      </Link>
     );
   }
 

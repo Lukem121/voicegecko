@@ -24,6 +24,7 @@ import { FaAndroid, FaApple, FaLinux, FaWindows } from 'react-icons/fa';
 import { HiInformationCircle } from 'react-icons/hi';
 import { HiGlobeAlt } from 'react-icons/hi2';
 import { SiApple } from 'react-icons/si';
+import { useRouter } from 'next/navigation';
 import { useGTM } from '~/hooks/use-gtm';
 import { usePostHog } from '~/hooks/use-posthog';
 import type { DownloadsData } from '~/lib/downloads-utils';
@@ -247,6 +248,7 @@ function PlatformCard({
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { trackEvent } = useGTM();
   const { trackEvent: trackPostHogEvent } = usePostHog();
+  const router = useRouter();
 
   const handleDownload = (download: {
     name: string;
@@ -287,6 +289,21 @@ function PlatformCard({
     link.click();
     document.body.removeChild(link);
     log.info(`Download initiated: ${download.name}`);
+
+    // Navigate to success page with file metadata
+    try {
+      const params = new URLSearchParams({
+        os: osType,
+        file_name: download.name,
+        file_url: download.url,
+      });
+      // Small timeout to allow the browser to register the download click
+      setTimeout(() => {
+        router.push(`/download/success?${params.toString()}`);
+      }, 50);
+    } catch {
+      // no-op
+    }
   };
 
   const getDownloadButtonText = (download: {
