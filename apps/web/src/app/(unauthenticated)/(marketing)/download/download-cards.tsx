@@ -18,6 +18,7 @@ import {
   DialogTrigger,
 } from '@acme/ui/components/ui/dialog';
 import { motion } from 'motion/react';
+import { useRouter } from 'next/navigation';
 import posthog from 'posthog-js';
 import { useState } from 'react';
 import { FaAndroid, FaApple, FaLinux, FaWindows } from 'react-icons/fa';
@@ -28,7 +29,6 @@ import { useGTM } from '~/hooks/use-gtm';
 import { usePostHog } from '~/hooks/use-posthog';
 import type { DownloadsData } from '~/lib/downloads-utils';
 import { SOURCES } from '~/lib/gtm/constants';
-import { MODAL_NAMES, POSTHOG_SOURCES } from '~/lib/posthog/constants';
 
 type PlatformCardProps = {
   title: string;
@@ -118,7 +118,6 @@ function VotingCard({ title, description }: VotingCardProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [hasVoted, setHasVoted] = useState(false);
   const [showVoteAnimation, setShowVoteAnimation] = useState(false);
-  const { trackEvent } = usePostHog();
 
   const handleVote = () => {
     if (hasVoted) {
@@ -143,30 +142,6 @@ function VotingCard({ title, description }: VotingCardProps) {
 
   const handleDialogChange = (open: boolean) => {
     setIsDialogOpen(open);
-    if (open) {
-      trackEvent({
-        event: 'modal_opened',
-        modal_name: MODAL_NAMES.SYSTEM_REQUIREMENTS,
-        source: POSTHOG_SOURCES.DOWNLOAD_PAGE,
-        trigger_location: 'voting_card',
-        timestamp: new Date().toISOString(),
-      });
-
-      trackEvent({
-        event: 'system_requirements_viewed',
-        platform: title.toLowerCase(),
-        source: POSTHOG_SOURCES.DOWNLOAD_PAGE,
-        timestamp: new Date().toISOString(),
-      });
-    } else {
-      trackEvent({
-        event: 'modal_closed',
-        modal_name: MODAL_NAMES.SYSTEM_REQUIREMENTS,
-        close_method: 'overlay',
-        source: POSTHOG_SOURCES.DOWNLOAD_PAGE,
-        timestamp: new Date().toISOString(),
-      });
-    }
   };
 
   return (
@@ -247,6 +222,7 @@ function PlatformCard({
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { trackEvent } = useGTM();
   const { trackEvent: trackPostHogEvent } = usePostHog();
+  const router = useRouter();
 
   const handleDownload = (download: {
     name: string;
@@ -274,7 +250,7 @@ function PlatformCard({
     // PostHog tracking
     trackPostHogEvent({
       event: 'download_completed',
-      source: POSTHOG_SOURCES.DOWNLOAD_PAGE,
+      source: SOURCES.DOWNLOAD_PAGE,
       os_type: osType,
       file_name: download.name,
       timestamp: new Date().toISOString(),
@@ -287,6 +263,15 @@ function PlatformCard({
     link.click();
     document.body.removeChild(link);
     log.info(`Download initiated: ${download.name}`);
+
+    // Navigate to success page (Windows-only flow; no query params needed)
+    try {
+      setTimeout(() => {
+        router.push('/download/success');
+      }, 50);
+    } catch {
+      // no-op
+    }
   };
 
   const getDownloadButtonText = (download: {
@@ -318,30 +303,6 @@ function PlatformCard({
 
   const handlePlatformDialogChange = (open: boolean) => {
     setIsDialogOpen(open);
-    if (open) {
-      trackPostHogEvent({
-        event: 'modal_opened',
-        modal_name: MODAL_NAMES.SYSTEM_REQUIREMENTS,
-        source: POSTHOG_SOURCES.DOWNLOAD_PAGE,
-        trigger_location: 'platform_card',
-        timestamp: new Date().toISOString(),
-      });
-
-      trackPostHogEvent({
-        event: 'system_requirements_viewed',
-        platform: title.toLowerCase(),
-        source: POSTHOG_SOURCES.DOWNLOAD_PAGE,
-        timestamp: new Date().toISOString(),
-      });
-    } else {
-      trackPostHogEvent({
-        event: 'modal_closed',
-        modal_name: MODAL_NAMES.SYSTEM_REQUIREMENTS,
-        close_method: 'overlay',
-        source: POSTHOG_SOURCES.DOWNLOAD_PAGE,
-        timestamp: new Date().toISOString(),
-      });
-    }
   };
 
   return (

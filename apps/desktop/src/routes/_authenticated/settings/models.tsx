@@ -10,9 +10,15 @@ import {
   CardHeader,
   CardTitle,
 } from '@acme/ui/components/ui/card';
-
 import { Progress } from '@acme/ui/components/ui/progress';
 import { RadioGroup, RadioGroupItem } from '@acme/ui/components/ui/radio-group';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@acme/ui/components/ui/select';
 import { createFileRoute } from '@tanstack/react-router';
 import { invoke } from '@tauri-apps/api/core';
 import { listen } from '@tauri-apps/api/event';
@@ -22,6 +28,8 @@ import {
   Download,
   HardDrive,
   MemoryStick,
+  Settings,
+  X,
 } from 'lucide-react';
 import { useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
@@ -41,10 +49,12 @@ function SettingsModelsPage() {
   const {
     settings,
     updateSelectedTier,
+    updateSelectedModelOverride,
     refreshModels,
     updateModelStatus,
     getModelsForTier,
     getTierDownloadStatus,
+    getSelectedModelOverride,
   } = useSettingsStore();
 
   const hardwareInfo = useHardwareInfo();
@@ -93,7 +103,6 @@ function SettingsModelsPage() {
   // Helper function to handle model download progress
   const handleModelDownloadProgress =
     (hasNotifiedAutoDownload: { current: boolean }) =>
-    // biome-ignore lint/complexity/noExcessiveCognitiveComplexity: lazy
     (event: { payload: [string, number] }) => {
       const [modelId, progress] = event.payload;
 
@@ -489,7 +498,6 @@ function SettingsModelsPage() {
             }}
             value={selectedTier}
           >
-            {/** biome-ignore lint/complexity/noExcessiveCognitiveComplexity: lazy */}
             {(Object.keys(tierDisplayInfo) as ModelTier[]).map((tier) => {
               const info = tierDisplayInfo[tier];
               const recommended = isRecommended(tier);
@@ -564,6 +572,224 @@ function SettingsModelsPage() {
           </RadioGroup>
         </CardContent>
       </Card>
+
+      {/* Admin Section - Only show in development or with admin flag */}
+      {(process.env.NODE_ENV === 'development' ||
+        globalThis.location?.search?.includes('admin=1')) && (
+        <Card className="">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Settings className="h-5 w-5" />
+              Admin: Individual Model Selection
+            </CardTitle>
+            <CardDescription>
+              Developer mode: Override tier-based selection and choose any
+              specific model for testing. This overrides the tier selection
+              above when active.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center gap-4">
+              <div className="flex-1">
+                <label className="font-medium text-sm" htmlFor="model-override">
+                  Selected Model Override:
+                </label>
+                <Select
+                  onValueChange={async (value) => {
+                    const modelId = value === 'none' ? null : value;
+                    try {
+                      await updateSelectedModelOverride(modelId);
+                      if (modelId) {
+                        toast.success(
+                          `Model override set to: ${settings.models.availableModels[modelId]?.name || modelId}`
+                        );
+                      } else {
+                        toast.success(
+                          'Cleared model override - using tier-based selection'
+                        );
+                      }
+                      await refreshModels();
+                    } catch (error) {
+                      toast.error('Failed to update model override', {
+                        description: error as string,
+                      });
+                    }
+                  }}
+                  value={getSelectedModelOverride() || 'none'}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a specific model..." />
+                  </SelectTrigger>
+                  <SelectContent className="max-h-96">
+                    <SelectItem value="none">
+                      <span className="font-medium text-slate-600">
+                        Use tier-based selection
+                      </span>
+                    </SelectItem>
+                    {Object.entries(settings.models.availableModels)
+                      .sort(([, a], [, b]) => {
+                        // Sort by tier, then by name
+                        const tierOrder = {
+                          minimal: 0,
+                          balanced: 1,
+                          quality: 2,
+                          maximum: 3,
+                        };
+                        const aTierOrder =
+                          tierOrder[
+                            a.tier.toLowerCase() as keyof typeof tierOrder
+                          ] ?? 999;
+                        const bTierOrder =
+                          tierOrder[
+                            b.tier.toLowerCase() as keyof typeof tierOrder
+                          ] ?? 999;
+                        if (aTierOrder !== bTierOrder) {
+                          return aTierOrder - bTierOrder;
+                        }
+                        return a.name.localeCompare(b.name);
+                      })
+                      .map(([modelId, model]) => (
+                        <SelectItem key={modelId} value={modelId}>
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium">{model.name}</span>
+                            <Badge className="text-xs" variant="outline">
+                              {model.tier}
+                            </Badge>
+                            <span className="text-muted-foreground text-xs">
+                              ({model.size})
+                            </span>
+                            {model.status === 'Downloaded' && (
+                              <CheckCircle className="h-3 w-3 text-green-500" />
+                            )}
+                            {typeof model.status === 'object' &&
+                              'Downloading' in model.status && (
+                                <div className="flex items-center gap-1">
+                                  <Progress
+                                    className="h-1 w-8"
+                                    value={model.status.Downloading}
+                                  />
+                                  <span className="text-xs">
+                                    {model.status.Downloading}%
+                                  </span>
+                                </div>
+                              )}
+                          </div>
+                        </SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {getSelectedModelOverride() && (
+                <Button
+                  onClick={async () => {
+                    try {
+                      await updateSelectedModelOverride(null);
+                      toast.success('Cleared model override');
+                      await refreshModels();
+                    } catch (error) {
+                      toast.error('Failed to clear override', {
+                        description: error as string,
+                      });
+                    }
+                  }}
+                  size="sm"
+                  variant="outline"
+                >
+                  <X className="h-4 w-4" />
+                  Clear Override
+                </Button>
+              )}
+            </div>
+
+            {getSelectedModelOverride() && (
+              <div className="rounded-md border p-3">
+                <div className="flex items-start gap-3">
+                  <div className="flex-1">
+                    {(() => {
+                      const modelId = getSelectedModelOverride();
+                      const model = modelId
+                        ? settings.models.availableModels[modelId]
+                        : null;
+
+                      if (!model) {
+                        return (
+                          <p className="text-sm">Selected model not found</p>
+                        );
+                      }
+
+                      const isDownloaded = model.status === 'Downloaded';
+                      const isDownloading =
+                        typeof model.status === 'object' &&
+                        'Downloading' in model.status;
+
+                      return (
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2">
+                            <h4 className="font-medium">{model.name}</h4>
+                            <Badge variant="outline">{model.tier}</Badge>
+                            <span className="text-sm">({model.size})</span>
+                          </div>
+                          <p className="text-sm">{model.description}</p>
+                          <div className="flex items-center gap-2">
+                            {isDownloaded ? (
+                              <Badge className="gap-1" variant="secondary">
+                                <CheckCircle className="h-3 w-3" />
+                                Ready to Use
+                              </Badge>
+                            ) : isDownloading ? (
+                              <div className="flex items-center gap-2">
+                                <Progress
+                                  className="h-2 w-20"
+                                  value={
+                                    (model.status as { Downloading: number })
+                                      .Downloading
+                                  }
+                                />
+                                <span className="text-sm">
+                                  {
+                                    (model.status as { Downloading: number })
+                                      .Downloading
+                                  }
+                                  %
+                                </span>
+                              </div>
+                            ) : (
+                              <Button
+                                onClick={async () => {
+                                  try {
+                                    await invoke('download_model', { modelId });
+                                    toast.info(`Downloading ${model.name}...`);
+                                  } catch (error) {
+                                    toast.error('Failed to start download', {
+                                      description: error as string,
+                                    });
+                                  }
+                                }}
+                                size="sm"
+                                variant="outline"
+                              >
+                                <Download className="mr-1 h-3 w-3" />
+                                Download Model
+                              </Button>
+                            )}
+                          </div>
+                        </div>
+                      );
+                    })()}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <div className="text-xs">
+              <strong>Note:</strong> When a model override is active, the tier
+              selection above is ignored. Clear the override to return to
+              automatic tier-based model selection.
+            </div>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

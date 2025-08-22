@@ -1,7 +1,6 @@
 import { cn } from '@acme/ui/lib/utils';
 import { motion } from 'motion/react';
 import { useCallback, useMemo } from 'react';
-
 import { useGeckoBarState } from '~/hooks/use-gecko-bar-state';
 import { analytics } from '~/lib/analytics/posthog-analytics';
 import { useEventStore } from '~/stores/event.store';
@@ -162,6 +161,7 @@ export function GeckoBarApp() {
       >
         {/* Tooltip */}
         <GeckoBarTooltip
+          isPassthroughMode={state.isPassthroughMode}
           isRecording={isRecording}
           message={state.tooltipMessage}
           show={state.showTooltip}
@@ -174,10 +174,25 @@ export function GeckoBarApp() {
             '!border-primary/70 relative flex items-center justify-center overflow-hidden rounded-full border',
             state.isLoading
               ? 'cursor-wait bg-muted/70 shadow-lg'
-              : 'bg-muted/70'
+              : 'bg-muted/70',
+            state.isPassthroughMode && 'opacity-50'
           )}
           onClick={handlers.onClick}
-          onMouseDown={() => {
+          onContextMenu={(e) => {
+            e.preventDefault();
+            handlers.onRightClick(e);
+            // Track right-click interaction for pass-through
+            analytics.track('gecko_bar_interaction', {
+              action: 'click',
+              state: getBarState(),
+            });
+          }}
+          onMouseDown={(e) => {
+            // Only handle left clicks (button 0), ignore right clicks (button 2)
+            if (e.button !== 0) {
+              return;
+            }
+
             handlers.onClick();
             // Track click interaction
             analytics.track('gecko_bar_interaction', {

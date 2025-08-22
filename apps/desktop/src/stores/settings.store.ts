@@ -71,12 +71,14 @@ type SettingsState = {
 
   // Model actions
   updateSelectedTier: (tier: string) => Promise<void>;
+  updateSelectedModelOverride: (modelId: string | null) => Promise<void>;
   refreshModels: () => Promise<void>;
   updateModelStatus: (modelId: string, status: ModelStatus) => void;
   getModelsForTier: (tier: string) => Model[];
   getTierDownloadStatus: (
     tier: string
   ) => 'none' | 'partial' | 'complete' | 'downloading';
+  getSelectedModelOverride: () => string | null | undefined;
 
   // Test sound
   playTestSound: () => Promise<void>;
@@ -148,6 +150,7 @@ export const useSettingsStore = create<SettingsState>()(
             personalizationSettings,
             models,
             selectedTier,
+            selectedModelOverride,
             hardwareInfo,
           ] = await Promise.all([
             loadAudioSettings(),
@@ -160,6 +163,7 @@ export const useSettingsStore = create<SettingsState>()(
             loadPersonalizationSettings(),
             invoke<Record<string, Model>>('list_models'),
             invoke<string | null>('get_selected_tier'),
+            invoke<string | null>('get_selected_model_override'),
             invoke<HardwareInfo>('get_hardware_info'),
           ]);
 
@@ -188,6 +192,7 @@ export const useSettingsStore = create<SettingsState>()(
               personalization: personalizationSettings,
               models: {
                 selectedTier: selectedTier ?? 'cloud',
+                selectedModelOverride: selectedModelOverride ?? null,
                 availableModels: models,
               },
               onboarding: {
@@ -438,12 +443,44 @@ export const useSettingsStore = create<SettingsState>()(
         await invoke('set_selected_tier', { tier });
       },
 
+      updateSelectedModelOverride: async (modelId) => {
+        const { settings } = get();
+        const oldModelOverride = settings.models.selectedModelOverride;
+        const newSettings = {
+          ...settings,
+          models: { ...settings.models, selectedModelOverride: modelId },
+        };
+
+        // Track model override change
+        analytics.track('settings_changed', {
+          category: 'models',
+          setting_key: 'selectedModelOverride',
+          old_value: oldModelOverride || 'none',
+          new_value: modelId || 'none',
+        });
+
+        set({ settings: newSettings });
+
+        if (modelId) {
+          await invoke('set_selected_model_override', { modelId });
+        } else {
+          await invoke('clear_selected_model_override');
+        }
+      },
+
+      getSelectedModelOverride: () => {
+        const { settings } = get();
+        return settings.models.selectedModelOverride;
+      },
+
       refreshModels: async () => {
         try {
-          const [models, selectedTier] = await Promise.all([
-            invoke<Record<string, Model>>('list_models'),
-            invoke<string | null>('get_selected_tier'),
-          ]);
+          const [models, selectedTier, selectedModelOverride] =
+            await Promise.all([
+              invoke<Record<string, Model>>('list_models'),
+              invoke<string | null>('get_selected_tier'),
+              invoke<string | null>('get_selected_model_override'),
+            ]);
 
           set((state) => ({
             settings: {
@@ -453,6 +490,9 @@ export const useSettingsStore = create<SettingsState>()(
                 availableModels: models,
                 selectedTier:
                   selectedTier ?? state.settings.models.selectedTier,
+                selectedModelOverride:
+                  selectedModelOverride ??
+                  state.settings.models.selectedModelOverride,
               },
             },
           }));

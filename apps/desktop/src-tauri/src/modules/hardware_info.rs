@@ -257,22 +257,18 @@ fn calculate_capability_score(
 fn determine_recommended_tier(capability_score: u32, available_memory: u64) -> ModelTier {
     let available_memory_gb = available_memory / 1024;
 
-    // First check if system is too weak for any local model
-    if capability_score < 20 || available_memory_gb < 2 {
+    // Only use cloud for truly ancient systems - models only use ~300MB RAM in practice
+    if capability_score < 15 || available_memory_gb < 1 {
         return ModelTier::Cloud;
     }
 
-    // Then recommend based on score and available memory
+    // Much more aggressive tier assignment - most modern systems should get Maximum
+    // Since actual model RAM usage is only ~200-300MB, focus on CPU performance
     match (capability_score, available_memory_gb) {
-        (20..=39, _) => ModelTier::Minimal,
-        (40..=69, 2..=7) => ModelTier::Minimal,
-        (40..=69, 8..) => ModelTier::Balanced,
-        (70..=89, 2..=7) => ModelTier::Balanced,
-        (70..=89, 8..=15) => ModelTier::Quality,
-        (70..=89, 16..) => ModelTier::Maximum,
-        (90.., 2..=7) => ModelTier::Balanced,
-        (90.., 8..=15) => ModelTier::Quality,
-        (90.., 16..) => ModelTier::Maximum,
+        (15..=34, _) => ModelTier::Minimal,  // Very basic systems
+        (35..=54, _) => ModelTier::Balanced, // Older but decent systems
+        (55..=74, _) => ModelTier::Quality,  // Good systems
+        (75.., _) => ModelTier::Maximum,     // Most modern systems - aggressive!
         _ => ModelTier::Minimal,
     }
 }
@@ -309,8 +305,8 @@ mod tests {
 
     #[test]
     fn test_tier_recommendation() {
-        // Test weak system
-        let tier = determine_recommended_tier(15, 1024);
+        // Test truly weak system - should use cloud
+        let tier = determine_recommended_tier(10, 1024);
         assert_eq!(tier, ModelTier::Cloud);
 
         // Test minimal system
@@ -320,6 +316,21 @@ mod tests {
         // Test balanced system
         let tier = determine_recommended_tier(50, 8192);
         assert_eq!(tier, ModelTier::Balanced);
+
+        // Test quality system
+        let tier = determine_recommended_tier(65, 8192);
+        assert_eq!(tier, ModelTier::Quality);
+
+        // Test maximum system - much more achievable now!
+        let tier = determine_recommended_tier(80, 8192);
+        assert_eq!(tier, ModelTier::Maximum);
+
+        // Test boundary cases
+        let tier = determine_recommended_tier(15, 2048); // Just above cloud threshold
+        assert_eq!(tier, ModelTier::Minimal);
+
+        let tier = determine_recommended_tier(75, 2048); // Maximum tier with modest RAM
+        assert_eq!(tier, ModelTier::Maximum);
     }
 
     #[test]

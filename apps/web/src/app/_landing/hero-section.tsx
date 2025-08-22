@@ -4,8 +4,9 @@ import { buttonVariants } from '@acme/ui/components/ui/button';
 import { cn } from '@acme/ui/lib/utils';
 import { FaWindows } from 'react-icons/fa';
 import { usePostHog } from '~/hooks/use-posthog';
+// import { APP_ROUTES } from '~/utils/app-routes';
+import { useStartDownload } from '~/hooks/use-start-download';
 import { POSTHOG_SOURCES } from '~/lib/posthog/constants';
-import { APP_ROUTES } from '~/utils/app-routes';
 import HeroHeading from './hero-heading';
 import HeroSubheading from './hero-subheading';
 import SectionWrapper from './section-wrapper';
@@ -14,6 +15,7 @@ import Branch2Long from './svgs/branch-2-long';
 
 export default function HeroSection() {
   const { trackEvent } = usePostHog();
+  const { startDownload } = useStartDownload();
 
   const handleHeroCTAClick = () => {
     trackEvent({
@@ -66,17 +68,21 @@ export default function HeroSection() {
           time and replacing slow typing with fast, natural speech.
         </HeroSubheading>
         <div className="z-30 mt-8 flex items-center justify-center">
-          <a
+          <button
             className={cn(
               buttonVariants({ variant: 'default', size: 'xl' }),
               'gap-2 px-6 text-white'
             )}
-            href={APP_ROUTES.MARKETING.DOWNLOAD}
-            onClick={handleHeroCTAClick}
+            onClick={() => {
+              handleHeroCTAClick();
+              startDownload({ source: 'landing_page' });
+              // Success page no longer needs query params
+            }}
+            type="button"
           >
             <FaWindows aria-hidden className="h-4 w-4" />
             <span>Download for Windows</span>
-          </a>
+          </button>
         </div>
       </div>
     </SectionWrapper>

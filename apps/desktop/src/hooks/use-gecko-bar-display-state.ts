@@ -11,7 +11,8 @@ export type GeckoBarDisplayMode =
   | 'hover' // User hovering, show appropriate message
   | 'notification' // Active notification, highest priority
   | 'recording' // Currently recording, expanded
-  | 'transcribing'; // Processing transcription, expanded
+  | 'transcribing' // Processing transcription, expanded
+  | 'passthrough'; // Pass-through mode active, expanded with countdown
 
 export type GeckoBarDisplayState = {
   mode: GeckoBarDisplayMode;
@@ -29,6 +30,8 @@ type DisplayAction =
   | { type: 'RECORDING_END' }
   | { type: 'TRANSCRIBING_START' }
   | { type: 'TRANSCRIBING_END' }
+  | { type: 'PASSTHROUGH_START'; message: string }
+  | { type: 'PASSTHROUGH_END' }
   | { type: 'FORCE_IDLE' };
 
 // Helper functions for state transitions
@@ -69,9 +72,19 @@ const createHoverState = (canTranscribe: boolean): GeckoBarDisplayState => ({
     : 'Usage limit reached',
 });
 
+const createPassthroughState = (message: string): GeckoBarDisplayState => ({
+  mode: 'passthrough',
+  isExpanded: true,
+  showTooltip: true,
+  tooltipMessage: message,
+});
+
 const isHighPriorityState = (mode: GeckoBarDisplayMode): boolean => {
   return (
-    mode === 'notification' || mode === 'recording' || mode === 'transcribing'
+    mode === 'notification' ||
+    mode === 'recording' ||
+    mode === 'transcribing' ||
+    mode === 'passthrough'
   );
 };
 
@@ -84,11 +97,20 @@ function displayReducer(
     case 'NOTIFICATION_START':
       return createNotificationState(action.message);
 
+    case 'PASSTHROUGH_START':
+      return state.mode === 'notification'
+        ? state
+        : createPassthroughState(action.message);
+
     case 'RECORDING_START':
-      return state.mode === 'notification' ? state : createRecordingState();
+      return state.mode === 'notification' || state.mode === 'passthrough'
+        ? state
+        : createRecordingState();
 
     case 'TRANSCRIBING_START':
-      return state.mode === 'notification' ? state : createTranscribingState();
+      return state.mode === 'notification' || state.mode === 'passthrough'
+        ? state
+        : createTranscribingState();
 
     case 'HOVER_START':
       return isHighPriorityState(state.mode)
@@ -100,6 +122,9 @@ function displayReducer(
 
     case 'NOTIFICATION_END':
       return state.mode === 'notification' ? createIdleState() : state;
+
+    case 'PASSTHROUGH_END':
+      return state.mode === 'passthrough' ? createIdleState() : state;
 
     case 'RECORDING_END':
     case 'TRANSCRIBING_END':
@@ -124,7 +149,9 @@ const initialState: GeckoBarDisplayState = {
 
 export function useGeckoBarDisplayState(
   isHovered: boolean,
-  isLoading: boolean
+  isLoading: boolean,
+  isPassthroughMode = false,
+  passthroughMessage = ''
 ) {
   const [state, dispatch] = useReducer(displayReducer, initialState);
 
@@ -143,12 +170,17 @@ export function useGeckoBarDisplayState(
     refetchInterval: 30_000,
   });
 
+  // Check usage limits (auth is now enforced at service level)
   const canTranscribe = !usageStatus || usageStatus.canTranscribe;
 
   // Helper functions for state management
   const handleHighPriorityStates = useCallback((): boolean => {
     if (notification) {
       dispatch({ type: 'NOTIFICATION_START', message: notification.message });
+      return true;
+    }
+    if (isPassthroughMode) {
+      dispatch({ type: 'PASSTHROUGH_START', message: passthroughMessage });
       return true;
     }
     if (isRecording) {
@@ -160,7 +192,13 @@ export function useGeckoBarDisplayState(
       return true;
     }
     return false;
-  }, [notification, isRecording, isTranscribing]);
+  }, [
+    notification,
+    isPassthroughMode,
+    passthroughMessage,
+    isRecording,
+    isTranscribing,
+  ]);
 
   const handleHoverState = useCallback((): boolean => {
     if (isHovered && !isLoading) {
@@ -173,6 +211,8 @@ export function useGeckoBarDisplayState(
   const handleStateCleanup = useCallback((): void => {
     if (state.mode === 'notification' && !notification) {
       dispatch({ type: 'NOTIFICATION_END' });
+    } else if (state.mode === 'passthrough' && !isPassthroughMode) {
+      dispatch({ type: 'PASSTHROUGH_END' });
     } else if (state.mode === 'recording' && !isRecording) {
       dispatch({ type: 'RECORDING_END' });
     } else if (state.mode === 'transcribing' && !isTranscribing) {
@@ -180,7 +220,14 @@ export function useGeckoBarDisplayState(
     } else if (state.mode === 'hover' && !isHovered) {
       dispatch({ type: 'HOVER_END' });
     }
-  }, [state.mode, notification, isRecording, isTranscribing, isHovered]);
+  }, [
+    state.mode,
+    notification,
+    isPassthroughMode,
+    isRecording,
+    isTranscribing,
+    isHovered,
+  ]);
 
   // Single effect to manage all state transitions
   useEffect(() => {

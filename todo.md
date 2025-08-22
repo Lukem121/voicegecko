@@ -1,10 +1,10 @@
 Todo
 
-- [ ]
+- [ ] Burger menu on mobile not implemented
 
 Pre Launch Checks
 
-- [ ] Check added stripe student coupon code: RYGALTMSXJAAWould it be better if instead we had a specific point that I would position manually where the actual eyes are? I imagine part of this is because we are trying to do this relative to the component, but the component is kind of bigger or we've centred it. We're doing it from the middle of the component, which is like the belly and not the eyes.
+- [ ] Check added stripe student coupon code: RYGALTMSXJAA
 - [ ] Inside BetterAuth we are only allowing MY emails to sign up. We need to remove that.
 - [ ] Check all links are working including in emails.
 
@@ -14,6 +14,7 @@ After MVP
 - [ ] Turn off the audio processing logs 'audio_debug'
 - [ ] Post processing, fix grammer, change style.
 - [ ] I notice whisper when it can mute the audio without having to just mute the whole It can like mute everything else. It can just like isolate its own audio.
+- [ ] Add a context menu to the gecko bar so we can do things like hide it and other things.
 
 🪳 After MVP Bugs
 
