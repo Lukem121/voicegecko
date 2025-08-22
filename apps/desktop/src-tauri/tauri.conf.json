@@ -1,6 +1,6 @@
 {
   "productName": "Voice Gecko",
-  "version": "0.0.16",
+  "version": "0.0.17",
   "identifier": "com.voicegecko.desktop",
   "build": {
     "frontendDist": "../dist",
@@ -72,6 +72,9 @@
         "http://localhost:3000/api/updater/{{target}}/{{current_version}}",
         "https://www.voicegecko.io/api/updater/{{target}}/{{current_version}}"
       ]
+    },
+    "windows": {
+      "installMode": "quiet"
     }
   },
   "bundle": {

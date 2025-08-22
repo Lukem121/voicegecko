@@ -31,12 +31,12 @@ cd apps/desktop && pnpm dev
 
 - **Framework**: Tauri + React + TypeScript
 - **Router**: TanStack Router
-- **Version**: Currently 0.0.16
+- **Version**: Currently 0.0.17
 
 ### Web App (`apps/web/`)
 
 - **Framework**: Next.js + React + TypeScript
-- **Version**: Currently 0.0.16 (needs sync with desktop)
+- **Version**: Currently 0.0.17 (needs sync with desktop)
 
 ## Common Tasks
 
