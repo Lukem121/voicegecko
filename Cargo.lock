@@ -1330,7 +1330,7 @@ dependencies = [
 
 [[package]]
 name = "desktop"
-version = "0.0.16"
+version = "0.0.17"
 dependencies = [
  "async-trait",
  "cpal",
