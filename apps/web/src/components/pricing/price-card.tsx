@@ -24,6 +24,7 @@ export type PriceCardProps = {
   subtitle?: string;
   popular?: boolean;
   period?: string;
+  className?: string;
 };
 
 function PriceCardHeader({
@@ -46,7 +47,7 @@ function PriceCardHeader({
   return (
     <div
       className={cn(
-        'flex h-full flex-col space-y-1.5 border-b p-5',
+        'flex h-full flex-col space-y-1.5 border-b p-4 md:p-5',
         highlight ? 'border-primary/20 bg-primary/5' : 'border-border'
       )}
     >
@@ -151,15 +152,17 @@ export function PriceCard({
   subtitle,
   popular,
   period = 'month',
+  className,
 }: PriceCardProps) {
   return (
     <div
       className={cn(
-        'relative grid h-full w-full grid-rows-[170px_1fr_auto] overflow-hidden rounded-2xl bg-card shadow-sm transition-all',
+        'relative grid h-full w-full grid-rows-[auto_1fr_auto] overflow-hidden rounded-2xl bg-card shadow-sm transition-all md:grid-rows-[170px_1fr_auto]',
         highlight
           ? 'ring-1 ring-primary/30 hover:ring-primary/40'
           : 'ring-1 ring-border/70',
-        highlight && 'border-2 border-primary'
+        highlight && 'border-2 border-primary',
+        className
       )}
     >
       <PriceCardHeader
@@ -172,7 +175,7 @@ export function PriceCard({
         subtitle={subtitle}
       />
 
-      <div className="flex h-full flex-col justify-start p-5">
+      <div className="flex h-full flex-col justify-start p-4 md:p-5">
         <ul className="space-y-3.5">
           {features.map((feature, index) => (
             <FeatureListItem key={`${feature.text}-${index}`} {...feature} />
@@ -180,7 +183,7 @@ export function PriceCard({
         </ul>
       </div>
 
-      <div className="p-5 pt-0">
+      <div className="p-4 pt-0 md:p-5 md:pt-0">
         <UpgradeButton
           highlight={highlight}
           isAnnual={isAnnual}

@@ -1,6 +1,5 @@
 Todo
 
-- [ ] Geckobar works even if we are not logged in.
 - [ ] Burger menu on mobile not implemented
 
 Pre Launch Checks

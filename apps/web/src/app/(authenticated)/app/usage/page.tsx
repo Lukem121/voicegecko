@@ -135,7 +135,92 @@ export default async function UsagePage() {
             Your usage statistics for this week and month
           </p>
         </div>
-        <div className="grid gap-6 md:grid-cols-4">
+
+        {/* Mobile Layout - Combined Cards */}
+        <div className="grid gap-4 md:hidden">
+          <Card>
+            <CardHeader>
+              <CardTitle className="font-medium text-base">
+                Usage & Activity
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 text-muted-foreground text-sm">
+                  <TrendingUp className="h-4 w-4" />
+                  <span>Words Used</span>
+                </div>
+                <div className="text-right">
+                  <div className="font-bold text-lg">
+                    {stats.current.isUnlimited
+                      ? formatCompactNumber(currentPeriod.wordsUsed.used)
+                      : currentPeriod.wordsUsed.used.toLocaleString()}
+                  </div>
+                  <p className="text-muted-foreground text-xs">
+                    {stats.current.isUnlimited
+                      ? 'this month'
+                      : `of ${currentPeriod.wordsUsed.limit.toLocaleString()} this week`}
+                  </p>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 text-muted-foreground text-sm">
+                  <FileText className="h-4 w-4" />
+                  <span>Transcriptions</span>
+                </div>
+                <div className="text-right">
+                  <div className="font-bold text-lg">
+                    {currentPeriod.transcriptions.used}
+                  </div>
+                  <p className="text-muted-foreground text-xs">
+                    {stats.current.isUnlimited
+                      ? 'this month'
+                      : currentPeriod.transcriptions.limit}
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="font-medium text-base">
+                Performance
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 text-muted-foreground text-sm">
+                  <TrendingUp className="h-4 w-4" />
+                  <span>Words Processed</span>
+                </div>
+                <div className="text-right">
+                  <div className="font-bold text-lg">
+                    {formatCompactNumber(currentPeriod.wordsProcessed)}
+                  </div>
+                  <p className="text-muted-foreground text-xs">this month</p>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2 text-muted-foreground text-sm">
+                  <Clock className="h-4 w-4" />
+                  <span>Time Saved</span>
+                </div>
+                <div className="text-right">
+                  <div className="font-bold text-lg">
+                    {formatTime(currentPeriod.timeSaved)}
+                  </div>
+                  <p className="text-muted-foreground text-xs">this month</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Desktop Layout - Individual Cards */}
+        <div className="hidden gap-6 md:grid md:grid-cols-4">
           <Card className="">
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center gap-2 font-medium text-muted-foreground text-sm">
