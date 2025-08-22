@@ -57,27 +57,28 @@ export default function PricingSection({
 
   return (
     <Section className="relative overflow-hidden md:py-12" id="pricing">
-      <div className="flex items-end justify-between gap-4">
+      <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
         <div className="text-left">
           <p className="font-medium text-primary text-sm">
             Transparent Pricing
           </p>
-          <h2 className="mt-2 font-hero font-semibold text-4xl tracking-[-0.05em]">
+          <h2 className="mt-2 font-hero font-semibold text-3xl tracking-[-0.05em] sm:text-4xl">
             Simple, fair pricing
           </h2>
           <p className="mt-2 max-w-lg text-pretty text-muted-foreground text-sm">
             Start free with 2,000 words per week. Upgrade for unlimited
-            transcription whenever you’re ready.
+            transcription whenever you're ready.
           </p>
         </div>
 
-        <div className="mt-4">
+        <div className="flex lg:justify-end">
           <Toggle selected={billingPeriod} setSelected={setBillingPeriod} />
         </div>
       </div>
       <div>
-        <div className="mt-6 grid h-[33rem] gap-6 md:grid-cols-2">
+        <div className="mt-6 grid gap-6 md:h-[33rem] md:grid-cols-2">
           <PriceCard
+            className="order-2 md:order-1"
             cta={isLoggedIn ? 'Download App' : 'Get Started'}
             features={
               [
@@ -104,6 +105,7 @@ export default function PricingSection({
             subtitle="Perfect for trying out Voice Gecko"
           />
           <PriceCard
+            className="order-1 md:order-2"
             cta={isLoggedIn ? 'Upgrade to Pro' : 'Get Started'}
             features={
               [
@@ -146,14 +148,14 @@ export default function PricingSection({
             subtitle="For power users and professionals"
           />
         </div>
-        <div className="mt-12">
+        <div className="mt-8 md:mt-12">
           <Card className="relative border-2 border-border/80 border-dashed bg-background p-5 shadow-none">
             <Image
               alt="Student"
               className="-translate-y-1/2 -top-3 absolute left-0 h-10 w-auto"
               src={GeckoStudentSitting}
             />
-            <div className="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
+            <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center sm:gap-3">
               <div className="">
                 <p className="font-medium">Student Discount</p>
                 <p className="text-muted-foreground text-sm">
@@ -167,8 +169,8 @@ export default function PricingSection({
           </Card>
         </div>
       </div>
-      <div className="mt-10">
-        <div className="flex flex-wrap items-center justify-center gap-5 text-muted-foreground text-sm">
+      <div className="mt-8 md:mt-10">
+        <div className="flex flex-wrap items-center justify-center gap-4 text-muted-foreground text-sm sm:gap-5">
           <div className="flex items-center gap-2">
             <HiCheck className="h-4 w-4 text-primary" />
             <span>No credit card required</span>

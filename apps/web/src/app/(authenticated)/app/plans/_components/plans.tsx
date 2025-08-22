@@ -227,9 +227,12 @@ export default function Plans({ prices, subscription, error }: PlansProps) {
         }
       />
 
-      <div className="mb-8 flex items-center justify-between">
-        <div className="">
-          <h1 className="mb-2 font-semibold text-2xl tracking-tight">Plans</h1>
+      <div className="mb-4 flex items-end justify-between gap-4 sm:mb-8">
+        <h1 className="font-semibold text-2xl tracking-tight">Plans</h1>
+        <div className="hidden sm:block">
+          <h1 className="font-semibold text-2xl tracking-tight sm:mb-2">
+            Plans
+          </h1>
           <p className="text-muted-foreground">
             Choose the plan that works for you
           </p>
@@ -257,16 +260,23 @@ export default function Plans({ prices, subscription, error }: PlansProps) {
           // Use the hook's isUpgrading state for all plans
           const isLoading = isUpgrading;
 
+          // On mobile, show Pro plan first (order-1), Basic plan second (order-2)
+          // On desktop, maintain normal order
+          const mobileOrder = plan.isFree
+            ? 'order-2 md:order-none'
+            : 'order-1 md:order-none';
+
           return (
-            <PlanCard
-              isCurrent={isCurrent}
-              isLoading={isLoading}
-              isYearly={isYearly}
-              key={plan.name}
-              onPlanClick={handlePlanClick}
-              plan={plan}
-              subscription={subscription}
-            />
+            <div className={mobileOrder} key={plan.name}>
+              <PlanCard
+                isCurrent={isCurrent}
+                isLoading={isLoading}
+                isYearly={isYearly}
+                onPlanClick={handlePlanClick}
+                plan={plan}
+                subscription={subscription}
+              />
+            </div>
           );
         })}
       </div>

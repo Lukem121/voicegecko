@@ -62,7 +62,7 @@ const data: NavigationData = {
 export default function AppSidebar() {
   const pathname = usePathname();
   return (
-    <Sidebar collapsible="none" variant="sidebar">
+    <Sidebar className="hidden md:flex" collapsible="none" variant="sidebar">
       <SidebarContent>
         <SidebarGroup>
           <SidebarGroupLabel>Main</SidebarGroupLabel>
