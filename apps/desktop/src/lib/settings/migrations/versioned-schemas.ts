@@ -65,6 +65,7 @@ export type SettingsV1Model = {
 
 export type SettingsV1ModelSettings = {
   selectedTier: string;
+  selectedModelOverride?: string | null; // For admin-only individual model selection
   availableModels: Record<string, SettingsV1Model>;
 };
 

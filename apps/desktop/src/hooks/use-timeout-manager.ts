@@ -11,6 +11,7 @@ export function useTimeoutManager(): UseTimeoutManagerReturn {
     collapse: null,
     tooltip: null,
     cleanup: null,
+    passthrough: null,
   });
 
   const clearTimeout = useCallback((type: keyof TimeoutState) => {

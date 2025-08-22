@@ -38,6 +38,7 @@ pub enum ModelManagerError {
 const STORE_PATH: &str = "models.json";
 const SELECTED_TIER_KEY: &str = "selected_tier";
 const MODEL_STATUSES_KEY: &str = "model_statuses";
+const SELECTED_MODEL_KEY: &str = "selected_model_override";
 
 impl From<std::io::Error> for ModelManagerError {
     fn from(err: std::io::Error) -> Self {
@@ -305,22 +306,21 @@ pub fn synchronize_models(app: AppHandle) -> Result<(), ModelManagerError> {
 }
 
 #[tauri::command]
-pub fn get_active_model_id(_app: AppHandle) -> Result<String, ModelManagerError> {
-    // TEMPORARY: Always use base model for now
-    // TODO: Restore hardware-based model selection in the future
-    return Ok("base.en".to_string());
+pub fn get_active_model_id(app: AppHandle) -> Result<String, ModelManagerError> {
+    // First check if there's a specific model override (admin mode)
+    if let Some(model_override) = get_selected_model_override(app.clone())? {
+        return Ok(model_override);
+    }
 
-    // Original logic preserved for future use:
-    /*
     // Get the selected tier
-    if let Some(selected_tier) = get_selected_tier(_app.clone())? {
+    if let Some(selected_tier) = get_selected_tier(app.clone())? {
         if selected_tier == "cloud" {
             return Ok("cloud".to_string());
         }
 
         // Get the best available model for the selected tier
         if let Some(tier) = ModelTier::from_string(&selected_tier) {
-            if let Ok(model_id) = get_best_model_for_tier(_app, tier) {
+            if let Ok(model_id) = get_best_model_for_tier(app, tier) {
                 return Ok(model_id);
             }
         }
@@ -328,61 +328,10 @@ pub fn get_active_model_id(_app: AppHandle) -> Result<String, ModelManagerError>
 
     // Default to cloud if no tier is selected
     Ok("cloud".to_string())
-    */
 }
 
 #[tauri::command]
 pub async fn auto_download_recommended_model(app: AppHandle) -> Result<(), ModelManagerError> {
-    // TEMPORARY: Always ensure base model is available instead of hardware-based selection
-    let base_model_id = "base.en";
-
-    let app_data_dir = app
-        .path()
-        .app_data_dir()
-        .map_err(|e| ModelManagerError::PathError(e.to_string()))?;
-    let models_dir = app_data_dir.join("models");
-
-    // Check if base model exists on disk
-    let file_path = models_dir.join(format!("ggml-{}.bin", base_model_id));
-    let mut base_model_available = false;
-
-    if file_path.exists() {
-        if let Ok(metadata) = std::fs::metadata(&file_path) {
-            if metadata.len() > 1_000_000 {
-                // File must be > 1MB
-                base_model_available = true;
-                // Ensure status is correct
-                let _ = set_model_status(&app, base_model_id, ModelStatus::Downloaded);
-            } else {
-                // File is too small, mark as not downloaded
-                let _ = set_model_status(&app, base_model_id, ModelStatus::NotDownloaded);
-            }
-        }
-    } else {
-        // File doesn't exist
-        let _ = set_model_status(&app, base_model_id, ModelStatus::NotDownloaded);
-    }
-
-    // If base model is not available, download it
-    if !base_model_available {
-        let result = download_model(app.clone(), base_model_id.to_string()).await;
-        match result {
-            Ok(_) => {
-                println!("[Auto Download] Successfully downloaded base model");
-            }
-            Err(e) => {
-                let error_msg = e.to_string();
-                if !error_msg.contains("already downloaded") {
-                    println!("[Auto Download] Base model download failed: {}", e);
-                }
-            }
-        }
-    }
-
-    Ok(())
-
-    // Original hardware-based logic preserved for future use:
-    /*
     // Get hardware info to determine recommended tier
     let hardware_info = crate::modules::hardware_info::detect_hardware();
     let recommended_tier = hardware_info.recommended_tier;
@@ -470,7 +419,6 @@ pub async fn auto_download_recommended_model(app: AppHandle) -> Result<(), Model
     }
 
     Ok(())
-    */
 }
 
 #[tauri::command]
@@ -488,13 +436,37 @@ pub fn set_selected_tier(app: AppHandle, tier: String) -> Result<(), ModelManage
     store.set(SELECTED_TIER_KEY, json!(tier));
     store.save()?;
 
-    // When a tier is selected, try to select the best available model for that tier
-    if let Some(model_tier) = ModelTier::from_string(&tier) {
-        if let Ok(_model_id) = get_best_model_for_tier(app.clone(), model_tier) {
-            // set_selected_model(app, model_id)?; // This function is removed
-        }
-    }
+    // When a tier is selected, clear any model override to use tier-based selection
+    clear_selected_model_override(app.clone())?;
 
+    Ok(())
+}
+
+#[tauri::command]
+pub fn get_selected_model_override(app: AppHandle) -> Result<Option<String>, ModelManagerError> {
+    let store = app.store(STORE_PATH)?;
+    let selected_model = store
+        .get(SELECTED_MODEL_KEY)
+        .and_then(|v| v.as_str().map(|s| s.to_string()));
+    Ok(selected_model)
+}
+
+#[tauri::command]
+pub fn set_selected_model_override(
+    app: AppHandle,
+    model_id: String,
+) -> Result<(), ModelManagerError> {
+    let store = app.store(STORE_PATH)?;
+    store.set(SELECTED_MODEL_KEY, json!(model_id));
+    store.save()?;
+    Ok(())
+}
+
+#[tauri::command]
+pub fn clear_selected_model_override(app: AppHandle) -> Result<(), ModelManagerError> {
+    let store = app.store(STORE_PATH)?;
+    store.delete(SELECTED_MODEL_KEY);
+    store.save()?;
     Ok(())
 }
 
@@ -942,11 +914,101 @@ pub fn delete_model(app: AppHandle, model_id: String) -> Result<(), ModelManager
 
 fn get_initial_models() -> HashMap<String, Model> {
     let models_data = vec![
-        // Minimal Tier - Smallest models for basic hardware
+        // Minimal Tier - Ultra-small models for low-end hardware
+        (
+            "tiny",
+            "Tiny (Multilingual)",
+            "Ultra-compact multilingual model, fastest processing for basic transcription.",
+            "75 MiB",
+            "~512 MB",
+            "be07e048e1e599ad46341c8d2a135645097a7df2",
+            false,
+            ModelTier::Minimal,
+        ),
+        (
+            "tiny-q5_1",
+            "Tiny Q5_1",
+            "Quantized tiny model with Q5_1 compression for even smaller size.",
+            "31 MiB",
+            "~512 MB",
+            "1be07e048e1e599ad46341c8d2a135645097a7df3",
+            false,
+            ModelTier::Minimal,
+        ),
+        (
+            "tiny-q8_0",
+            "Tiny Q8_0",
+            "Quantized tiny model with Q8_0 compression, balanced size and quality.",
+            "42 MiB",
+            "~512 MB",
+            "2be07e048e1e599ad46341c8d2a135645097a7df4",
+            false,
+            ModelTier::Minimal,
+        ),
+        (
+            "tiny.en",
+            "Tiny English",
+            "Ultra-fast English-only processing, ideal for quick notes and simple commands.",
+            "75 MiB",
+            "~1 GB",
+            "c78c86eb1a8faa21b369bcd33207cc90d64ae9df",
+            false,
+            ModelTier::Minimal,
+        ),
+        (
+            "tiny.en-q5_1",
+            "Tiny English Q5_1",
+            "Compact English-only model with Q5_1 quantization.",
+            "31 MiB",
+            "~1 GB",
+            "3be07e048e1e599ad46341c8d2a135645097a7df5",
+            false,
+            ModelTier::Minimal,
+        ),
+        (
+            "tiny.en-q8_0",
+            "Tiny English Q8_0",
+            "English-only tiny model with Q8_0 quantization for better quality.",
+            "42 MiB",
+            "~1 GB",
+            "4be07e048e1e599ad46341c8d2a135645097a7df6",
+            false,
+            ModelTier::Minimal,
+        ),
+        (
+            "base",
+            "Base (Multilingual)",
+            "Balanced multilingual model with good performance for general use.",
+            "142 MiB",
+            "~1.5 GB",
+            "60ed5bc3dd14eea856493d334349b405782e8360",
+            false,
+            ModelTier::Minimal,
+        ),
+        (
+            "base-q5_1",
+            "Base Q5_1",
+            "Base model with Q5_1 quantization for reduced size.",
+            "57 MiB",
+            "~1.5 GB",
+            "5be07e048e1e599ad46341c8d2a135645097a7df7",
+            false,
+            ModelTier::Minimal,
+        ),
+        (
+            "base-q8_0",
+            "Base Q8_0",
+            "Base model with Q8_0 quantization, good balance of size and quality.",
+            "78 MiB",
+            "~1.5 GB",
+            "6be07e048e1e599ad46341c8d2a135645097a7df8",
+            false,
+            ModelTier::Minimal,
+        ),
         (
             "base.en",
-            "Base",
-            "Bundled model with balanced performance and reliable accuracy for everyday use.",
+            "Base English",
+            "Bundled English-only model with balanced performance and reliable accuracy for everyday use.",
             "142 MiB",
             "~1.5 GB",
             "137c40403d78fd54d454da0f9bd998f78703390c",
@@ -954,20 +1016,40 @@ fn get_initial_models() -> HashMap<String, Model> {
             ModelTier::Minimal,
         ),
         (
-            "tiny.en",
-            "Tiny",
-            "Ultra-fast processing, ideal for quick notes and simple commands.",
-            "75 MiB",
-            "~1 GB",
-            "c78c86eb1a8faa21b369bcd33207cc90d64ae9df",
+            "base.en-q5_1",
+            "Base English Q5_1",
+            "English-only base model with Q5_1 quantization for compact size.",
+            "57 MiB",
+            "~1.5 GB",
+            "7be07e048e1e599ad46341c8d2a135645097a7df9",
             false,
             ModelTier::Minimal,
         ),
-        // Balanced Tier - Small quantized models for mid-range hardware
         (
-            "small.en-q5_1",
+            "base.en-q8_0",
+            "Base English Q8_0",
+            "English-only base model with Q8_0 quantization for enhanced quality.",
+            "78 MiB",
+            "~1.5 GB",
+            "8be07e048e1e599ad46341c8d2a135645097a7dfa",
+            false,
+            ModelTier::Minimal,
+        ),
+        // Balanced Tier - Small models for mid-range hardware
+        (
+            "small",
+            "Small (Multilingual)",
+            "Multilingual small model for enhanced accuracy in meetings and interviews.",
+            "466 MiB",
+            "~2 GB",
+            "9ecf779972d90ba49c06d968637bb58d5274bb6c",
+            false,
+            ModelTier::Balanced,
+        ),
+        (
+            "small-q5_1",
             "Small Q5_1",
-            "Enhanced accuracy for meetings and interviews with Q5_1 quantization for reduced size.",
+            "Small model with Q5_1 quantization for reduced size while maintaining quality.",
             "181 MiB",
             "~2 GB",
             "20f54878d608f94e4a8ee3ae56016571d47cba34",
@@ -975,20 +1057,70 @@ fn get_initial_models() -> HashMap<String, Model> {
             ModelTier::Balanced,
         ),
         (
-            "small.en-q8_0",
+            "small-q8_0",
             "Small Q8_0",
-            "Enhanced accuracy with Q8_0 quantization, balancing quality and performance.",
+            "Small model with Q8_0 quantization, balancing quality and performance.",
             "252 MiB",
             "~2 GB",
             "9d75ff4ccfa0a8217870d7405cf8cef0a5579852",
             false,
             ModelTier::Balanced,
         ),
-        // Quality Tier - Medium quantized models for good hardware
         (
-            "medium.en-q5_0",
+            "small.en",
+            "Small English",
+            "English-only small model for enhanced accuracy in professional settings.",
+            "466 MiB",
+            "~2 GB",
+            "abf2a2c5bf4d1c9bb1cd9b21e1b4c1a3c4d5e6f7",
+            false,
+            ModelTier::Balanced,
+        ),
+        (
+            "small.en-q5_1",
+            "Small English Q5_1",
+            "English small model with Q5_1 quantization for meetings and interviews.",
+            "181 MiB",
+            "~2 GB",
+            "bbf2a2c5bf4d1c9bb1cd9b21e1b4c1a3c4d5e6f8",
+            false,
+            ModelTier::Balanced,
+        ),
+        (
+            "small.en-q8_0",
+            "Small English Q8_0",
+            "English small model with Q8_0 quantization for professional use.",
+            "252 MiB",
+            "~2 GB",
+            "cbf2a2c5bf4d1c9bb1cd9b21e1b4c1a3c4d5e6f9",
+            false,
+            ModelTier::Balanced,
+        ),
+        (
+            "small.en-tdrz",
+            "Small English TDRZ",
+            "Specialized English small model with TDRZ optimization for specific use cases.",
+            "465 MiB",
+            "~2 GB",
+            "dbf2a2c5bf4d1c9bb1cd9b21e1b4c1a3c4d5e6fa",
+            false,
+            ModelTier::Balanced,
+        ),
+        // Quality Tier - Medium models for good hardware
+        (
+            "medium",
+            "Medium (Multilingual)",
+            "High-quality multilingual model for professional transcription with accent support.",
+            "1.5 GiB",
+            "~4 GB",
+            "345b3b5281bddd61605d6fc76bc5b92d8f20284c4",
+            false,
+            ModelTier::Quality,
+        ),
+        (
+            "medium-q5_0",
             "Medium Q5_0",
-            "Superior accuracy with Q5_0 quantization, handling accents and background noise.",
+            "Medium model with Q5_0 quantization for superior accuracy with reduced size.",
             "514 MiB",
             "~4 GB",
             "bb3b5281bddd61605d6fc76bc5b92d8f20284c3b",
@@ -996,19 +1128,119 @@ fn get_initial_models() -> HashMap<String, Model> {
             ModelTier::Quality,
         ),
         (
-            "medium.en-q8_0",
+            "medium-q8_0",
             "Medium Q8_0",
-            "Highest quality medium model with Q8_0 quantization for professional use.",
+            "Medium model with Q8_0 quantization for professional-grade accuracy.",
             "785 MiB",
             "~4 GB",
             "b1cf48c12c807e14881f634fb7b6c6ca867f6b38",
             false,
             ModelTier::Quality,
         ),
-        // Maximum Tier - Best models up to large-v3-turbo limit
+        (
+            "medium.en",
+            "Medium English",
+            "High-quality English-only model for professional transcription and dictation.",
+            "1.5 GiB",
+            "~4 GB",
+            "ebf2a2c5bf4d1c9bb1cd9b21e1b4c1a3c4d5e6fb",
+            false,
+            ModelTier::Quality,
+        ),
+        (
+            "medium.en-q5_0",
+            "Medium English Q5_0",
+            "English medium model with Q5_0 quantization, handling accents and background noise.",
+            "514 MiB",
+            "~4 GB",
+            "fbf2a2c5bf4d1c9bb1cd9b21e1b4c1a3c4d5e6fc",
+            false,
+            ModelTier::Quality,
+        ),
+        (
+            "medium.en-q8_0",
+            "Medium English Q8_0",
+            "Highest quality medium English model with Q8_0 quantization for professional use.",
+            "785 MiB",
+            "~4 GB",
+            "gbf2a2c5bf4d1c9bb1cd9b21e1b4c1a3c4d5e6fd",
+            false,
+            ModelTier::Quality,
+        ),
+        // Maximum Tier - Large models for high-end hardware
+        (
+            "large-v1",
+            "Large V1",
+            "First generation large model with maximum accuracy for critical applications.",
+            "2.9 GiB",
+            "~8 GB",
+            "hbf2a2c5bf4d1c9bb1cd9b21e1b4c1a3c4d5e6fe",
+            false,
+            ModelTier::Maximum,
+        ),
+        (
+            "large-v2",
+            "Large V2",
+            "Second generation large model with improved accuracy and language understanding.",
+            "2.9 GiB",
+            "~8 GB",
+            "ibf2a2c5bf4d1c9bb1cd9b21e1b4c1a3c4d5e6ff",
+            false,
+            ModelTier::Maximum,
+        ),
+        (
+            "large-v2-q5_0",
+            "Large V2 Q5_0",
+            "Large V2 model with Q5_0 quantization for reduced size while maintaining excellence.",
+            "1.1 GiB",
+            "~8 GB",
+            "jbf2a2c5bf4d1c9bb1cd9b21e1b4c1a3c4d5e600",
+            false,
+            ModelTier::Maximum,
+        ),
+        (
+            "large-v2-q8_0",
+            "Large V2 Q8_0",
+            "Large V2 model with Q8_0 quantization for professional-grade performance.",
+            "1.5 GiB",
+            "~8 GB",
+            "kbf2a2c5bf4d1c9bb1cd9b21e1b4c1a3c4d5e601",
+            false,
+            ModelTier::Maximum,
+        ),
+        (
+            "large-v3",
+            "Large V3",
+            "Latest large model with state-of-the-art accuracy and multilingual support.",
+            "2.9 GiB",
+            "~8 GB",
+            "lbf2a2c5bf4d1c9bb1cd9b21e1b4c1a3c4d5e602",
+            false,
+            ModelTier::Maximum,
+        ),
+        (
+            "large-v3-q5_0",
+            "Large V3 Q5_0",
+            "Large V3 model with Q5_0 quantization for optimal balance of size and quality.",
+            "1.1 GiB",
+            "~8 GB",
+            "mbf2a2c5bf4d1c9bb1cd9b21e1b4c1a3c4d5e603",
+            false,
+            ModelTier::Maximum,
+        ),
+        (
+            "large-v3-turbo",
+            "Large V3 Turbo",
+            "Optimized large model with maximum accuracy and advanced language understanding.",
+            "1.5 GiB",
+            "~8 GB",
+            "4af2b29d7ec73d781377bfd1758ca957a807e941",
+            false,
+            ModelTier::Maximum,
+        ),
         (
             "large-v3-turbo-q5_0",
-            "Large Turbo Q5_0",
+            "Large V3 Turbo Q5_0",
             "Best performance with Q5_0 quantization, advanced language understanding.",
             "547 MiB",
             "~8 GB",
@@ -1017,12 +1249,12 @@ fn get_initial_models() -> HashMap<String, Model> {
             ModelTier::Maximum,
         ),
         (
-            "large-v3-turbo",
-            "Large Turbo",
-            "Maximum accuracy with advanced language understanding and punctuation.",
-            "1.5 GiB",
+            "large-v3-turbo-q8_0",
+            "Large V3 Turbo Q8_0",
+            "Premium turbo model with Q8_0 quantization for ultimate quality and performance.",
+            "834 MiB",
             "~8 GB",
-            "4af2b29d7ec73d781377bfd1758ca957a807e941",
+            "nbf2a2c5bf4d1c9bb1cd9b21e1b4c1a3c4d5e604",
             false,
             ModelTier::Maximum,
         ),
