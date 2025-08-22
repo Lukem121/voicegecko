@@ -28,6 +28,7 @@ export const env = createEnv({
     REVALIDATE_SECRET: z
       .string()
       .min(1, 'Revalidation secret is required for ISR'),
+    SENTRY_AUTH_TOKEN: z.string().min(1, 'Sentry auth token is required'),
     // Google Tag Manager server-side configuration
   },
 
