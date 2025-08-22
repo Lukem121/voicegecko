@@ -1,6 +1,6 @@
 Todo
 
-- [ ] Burger menu on mobile not implemented
+- [ ] On startup main window pops up
 
 Pre Launch Checks
 
