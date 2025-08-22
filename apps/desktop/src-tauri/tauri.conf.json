@@ -51,18 +51,14 @@
       "mobile": [
         {
           "host": "voicegecko.io",
-          "pathPrefix": [
-            "/login"
-          ]
+          "pathPrefix": ["/login"]
         },
         {
           "host": "voicegecko.io"
         }
       ],
       "desktop": {
-        "schemes": [
-          "voicegecko"
-        ]
+        "schemes": ["voicegecko"]
       }
     },
     "updater": {
@@ -72,21 +68,14 @@
         "http://localhost:3000/api/updater/{{target}}/{{current_version}}",
         "https://www.voicegecko.io/api/updater/{{target}}/{{current_version}}"
       ]
-    },
-    "windows": {
-      "installMode": "quiet"
     }
   },
   "bundle": {
     "active": true,
     "targets": "all",
-    "icon": [
-      "icons/icon.ico"
-    ],
+    "icon": ["icons/icon.ico"],
     "createUpdaterArtifacts": true,
-    "resources": [
-      "resources/**/*"
-    ],
+    "resources": ["resources/**/*"],
     "macOS": {
       "minimumSystemVersion": "10.15"
     }
