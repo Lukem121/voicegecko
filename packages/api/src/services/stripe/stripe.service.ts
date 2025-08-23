@@ -1,5 +1,6 @@
 import { log } from '@acme/observability/log';
 import { stripeClient } from '@acme/payment/stripe';
+import type Stripe from 'stripe';
 import { apiEnv } from '../../../env';
 
 type PriceId = string;
@@ -61,7 +62,7 @@ export const stripeService = {
       apiEnv().STRIPE_PRICE_ID_TEAM_YEARLY,
     ];
 
-    const prices = await Promise.all(
+    const results = await Promise.allSettled(
       priceIds.map((id) =>
         stripeClient.prices.retrieve(id, {
           expand: ['currency_options'],
@@ -69,7 +70,32 @@ export const stripeService = {
       )
     );
 
-    log.info('Retrieved Stripe prices', { prices });
+    const prices: Stripe.Price[] = [];
+    results.forEach((result, index) => {
+      if (result.status === 'fulfilled') {
+        prices.push(result.value);
+        return;
+      }
+
+      const reason = result.reason as
+        | { message?: string; code?: string }
+        | unknown;
+      log.warn(
+        {
+          priceId: priceIds[index],
+          error:
+            reason && typeof reason === 'object'
+              ? {
+                  message: (reason as { message?: string }).message,
+                  code: (reason as { code?: string }).code,
+                }
+              : { message: String(reason) },
+        },
+        'Stripe price retrieval failed; skipping this price'
+      );
+    });
+
+    log.info('Retrieved Stripe prices', { count: prices.length });
 
     // Transform the data into a more usable format with metadata
     const priceData = prices.reduce(
