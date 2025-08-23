@@ -452,9 +452,10 @@ const CRITICAL_TAG_PATTERNS = [
 
 // Regex for extracting base names from asset file names
 const FILE_EXTENSION_REGEX = /\.[^.]+$/;
+const NEWLINE_REGEX = /\r?\n/;
+const VALID_CHANNELS = new Set(['stable', 'beta', 'canary']);
 
 const CRITICAL_BODY_PATTERNS = [
-  /🚨/,
   /critical.*update/i,
   /security.*fix/i,
   /urgent.*update/i,
@@ -467,29 +468,84 @@ const CRITICAL_BODY_PATTERNS = [
  * Detects if a GitHub release should be treated as a critical/forced update
  * based on release tags, title, or body content
  */
-function isCriticalUpdate(release: GitHubRelease): boolean {
+function parseReleaseMetadata(release: GitHubRelease): {
+  critical: boolean;
+  channel: 'stable' | 'beta' | 'canary';
+  minSupportedDesktop?: string;
+  rolloutPercent?: number;
+} {
+  // Default values
+  let critical = false;
+  let channel: 'stable' | 'beta' | 'canary' = release.prerelease
+    ? 'beta'
+    : 'stable';
+  let minSupportedDesktop: string | undefined;
+  let rolloutPercent: number | undefined;
+
+  // Parse simple YAML/JSON front-matter-like blocks from body if present
+  if (release.body) {
+    try {
+      const lines = release.body.split(NEWLINE_REGEX);
+      for (const rawLine of lines) {
+        const line = rawLine.trim();
+        const [k, ...rest] = line.split(':');
+        const key = k?.toLowerCase();
+        const value = rest.join(':').trim();
+        if (!key) {
+          continue;
+        }
+        if (!value) {
+          continue;
+        }
+        if (key === 'critical') {
+          critical = value === 'true' || value === 'yes';
+        }
+        if (key === 'channel' && VALID_CHANNELS.has(value)) {
+          channel = value as 'stable' | 'beta' | 'canary';
+        }
+        if (key === 'min_supported_desktop') {
+          minSupportedDesktop = value;
+        }
+        if (key === 'rollout_percent') {
+          const n = Number.parseInt(value, 10);
+          if (!Number.isNaN(n) && n >= 0 && n <= 100) {
+            rolloutPercent = n;
+          }
+        }
+      }
+    } catch {
+      // ignore parse errors
+    }
+  }
+
+  // Fallback heuristics for critical when metadata not explicit
   // Check tag name for critical patterns
-  if (CRITICAL_TAG_PATTERNS.some((pattern) => pattern.test(release.tag_name))) {
-    return true;
+  if (
+    !critical &&
+    CRITICAL_TAG_PATTERNS.some((p) => p.test(release.tag_name))
+  ) {
+    critical = true;
   }
 
   // Check release title for critical patterns
   if (
     release.name &&
-    CRITICAL_TAG_PATTERNS.some((pattern) => pattern.test(release.name))
+    !critical &&
+    CRITICAL_TAG_PATTERNS.some((p) => p.test(release.name))
   ) {
-    return true;
+    critical = true;
   }
 
   // Check release body for critical indicators
   if (
     release.body &&
-    CRITICAL_BODY_PATTERNS.some((pattern) => pattern.test(release.body))
+    !critical &&
+    CRITICAL_BODY_PATTERNS.some((p) => p.test(release.body))
   ) {
-    return true;
+    critical = true;
   }
 
-  return false;
+  return { critical, channel, minSupportedDesktop, rolloutPercent };
 }
 
 function normalizeVersion(version: string): string {
@@ -528,8 +584,8 @@ const ResponseBuilder = {
       }
     }
 
-    // Detect if this is a critical update
-    const critical = isCriticalUpdate(release);
+    const meta = parseReleaseMetadata(release);
+    const critical = meta.critical;
 
     if (critical) {
       Logger.info('Critical update detected', {
@@ -655,6 +711,8 @@ export async function GET(
       newVersion: updateResponse.version,
       platforms: Object.keys(updateResponse.platforms),
     });
+
+    // MVP: No staged rollout; always return updateResponse
 
     return NextResponse.json(updateResponse);
   } catch (error) {

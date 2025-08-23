@@ -1,10 +1,12 @@
 # Release Process
 
-## Current Version: 0.0.17
+## Current Version: 0.0.18
 
 ## Overview
 
 This document outlines the step-by-step process for creating a new release of Voice Gecko.
+
+For details on the desktop updater and forced update policy, see `docs/UPDATER.md`.
 
 ## 🚀 Quick Release (Automated)
 
@@ -56,6 +58,16 @@ pnpm version:check
 pnpm version:bump 0.0.8
 ```
 
+### 2.5. Forced Update (Only if Breaking)
+
+If this release includes breaking changes that require all users to update:
+
+1. Publish desktop artifacts (GitHub Release) first.
+2. Set `MIN_SUPPORTED_DESKTOP_VERSION` in the web environment to the new desktop version.
+3. Deploy the web app. Older clients will receive HTTP 426 and auto-update on next API call.
+
+To rollback a forced update, lower `MIN_SUPPORTED_DESKTOP_VERSION` and redeploy the web app.
+
 ### 3. Manual Version Update (Legacy)
 
 If you prefer manual updates:
@@ -69,16 +81,16 @@ If you prefer manual updates:
 
    ```bash
    # Desktop app package.json
-   # Change line 4: "version": "0.0.17" → "version": "0.0.17"
+   # Change line 4: "version": "0.0.18" → "version": "0.0.18"
 
    # Tauri Cargo.toml
-   # Change line 3: version = "0.0.17" → version = "0.0.17"
+   # Change line 3: version = "0.0.18" → version = "0.0.18"
 
    # Tauri config
-   # Change line 3: "version": "0.0.17" → "version": "0.0.17"
+   # Change line 3: "version": "0.0.18" → "version": "0.0.18"
 
    # Web app package.json (sync with desktop)
-   # Change line 3: "version": "0.0.17" → "version": "0.0.17"
+   # Change line 3: "version": "0.0.18" → "version": "0.0.18"
    ```
 
 3. **Verify all changes**:
@@ -131,6 +143,7 @@ The release process uses a self-hosted GitHub Actions runner.
 
 - [ ] Verify the release was created on GitHub
 - [ ] Test the installer/updater
+- [ ] If breaking, confirm `MIN_SUPPORTED_DESKTOP_VERSION` is set correctly
 - [ ] Update any deployment documentation if needed
 - [ ] Announce the release (if applicable)
 

@@ -103,6 +103,7 @@ const defaultSettings: AppSettings = {
     showGeckoBar: true,
     hideGeckoOnFullscreen: true,
   },
+  // Update preferences are added lazily to preserve migration path
   privacy: {
     usageAnalytics: true,
     crashReports: true,

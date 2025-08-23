@@ -7,6 +7,7 @@ import {
   CardTitle,
 } from '@acme/ui/components/ui/card';
 import { Label } from '@acme/ui/components/ui/label';
+import { Progress } from '@acme/ui/components/ui/progress';
 import {
   Select,
   SelectContent,
@@ -17,17 +18,12 @@ import {
 import { Slider } from '@acme/ui/components/ui/slider';
 import { Switch } from '@acme/ui/components/ui/switch';
 import { ThemeToggle } from '@acme/ui/components/ui/theme';
-import { createFileRoute, Link } from '@tanstack/react-router';
-import {
-  Keyboard,
-  Mic,
-  Palette,
-  Settings,
-  Shield,
-  Volume2,
-} from 'lucide-react';
-
+import { createFileRoute } from '@tanstack/react-router';
+import { getVersion } from '@tauri-apps/api/app';
+import { Mic, Palette, Settings, Shield, Volume2 } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { useSettingsStore } from '~/stores/settings.store';
+import { useUpdateStore } from '~/stores/update.store';
 
 export const Route = createFileRoute('/_authenticated/settings/')({
   component: SettingsPage,
@@ -50,10 +46,53 @@ function SettingsPage() {
     playTestSound,
   } = useSettingsStore();
 
+  const [currentVersion, setCurrentVersion] = useState<string>('');
+  const updateStore = useUpdateStore();
+
+  useEffect(() => {
+    getVersion()
+      .then(setCurrentVersion)
+      .catch(() => setCurrentVersion(''));
+  }, []);
+
   return (
     <div className="flex flex-1 flex-col gap-4">
+      {updateStore.availableUpdate && (
+        <div className="rounded-md border p-3">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <span
+                aria-hidden="true"
+                className="inline-block h-2 w-2 rounded-full bg-red-500"
+              />
+              <span className="font-medium">Update available</span>
+              <span className="text-muted-foreground text-sm">
+                v{updateStore.availableUpdate.version}
+              </span>
+            </div>
+            <Button
+              disabled={updateStore.isInstalling}
+              onClick={() => updateStore.installUpdate()}
+              size="sm"
+              type="button"
+            >
+              {updateStore.isInstalling ? 'Installing…' : 'Install now'}
+            </Button>
+          </div>
+          {updateStore.isInstalling && (
+            <div className="mt-2">
+              <Progress className="h-1.5" value={updateStore.progress} />
+            </div>
+          )}
+          <div className="mt-2 text-[11px] text-muted-foreground">
+            {currentVersion ? `v${currentVersion}` : 'Loading version…'}
+            {updateStore.lastCheckedAt
+              ? ` • Last checked ${new Date(updateStore.lastCheckedAt).toLocaleString()}`
+              : ''}
+          </div>
+        </div>
+      )}
       <div className="grid gap-4 md:grid-cols-2">
-        {/* General Settings */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
@@ -374,23 +413,25 @@ function SettingsPage() {
         </Card>
       </div>
 
-      {/* Advanced Settings */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Advanced Settings</CardTitle>
-          <CardDescription>Advanced configuration options</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid gap-4 md:grid-cols-3">
-            <Link className="w-full" to="/settings/shortcuts">
-              <Button className="w-full justify-start gap-2" variant="outline">
-                <Keyboard className="h-4 w-4" />
-                Keyboard Shortcuts
-              </Button>
-            </Link>
-          </div>
-        </CardContent>
-      </Card>
+      {!updateStore.availableUpdate && (
+        <div className="flex items-center justify-between rounded-md border p-3">
+          <span className="text-muted-foreground text-sm">
+            {currentVersion ? `v${currentVersion}` : 'Loading version…'}
+            {updateStore.lastCheckedAt
+              ? ` • Last checked ${new Date(updateStore.lastCheckedAt).toLocaleString()}`
+              : ''}
+          </span>
+          <Button
+            disabled={updateStore.isChecking}
+            onClick={() => updateStore.checkForUpdates()}
+            size="sm"
+            type="button"
+            variant="outline"
+          >
+            {updateStore.isChecking ? 'Checking…' : 'Check for updates'}
+          </Button>
+        </div>
+      )}
     </div>
   );
 }

@@ -1,6 +1,7 @@
 import type { AppRouter } from '@acme/api/src/root';
 import { log } from '@acme/observability/log';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { getVersion } from '@tauri-apps/api/app';
 import { createTRPCClient, httpBatchLink, TRPCClientError } from '@trpc/client';
 import { createTRPCOptionsProxy } from '@trpc/tanstack-react-query';
 import superjson from 'superjson';
@@ -130,9 +131,15 @@ export const trpcClient = createTRPCClient<AppRouter>({
       transformer: superjson,
       async fetch(url, options) {
         try {
+          const clientVersion = await getVersion().catch(() => 'unknown');
           const response = await fetch(url, {
             ...options,
             credentials: 'include',
+            headers: {
+              ...(options?.headers ?? {}),
+              'x-client-version': clientVersion,
+              // Single channel MVP: no channel header
+            },
           });
 
           // Check for 401 Unauthorized response
@@ -145,6 +152,23 @@ export const trpcClient = createTRPCClient<AppRouter>({
             });
 
             // Still return the response to let TRPC handle the error appropriately
+            return response;
+          }
+
+          // Handle 426 Upgrade Required (min supported version)
+          if (response.status === 426) {
+            log.warn('🚨 Received 426 Upgrade Required from API');
+            // Defer the heavy work to avoid blocking the current request
+            import('./lib/app-lifecycle')
+              .then(async (m) => {
+                try {
+                  await m.appLifecycle.forceUpdateNow();
+                } catch (e) {
+                  log.error('Error handling 426 forced update:', e);
+                }
+              })
+              .catch((e) => log.error('Failed to load appLifecycle:', e));
+
             return response;
           }
 
