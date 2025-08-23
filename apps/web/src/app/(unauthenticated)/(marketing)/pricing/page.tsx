@@ -127,10 +127,6 @@ export default async function PricingPage() {
             </Link>
           </div>
         </section>
-
-        <section className="mt-20">
-          <pre>{JSON.stringify(prices, null, 2)}</pre>
-        </section>
       </Section>
     </>
   );
