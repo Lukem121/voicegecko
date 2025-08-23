@@ -23,6 +23,8 @@ const unprotectedRoutes: string[] = [
   // Marketing
   APP_ROUTES.MARKETING.PRICING,
   APP_ROUTES.MARKETING.DOWNLOAD,
+
+  '/opengraph-image',
 ];
 
 export default function middleware(request: NextRequest) {
