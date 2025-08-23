@@ -1,7 +1,9 @@
 #!/usr/bin/env node
+/** biome-ignore-all lint/performance/useTopLevelRegex: useTopLevelRegex */
+/** biome-ignore-all lint/suspicious/noConsole: no console.log */
 
-const fs = require('fs');
-const path = require('path');
+const fs = require('node:fs');
+const path = require('node:path');
 
 /**
  * Script to check version consistency across all project files
@@ -14,6 +16,16 @@ const VERSION_FILES = [
     file: 'apps/desktop/package.json',
     getter: (content) => JSON.parse(content).version,
     category: 'app',
+  },
+  // Policy file (informational)
+  {
+    name: 'Desktop policy (min supported)',
+    file: 'apps/web/src/config/desktop-policy.ts',
+    getter: (content) => {
+      const match = content.match(/MIN_SUPPORTED_DESKTOP_VERSION:\s*'([^']*)'/);
+      return match ? match[1] : null;
+    },
+    category: 'policy',
   },
   {
     name: 'Web package.json',
@@ -155,11 +167,11 @@ function checkVersions() {
   const categories = ['app', 'workspace', 'package', 'tooling'];
   const versionsByCategory = {};
 
-  categories.forEach((category) => {
+  for (const category of categories) {
     versionsByCategory[category] = versions.filter(
       (v) => v.category === category
     );
-  });
+  }
 
   // Check app versions (must be consistent)
   const appVersions = [
@@ -169,10 +181,10 @@ function checkVersions() {
     console.log(`✅ App versions are consistent: ${appVersions[0]}`);
   } else {
     console.log('❌ App version mismatch detected:');
-    appVersions.forEach((version) => {
+    for (const version of appVersions) {
       const files = versionsByCategory.app.filter((v) => v.version === version);
       console.log(`   ${version}: ${files.map((f) => f.name).join(', ')}`);
-    });
+    }
     hasErrors = true;
   }
 
@@ -188,12 +200,12 @@ function checkVersions() {
     console.log(`✅ Package versions match app version: ${packageVersions[0]}`);
   } else {
     console.log('❌ Package versions out of sync:');
-    packageVersions.forEach((version) => {
+    for (const version of packageVersions) {
       const files = versionsByCategory.package.filter(
         (v) => v.version === version
       );
       console.log(`   ${version}: ${files.map((f) => f.name).join(', ')}`);
-    });
+    }
     hasErrors = true;
   }
 
@@ -209,12 +221,12 @@ function checkVersions() {
     );
   } else {
     console.log('❌ Workspace version out of sync:');
-    workspaceVersions.forEach((version) => {
+    for (const version of workspaceVersions) {
       const files = versionsByCategory.workspace.filter(
         (v) => v.version === version
       );
       console.log(`   ${version}: ${files.map((f) => f.name).join(', ')}`);
-    });
+    }
     hasErrors = true;
   }
 
@@ -228,12 +240,12 @@ function checkVersions() {
     console.log(`✅ Tooling versions match app version: ${toolingVersions[0]}`);
   } else if (toolingVersions.length > 0) {
     console.log('❌ Tooling versions out of sync:');
-    toolingVersions.forEach((version) => {
+    for (const version of toolingVersions) {
       const files = versionsByCategory.tooling.filter(
         (v) => v.version === version
       );
       console.log(`   ${version}: ${files.map((f) => f.name).join(', ')}`);
-    });
+    }
     hasErrors = true;
   }
 

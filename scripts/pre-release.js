@@ -1,6 +1,8 @@
 #!/usr/bin/env node
+/** biome-ignore-all lint/performance/useTopLevelRegex: useTopLevelRegex */
+/** biome-ignore-all lint/suspicious/noConsole: no console.log */
 
-const { execSync } = require('child_process');
+const { execSync } = require('node:child_process');
 
 /**
  * Pre-release validation script
@@ -37,7 +39,7 @@ function runCheck(check) {
     execSync(check.command, { stdio: 'inherit', cwd: process.cwd() });
     console.log(`✅ ${check.name} passed\n`);
     return true;
-  } catch (error) {
+  } catch {
     console.log(`❌ ${check.name} failed\n`);
     return false;
   }
@@ -62,7 +64,9 @@ function main() {
 
   if (failed.length > 0) {
     console.log(`❌ Failed: ${failed.length}`);
-    failed.forEach((f) => console.log(`   - ${f.name}`));
+    for (const f of failed) {
+      console.log(`   - ${f.name}`);
+    }
     console.log('\n💡 Fix the failing checks before creating a release.');
     process.exit(1);
   }

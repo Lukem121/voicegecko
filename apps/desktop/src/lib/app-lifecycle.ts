@@ -190,7 +190,67 @@ class AppLifecycleManager {
         return;
       }
 
-      log.info('[AppLifecycle] 🎉 Update available:', update.version);
+      // Do not auto-install on launch. Record availability and continue startup.
+      log.info(
+        '[AppLifecycle] 🎉 Update available (deferred):',
+        update.version
+      );
+
+      // Fire analytics but do not block app startup
+      try {
+        analytics.track('feature_first_use', {
+          feature_name: 'update_available',
+          time_to_first_use_seconds: 0,
+        });
+      } catch (e) {
+        log.warn('[AppLifecycle] Failed to track update_available:', e);
+      }
+
+      // Reset status to idle so UI can proceed
+      this.notifyStatusChange('idle');
+      this.notifyProgressChange(0);
+    } catch (error) {
+      // Don't throw - app should continue even if updates fail
+      log.error('[AppLifecycle] ❌ Update check failed:', error);
+      this.notifyStatusChange('error');
+      log.info('[AppLifecycle] 🚀 Continuing with app startup...');
+    }
+  }
+
+  /**
+   * Schedule periodic update checks while the app is running
+   * intervalMs default: 12 hours
+   */
+  schedulePeriodicChecks(intervalMs = 12 * 60 * 60 * 1000): void {
+    const run = async () => {
+      try {
+        // Re-use the same check logic but do not auto-install
+        await this.performUpdateCheck();
+      } catch (e) {
+        log.warn('[AppLifecycle] Periodic update check failed:', e);
+      }
+    };
+
+    // First periodic run happens after interval to avoid duplicate with launch check
+    setInterval(run, intervalMs);
+  }
+
+  /**
+   * Force an update now (used when server requires an upgrade)
+   * This will download and install the update and relaunch.
+   */
+  async forceUpdateNow(): Promise<void> {
+    try {
+      log.info('[AppLifecycle] 🚨 Forced update initiated');
+      this.notifyStatusChange('checking');
+
+      const update = await check();
+      if (!update) {
+        log.info('[AppLifecycle] No update available during forced update');
+        this.notifyStatusChange('no-update');
+        return;
+      }
+
       this.notifyStatusChange('downloading');
 
       let downloaded = 0;
@@ -204,20 +264,21 @@ class AppLifecycleManager {
 
         switch (event.event) {
           case 'Started':
-            log.info('[AppLifecycle] 📥 Download started');
+            log.info('[AppLifecycle] 📥 Forced update download started');
             contentLength = event.data.contentLength ?? 0;
             this.notifyProgressChange(0);
             break;
           case 'Progress':
             downloaded += event.data.chunkLength;
             this.notifyProgressChange(progress);
-            // Only log major progress milestones to avoid spam
             if (progress % 25 === 0 || progress === 100) {
-              log.info(`[AppLifecycle] 📊 Download progress: ${progress}%`);
+              log.info(
+                `[AppLifecycle] 📊 Forced update progress: ${progress}%`
+              );
             }
             break;
           case 'Finished':
-            log.info('[AppLifecycle] ✅ Download finished');
+            log.info('[AppLifecycle] ✅ Forced update download finished');
             this.notifyStatusChange('installing');
             break;
           default:
@@ -225,14 +286,22 @@ class AppLifecycleManager {
         }
       });
 
-      log.info('[AppLifecycle] 🔄 Update installed, relaunching app...');
+      log.info('[AppLifecycle] 🔄 Forced update installed, relaunching app...');
       this.notifyStatusChange('ready-to-relaunch');
+
+      try {
+        analytics.track('feature_first_use', {
+          feature_name: 'update_installed',
+          time_to_first_use_seconds: 0,
+        });
+      } catch (e) {
+        log.warn('[AppLifecycle] Failed to track update_installed:', e);
+      }
+
       await relaunch();
     } catch (error) {
-      // Don't throw - app should continue even if updates fail
-      log.error('[AppLifecycle] ❌ Update check failed:', error);
+      log.error('[AppLifecycle] ❌ Forced update failed:', error);
       this.notifyStatusChange('error');
-      log.info('[AppLifecycle] 🚀 Continuing with app startup...');
     }
   }
 

@@ -83,6 +83,14 @@ Add to `package.json` scripts:
 }
 ```
 
+### 2.5. Forced Update Guidance (Manual Step)
+
+Add a note to your release steps for breaking changes:
+
+1. Publish desktop artifacts (GitHub Release).
+2. Set `MIN_SUPPORTED_DESKTOP_VERSION` in the web environment to the new desktop version.
+3. Deploy the web app so TRPC begins returning HTTP 426 to older clients.
+
 ### 3. Release Checklist Script
 
 Interactive script that walks through the release process.
