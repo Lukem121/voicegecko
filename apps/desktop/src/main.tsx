@@ -178,6 +178,9 @@ async function initializeApp() {
     // Initialize core systems (but NOT updates - those need UI feedback)
     await appLifecycle.initializeCoreSystemsOnce();
 
+    // Schedule periodic update checks every 12 hours
+    appLifecycle.schedulePeriodicChecks(12 * 60 * 60 * 1000);
+
     log.info('[Main] ✅ Core systems initialization complete');
   } catch (error) {
     log.error('[Main] ❌ Core systems initialization failed:', error);

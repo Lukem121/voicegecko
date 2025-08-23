@@ -1,9 +1,11 @@
 #!/usr/bin/env node
+/** biome-ignore-all lint/performance/useTopLevelRegex: useTopLevelRegex */
+/** biome-ignore-all lint/suspicious/noConsole: no console.log */
 
-const readline = require('readline');
-const { execSync } = require('child_process');
-const fs = require('fs');
-const path = require('path');
+const readline = require('node:readline');
+const { execSync } = require('node:child_process');
+const fs = require('node:fs');
+const path = require('node:path');
 
 /**
  * Interactive release helper script
@@ -26,33 +28,33 @@ function getCurrentVersion() {
 }
 
 function runCommand(command, description) {
-  console.log(`\n🔄 ${description}...`);
+  process.stdout.write(`\n🔄 ${description}...\n`);
   try {
     execSync(command, { stdio: 'inherit', cwd: process.cwd() });
-    console.log(`✅ ${description} completed`);
+    process.stdout.write(`✅ ${description} completed\n`);
     return true;
-  } catch (error) {
-    console.log(`❌ ${description} failed`);
+  } catch {
+    process.stdout.write(`❌ ${description} failed\n`);
     return false;
   }
 }
 
 async function main() {
-  console.log('🚀 Voice Gecko Release Helper\n');
+  process.stdout.write('🚀 Voice Gecko Release Helper\n\n');
 
   const currentVersion = getCurrentVersion();
-  console.log(`📦 Current version: ${currentVersion}\n`);
+  process.stdout.write(`📦 Current version: ${currentVersion}\n\n`);
 
   const confirm = await question('Start the release process? (y/N): ');
   if (confirm.toLowerCase() !== 'y') {
-    console.log('❌ Release cancelled');
+    process.stdout.write('❌ Release cancelled\n');
     process.exit(0);
   }
 
   // Step 2: Pre-release checks
-  console.log('\n' + '='.repeat(50));
-  console.log('STEP 1: PRE-RELEASE VALIDATION');
-  console.log('='.repeat(50));
+  process.stdout.write(`\n${'='.repeat(50)}\n`);
+  process.stdout.write('STEP 1: PRE-RELEASE VALIDATION\n');
+  process.stdout.write(`${'='.repeat(50)}\n`);
 
   if (
     !runCommand('node scripts/pre-release.js', 'Running pre-release checks')
@@ -61,29 +63,56 @@ async function main() {
       '\nPre-release checks failed. Continue anyway? (y/N): '
     );
     if (continueAnyway.toLowerCase() !== 'y') {
-      console.log('❌ Release cancelled');
+      process.stdout.write('❌ Release cancelled\n');
       process.exit(1);
     }
   }
 
   // Step 3: Version bump
-  console.log('\n' + '='.repeat(50));
-  console.log('STEP 2: VERSION BUMP');
-  console.log('='.repeat(50));
+  process.stdout.write(`\n${'='.repeat(50)}\n`);
+  process.stdout.write('STEP 2: VERSION BUMP\n');
+  process.stdout.write(`${'='.repeat(50)}\n`);
 
-  console.log('🔄 Starting interactive version bump...');
+  process.stdout.write('🔄 Starting interactive version bump...\n');
   if (!runCommand('node scripts/bump-version.js', 'Bumping version')) {
-    console.log('❌ Version bump failed');
+    process.stdout.write('❌ Version bump failed\n');
     process.exit(1);
   }
 
   // Get the new version after bump
   const newVersion = getCurrentVersion();
 
+  // Ask if breaking and bump MIN_SUPPORTED_DESKTOP_VERSION in policy
+  const breaking = await question(
+    '\nIs this a breaking release requiring a forced desktop update? (y/N): '
+  );
+  if (breaking.toLowerCase() === 'y') {
+    const POLICY_FILE_PATH = path.join(
+      process.cwd(),
+      'apps/web/src/config/desktop-policy.ts'
+    );
+    const POLICY_MIN_VERSION_REGEX = /MIN_SUPPORTED_DESKTOP_VERSION:\s*'[^']*'/;
+    try {
+      const original = fs.readFileSync(POLICY_FILE_PATH, 'utf8');
+      const updated = original.replace(
+        POLICY_MIN_VERSION_REGEX,
+        `MIN_SUPPORTED_DESKTOP_VERSION: '${newVersion}'`
+      );
+      fs.writeFileSync(POLICY_FILE_PATH, updated, 'utf8');
+      process.stdout.write(
+        `\n📝 Updated ${POLICY_FILE_PATH} (MIN_SUPPORTED_DESKTOP_VERSION=${newVersion})\n`
+      );
+    } catch {
+      process.stdout.write(
+        `\n⚠️  Failed to update policy file. Please bump MIN_SUPPORTED_DESKTOP_VERSION manually in ${POLICY_FILE_PATH}.\n`
+      );
+    }
+  }
+
   // Step 4: Git operations
-  console.log('\n' + '='.repeat(50));
-  console.log('STEP 3: GIT OPERATIONS');
-  console.log('='.repeat(50));
+  process.stdout.write(`\n${'='.repeat(50)}\n`);
+  process.stdout.write('STEP 3: GIT OPERATIONS\n');
+  process.stdout.write(`${'='.repeat(50)}\n`);
 
   if (!runCommand('git add .', 'Staging changes')) {
     process.exit(1);
@@ -99,14 +128,14 @@ async function main() {
   }
 
   // Step 5: Release branch
-  console.log('\n' + '='.repeat(50));
-  console.log('STEP 4: RELEASE DEPLOYMENT');
-  console.log('='.repeat(50));
+  process.stdout.write(`\n${'='.repeat(50)}\n`);
+  process.stdout.write('STEP 4: RELEASE DEPLOYMENT\n');
+  process.stdout.write(`${'='.repeat(50)}\n`);
 
   const currentBranch = execSync('git branch --show-current', {
     encoding: 'utf8',
   }).trim();
-  console.log(`📍 Current branch: ${currentBranch}`);
+  process.stdout.write(`📍 Current branch: ${currentBranch}\n`);
 
   const pushToRelease = await question(
     '\nPush to release branch to trigger GitHub Actions? (y/N): '
@@ -129,8 +158,10 @@ async function main() {
       process.exit(1);
     }
 
-    console.log('\n🎉 Release deployment initiated!');
-    console.log('📍 Monitor progress at: https://github.com/your-repo/actions');
+    process.stdout.write('\n🎉 Release deployment initiated!\n');
+    process.stdout.write(
+      '📍 Monitor progress at: https://github.com/lukem121/voicegecko/actions\n'
+    );
 
     if (
       !runCommand(
@@ -138,23 +169,25 @@ async function main() {
         `Switching back to ${currentBranch}`
       )
     ) {
-      console.log('⚠️  Warning: Could not switch back to original branch');
+      process.stdout.write(
+        '⚠️  Warning: Could not switch back to original branch\n'
+      );
     }
   } else {
-    console.log('\n📝 Manual steps remaining:');
-    console.log('   1. git checkout release');
-    console.log(`   2. git merge ${currentBranch}`);
-    console.log('   3. git push origin release');
+    process.stdout.write('\n📝 Manual steps remaining:\n');
+    process.stdout.write('   1. git checkout release\n');
+    process.stdout.write(`   2. git merge ${currentBranch}\n`);
+    process.stdout.write('   3. git push origin release\n');
   }
 
-  console.log('\n🏁 Release process completed!');
-  console.log(`📦 Version ${newVersion} is ready`);
+  process.stdout.write('\n🏁 Release process completed!\n');
+  process.stdout.write(`📦 Version ${newVersion} is ready\n`);
 
   rl.close();
 }
 
 main().catch((error) => {
-  console.error('❌ Release process failed:', error);
+  process.stderr.write(`❌ Release process failed: ${error}\n`);
   rl.close();
   process.exit(1);
 });

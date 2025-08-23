@@ -1,7 +1,7 @@
 {
   "$schema": "../../../node_modules/@tauri-apps/cli/schema.json",
   "productName": "Voice Gecko",
-  "version": "0.0.17",
+  "version": "0.0.18",
   "identifier": "com.voicegecko.desktop",
   "build": {
     "frontendDist": "../dist",
@@ -52,19 +52,25 @@
       "mobile": [
         {
           "host": "voicegecko.io",
-          "pathPrefix": ["/login"]
+          "pathPrefix": [
+            "/login"
+          ]
         },
         {
           "host": "voicegecko.io"
         }
       ],
       "desktop": {
-        "schemes": ["voicegecko"]
+        "schemes": [
+          "voicegecko"
+        ]
       }
     },
     "updater": {
       "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEUyQTlDMDc3NUNCOTdCRTEKUldUaGU3bGNkOENwNHVleGV3OEhXMTNpTUozaG82S0VSbFVKTnpVeTBkZWRhaGFuazhLL2dxWUkK",
+      "dangerousInsecureTransportProtocol": true,
       "endpoints": [
+        "http://localhost:3000/api/updater/{{target}}/{{current_version}}",
         "https://www.voicegecko.io/api/updater/{{target}}/{{current_version}}"
       ]
     }
@@ -72,9 +78,13 @@
   "bundle": {
     "active": true,
     "targets": "all",
-    "icon": ["icons/icon.ico"],
+    "icon": [
+      "icons/icon.ico"
+    ],
     "createUpdaterArtifacts": true,
-    "resources": ["resources/**/*"],
+    "resources": [
+      "resources/**/*"
+    ],
     "macOS": {
       "minimumSystemVersion": "10.15"
     }

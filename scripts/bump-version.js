@@ -1,13 +1,29 @@
 #!/usr/bin/env node
+/** biome-ignore-all lint/suspicious/noConsole: no console.log */
 
-const fs = require('fs');
-const path = require('path');
-const readline = require('readline');
+const fs = require('node:fs');
+const path = require('node:path');
+const readline = require('node:readline');
 
 /**
  * Script to automatically bump version across all project files
  * Usage: node scripts/bump-version.js 0.0.8
  */
+
+const out = (msg) => process.stdout.write(`${msg}\n`);
+const err = (msg) => process.stderr.write(`${msg}\n`);
+
+// Top-level regex constants for linter performance rule
+const CARGO_SET_VERSION_REGEX = /^version = ".+"$/m;
+const CARGO_EXTRACT_VERSION_REGEX = /^version = "(.+)"$/m;
+const SEMVER_REGEX =
+  /^(\d+)\.(\d+)\.(\d+)(-[a-zA-Z0-9.-]+)?(\+[a-zA-Z0-9.-]+)?$/;
+const RELEASE_DOC_CURRENT_VERSION_LINE = /^## Current Version: .+$/m;
+const RELEASE_DOC_ANY_QUOTED_VERSION = /"0\.0\.\d+"/g;
+
+// Policy update constants
+const POLICY_FILE_PATH = 'apps/web/src/config/desktop-policy.ts';
+const POLICY_MIN_VERSION_REGEX = /MIN_SUPPORTED_DESKTOP_VERSION:\s*'[^']*'/;
 
 const VERSION_FILES = [
   // Application files (primary)
@@ -17,7 +33,7 @@ const VERSION_FILES = [
     updater: (content, newVersion) => {
       const pkg = JSON.parse(content);
       pkg.version = newVersion;
-      return JSON.stringify(pkg, null, 2) + '\n';
+      return `${JSON.stringify(pkg, null, 2)}\n`;
     },
     category: 'app',
   },
@@ -27,7 +43,7 @@ const VERSION_FILES = [
     updater: (content, newVersion) => {
       const pkg = JSON.parse(content);
       pkg.version = newVersion;
-      return JSON.stringify(pkg, null, 2) + '\n';
+      return `${JSON.stringify(pkg, null, 2)}\n`;
     },
     category: 'app',
   },
@@ -35,7 +51,10 @@ const VERSION_FILES = [
     name: 'Tauri Cargo.toml',
     file: 'apps/desktop/src-tauri/Cargo.toml',
     updater: (content, newVersion) => {
-      return content.replace(/^version = ".+"$/m, `version = "${newVersion}"`);
+      return content.replace(
+        CARGO_SET_VERSION_REGEX,
+        `version = "${newVersion}"`
+      );
     },
     category: 'app',
   },
@@ -45,7 +64,7 @@ const VERSION_FILES = [
     updater: (content, newVersion) => {
       const config = JSON.parse(content);
       config.version = newVersion;
-      return JSON.stringify(config, null, 2) + '\n';
+      return `${JSON.stringify(config, null, 2)}\n`;
     },
     category: 'app',
   },
@@ -55,7 +74,7 @@ const VERSION_FILES = [
     updater: (content, newVersion) => {
       const config = JSON.parse(content);
       config.version = newVersion;
-      return JSON.stringify(config, null, 2) + '\n';
+      return `${JSON.stringify(config, null, 2)}\n`;
     },
     category: 'app',
   },
@@ -65,7 +84,7 @@ const VERSION_FILES = [
     updater: (content, newVersion) => {
       const config = JSON.parse(content);
       config.version = newVersion;
-      return JSON.stringify(config, null, 2) + '\n';
+      return `${JSON.stringify(config, null, 2)}\n`;
     },
     category: 'app',
   },
@@ -74,7 +93,10 @@ const VERSION_FILES = [
     name: 'Workspace Cargo.toml',
     file: 'Cargo.toml',
     updater: (content, newVersion) => {
-      return content.replace(/^version = ".+"$/m, `version = "${newVersion}"`);
+      return content.replace(
+        CARGO_SET_VERSION_REGEX,
+        `version = "${newVersion}"`
+      );
     },
     category: 'workspace',
   },
@@ -85,7 +107,7 @@ const VERSION_FILES = [
     updater: (content, newVersion) => {
       const pkg = JSON.parse(content);
       pkg.version = newVersion;
-      return JSON.stringify(pkg, null, 2) + '\n';
+      return `${JSON.stringify(pkg, null, 2)}\n`;
     },
     category: 'package',
   },
@@ -95,7 +117,7 @@ const VERSION_FILES = [
     updater: (content, newVersion) => {
       const pkg = JSON.parse(content);
       pkg.version = newVersion;
-      return JSON.stringify(pkg, null, 2) + '\n';
+      return `${JSON.stringify(pkg, null, 2)}\n`;
     },
     category: 'package',
   },
@@ -105,7 +127,7 @@ const VERSION_FILES = [
     updater: (content, newVersion) => {
       const pkg = JSON.parse(content);
       pkg.version = newVersion;
-      return JSON.stringify(pkg, null, 2) + '\n';
+      return `${JSON.stringify(pkg, null, 2)}\n`;
     },
     category: 'package',
   },
@@ -115,7 +137,7 @@ const VERSION_FILES = [
     updater: (content, newVersion) => {
       const pkg = JSON.parse(content);
       pkg.version = newVersion;
-      return JSON.stringify(pkg, null, 2) + '\n';
+      return `${JSON.stringify(pkg, null, 2)}\n`;
     },
     category: 'package',
   },
@@ -125,7 +147,7 @@ const VERSION_FILES = [
     updater: (content, newVersion) => {
       const pkg = JSON.parse(content);
       pkg.version = newVersion;
-      return JSON.stringify(pkg, null, 2) + '\n';
+      return `${JSON.stringify(pkg, null, 2)}\n`;
     },
     category: 'package',
   },
@@ -135,7 +157,7 @@ const VERSION_FILES = [
     updater: (content, newVersion) => {
       const pkg = JSON.parse(content);
       pkg.version = newVersion;
-      return JSON.stringify(pkg, null, 2) + '\n';
+      return `${JSON.stringify(pkg, null, 2)}\n`;
     },
     category: 'package',
   },
@@ -145,7 +167,7 @@ const VERSION_FILES = [
     updater: (content, newVersion) => {
       const pkg = JSON.parse(content);
       pkg.version = newVersion;
-      return JSON.stringify(pkg, null, 2) + '\n';
+      return `${JSON.stringify(pkg, null, 2)}\n`;
     },
     category: 'package',
   },
@@ -155,7 +177,7 @@ const VERSION_FILES = [
     updater: (content, newVersion) => {
       const pkg = JSON.parse(content);
       pkg.version = newVersion;
-      return JSON.stringify(pkg, null, 2) + '\n';
+      return `${JSON.stringify(pkg, null, 2)}\n`;
     },
     category: 'package',
   },
@@ -165,7 +187,7 @@ const VERSION_FILES = [
     updater: (content, newVersion) => {
       const pkg = JSON.parse(content);
       pkg.version = newVersion;
-      return JSON.stringify(pkg, null, 2) + '\n';
+      return `${JSON.stringify(pkg, null, 2)}\n`;
     },
     category: 'package',
   },
@@ -175,16 +197,14 @@ const VERSION_FILES = [
     updater: (content, newVersion) => {
       const pkg = JSON.parse(content);
       pkg.version = newVersion;
-      return JSON.stringify(pkg, null, 2) + '\n';
+      return `${JSON.stringify(pkg, null, 2)}\n`;
     },
     category: 'tooling',
   },
 ];
 
 function isValidSemver(version) {
-  const semverRegex =
-    /^(\d+)\.(\d+)\.(\d+)(-[a-zA-Z0-9.-]+)?(\+[a-zA-Z0-9.-]+)?$/;
-  return semverRegex.test(version);
+  return SEMVER_REGEX.test(version);
 }
 
 function getCurrentVersion() {
@@ -193,7 +213,7 @@ function getCurrentVersion() {
     const content = fs.readFileSync(pkgPath, 'utf8');
     return JSON.parse(content).version;
   } catch (error) {
-    console.error('❌ Could not read current version:', error.message);
+    err(`❌ Could not read current version: ${error.message}`);
     process.exit(1);
   }
 }
@@ -214,7 +234,7 @@ function updateDocumentationFiles(newVersion) {
       file: 'docs/RELEASE.md',
       updates: [
         {
-          search: /^## Current Version: .+$/m,
+          search: RELEASE_DOC_CURRENT_VERSION_LINE,
           replace: `## Current Version: ${newVersion}`,
         },
         {
@@ -222,7 +242,7 @@ function updateDocumentationFiles(newVersion) {
           replace: `Currently synced at ${newVersion}`,
         },
         {
-          search: /"0\.0\.\d+"/g,
+          search: RELEASE_DOC_ANY_QUOTED_VERSION,
           replace: `"${newVersion}"`,
         },
       ],
@@ -252,14 +272,14 @@ function updateDocumentationFiles(newVersion) {
 
       fs.writeFileSync(filePath, content, 'utf8');
       results.push({ name: docFile.name, success: true });
-      console.log(`📄 Updated documentation: ${docFile.name}`);
+      out(`📄 Updated documentation: ${docFile.name}`);
     } catch (error) {
       results.push({
         name: docFile.name,
         success: false,
         error: error.message,
       });
-      console.log(`❌ Failed to update ${docFile.name}: ${error.message}`);
+      out(`❌ Failed to update ${docFile.name}: ${error.message}`);
     }
   }
 
@@ -267,7 +287,7 @@ function updateDocumentationFiles(newVersion) {
 }
 
 function bumpVersion(newVersion) {
-  console.log(`🚀 Bumping version to: ${newVersion}\n`);
+  out(`🚀 Bumping version to: ${newVersion}\n`);
 
   const changes = [];
   const categories = ['app', 'workspace', 'package', 'tooling'];
@@ -275,7 +295,7 @@ function bumpVersion(newVersion) {
   // Update all versioned files by category
   for (const category of categories) {
     const categoryFiles = VERSION_FILES.filter((f) => f.category === category);
-    console.log(`\n📂 Updating ${category} files:`);
+    out(`\n📂 Updating ${category} files:`);
 
     for (const versionFile of categoryFiles) {
       try {
@@ -291,9 +311,9 @@ function bumpVersion(newVersion) {
           success: true,
         });
 
-        console.log(`   ✅ ${versionFile.name}`);
+        out(`   ✅ ${versionFile.name}`);
       } catch (error) {
-        console.log(`   ❌ ${versionFile.name}: ${error.message}`);
+        out(`   ❌ ${versionFile.name}: ${error.message}`);
         changes.push({
           file: versionFile.file,
           name: versionFile.name,
@@ -306,7 +326,7 @@ function bumpVersion(newVersion) {
   }
 
   // Update documentation files
-  console.log('\n📄 Updating documentation files:');
+  out('\n📄 Updating documentation files:');
   const docResults = updateDocumentationFiles(newVersion);
 
   // Summary
@@ -315,29 +335,48 @@ function bumpVersion(newVersion) {
   const docSuccessful = docResults.filter((r) => r.success);
   const docFailed = docResults.filter((r) => !r.success);
 
-  console.log('\n📊 Summary:');
-  console.log(`✅ Successfully updated: ${successful.length} version files`);
-  console.log(
-    `📄 Successfully updated: ${docSuccessful.length} documentation files`
-  );
+  out('\n📊 Summary:');
+  out(`✅ Successfully updated: ${successful.length} version files`);
+  out(`📄 Successfully updated: ${docSuccessful.length} documentation files`);
 
   if (failed.length > 0 || docFailed.length > 0) {
-    console.log('❌ Failed updates:');
-    failed.forEach((f) => console.log(`   - ${f.name}: ${f.error}`));
-    docFailed.forEach((f) => console.log(`   - ${f.name}: ${f.error}`));
+    out('❌ Failed updates:');
+    for (const f of failed) {
+      out(`   - ${f.name}: ${f.error}`);
+    }
+    for (const f of docFailed) {
+      out(`   - ${f.name}: ${f.error}`);
+    }
     process.exit(1);
   }
 
-  console.log(`\n🎉 Version successfully bumped to ${newVersion}!`);
-  console.log(
+  out(`\n🎉 Version successfully bumped to ${newVersion}!`);
+  out(
     `📦 Updated ${successful.length} files across ${categories.length} categories`
   );
-  console.log('\n📝 Next steps:');
-  console.log('   1. Review changes: git diff');
-  console.log('   2. Verify: pnpm version:check');
-  console.log(
+  out('\n📝 Next steps:');
+  out('   1. Review changes: git diff');
+  out('   2. Verify: pnpm version:check');
+  out(
     `   3. Commit: git add . && git commit -m "chore: bump version to ${newVersion}"`
   );
+}
+
+function updateDesktopPolicyMinVersion(newVersion) {
+  try {
+    const policyPath = path.join(process.cwd(), POLICY_FILE_PATH);
+    const original = fs.readFileSync(policyPath, 'utf8');
+    const updated = original.replace(
+      POLICY_MIN_VERSION_REGEX,
+      `MIN_SUPPORTED_DESKTOP_VERSION: '${newVersion}'`
+    );
+    fs.writeFileSync(policyPath, updated, 'utf8');
+    out(
+      `\n📝 Updated ${POLICY_FILE_PATH} (MIN_SUPPORTED_DESKTOP_VERSION=${newVersion})`
+    );
+  } catch (error) {
+    out(`\n⚠️  Failed to update ${POLICY_FILE_PATH}: ${error.message}`);
+  }
 }
 
 const rl = readline.createInterface({
@@ -353,12 +392,12 @@ async function promptForVersion() {
   const currentVersion = getCurrentVersion();
   const suggestions = suggestNextVersions(currentVersion);
 
-  console.log(`📦 Current version: ${currentVersion}\n`);
-  console.log('💡 Version options:');
-  console.log(`   1. Patch (${suggestions.patch}) - Bug fixes`);
-  console.log(`   2. Minor (${suggestions.minor}) - New features`);
-  console.log(`   3. Major (${suggestions.major}) - Breaking changes`);
-  console.log('   4. Custom version');
+  out(`📦 Current version: ${currentVersion}\n`);
+  out('💡 Version options:');
+  out(`   1. Patch (${suggestions.patch}) - Bug fixes`);
+  out(`   2. Minor (${suggestions.minor}) - New features`);
+  out(`   3. Major (${suggestions.major}) - Breaking changes`);
+  out('   4. Custom version');
 
   const choice = await question('\nSelect version type (1-4): ');
 
@@ -377,7 +416,7 @@ async function promptForVersion() {
       newVersion = await question('Enter custom version: ');
       break;
     default:
-      console.log('❌ Invalid choice');
+      out('❌ Invalid choice');
       rl.close();
       process.exit(1);
   }
@@ -395,8 +434,8 @@ async function main() {
   }
 
   if (!isValidSemver(newVersion)) {
-    console.error(`❌ Invalid semantic version: ${newVersion}`);
-    console.error('   Expected format: X.Y.Z (e.g., 1.2.3)');
+    err(`❌ Invalid semantic version: ${newVersion}`);
+    err('   Expected format: X.Y.Z (e.g., 1.2.3)');
     rl.close();
     process.exit(1);
   }
@@ -405,13 +444,13 @@ async function main() {
 
   // Check which files need updating and show summary
   const filesToUpdate = [];
-  VERSION_FILES.forEach((versionFile) => {
+  for (const versionFile of VERSION_FILES) {
     try {
       const filePath = path.join(process.cwd(), versionFile.file);
       const content = fs.readFileSync(filePath, 'utf8');
       let fileVersion;
       if (versionFile.file.includes('Cargo.toml')) {
-        const match = content.match(/^version = "(.+)"$/m);
+        const match = content.match(CARGO_EXTRACT_VERSION_REGEX);
         fileVersion = match ? match[1] : null;
       } else {
         fileVersion = JSON.parse(content).version;
@@ -423,53 +462,59 @@ async function main() {
           category: versionFile.category,
         });
       }
-    } catch (error) {
+    } catch {
       filesToUpdate.push({
         name: versionFile.name,
         currentVersion: 'ERROR',
         category: versionFile.category,
       });
     }
-  });
+  }
 
   if (filesToUpdate.length === 0) {
-    console.log(`⚠️  All files already at version ${newVersion}.`);
+    out(`⚠️  All files already at version ${newVersion}.`);
     rl.close();
     process.exit(0);
   }
 
   // Show which files will be updated
-  console.log(`\n🔍 Files needing update to ${newVersion}:`);
+  out(`\n🔍 Files needing update to ${newVersion}:`);
   const categories = ['app', 'workspace', 'package', 'tooling'];
-  categories.forEach((category) => {
+  for (const category of categories) {
     const categoryFiles = filesToUpdate.filter((f) => f.category === category);
     if (categoryFiles.length > 0) {
-      console.log(`\n📂 ${category.toUpperCase()} files:`);
-      categoryFiles.forEach((file) => {
-        console.log(
-          `   • ${file.name}: ${file.currentVersion} → ${newVersion}`
-        );
-      });
+      out(`\n📂 ${category.toUpperCase()} files:`);
+      for (const file of categoryFiles) {
+        out(`   • ${file.name}: ${file.currentVersion} → ${newVersion}`);
+      }
     }
-  });
+  }
 
-  console.log(`\n📦 Current version: ${currentVersion}`);
-  console.log(`🎯 Target version: ${newVersion}`);
+  out(`\n📦 Current version: ${currentVersion}`);
+  out(`🎯 Target version: ${newVersion}`);
 
   // Confirmation prompt
   const confirm = await question('\nProceed with version bump? (y/N): ');
   if (confirm.toLowerCase() !== 'y') {
-    console.log('❌ Version bump cancelled');
+    out('❌ Version bump cancelled');
     rl.close();
     process.exit(0);
   }
 
   bumpVersion(newVersion);
+
+  // Prompt for forced update and update repo-tracked policy if needed
+  const breaking = await question(
+    '\nIs this a breaking release requiring a forced desktop update? (y/N): '
+  );
+  if (breaking.toLowerCase() === 'y') {
+    updateDesktopPolicyMinVersion(newVersion);
+  }
   rl.close();
 }
 
 main().catch((error) => {
-  console.error('❌ Version bump failed:', error);
+  err(`❌ Version bump failed: ${error}`);
   rl.close();
   process.exit(1);
 });

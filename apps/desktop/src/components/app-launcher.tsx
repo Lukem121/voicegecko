@@ -165,20 +165,18 @@ export function AppLauncher({ onReady }: { onReady: () => void }) {
   const { error, updateStatus, updateProgress, isUpdating } =
     useAppInitialization(onReady);
 
-  // Wait for authentication to be ready AND updates to finish
+  // Wait for authentication to be ready (updates no longer block startup)
   useEffect(() => {
     const authReady = !auth.isLoading;
-    const updatesComplete = !isUpdating;
 
-    if (authReady && updatesComplete) {
-      log.info('App launcher: Authentication ready and updates complete', {
+    if (authReady) {
+      log.info('App launcher: Authentication ready', {
         authLoading: auth.isLoading,
         authState: auth.getAuthState(),
-        isUpdating,
       });
       onReady();
     }
-  }, [auth.isLoading, auth.getAuthState, isUpdating, onReady]);
+  }, [auth.isLoading, auth.getAuthState, onReady]);
 
   if (error) {
     return (
@@ -196,8 +194,8 @@ export function AppLauncher({ onReady }: { onReady: () => void }) {
     );
   }
 
-  // Show launcher while updates are running OR auth is loading
-  if (isUpdating || auth.isLoading) {
+  // Show launcher while auth is loading
+  if (auth.isLoading) {
     return (
       <LoadingScreen
         isUpdating={isUpdating}
