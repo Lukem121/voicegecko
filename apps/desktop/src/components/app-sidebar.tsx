@@ -57,9 +57,9 @@ import {
   Wand2,
 } from 'lucide-react';
 import { useState } from 'react';
-
 import { useSignOut } from '~/hooks/auth';
 import { useAuthWithConnectivity } from '~/hooks/use-auth-with-connectivity';
+import { useUpdateStore } from '~/stores/update.store';
 import { trpc } from '~/trpc';
 
 type NavigationSubItem = {
@@ -252,6 +252,9 @@ export function AppSidebar() {
     enabled: !!user,
   });
 
+  // Update availability indicator for Settings menu
+  const updateAvailable = !!useUpdateStore((s) => s.availableUpdate);
+
   // Check if user is on free plan (no subscription)
   const isFreePlan = usageStatus && !usageStatus.isUnlimited;
   const usagePercentage = isFreePlan
@@ -379,6 +382,12 @@ export function AppSidebar() {
                         <Link to={item.url}>
                           <item.icon />
                           <span>{item.title}</span>
+                          {item.title === 'Settings' && updateAvailable && (
+                            <span
+                              aria-hidden="true"
+                              className="ml-auto inline-block h-2 w-2 rounded-full bg-red-500"
+                            />
+                          )}
                         </Link>
                       ) : (
                         <>

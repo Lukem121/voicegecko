@@ -6,6 +6,7 @@ import { check } from '@tauri-apps/plugin-updater';
 
 import { dictionaryService } from '~/services/dictionary.service';
 import { storeRegistry } from '~/stores/store-registry';
+import { useUpdateStore } from '~/stores/update.store';
 import { setInitializationFlag } from '~/trpc';
 import { analytics } from './analytics/posthog-analytics';
 import { initializeTauriEvents } from './tauri-events';
@@ -187,6 +188,12 @@ class AppLifecycleManager {
       if (!update) {
         log.info('[AppLifecycle] ✅ No updates available');
         this.notifyStatusChange('no-update');
+        try {
+          useUpdateStore.getState().setAvailable(null);
+          useUpdateStore.getState().setLastCheckedNow();
+        } catch (e) {
+          log.debug('[AppLifecycle] update store not ready', e as unknown);
+        }
         return;
       }
 
@@ -209,6 +216,12 @@ class AppLifecycleManager {
       // Reset status to idle so UI can proceed
       this.notifyStatusChange('idle');
       this.notifyProgressChange(0);
+      try {
+        useUpdateStore.getState().setAvailable({ version: update.version });
+        useUpdateStore.getState().setLastCheckedNow();
+      } catch (e) {
+        log.debug('[AppLifecycle] update store not ready', e as unknown);
+      }
     } catch (error) {
       // Don't throw - app should continue even if updates fail
       log.error('[AppLifecycle] ❌ Update check failed:', error);
@@ -243,11 +256,22 @@ class AppLifecycleManager {
     try {
       log.info('[AppLifecycle] 🚨 Forced update initiated');
       this.notifyStatusChange('checking');
+      try {
+        useUpdateStore.getState().setInstalling(true);
+        useUpdateStore.getState().setProgress(0);
+      } catch (e) {
+        log.debug('[AppLifecycle] update store not ready', e as unknown);
+      }
 
       const update = await check();
       if (!update) {
         log.info('[AppLifecycle] No update available during forced update');
         this.notifyStatusChange('no-update');
+        try {
+          useUpdateStore.getState().setInstalling(false);
+        } catch (e) {
+          log.debug('[AppLifecycle] update store not ready', e as unknown);
+        }
         return;
       }
 
@@ -267,6 +291,11 @@ class AppLifecycleManager {
             log.info('[AppLifecycle] 📥 Forced update download started');
             contentLength = event.data.contentLength ?? 0;
             this.notifyProgressChange(0);
+            try {
+              useUpdateStore.getState().setProgress(0);
+            } catch (e) {
+              log.debug('[AppLifecycle] update store not ready', e as unknown);
+            }
             break;
           case 'Progress':
             downloaded += event.data.chunkLength;
@@ -276,10 +305,20 @@ class AppLifecycleManager {
                 `[AppLifecycle] 📊 Forced update progress: ${progress}%`
               );
             }
+            try {
+              useUpdateStore.getState().setProgress(progress);
+            } catch (e) {
+              log.debug('[AppLifecycle] update store not ready', e as unknown);
+            }
             break;
           case 'Finished':
             log.info('[AppLifecycle] ✅ Forced update download finished');
             this.notifyStatusChange('installing');
+            try {
+              useUpdateStore.getState().setProgress(100);
+            } catch (e) {
+              log.debug('[AppLifecycle] update store not ready', e as unknown);
+            }
             break;
           default:
             break;
@@ -302,6 +341,11 @@ class AppLifecycleManager {
     } catch (error) {
       log.error('[AppLifecycle] ❌ Forced update failed:', error);
       this.notifyStatusChange('error');
+      try {
+        useUpdateStore.getState().setInstalling(false);
+      } catch (e) {
+        log.debug('[AppLifecycle] update store not ready', e as unknown);
+      }
     }
   }
 
