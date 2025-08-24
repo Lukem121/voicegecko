@@ -4,7 +4,7 @@ use thiserror::Error;
 
 use super::model_manager;
 use crate::modules::audio::AudioData;
-use crate::modules::transcription_service::{LocalWhisperProvider, TranscriptionProvider};
+use crate::modules::transcription_sidecar::{SidecarWhisperProvider, TranscriptionProvider};
 
 #[derive(Debug, Error, Serialize, Clone)]
 pub enum TranscriptionError {
@@ -106,10 +106,10 @@ pub async fn transcribe_audio_buffer(
             .map_err(|e| format!("Failed to emit cloud transcription event: {}", e))?;
         return Ok(());
     } else {
-        Box::new(LocalWhisperProvider {
-            model_id: model_id.clone(),
+        Box::new(SidecarWhisperProvider::new(
+            model_id.clone(),
             dictionary_prompt,
-        })
+        ))
     };
 
     // Calculate duration in seconds
@@ -202,10 +202,7 @@ pub async fn start_internal_transcription(
         Err(_) => None,
     };
 
-    let provider = LocalWhisperProvider {
-        model_id: model_id.clone(),
-        dictionary_prompt,
-    };
+    let provider = SidecarWhisperProvider::new(model_id.clone(), dictionary_prompt);
 
     // Calculate duration for metadata
     let duration_seconds = if audio_data.sample_rate > 0 {

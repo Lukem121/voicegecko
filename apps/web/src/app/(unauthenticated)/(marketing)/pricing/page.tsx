@@ -1,5 +1,6 @@
 import type { PriceWithMetadata } from '@acme/api/src/services/stripe/stripe.service';
 import { stripeService } from '@acme/api/src/services/stripe/stripe.service';
+import { log } from '@acme/observability/log';
 import { Card } from '@acme/ui/components/ui/card';
 import { Separator } from '@acme/ui/components/ui/separator';
 import type { Metadata } from 'next';
@@ -31,7 +32,8 @@ export default async function PricingPage() {
   let prices: Record<string, PriceWithMetadata> | null = null;
   try {
     prices = await getCachedPricingData();
-  } catch {
+  } catch (error) {
+    log.error('Error fetching pricing data', { error });
     prices = null;
   }
 

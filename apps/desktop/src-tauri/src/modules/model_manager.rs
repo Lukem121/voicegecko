@@ -118,11 +118,13 @@ pub fn synchronize_models(app: AppHandle) -> Result<(), ModelManagerError> {
         target_path.display()
     );
 
-    // Try to find the bundled model in resources
-    if let Ok(resource_dir) = app.path().resource_dir() {
-        let bundled_path = resource_dir.join(bundled_model_name);
+    // Try to find the bundled model in resources (packaged under the `resources/` dir)
+    if let Ok(bundled_path) = app.path().resolve(
+        format!("resources/{}", bundled_model_name),
+        tauri::path::BaseDirectory::Resource,
+    ) {
         println!(
-            "[Sync] Looking for bundled model at: {}",
+            "[Sync] Looking for installer-bundled model at: {}",
             bundled_path.display()
         );
 
@@ -206,7 +208,7 @@ pub fn synchronize_models(app: AppHandle) -> Result<(), ModelManagerError> {
             }
         }
     } else {
-        println!("[Sync] Could not get resource directory");
+        println!("[Sync] Could not resolve bundled resource path");
     }
 
     // Check what files actually exist in the models directory

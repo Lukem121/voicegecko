@@ -1,5 +1,5 @@
 import { log } from '@acme/observability/log';
-import { listen } from '@tauri-apps/api/event';
+import { emit, listen } from '@tauri-apps/api/event';
 import { toast } from 'sonner';
 import { transcriptionService } from '~/services/transcription.service';
 import { useEventStore } from '~/stores/event.store';
@@ -44,6 +44,19 @@ async function processCloudTranscription(
     const store = useEventStore.getState();
     store.setTranscriptionProgress('Transcribing');
 
+    // Broadcast progress to all windows (e.g., Gecko Bar)
+    await emit('transcription-progress', {
+      status: 'Transcribing',
+      // Mark source so main-window listener can skip duplicate completion handling
+      // for cloud flows.
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-expect-error allow extra field for cross-window event consumers
+      source: 'cloud',
+      duration_seconds: audioData.samples.length / audioData.sample_rate,
+      model_used: 'whisper-1',
+      sample_rate: audioData.sample_rate,
+    } satisfies TranscriptionProgressEvent);
+
     // Call the cloud transcription API
     const result = await trpcClient.transcription.cloudTranscribe.mutate({
       audioData: Array.from(audioData.samples),
@@ -59,6 +72,18 @@ async function processCloudTranscription(
 
     // Update transcription progress to complete
     store.setTranscriptionProgress('Complete', result.transcript, metadata);
+
+    // Broadcast completion to all windows (e.g., Gecko Bar)
+    await emit('transcription-progress', {
+      status: 'Complete',
+      data: result.transcript,
+      duration_seconds: metadata.duration_seconds,
+      model_used: metadata.model_used,
+      sample_rate: metadata.sample_rate,
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-expect-error allow extra field for cross-window event consumers
+      source: 'cloud',
+    } satisfies TranscriptionProgressEvent);
 
     // Handle completion business logic only if not in gecko bar
     if (!options.isGeckoBar && result.transcript) {
@@ -114,6 +139,17 @@ function handleTranscriptionError(
     error instanceof Error ? error.message : 'Cloud transcription failed'
   );
 
+  // Broadcast error to all windows (e.g., Gecko Bar)
+  emit('transcription-progress', {
+    status: 'Error',
+    data: error instanceof Error ? error.message : 'Cloud transcription failed',
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-expect-error allow extra field for cross-window event consumers
+    source: 'cloud',
+  } satisfies TranscriptionProgressEvent).catch(() => {
+    // Non-fatal if emit fails
+  });
+
   toast.error('Cloud transcription failed', {
     description: error instanceof Error ? error.message : 'Unknown error',
   });
@@ -164,6 +200,16 @@ export async function initializeTauriEvents(
 
       // Only handle completion business logic in main window
       if (!options.isGeckoBar && payload.status === 'Complete') {
+        const source = (payload as unknown as { source?: string }).source;
+        if (source === 'cloud') {
+          // For cloud flows, completion handling (clipboard, sounds, cache) is
+          // already executed in processCloudTranscription. Skip here to avoid
+          // duplicate operations and duplicate DB saves.
+          log.info(
+            '[TauriEvents] Skipping main-window completion handling for cloud source'
+          );
+          return;
+        }
         log.info(
           '[TauriEvents] Handling transcription completion in main window',
           { isGeckoBar: options.isGeckoBar, callerId: initializationId }

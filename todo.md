@@ -1,12 +1,11 @@
 Todo
 
-- [ ] On startup main window pops up
+- [ ] On startup main window pops up?
+- [ ] Gecko bar gets suck on cloud provider
 
 Pre Launch Checks
 
-- [ ] Check added stripe student coupon code: RYGALTMSXJAA
-- [ ] Inside BetterAuth we are only allowing MY emails to sign up. We need to remove that.
-- [ ] Check all links are working including in emails.
+- [ ]
 
 After MVP
 
