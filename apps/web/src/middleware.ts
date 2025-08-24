@@ -23,6 +23,7 @@ const unprotectedRoutes: string[] = [
   // Marketing
   APP_ROUTES.MARKETING.PRICING,
   APP_ROUTES.MARKETING.DOWNLOAD,
+  APP_ROUTES.MARKETING.DOWNLOAD_SUCCESS,
 
   '/opengraph-image',
 ];
