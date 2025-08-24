@@ -15,6 +15,7 @@ export type TranscriptionGroup = {
     timestamp: string;
     content: string;
     status: 'normal' | 'silent';
+    createdAt: string;
   }[];
 };
 
@@ -162,6 +163,7 @@ export class TranscriptionService {
         }),
         content: transcription.content,
         status: transcription.status,
+        createdAt: transcription.createdAt.toISOString(),
       });
     }
 

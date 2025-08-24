@@ -19,6 +19,7 @@ type TranscriptionGroup = {
     timestamp: string;
     content: string;
     status: 'normal' | 'silent';
+    createdAt?: string;
   }[];
 };
 
@@ -91,25 +92,65 @@ export const useInfiniteTranscriptions = ({
 
     const fuzzyResults = fuse.search(search.debouncedSearchTerm);
 
-    // Group fuzzy results back by date
+    // Helper functions for local formatting
+    const isSameDay = (a: Date, b: Date) =>
+      a.getFullYear() === b.getFullYear() &&
+      a.getMonth() === b.getMonth() &&
+      a.getDate() === b.getDate();
+
+    const getLocalDateLabel = (date: Date) => {
+      const today = new Date();
+      const yesterday = new Date();
+      yesterday.setDate(today.getDate() - 1);
+
+      if (isSameDay(date, today)) {
+        return 'TODAY';
+      }
+      if (isSameDay(date, yesterday)) {
+        return 'YESTERDAY';
+      }
+
+      return date
+        .toLocaleDateString(undefined, {
+          weekday: 'long',
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+        })
+        .toUpperCase();
+    };
+
+    const getLocalTime = (date: Date) =>
+      date.toLocaleTimeString(undefined, {
+        hour: 'numeric',
+        minute: '2-digit',
+      });
+
+    // Group fuzzy results back by local date
     const groupedResults = fuzzyResults.reduce((acc, { item }) => {
-      const existingGroup = acc.find((g) => g.date === item.groupDate);
+      const date = item.createdAt ? new Date(item.createdAt) : undefined;
+      const dateLabel = date ? getLocalDateLabel(date) : item.groupDate;
+      const localTime = date ? getLocalTime(date) : item.timestamp;
+
+      const existingGroup = acc.find((g) => g.date === dateLabel);
       if (existingGroup) {
         existingGroup.items.push({
           id: item.id,
-          timestamp: item.timestamp,
+          timestamp: localTime,
           content: item.content,
           status: item.status,
+          createdAt: item.createdAt,
         });
       } else {
         acc.push({
-          date: item.groupDate,
+          date: dateLabel,
           items: [
             {
               id: item.id,
-              timestamp: item.timestamp,
+              timestamp: localTime,
               content: item.content,
               status: item.status,
+              createdAt: item.createdAt,
             },
           ],
         });
@@ -120,36 +161,98 @@ export const useInfiniteTranscriptions = ({
     return groupedResults;
   }, [shouldUseFuzzySearch, search.debouncedSearchTerm, allTranscriptions]);
 
-  // Flatten and merge all groups from all pages with stable sorting
+  // Flatten, reformat to local, and regroup all items from all pages
   const serverTranscriptions = useMemo(() => {
     if (!infiniteQuery.data) {
       return [];
     }
 
-    const allGroups = infiniteQuery.data.pages.flatMap((page) => page.groups);
+    const isSameDay = (a: Date, b: Date) =>
+      a.getFullYear() === b.getFullYear() &&
+      a.getMonth() === b.getMonth() &&
+      a.getDate() === b.getDate();
 
-    // Merge groups with the same date across pages, maintaining item order
-    const mergedGroups = allGroups.reduce((acc, group) => {
-      const existingGroup = acc.find((g) => g.date === group.date);
-      if (existingGroup) {
-        // Ensure stable ordering by checking for duplicates and maintaining sort order
-        const newItems = group.items.filter(
-          (newItem) =>
-            !existingGroup.items.some((existing) => existing.id === newItem.id)
-        );
-        existingGroup.items.push(...newItems);
-        // Sort items by ID to maintain consistent order
-        existingGroup.items.sort((a, b) => b.id - a.id);
-      } else {
-        acc.push({
-          ...group,
-          items: [...group.items].sort((a, b) => b.id - a.id),
+    const getLocalDateLabel = (date: Date) => {
+      const today = new Date();
+      const yesterday = new Date();
+      yesterday.setDate(today.getDate() - 1);
+
+      if (isSameDay(date, today)) {
+        return 'TODAY';
+      }
+      if (isSameDay(date, yesterday)) {
+        return 'YESTERDAY';
+      }
+
+      return date
+        .toLocaleDateString(undefined, {
+          weekday: 'long',
+          year: 'numeric',
+          month: 'long',
+          day: 'numeric',
+        })
+        .toUpperCase();
+    };
+
+    const getLocalTime = (date: Date) =>
+      date.toLocaleTimeString(undefined, {
+        hour: 'numeric',
+        minute: '2-digit',
+      });
+
+    const allItems = infiniteQuery.data.pages.flatMap((page) =>
+      page.groups.flatMap((group) => group.items)
+    );
+
+    const groupsMap = new Map<string, TranscriptionGroup>();
+
+    for (const item of allItems) {
+      const date = item.createdAt ? new Date(item.createdAt) : undefined;
+      const dateLabel = date ? getLocalDateLabel(date) : 'UNKNOWN DATE';
+      const localTime = date ? getLocalTime(date) : item.timestamp;
+
+      if (!groupsMap.has(dateLabel)) {
+        groupsMap.set(dateLabel, { date: dateLabel, items: [] });
+      }
+
+      const group = groupsMap.get(dateLabel);
+      if (!group) {
+        continue;
+      }
+
+      if (!group.items.some((existing) => existing.id === item.id)) {
+        group.items.push({
+          id: item.id,
+          timestamp: localTime,
+          content: item.content,
+          status: item.status,
+          createdAt: item.createdAt,
         });
       }
-      return acc;
-    }, [] as TranscriptionGroup[]);
+    }
 
-    return mergedGroups;
+    const result = Array.from(groupsMap.values()).map((g) => ({
+      ...g,
+      items: g.items.sort((a, b) => b.id - a.id),
+    }));
+
+    result.sort((a, b) => {
+      if (a.date === 'TODAY') {
+        return -1;
+      }
+      if (b.date === 'TODAY') {
+        return 1;
+      }
+      if (a.date === 'YESTERDAY') {
+        return -1;
+      }
+      if (b.date === 'YESTERDAY') {
+        return 1;
+      }
+      return 0;
+    });
+
+    return result;
   }, [infiniteQuery.data]);
 
   const transcriptions = shouldUseFuzzySearch
