@@ -16,7 +16,7 @@ pub fn setup_updater(app: &App) -> Result<(), Box<dyn std::error::Error>> {
     let host = if use_local {
         "http://localhost:3000"
     } else {
-        "https://voicegecko.io"
+        "https://www.voicegecko.io"
     };
 
     println!(

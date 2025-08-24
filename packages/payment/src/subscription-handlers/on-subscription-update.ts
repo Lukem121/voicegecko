@@ -45,7 +45,7 @@ export const onSubscriptionUpdate = async ({
     try {
       if (user) {
         // Create retry payment URL - user can manage subscription through billing portal
-        const retryPaymentUrl = `${paymentEnv().NEXT_PUBLIC_VOICEGECKO_URL || 'https://voicegecko.io'}/app/billing`;
+        const retryPaymentUrl = `${paymentEnv().NEXT_PUBLIC_VOICEGECKO_URL || 'https://www.voicegecko.io'}/app/billing`;
         const accountUrl = retryPaymentUrl; // Same URL for account management
 
         await sendPaymentFailedEmail({
