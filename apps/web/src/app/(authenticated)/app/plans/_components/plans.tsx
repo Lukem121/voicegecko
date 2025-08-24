@@ -228,7 +228,9 @@ export default function Plans({ prices, subscription, error }: PlansProps) {
       />
 
       <div className="mb-4 flex items-end justify-between gap-4 sm:mb-8">
-        <h1 className="font-semibold text-2xl tracking-tight">Plans</h1>
+        <h1 className="font-semibold text-2xl tracking-tight sm:hidden">
+          Plans
+        </h1>
         <div className="hidden sm:block">
           <h1 className="font-semibold text-2xl tracking-tight sm:mb-2">
             Plans

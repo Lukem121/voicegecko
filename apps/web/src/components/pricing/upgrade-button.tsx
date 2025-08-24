@@ -4,6 +4,7 @@ import { cn } from '@acme/ui/lib/utils';
 import { useRouter } from 'next/navigation';
 import { Suspense, useEffect, useState } from 'react';
 import { useSubscriptionUpgrade } from '~/hooks/use-subscription-upgrade';
+import { authClient } from '~/lib/auth/client';
 
 export type UpgradeButtonProps = {
   planType: 'basic' | 'pro';
@@ -59,6 +60,47 @@ function InteractiveUpgradeButton({
     },
   });
 
+  // Detect if the logged-in user already has an active Pro subscription
+  const [hasActivePro, setHasActivePro] = useState(false);
+  const [isCheckingPro, setIsCheckingPro] = useState(false);
+
+  useEffect(() => {
+    let isCancelled = false;
+
+    const checkProStatus = async () => {
+      if (!isLoggedIn || planType !== 'pro') {
+        return;
+      }
+
+      setIsCheckingPro(true);
+      try {
+        const result = await authClient.subscription.list();
+        const subscriptions = result.data ?? [];
+        const userHasPro = subscriptions.some(
+          (subscription) =>
+            subscription?.plan === 'voice gecko pro' &&
+            (subscription?.status === 'active' ||
+              subscription?.status === 'trialing')
+        );
+
+        if (!isCancelled) {
+          setHasActivePro(userHasPro);
+        }
+      } catch {
+        // Ignore errors here; upgrade flow will handle errors if user clicks
+      } finally {
+        if (!isCancelled) {
+          setIsCheckingPro(false);
+        }
+      }
+    };
+
+    checkProStatus();
+    return () => {
+      isCancelled = true;
+    };
+  }, [isLoggedIn, planType]);
+
   const handleClick = async () => {
     // Basic plan always goes to download
     if (planType === 'basic') {
@@ -72,11 +114,21 @@ function InteractiveUpgradeButton({
       return;
     }
 
+    // Pro plan - already on Pro, do nothing
+    if (hasActivePro) {
+      return;
+    }
+
     // Pro plan - logged in, initiate upgrade
     await upgrade('voice gecko pro', isAnnual);
   };
 
-  const displayText = isUpgrading ? 'Processing...' : children;
+  let displayText = children as React.ReactNode;
+  if (isUpgrading) {
+    displayText = 'Processing...';
+  } else if (planType === 'pro' && isLoggedIn && hasActivePro) {
+    displayText = "You're on Pro";
+  }
 
   return (
     <button
@@ -88,7 +140,10 @@ function InteractiveUpgradeButton({
         isUpgrading && 'cursor-not-allowed opacity-75',
         className
       )}
-      disabled={isUpgrading}
+      disabled={
+        isUpgrading ||
+        (planType === 'pro' && isLoggedIn && (hasActivePro || isCheckingPro))
+      }
       onClick={handleClick}
       type="button"
     >

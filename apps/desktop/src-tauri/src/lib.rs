@@ -1,6 +1,8 @@
 use tauri::Manager;
 use tauri_plugin_sentry::{minidump, sentry};
 mod modules;
+use modules::transcription_sidecar::TranscriptionState;
+use modules::model_manager;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -22,6 +24,7 @@ pub fn run() {
 
     tauri::Builder::default()
         .plugin(tauri_plugin_sentry::init(&client))
+        .manage(TranscriptionState::default())
         .plugin(tauri_plugin_positioner::init())
         .plugin(tauri_plugin_clipboard_manager::init())
         .plugin(tauri_plugin_global_shortcut::Builder::new().build())
@@ -133,16 +136,16 @@ pub fn run() {
 
             modules::model_manager::synchronize_models(app.handle().clone())?;
 
-            let transcription_service =
-                modules::transcription_service::TranscriptionService::new();
-            
-            // Preload the active model to ensure fast first transcription
-            if let Err(e) = transcription_service.preload_active_model(&app.handle()) {
-                println!("[Rust] Failed to preload model during startup: {}", e);
-                // Don't fail startup if preloading fails
-            }
-            
-            app.manage(transcription_service);
+            // Prewarm the warm sidecar with the active model to avoid first-use latency
+            let app_handle = app.handle().clone();
+            tauri::async_runtime::spawn(async move {
+                if let Ok(model_id) = model_manager::get_active_model_id(app_handle.clone()) {
+                    let state = app_handle.state::<TranscriptionState>();
+                    let _ = state.manager.prewarm(&app_handle, &model_id).await;
+                }
+            });
+
+            // Sidecar-based transcription does not need to preload models here.
 
             // Setup system tray
             let tray_manager = modules::tray::TrayManager::new();
