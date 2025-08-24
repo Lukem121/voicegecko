@@ -1,6 +1,6 @@
 {
   "productName": "Voice Gecko",
-  "version": "0.0.18",
+  "version": "0.0.19",
   "identifier": "com.voicegecko.desktop",
   "build": {
     "frontendDist": "../dist",
