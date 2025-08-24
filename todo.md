@@ -1,6 +1,9 @@
 Todo
 
 - [ ] On startup main window pops up
+- [ ] Gecko bar gets suck on cloud provider
+- [ ] maybe make a min window size
+- [ ] needs localised transcription times
 
 Pre Launch Checks
 
