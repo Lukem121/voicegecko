@@ -1,7 +1,6 @@
 Todo
 
 - [ ] On startup main window pops up?
-- [ ] Gecko bar gets suck on cloud provider
 
 Pre Launch Checks
 
