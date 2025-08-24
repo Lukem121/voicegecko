@@ -26,6 +26,7 @@ const unprotectedRoutes: string[] = [
   APP_ROUTES.MARKETING.DOWNLOAD_SUCCESS,
 
   '/opengraph-image',
+  '/redirect-deeplink',
 ];
 
 export default function middleware(request: NextRequest) {
