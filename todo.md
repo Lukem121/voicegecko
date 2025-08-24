@@ -2,8 +2,6 @@ Todo
 
 - [ ] On startup main window pops up?
 - [ ] Gecko bar gets suck on cloud provider
-- [ ] needs localised transcription times
-- [ ] If on /pricing page Then there is the option to 'upgrade to Pro', but if you're already on Pro, then we get the error saying upgrade failed, failed progress. So basically we just need to check if they're on the pricing page and they are already a Pro member, we should just either disable the button or just do something.
 
 Pre Launch Checks
 
