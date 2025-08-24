@@ -16,6 +16,8 @@
         "title": "Voice Gecko",
         "width": 1350,
         "height": 820,
+        "minWidth": 960,
+        "minHeight": 600,
         "closable": true,
         "minimizable": true,
         "maximizable": true,
