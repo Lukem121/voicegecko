@@ -58,7 +58,7 @@
               "target": "Package",
               "version": "[1.8.1, )"
             },
-            "Whisper.net.Runtime.Vulkan": {
+            "Whisper.net.Runtime": {
               "target": "Package",
               "version": "[1.8.1, )"
             }

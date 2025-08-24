@@ -27,10 +27,10 @@
           "lib/net8.0/Whisper.net.dll": {}
         }
       },
-      "Whisper.net.Runtime.Vulkan/1.8.1": {
+      "Whisper.net.Runtime/1.8.1": {
         "type": "package",
         "build": {
-          "build/Whisper.net.Runtime.Vulkan.targets": {}
+          "build/Whisper.net.Runtime.targets": {}
         }
       }
     },
@@ -60,10 +60,10 @@
           "lib/net8.0/Whisper.net.dll": {}
         }
       },
-      "Whisper.net.Runtime.Vulkan/1.8.1": {
+      "Whisper.net.Runtime/1.8.1": {
         "type": "package",
         "build": {
-          "build/Whisper.net.Runtime.Vulkan.targets": {}
+          "build/Whisper.net.Runtime.targets": {}
         }
       }
     }
@@ -168,27 +168,96 @@
         "whisper.net.nuspec"
       ]
     },
-    "Whisper.net.Runtime.Vulkan/1.8.1": {
-      "sha512": "hZmqxZZ6foU3WVmrewuFguIrodMkfb/7uyitBBPrZipo55jK16t/xxKUsWMLETYgEgGVwkZ33YNu8i3+4Kbjpg==",
+    "Whisper.net.Runtime/1.8.1": {
+      "sha512": "DW2JhlBbt0W5W+cIP8Uevt5+7XnjPIsG9b5FyAdeB9taNk9w1WFw9W7TYSNaqgyEbEHHPNOXA6hl+yrmBwOfsQ==",
       "type": "package",
-      "path": "whisper.net.runtime.vulkan/1.8.1",
+      "path": "whisper.net.runtime/1.8.1",
       "files": [
         ".nupkg.metadata",
         ".signature.p7s",
-        "build/Whisper.net.Runtime.Vulkan.targets",
+        "build/Whisper.net.Runtime.targets",
+        "build/android-arm64-v8a/libggml-base-whisper.so",
+        "build/android-arm64-v8a/libggml-cpu-whisper.so",
+        "build/android-arm64-v8a/libggml-whisper.so",
+        "build/android-arm64-v8a/libwhisper.so",
+        "build/android-x86/libggml-base-whisper.so",
+        "build/android-x86/libggml-cpu-whisper.so",
+        "build/android-x86/libggml-whisper.so",
+        "build/android-x86/libwhisper.so",
+        "build/android-x86_64/libggml-base-whisper.so",
+        "build/android-x86_64/libggml-cpu-whisper.so",
+        "build/android-x86_64/libggml-whisper.so",
+        "build/android-x86_64/libwhisper.so",
+        "build/browser-wasm/libggml-base-whisper.a",
+        "build/browser-wasm/libggml-cpu-whisper.a",
+        "build/browser-wasm/libggml-whisper.a",
+        "build/browser-wasm/libwhisper.a",
+        "build/ggml-metal.metal",
+        "build/ios-device/libggml-base-whisper.dylib",
+        "build/ios-device/libggml-blas-whisper.dylib",
+        "build/ios-device/libggml-cpu-whisper.dylib",
+        "build/ios-device/libggml-metal-whisper.dylib",
+        "build/ios-device/libggml-whisper.dylib",
+        "build/ios-device/libwhisper.dylib",
+        "build/ios-simulator/libggml-base-whisper.dylib",
+        "build/ios-simulator/libggml-blas-whisper.dylib",
+        "build/ios-simulator/libggml-cpu-whisper.dylib",
+        "build/ios-simulator/libggml-whisper.dylib",
+        "build/ios-simulator/libwhisper.dylib",
+        "build/linux-arm/libggml-base-whisper.so",
+        "build/linux-arm/libggml-cpu-whisper.so",
+        "build/linux-arm/libggml-whisper.so",
+        "build/linux-arm/libwhisper.so",
+        "build/linux-arm64/libggml-base-whisper.so",
+        "build/linux-arm64/libggml-cpu-whisper.so",
+        "build/linux-arm64/libggml-whisper.so",
+        "build/linux-arm64/libwhisper.so",
         "build/linux-x64/libggml-base-whisper.so",
         "build/linux-x64/libggml-cpu-whisper.so",
-        "build/linux-x64/libggml-vulkan-whisper.so",
         "build/linux-x64/libggml-whisper.so",
         "build/linux-x64/libwhisper.so",
+        "build/maccatalyst/libggml-base-whisper.dylib",
+        "build/maccatalyst/libggml-blas-whisper.dylib",
+        "build/maccatalyst/libggml-cpu-whisper.dylib",
+        "build/maccatalyst/libggml-whisper.dylib",
+        "build/maccatalyst/libwhisper.dylib",
+        "build/macos-arm64/libggml-base-whisper.dylib",
+        "build/macos-arm64/libggml-blas-whisper.dylib",
+        "build/macos-arm64/libggml-cpu-whisper.dylib",
+        "build/macos-arm64/libggml-metal-whisper.dylib",
+        "build/macos-arm64/libggml-whisper.dylib",
+        "build/macos-arm64/libwhisper.dylib",
+        "build/macos-x64/libggml-base-whisper.dylib",
+        "build/macos-x64/libggml-blas-whisper.dylib",
+        "build/macos-x64/libggml-cpu-whisper.dylib",
+        "build/macos-x64/libggml-whisper.dylib",
+        "build/macos-x64/libwhisper.dylib",
+        "build/tvos-device/libggml-base-whisper.dylib",
+        "build/tvos-device/libggml-blas-whisper.dylib",
+        "build/tvos-device/libggml-cpu-whisper.dylib",
+        "build/tvos-device/libggml-metal-whisper.dylib",
+        "build/tvos-device/libggml-whisper.dylib",
+        "build/tvos-device/libwhisper.dylib",
+        "build/tvos-simulator/libggml-base-whisper.dylib",
+        "build/tvos-simulator/libggml-blas-whisper.dylib",
+        "build/tvos-simulator/libggml-cpu-whisper.dylib",
+        "build/tvos-simulator/libggml-whisper.dylib",
+        "build/tvos-simulator/libwhisper.dylib",
+        "build/win-arm64/ggml-base-whisper.dll",
+        "build/win-arm64/ggml-cpu-whisper.dll",
+        "build/win-arm64/ggml-whisper.dll",
+        "build/win-arm64/whisper.dll",
         "build/win-x64/ggml-base-whisper.dll",
         "build/win-x64/ggml-cpu-whisper.dll",
-        "build/win-x64/ggml-vulkan-whisper.dll",
         "build/win-x64/ggml-whisper.dll",
         "build/win-x64/whisper.dll",
+        "build/win-x86/ggml-base-whisper.dll",
+        "build/win-x86/ggml-cpu-whisper.dll",
+        "build/win-x86/ggml-whisper.dll",
+        "build/win-x86/whisper.dll",
         "content/readme.md",
-        "whisper.net.runtime.vulkan.1.8.1.nupkg.sha512",
-        "whisper.net.runtime.vulkan.nuspec"
+        "whisper.net.runtime.1.8.1.nupkg.sha512",
+        "whisper.net.runtime.nuspec"
       ]
     }
   },
@@ -196,7 +265,7 @@
     "net8.0": [
       "System.Text.Json >= 8.0.5",
       "Whisper.net >= 1.8.1",
-      "Whisper.net.Runtime.Vulkan >= 1.8.1"
+      "Whisper.net.Runtime >= 1.8.1"
     ]
   },
   "packageFolders": {
@@ -257,7 +326,7 @@
             "target": "Package",
             "version": "[1.8.1, )"
           },
-          "Whisper.net.Runtime.Vulkan": {
+          "Whisper.net.Runtime": {
             "target": "Package",
             "version": "[1.8.1, )"
           }
