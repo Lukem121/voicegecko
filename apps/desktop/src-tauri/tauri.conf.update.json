@@ -80,7 +80,7 @@
     "createUpdaterArtifacts": true,
     "resources": [
       "resources/binaries/whisper-sidecar/win-x64/**",
-      "resources/sounds/notification/**"
+      "resources/sounds/**/*"
     ],
     "macOS": {
       "minimumSystemVersion": "10.15"
