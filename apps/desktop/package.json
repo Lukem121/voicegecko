@@ -1,7 +1,7 @@
 {
   "name": "@acme/desktop",
   "private": true,
-  "version": "0.0.18",
+  "version": "0.0.19",
   "type": "module",
   "scripts": {
     "dev": "dotenv -e .env.development tauri dev",
