@@ -7,7 +7,7 @@ This directory contains the Zustand state management stores for the VoiceGecko a
 | Store                  | Purpose                              | File                    |
 | ---------------------- | ------------------------------------ | ----------------------- |
 | **Settings Store**     | Application settings and preferences | `settings.store.ts`     |
-| **Event Store**        | Recording and transcription state    | `event.store.ts`        |
+| **Event Store**        | Recording and dictation state        | `event.store.ts`        |
 | **Connectivity Store** | Network connectivity status          | `connectivity.store.ts` |
 
 ## Documentation

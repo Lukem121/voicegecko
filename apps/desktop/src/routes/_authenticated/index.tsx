@@ -34,8 +34,8 @@ import {
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
-import { useDeleteTranscription } from '~/features/transcription/use-delete-transcription';
-import { useGetTranscriptions } from '~/features/transcription/use-get-transcriptions';
+import { useDeleteDictation } from '~/features/dictation/use-delete-dictation';
+import { useGetDictations } from '~/features/dictation/use-get-dictations';
 import { useDebouncedSearch } from '~/hooks/use-debounced-search';
 import { recordingService } from '~/services/recording.service';
 import { useEventStore } from '~/stores/event.store';
@@ -49,7 +49,7 @@ type UsageStatus = {
   wordsLimit: number;
 };
 
-type TranscriptionItem = {
+type DictationItem = {
   id: number;
   content: string;
   timestamp: string;
@@ -91,7 +91,7 @@ function SearchBar({
   search,
   isSearchExpanded,
   setIsSearchExpanded,
-  filteredTranscriptions,
+  filteredDictations,
 }: {
   search: {
     searchTerm: string;
@@ -101,7 +101,7 @@ function SearchBar({
   };
   isSearchExpanded: boolean;
   setIsSearchExpanded: (expanded: boolean) => void;
-  filteredTranscriptions: TranscriptionItem[];
+  filteredDictations: DictationItem[];
 }) {
   return (
     <div className="space-y-4">
@@ -117,7 +117,7 @@ function SearchBar({
                   autoFocus
                   className="h-8 w-64 pr-8"
                   onChange={(e) => search.setSearchTerm(e.target.value)}
-                  placeholder="Search transcriptions..."
+                  placeholder="Search dictations..."
                   value={search.searchTerm}
                 />
                 {search.searchTerm && (
@@ -160,8 +160,8 @@ function SearchBar({
       {search.debouncedSearchTerm && (
         <div className="flex items-center gap-2 text-muted-foreground text-sm">
           <span>
-            Found {filteredTranscriptions.length} result
-            {filteredTranscriptions.length !== 1 ? 's' : ''} for "
+            Found {filteredDictations.length} result
+            {filteredDictations.length !== 1 ? 's' : ''} for "
             {search.debouncedSearchTerm}"
           </span>
         </div>
@@ -170,8 +170,8 @@ function SearchBar({
   );
 }
 
-// Individual transcription item component
-function TranscriptionItem({
+// Individual dictation item component
+function DictationItem({
   item,
   index,
   totalItems,
@@ -179,7 +179,7 @@ function TranscriptionItem({
   onSendFeedback,
   onDelete,
 }: {
-  item: TranscriptionItem;
+  item: DictationItem;
   index: number;
   totalItems: number;
   onCopy: (content: string) => void;
@@ -240,7 +240,7 @@ function TranscriptionItem({
               </Button>
             </TooltipTrigger>
             <TooltipContent>
-              <p>Copy transcription</p>
+              <p>Copy dictation</p>
             </TooltipContent>
           </Tooltip>
         )}
@@ -274,7 +274,7 @@ function TranscriptionItem({
               onClick={() => onDelete(item.id)}
             >
               <Trash2 className="mr-2 h-4 w-4" />
-              Delete transcription
+              Delete dictation
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -342,9 +342,8 @@ export const Route = createFileRoute('/_authenticated/')({
 });
 
 function RecordingPage() {
-  const { transcriptions, refetch: refetchTranscriptions } =
-    useGetTranscriptions();
-  const { deleteTranscription } = useDeleteTranscription();
+  const { dictations, refetch: refetchDictations } = useGetDictations();
+  const { deleteDictation } = useDeleteDictation();
   const [isProcessing, setIsProcessing] = useState(false);
   const [isSearchExpanded, setIsSearchExpanded] = useState(false);
 
@@ -354,10 +353,8 @@ function RecordingPage() {
   // External state from main event store
   const recordingStatus = useEventStore((state) => state.recordingStatus);
   const transcript = useEventStore((state) => state.transcript);
-  const transcriptionStatus = useEventStore(
-    (state) => state.transcriptionStatus
-  );
-  const transcriptionError = useEventStore((state) => state.transcriptionError);
+  const dictationStatus = useEventStore((state) => state.dictationStatus);
+  const dictationError = useEventStore((state) => state.dictationError);
   const isRecording = useEventStore((state) => state.isRecording());
   const isTranscribing = useEventStore((state) => state.isTranscribing());
 
@@ -368,18 +365,18 @@ function RecordingPage() {
     usageStatus && !usageStatus.isUnlimited && !usageStatus.canTranscribe
   );
 
-  // Flatten all transcriptions for search
-  const allTranscriptions = transcriptions.flatMap((section) => section.items);
+  // Flatten all dictations for search
+  const allDictations = dictations.flatMap((section) => section.items);
 
-  // Filter and limit recent transcriptions for display
-  const filteredTranscriptions = (() => {
+  // Filter and limit recent dictations for display
+  const filteredDictations = (() => {
     if (!search.debouncedSearchTerm) {
       // No search - show recent 5 items
-      return allTranscriptions.slice(0, 5);
+      return allDictations.slice(0, 5);
     }
 
-    // Perform fuzzy search on all transcriptions
-    const fuse = new Fuse(allTranscriptions, {
+    // Perform fuzzy search on all dictations
+    const fuse = new Fuse(allDictations, {
       keys: ['content'],
       threshold: 0.4,
       includeScore: true,
@@ -394,20 +391,20 @@ function RecordingPage() {
   log.info(
     '[RecordingPage] Component render - transcript:',
     transcript,
-    'transcriptionStatus:',
-    transcriptionStatus,
+    'dictationStatus:',
+    dictationStatus,
     'recordingStatus:',
     recordingStatus,
     'error:',
-    transcriptionError
+    dictationError
   );
 
-  // Ensure recents update immediately after a transcription completes
+  // Ensure recents update immediately after a dictation completes
   useEffect(() => {
-    if (transcriptionStatus === 'complete') {
-      refetchTranscriptions();
+    if (dictationStatus === 'complete') {
+      refetchDictations();
     }
-  }, [transcriptionStatus, refetchTranscriptions]);
+  }, [dictationStatus, refetchDictations]);
 
   const handleMicClick = async () => {
     log.info('[Recording] 🎯 handleMicClick called, status:', recordingStatus);
@@ -437,9 +434,9 @@ function RecordingPage() {
 
   const handleDeleteTranscript = async (id: number) => {
     try {
-      await deleteTranscription({ id });
+      await deleteDictation({ id });
     } catch (error) {
-      log.error('Failed to delete transcription:', error);
+      log.error('Failed to delete dictation:', error);
     }
   };
 
@@ -462,50 +459,50 @@ function RecordingPage() {
         {/* Recents Section */}
         <div className="space-y-4">
           <SearchBar
-            filteredTranscriptions={filteredTranscriptions}
+            filteredDictations={filteredDictations}
             isSearchExpanded={isSearchExpanded}
             search={search}
             setIsSearchExpanded={setIsSearchExpanded}
           />
 
-          {/* Recent Transcriptions */}
+          {/* Recent Dictations */}
           <div className="overflow-hidden rounded-lg border">
-            {filteredTranscriptions.length === 0 ? (
+            {filteredDictations.length === 0 ? (
               <div className="p-8 text-center text-muted-foreground">
                 {search.debouncedSearchTerm ? (
                   <>
                     <p>
-                      No transcriptions found matching "
-                      {search.debouncedSearchTerm}".
+                      No dictations found matching "{search.debouncedSearchTerm}
+                      ".
                     </p>
                     <p className="text-sm">Try adjusting your search terms.</p>
                   </>
                 ) : (
                   <>
-                    <p>No recent transcriptions yet.</p>
+                    <p>No recent dictations yet.</p>
                     <p className="text-sm">
-                      Start recording to see your transcriptions here.
+                      Start recording to see your dictations here.
                     </p>
                   </>
                 )}
               </div>
             ) : (
-              filteredTranscriptions.map((item, index) => (
-                <TranscriptionItem
+              filteredDictations.map((item, index) => (
+                <DictationItem
                   index={index}
                   item={item}
                   key={item.id}
                   onCopy={handleCopy}
                   onDelete={handleDeleteTranscript}
                   onSendFeedback={handleSendFeedback}
-                  totalItems={filteredTranscriptions.length}
+                  totalItems={filteredDictations.length}
                 />
               ))
             )}
           </div>
 
-          {/* View all transcriptions link */}
-          {(search.debouncedSearchTerm || allTranscriptions.length > 5) && (
+          {/* View all dictations link */}
+          {(search.debouncedSearchTerm || allDictations.length > 5) && (
             <div className="flex justify-center py-2">
               <Link
                 className="text-muted-foreground text-sm transition-colors hover:text-foreground"
@@ -514,11 +511,11 @@ function RecordingPage() {
                     ? { search: search.debouncedSearchTerm }
                     : {}
                 }
-                to="/transcriptions"
+                to="/dictations"
               >
                 {search.debouncedSearchTerm
-                  ? 'View all search results in transcriptions →'
-                  : 'View all transcriptions →'}
+                  ? 'View all search results in dictations →'
+                  : 'View all dictations →'}
               </Link>
             </div>
           )}

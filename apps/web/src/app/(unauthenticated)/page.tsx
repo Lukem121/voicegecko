@@ -1,5 +1,6 @@
 import AIVoiceSection from '../_landing/ai-voice-section';
 import AppScreenshotSection from '../_landing/app-screenshot-section';
+import DictationFeaturesSection from '../_landing/dictation-features-section';
 import FinalCtaSection from '../_landing/final-cta';
 import GeckoBarSection from '../_landing/geckobar-section';
 import HeroSection from '../_landing/hero-section';
@@ -7,7 +8,6 @@ import SocialProofSection from '../_landing/social-proof-section';
 import SpeedComparisonSection from '../_landing/speed-comparison-section';
 import StickyCta from '../_landing/sticky-cta';
 import TalkToAISection from '../_landing/talk-to-ai-section';
-import TranscriptionFeaturesSection from '../_landing/transcription-features-section';
 export default function LandingPage() {
   return (
     <div className="overflow-x-hidden">
@@ -33,8 +33,8 @@ export default function LandingPage() {
         {/* Talk to AI */}
         <TalkToAISection />
 
-        {/* Transcription Features */}
-        <TranscriptionFeaturesSection />
+        {/* Dictation Features */}
+        <DictationFeaturesSection />
 
         {/* Final CTA */}
         <FinalCtaSection />

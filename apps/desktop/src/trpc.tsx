@@ -8,6 +8,7 @@ import superjson from 'superjson';
 
 import { isNetworkError } from './hooks/auth';
 import { authClient } from './lib/client';
+import { navigate } from './lib/router';
 
 /**
  * Handle 401 Unauthorized errors by logging out the user
@@ -158,14 +159,16 @@ export const trpcClient = createTRPCClient<AppRouter>({
           // Handle 426 Upgrade Required (min supported version)
           if (response.status === 426) {
             log.warn('🚨 Received 426 Upgrade Required from API');
-            // Defer the heavy work to avoid blocking the current request
+            // Navigate user to update page and start forced update in the background
+            // Don't await navigation to avoid blocking
+            navigate({ to: '/update-required', replace: true }).catch((e) => {
+              log.error('Failed to navigate to update-required:', e);
+            });
+            // Start the update without blocking fetch
             import('./lib/app-lifecycle')
-              .then(async (m) => {
-                try {
-                  await m.appLifecycle.forceUpdateNow();
-                } catch (e) {
-                  log.error('Error handling 426 forced update:', e);
-                }
+              .then((m) => {
+                // eslint-disable-next-line @typescript-eslint/no-floating-promises
+                m.appLifecycle.forceUpdateNow();
               })
               .catch((e) => log.error('Failed to load appLifecycle:', e));
 

@@ -119,7 +119,7 @@ storeRegistry.register({
   priority: 3, // Initialize after auth, before shortcuts
   initialize: async () => {
     await Promise.resolve();
-    // Activate connectivity monitoring for transcription blocking
+    // Activate connectivity monitoring for dictation blocking
     log.info('[ConnectivityStore] Activating connectivity monitoring...');
     useConnectivityStore.getState().activateMonitoring();
   },

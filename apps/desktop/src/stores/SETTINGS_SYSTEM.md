@@ -87,11 +87,11 @@ async function loadPersonalizationSettings(): Promise<PersonalizationSettings> {
       true,
     autoAddToDictionary:
       (await settingsStore.get<boolean>(
-        "personalization.autoAddToDictionary",
+        "personalization.autoAddToDictionary"
       )) ?? true,
     autoPasteOnCompletion:
       (await settingsStore.get<boolean>(
-        "personalization.autoPasteOnCompletion", // ← Store key format
+        "personalization.autoPasteOnCompletion" // ← Store key format
       )) ?? true, // ← Default fallback value
   };
 }
@@ -108,8 +108,8 @@ async function loadPersonalizationSettings(): Promise<PersonalizationSettings> {
   <div className="space-y-0.5">
     <Label>Auto-paste on completion</Label>
     <p className="text-muted-foreground text-sm">
-      Automatically paste transcriptions into the active text field when
-      transcription completes
+      Automatically paste dictations into the active text field when dictation
+      completes
     </p>
   </div>
   <Switch

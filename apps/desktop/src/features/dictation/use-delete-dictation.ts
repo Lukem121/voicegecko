@@ -3,25 +3,25 @@ import { useMutation } from '@tanstack/react-query';
 import { analytics } from '~/lib/analytics/posthog-analytics';
 import { queryClient, trpc } from '~/trpc';
 
-export const useDeleteTranscription = () => {
+export const useDeleteDictation = () => {
   const mutation = useMutation(
-    trpc.transcription.delete.mutationOptions({
+    trpc.dictation.delete.mutationOptions({
       onSuccess: (_data, variables) => {
-        // Track transcription deletion
-        analytics.track('transcription_deleted', {
-          transcription_id: variables.id,
+        // Track dictation deletion
+        analytics.track('dictation_deleted', {
+          dictation_id: variables.id,
           method: 'user_action',
         });
 
         queryClient.invalidateQueries({
-          queryKey: trpc.transcription.getAll.queryKey(),
+          queryKey: trpc.dictation.getAll.queryKey(),
         });
       },
     })
   );
 
   return {
-    deleteTranscription: mutation.mutateAsync,
+    deleteDictation: mutation.mutateAsync,
     isDeleting: mutation.isPending,
     error: mutation.error,
   };

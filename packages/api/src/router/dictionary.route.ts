@@ -89,7 +89,7 @@ export const dictionaryRouter = {
       };
     }),
 
-  // Get dictionary as formatted string for transcription prompt
+  // Get dictionary as formatted string for dictation prompt
   getPrompt: protectedProcedure.query(async ({ ctx }) => {
     const userId = ctx.session.user.id;
 

@@ -251,7 +251,7 @@ function DictionaryPage() {
           </p>
           {!searchTerm && (
             <p className="text-muted-foreground text-sm">
-              Add commonly misheard words to improve transcription accuracy
+              Add commonly misheard words to improve dictation accuracy
             </p>
           )}
         </div>
@@ -407,7 +407,7 @@ function DictionaryPage() {
           <DialogHeader>
             <DialogTitle>Add to vocabulary</DialogTitle>
             <DialogDescription>
-              Add a word that is commonly misheard in your transcriptions
+              Add a word that is commonly misheard in your dictations
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">

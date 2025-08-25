@@ -41,7 +41,7 @@ export default function AppScreenshotSection() {
         />
         <div className="relative overflow-hidden rounded-xl border bg-card shadow-2xl ring-1 ring-black/5">
           <Image
-            alt="VoiceGecko desktop app showing the transcription interface"
+            alt="VoiceGecko desktop app showing the dictation interface"
             className="h-auto w-full select-none"
             height={1080}
             priority

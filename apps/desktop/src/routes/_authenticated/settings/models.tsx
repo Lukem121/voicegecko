@@ -416,7 +416,7 @@ function SettingsModelsPage() {
       <div>
         <h2 className="font-bold text-2xl">Quality Settings</h2>
         <p className="text-muted-foreground">
-          Choose your preferred transcription quality based on your hardware
+          Choose your preferred dictation quality based on your hardware
         </p>
       </div>
       {/* Hardware Info Card */}
@@ -480,7 +480,7 @@ function SettingsModelsPage() {
       {/* Quality Tier Selection */}
       <Card>
         <CardHeader>
-          <CardTitle>Transcription Quality</CardTitle>
+          <CardTitle>Dictation Quality</CardTitle>
           <CardDescription>
             Select the quality tier that best fits your needs. Higher tiers
             provide better accuracy but require more resources.

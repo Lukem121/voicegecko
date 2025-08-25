@@ -138,7 +138,7 @@ export default function Plans({ prices, subscription, error }: PlansProps) {
       ),
       subtitle: 'All of our features',
       features: [
-        'Unlimited transcriptions',
+        'Unlimited dictations',
         'Advanced AI processing',
         'Export formats',
         'Priority support',

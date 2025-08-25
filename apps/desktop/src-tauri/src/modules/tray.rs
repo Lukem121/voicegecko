@@ -55,13 +55,7 @@ impl TrayManager {
                 &PredefinedMenuItem::separator(app)?,
                 // === NAVIGATION SECTION ===
                 &MenuItem::with_id(app, "recording_page", "Recording", true, None::<&str>)?,
-                &MenuItem::with_id(
-                    app,
-                    "transcriptions_page",
-                    "Transcriptions",
-                    true,
-                    None::<&str>,
-                )?,
+                &MenuItem::with_id(app, "dictations_page", "Dictations", true, None::<&str>)?,
                 &MenuItem::with_id(
                     app,
                     "add_word_dictionary",
@@ -129,8 +123,8 @@ impl TrayManager {
                 "recording_page" => {
                     show_window_and_navigate(app, "/");
                 }
-                "transcriptions_page" => {
-                    show_window_and_navigate(app, "/transcriptions");
+                "dictations_page" => {
+                    show_window_and_navigate(app, "/dictations");
                 }
                 "settings" => {
                     show_window_and_navigate(app, "/settings");

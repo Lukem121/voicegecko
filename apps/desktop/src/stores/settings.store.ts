@@ -10,16 +10,14 @@ import { CURRENT_SETTINGS_VERSION } from '~/lib/settings/migrations/registry';
 import type {
   SettingsV1AppSettings,
   SettingsV1AudioSettings,
-  SettingsV1GeneralSettings,
   SettingsV1Model,
-  SettingsV1ModelSettings,
   SettingsV1ModelStatus,
   SettingsV1OnboardingSettings,
   SettingsV1PersonalizationSettings,
   SettingsV1PrivacySettings,
 } from '~/lib/settings/migrations/versioned-schemas';
+import { dictationService } from '~/services/dictation.service';
 import { recordingService } from '~/services/recording.service';
-import { transcriptionService } from '~/services/transcription.service';
 import type { HardwareInfo } from '~/types/models';
 import type {
   AudioDevice,
@@ -29,10 +27,8 @@ import type {
 
 // Use versioned settings types for type safety
 type AudioSettings = SettingsV1AudioSettings;
-type GeneralSettings = SettingsV1GeneralSettings;
 type PrivacySettings = SettingsV1PrivacySettings;
 type PersonalizationSettings = SettingsV1PersonalizationSettings;
-type ModelSettings = SettingsV1ModelSettings;
 type OnboardingSettings = SettingsV1OnboardingSettings;
 
 // Export types for external use (maintain backwards compatibility)
@@ -599,7 +595,7 @@ export const useSettingsStore = create<SettingsState>()(
         if (settings.audio.notificationTiming !== 'disabled') {
           await recordingService.playNotificationSound('Start');
           await new Promise((resolve) => setTimeout(resolve, 700));
-          await transcriptionService.playEndSoundIfEnabled();
+          await dictationService.playEndSoundIfEnabled();
         }
       },
 

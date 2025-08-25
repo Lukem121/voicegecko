@@ -12,11 +12,11 @@ import Section from '~/app/_components/section';
 export const metadata: Metadata = {
   title: 'Pricing — Voice Gecko',
   description:
-    'Simple, transparent pricing. Start free, upgrade when you need unlimited transcription and advanced features.',
+    'Simple, transparent pricing. Start free, upgrade when you need unlimited dictation and advanced features.',
   openGraph: {
     title: 'Pricing — Voice Gecko',
     description:
-      'Simple, transparent pricing. Start free, upgrade when you need unlimited transcription and advanced features.',
+      'Simple, transparent pricing. Start free, upgrade when you need unlimited dictation and advanced features.',
   },
 };
 

@@ -116,8 +116,8 @@ const data: NavigationData = {
       icon: Mic,
     },
     {
-      title: 'Transcriptions',
-      url: '/transcriptions',
+      title: 'dictations',
+      url: '/dictations',
       icon: FileText,
     },
     {

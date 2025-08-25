@@ -8,7 +8,7 @@ import Image from 'next/image';
 import { APP_ROUTES } from '~/utils/app-routes';
 import SectionWrapper from './section-wrapper';
 
-export default function TranscriptionFeaturesSection() {
+export default function DictationFeaturesSection() {
   return (
     <SectionWrapper>
       <div className="mx-auto max-w-4xl">
@@ -17,7 +17,7 @@ export default function TranscriptionFeaturesSection() {
             Full Control, Every Time
           </p>
           <h2 className="mt-2 font-hero font-semibold text-2xl tracking-[-0.05em]">
-            Transcription That Works Your Way
+            Dictation That Works Your Way
           </h2>
           <p className="mt-2 max-w-lg text-pretty text-muted-foreground text-sm">
             From saved transcripts to a custom dictionary and personalized
@@ -49,10 +49,10 @@ export default function TranscriptionFeaturesSection() {
             <div className="mb-6 overflow-hidden rounded-xl">
               <div className="aspect-[16/10]">
                 <Image
-                  alt="VoiceGecko transcription history interface"
+                  alt="VoiceGecko dictation history interface"
                   className="h-full w-full object-cover object-top"
                   height={400}
-                  src="/assets/images/app-screenshots/light-transcriptions.png"
+                  src="/assets/images/app-screenshots/light-dictations.png"
                   width={600}
                 />
               </div>
@@ -65,9 +65,9 @@ export default function TranscriptionFeaturesSection() {
                 Never Lose Work
               </h3>
               <p className="mt-2 text-sm text-white/90 leading-relaxed">
-                Every transcription you make is saved in a searchable history
-                for easy review, copying, or reuse anytime. Your raw audio is
-                never stored — only the finished text stays in your account.
+                Every dictation you make is saved in a searchable history for
+                easy review, copying, or reuse anytime. Your raw audio is never
+                stored — only the finished text stays in your account.
               </p>
             </div>
           </motion.div>
@@ -131,7 +131,7 @@ export default function TranscriptionFeaturesSection() {
                 Your Shortcuts, Your Rules
               </h3>
               <p className="mt-2 text-sm text-white/90 leading-relaxed">
-                Set custom keyboard shortcuts to start and stop transcriptions
+                Set custom keyboard shortcuts to start and stop dictations
                 without breaking your flow. Whether you work in code, documents,
                 or design tools, it's always at your fingertips.
               </p>

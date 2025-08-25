@@ -15,6 +15,7 @@ import { FullscreenDetector } from '~/components/fullscreen-detector';
 import { GeckoBarWindow } from '~/components/gecko-bar-window';
 import { useAuthWithConnectivity } from '~/hooks/use-auth-with-connectivity';
 import { appLifecycle } from '~/lib/app-lifecycle';
+import { setNavigator } from '~/lib/router';
 import { isGeckoBarWindow } from '~/lib/window-detection';
 import { routeTree } from '~/routeTree.gen';
 import { useSettingsStore } from '~/stores/settings.store';
@@ -35,6 +36,9 @@ const router = createRouter({
     },
   },
 });
+
+// Expose navigation for non-React modules (e.g., network layer)
+setNavigator((opts) => router.navigate(opts as never));
 
 // Register the router instance for type safety
 declare module '@tanstack/react-router' {

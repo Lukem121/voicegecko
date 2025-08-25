@@ -4,27 +4,27 @@ use thiserror::Error;
 
 use super::model_manager;
 use crate::modules::audio::AudioData;
-use crate::modules::transcription_sidecar::{SidecarWhisperProvider, TranscriptionProvider};
+use crate::modules::dictation_sidecar::{DictationProvider, SidecarWhisperProvider};
 
 #[derive(Debug, Error, Serialize, Clone)]
-pub enum TranscriptionError {
+pub enum DictationError {
     #[error("Model load failed: {0}")]
     ModelLoad(String),
     #[error("Audio processing failed: {0}")]
     #[allow(dead_code)]
     AudioProcessing(String),
-    #[error("Transcription failed: {0}")]
-    Transcription(String),
+    #[error("Dictation failed: {0}")]
+    Dictation(String),
 }
 
-impl From<model_manager::ModelManagerError> for TranscriptionError {
+impl From<model_manager::ModelManagerError> for DictationError {
     fn from(err: model_manager::ModelManagerError) -> Self {
-        TranscriptionError::ModelLoad(err.to_string())
+        DictationError::ModelLoad(err.to_string())
     }
 }
 
 #[derive(Clone, Serialize)]
-pub enum TranscriptionProgress {
+pub enum DictationProgress {
     LoadingModel,
     Transcribing,
     Complete {
@@ -37,7 +37,7 @@ pub enum TranscriptionProgress {
 }
 
 #[derive(Clone, Serialize, Debug)]
-pub struct TranscriptionEvent {
+pub struct DictationEvent {
     status: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     data: Option<String>,
@@ -49,36 +49,36 @@ pub struct TranscriptionEvent {
     sample_rate: Option<u32>,
 }
 
-impl From<TranscriptionProgress> for TranscriptionEvent {
-    fn from(progress: TranscriptionProgress) -> Self {
+impl From<DictationProgress> for DictationEvent {
+    fn from(progress: DictationProgress) -> Self {
         match progress {
-            TranscriptionProgress::LoadingModel => TranscriptionEvent {
+            DictationProgress::LoadingModel => DictationEvent {
                 status: "LoadingModel".to_string(),
                 data: None,
                 duration_seconds: None,
                 model_used: None,
                 sample_rate: None,
             },
-            TranscriptionProgress::Transcribing => TranscriptionEvent {
+            DictationProgress::Transcribing => DictationEvent {
                 status: "Transcribing".to_string(),
                 data: None,
                 duration_seconds: None,
                 model_used: None,
                 sample_rate: None,
             },
-            TranscriptionProgress::Complete {
+            DictationProgress::Complete {
                 transcript,
                 duration_seconds,
                 model_used,
                 sample_rate,
-            } => TranscriptionEvent {
+            } => DictationEvent {
                 status: "Complete".to_string(),
                 data: Some(transcript),
                 duration_seconds,
                 model_used,
                 sample_rate,
             },
-            TranscriptionProgress::Error(error) => TranscriptionEvent {
+            DictationProgress::Error(error) => DictationEvent {
                 status: "Error".to_string(),
                 data: Some(error),
                 duration_seconds: None,
@@ -97,13 +97,13 @@ pub async fn transcribe_audio_buffer(
 ) -> Result<(), String> {
     let model_id = model_manager::get_active_model_id(app.clone()).map_err(|e| e.to_string())?;
 
-    let provider: Box<dyn TranscriptionProvider> = if model_id == "cloud" {
-        // Emit event for frontend to handle cloud transcription
+    let provider: Box<dyn DictationProvider> = if model_id == "cloud" {
+        // Emit event for frontend to handle cloud dictation
         println!(
             "[Rust transcribe_audio_buffer] Cloud model selected, emitting event for frontend"
         );
-        app.emit("cloud-transcription-requested", &audio_data)
-            .map_err(|e| format!("Failed to emit cloud transcription event: {}", e))?;
+        app.emit("cloud-dictation-requested", &audio_data)
+            .map_err(|e| format!("Failed to emit cloud dictation event: {}", e))?;
         return Ok(());
     } else {
         Box::new(SidecarWhisperProvider::new(
@@ -121,12 +121,12 @@ pub async fn transcribe_audio_buffer(
 
     let sample_rate = Some(audio_data.sample_rate);
 
-    // Perform transcription in a separate thread
+    // Perform dictation in a separate thread
     tauri::async_runtime::spawn(async move {
-        println!("[Rust transcribe_audio_buffer] Starting transcription task");
+        println!("[Rust transcribe_audio_buffer] Starting dictation task");
 
-        // Emit transcription start event for performance tracking
-        let _ = app.emit("transcription-start", ());
+        // Emit dictation start event for performance tracking
+        let _ = app.emit("dictation-start", ());
 
         let result = provider
             .transcribe_buffer(app.clone(), audio_data.samples)
@@ -134,10 +134,10 @@ pub async fn transcribe_audio_buffer(
         let event_payload = match result {
             Ok(transcript) => {
                 println!(
-                    "[Rust transcribe_audio_buffer] Transcription successful: {}",
+                    "[Rust transcribe_audio_buffer] Dictation successful: {}",
                     transcript
                 );
-                TranscriptionProgress::Complete {
+                DictationProgress::Complete {
                     transcript,
                     duration_seconds,
                     model_used: Some(model_id),
@@ -145,49 +145,46 @@ pub async fn transcribe_audio_buffer(
                 }
             }
             Err(e) => {
-                println!("[Rust transcribe_audio_buffer] Transcription error: {}", e);
-                TranscriptionProgress::Error(e.to_string())
+                println!("[Rust transcribe_audio_buffer] Dictation error: {}", e);
+                DictationProgress::Error(e.to_string())
             }
         };
-        let event = TranscriptionEvent::from(event_payload);
+        let event = DictationEvent::from(event_payload);
         println!(
             "[Rust transcribe_audio_buffer] Emitting event: {:?}",
             serde_json::to_string(&event).unwrap()
         );
-        app.emit("transcription-progress", event).unwrap();
+        app.emit("dictation-progress", event).unwrap();
         println!("[Rust transcribe_audio_buffer] Event emitted successfully");
     });
 
     Ok(())
 }
 
-/// OPTIMIZATION: Internal transcription that bypasses frontend data transfer
+/// OPTIMIZATION: Internal dictation that bypasses frontend data transfer
 /// This eliminates ~267ms of serialization overhead by keeping audio in Rust
-pub async fn start_internal_transcription(
+pub async fn start_internal_dictation(
     app: AppHandle,
     audio_data: AudioData,
-) -> Result<(), TranscriptionError> {
-    println!("[PERF] 🚀 Starting OPTIMIZED internal transcription (no frontend round-trip)");
+) -> Result<(), DictationError> {
+    println!("[PERF] 🚀 Starting OPTIMIZED internal dictation (no frontend round-trip)");
 
     // Get active model and dictionary prompt
     let model_id = match crate::modules::model_manager::get_active_model_id(app.clone()) {
         Ok(id) => id,
         Err(e) => {
             println!("[Rust] Failed to get active model ID: {}", e);
-            return Err(TranscriptionError::ModelLoad(e.to_string()));
+            return Err(DictationError::ModelLoad(e.to_string()));
         }
     };
 
-    // Skip cloud transcription for this optimization (would require API call)
+    // Skip cloud dictation for this optimization (would require API call)
     if model_id == "cloud" {
         println!("[PERF] Cloud model detected - falling back to frontend flow for API access");
-        // Emit event for frontend to handle cloud transcription
-        app.emit("cloud-transcription-requested", &audio_data)
+        // Emit event for frontend to handle cloud dictation
+        app.emit("cloud-dictation-requested", &audio_data)
             .map_err(|e| {
-                TranscriptionError::ModelLoad(format!(
-                    "Failed to emit cloud transcription event: {}",
-                    e
-                ))
+                DictationError::ModelLoad(format!("Failed to emit cloud dictation event: {}", e))
             })?;
         return Ok(());
     }
@@ -212,21 +209,18 @@ pub async fn start_internal_transcription(
     };
     let sample_rate = Some(audio_data.sample_rate);
 
-    // Emit transcription start event
-    let _ = app.emit("transcription-start", ());
+    // Emit dictation start event
+    let _ = app.emit("dictation-start", ());
 
-    // Perform transcription directly
+    // Perform dictation directly
     let result = provider
         .transcribe_buffer(app.clone(), audio_data.samples)
         .await;
 
     let event_payload = match result {
         Ok(transcript) => {
-            println!(
-                "[PERF] ✅ Internal transcription successful: {}",
-                transcript
-            );
-            TranscriptionProgress::Complete {
+            println!("[PERF] ✅ Internal dictation successful: {}", transcript);
+            DictationProgress::Complete {
                 transcript,
                 duration_seconds,
                 model_used: Some(model_id),
@@ -234,14 +228,14 @@ pub async fn start_internal_transcription(
             }
         }
         Err(e) => {
-            println!("[PERF] ❌ Internal transcription error: {}", e);
-            TranscriptionProgress::Error(e.to_string())
+            println!("[PERF] ❌ Internal dictation error: {}", e);
+            DictationProgress::Error(e.to_string())
         }
     };
 
-    let event = TranscriptionEvent::from(event_payload);
-    println!("[PERF] 📡 Emitting internal transcription result");
-    app.emit("transcription-progress", event).unwrap();
+    let event = DictationEvent::from(event_payload);
+    println!("[PERF] 📡 Emitting internal dictation result");
+    app.emit("dictation-progress", event).unwrap();
 
     Ok(())
 }

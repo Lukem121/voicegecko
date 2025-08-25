@@ -14,14 +14,14 @@ import { Loader2, MessageSquare } from 'lucide-react';
 import React, { useState } from 'react';
 import { toast } from 'sonner';
 
-import { useSendFeedback } from '~/features/transcription/use-send-feedback';
+import { useSendFeedback } from '~/features/dictation/use-send-feedback';
 import { analytics } from '~/lib/analytics/posthog-analytics';
 
 type FeedbackModalProps = {
   isOpen: boolean;
   onClose: () => void;
-  transcriptionId: number;
-  transcriptionContent: string;
+  dictationId: number;
+  dictationContent: string;
 };
 
 // Character limit for feedback (matching backend constraint)
@@ -47,9 +47,9 @@ function getFeedbackLengthColor(length: number): string {
 export function FeedbackModal({
   isOpen,
   onClose,
-  transcriptionId,
-  // biome-ignore lint: transcriptionContent may be used in future to show original content
-  transcriptionContent,
+  dictationId,
+  // biome-ignore lint: dictationContent may be used in future to show original content
+  dictationContent,
 }: FeedbackModalProps) {
   const [feedback, setFeedback] = useState('');
   const { sendFeedback, isSending } = useSendFeedback();
@@ -78,13 +78,13 @@ export function FeedbackModal({
 
     try {
       await sendFeedback({
-        transcriptionId,
+        dictationId,
         feedback: trimmedFeedback,
       });
 
       // Track successful feedback submission
       analytics.track('feedback_submitted', {
-        type: 'transcription_quality',
+        type: 'dictation_quality',
         rating: undefined,
         has_text: trimmedFeedback.length > 0,
       });
@@ -124,7 +124,7 @@ export function FeedbackModal({
           </DialogTitle>
           <DialogDescription>
             Help us improve by sharing what you expected to see instead. Your
-            feedback helps us make transcriptions more accurate.
+            feedback helps us make dictations more accurate.
           </DialogDescription>
         </DialogHeader>
 

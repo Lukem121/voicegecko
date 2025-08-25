@@ -2,13 +2,13 @@ import { log } from '@acme/observability/log';
 import { TRPCError } from '@trpc/server';
 
 import type {
-  CreateTranscriptionData,
-  TranscriptionItem,
-} from '../../repository/transcription.repository';
-import { transcriptionRepository } from '../../repository/transcription.repository';
+  CreateDictationData,
+  DictationItem,
+} from '../../repository/dictation.repository';
+import { dictationRepository } from '../../repository/dictation.repository';
 import { countWords } from '../../utils/word-counter';
 
-export type TranscriptionGroup = {
+export type DictationGroup = {
   date: string;
   items: {
     id: number;
@@ -25,20 +25,20 @@ export type PaginationParams = {
   search?: string;
 };
 
-export type PaginatedTranscriptionsResult = {
-  groups: TranscriptionGroup[];
+export type PaginatedDictationsResult = {
+  groups: DictationGroup[];
   hasNextPage: boolean;
   nextCursor?: number;
   totalResults?: number;
 };
 
-export class TranscriptionService {
-  async createTranscription(data: Omit<CreateTranscriptionData, 'wordCount'>) {
+export class DictationService {
+  async createDictation(data: Omit<CreateDictationData, 'wordCount'>) {
     try {
       // Count words in the content
       const wordCount = countWords(data.content);
 
-      const result = await transcriptionRepository.create({
+      const result = await dictationRepository.create({
         ...data,
         wordCount,
       });
@@ -47,32 +47,32 @@ export class TranscriptionService {
       log.error(error);
       throw new TRPCError({
         code: 'INTERNAL_SERVER_ERROR',
-        message: 'Failed to save transcription',
+        message: 'Failed to save dictation',
       });
     }
   }
 
-  async getUserTranscriptions(
+  async getUserDictations(
     userId: string,
     params: PaginationParams = { limit: 20 }
-  ): Promise<PaginatedTranscriptionsResult> {
+  ): Promise<PaginatedDictationsResult> {
     const { cursor, limit, search } = params;
 
-    // Fetch transcriptions with pagination and search
-    const result = await transcriptionRepository.findByUserIdPaginated(userId, {
+    // Fetch dictations with pagination and search
+    const result = await dictationRepository.findByUserIdPaginated(userId, {
       cursor,
       limit: limit + 1, // Fetch one extra to check if there's a next page
       search,
     });
 
-    const { transcriptions, totalResults } = result;
+    const { dictations, totalResults } = result;
 
     // Check if there are more results
-    const hasNextPage = transcriptions.length > limit;
-    const items = hasNextPage ? transcriptions.slice(0, limit) : transcriptions;
+    const hasNextPage = dictations.length > limit;
+    const items = hasNextPage ? dictations.slice(0, limit) : dictations;
 
-    // Group transcriptions by date
-    const grouped = this.groupTranscriptionsByDate(items);
+    // Group dictations by date
+    const grouped = this.groupDictationsByDate(items);
 
     // Determine next cursor (ID of the last item)
     const nextCursor =
@@ -86,45 +86,43 @@ export class TranscriptionService {
     };
   }
 
-  async getTranscriptionById(id: number, userId: string) {
-    const transcription = await transcriptionRepository.findById(id, userId);
+  async getDictationById(id: number, userId: string) {
+    const dictation = await dictationRepository.findById(id, userId);
 
-    if (!transcription) {
+    if (!dictation) {
       throw new TRPCError({
         code: 'NOT_FOUND',
         message:
-          "Transcription not found or you don't have permission to access it",
+          "Dictation not found or you don't have permission to access it",
       });
     }
 
-    return transcription;
+    return dictation;
   }
 
-  async deleteTranscription(id: number, userId: string) {
-    const result = await transcriptionRepository.deleteById(id, userId);
+  async deleteDictation(id: number, userId: string) {
+    const result = await dictationRepository.deleteById(id, userId);
 
     if (!result) {
       throw new TRPCError({
         code: 'NOT_FOUND',
         message:
-          "Transcription not found or you don't have permission to delete it",
+          "Dictation not found or you don't have permission to delete it",
       });
     }
 
     return { success: true };
   }
 
-  private groupTranscriptionsByDate(
-    transcriptions: TranscriptionItem[]
-  ): TranscriptionGroup[] {
+  private groupDictationsByDate(dictations: DictationItem[]): DictationGroup[] {
     const today = new Date();
     const yesterday = new Date(today);
     yesterday.setDate(yesterday.getDate() - 1);
 
-    const groups = new Map<string, TranscriptionGroup>();
+    const groups = new Map<string, DictationGroup>();
 
-    for (const transcription of transcriptions) {
-      const date = new Date(transcription.createdAt);
+    for (const dictation of dictations) {
+      const date = new Date(dictation.createdAt);
       let dateLabel: string;
 
       if (this.isSameDay(date, today)) {
@@ -155,15 +153,15 @@ export class TranscriptionService {
       }
 
       group.items.push({
-        id: transcription.id,
+        id: dictation.id,
         timestamp: date.toLocaleTimeString('en-US', {
           hour: 'numeric',
           minute: '2-digit',
           hour12: true,
         }),
-        content: transcription.content,
-        status: transcription.status,
-        createdAt: transcription.createdAt.toISOString(),
+        content: dictation.content,
+        status: dictation.status,
+        createdAt: dictation.createdAt.toISOString(),
       });
     }
 
@@ -199,4 +197,4 @@ export class TranscriptionService {
   }
 }
 
-export const transcriptionService = new TranscriptionService();
+export const dictationService = new DictationService();

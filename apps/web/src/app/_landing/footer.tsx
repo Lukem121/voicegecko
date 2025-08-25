@@ -5,7 +5,7 @@ import { cn } from '@acme/ui/lib/utils';
 import { motion } from 'motion/react';
 import Link from 'next/link';
 import type { IconType } from 'react-icons';
-import { SiDiscord } from 'react-icons/si';
+import { SiDiscord, SiX } from 'react-icons/si';
 import { TbBolt, TbCalendarTime, TbGauge, TbLock } from 'react-icons/tb';
 import { CurrencySelector } from '~/providers/currency';
 import { APP_ROUTES } from '~/utils/app-routes';
@@ -75,6 +75,12 @@ const footerSections: FooterSection[] = [
         name: 'Discord',
         href: APP_ROUTES.SOCIALS.DISCORD,
         icon: SiDiscord,
+        openInNewTab: true,
+      },
+      {
+        name: 'Twitter',
+        href: APP_ROUTES.SOCIALS.TWITTER,
+        icon: SiX,
         openInNewTab: true,
       },
     ],

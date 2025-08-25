@@ -83,11 +83,11 @@ export const feedbackError = {
     details: {},
   }),
 
-  transcriptionNotFound: (transcriptionId: number): AppError => ({
+  dictationNotFound: (dictationId: number): AppError => ({
     code: FeedbackErrorCodes.TRANSCRIPTION_NOT_FOUND,
     message:
-      "The transcription you're trying to provide feedback for was not found.",
-    details: { transcriptionId },
+      "The dictation you're trying to provide feedback for was not found.",
+    details: { dictationId },
   }),
 
   discordSendFailed: (originalError: string): AppError => ({

@@ -66,9 +66,7 @@ export const SubscriptionCancelledTemplate = ({
               </li>
               <li className="flex items-start">
                 <span className="mr-3 text-green-600">✓</span>
-                <span>
-                  Your transcription history stays safe and accessible
-                </span>
+                <span>Your dictation history stays safe and accessible</span>
               </li>
               <li className="flex items-start">
                 <span className="mr-3 text-green-600">✓</span>

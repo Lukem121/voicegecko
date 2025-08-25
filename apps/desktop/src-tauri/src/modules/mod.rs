@@ -1,10 +1,10 @@
 pub mod audio;
+pub mod dictation;
+pub mod dictation_sidecar;
 pub mod gecko_bar;
 pub mod hardware_info;
 pub mod model_manager;
 pub mod settings;
 pub mod system;
-pub mod transcription;
-pub mod transcription_sidecar;
 pub mod tray;
 pub mod updater;

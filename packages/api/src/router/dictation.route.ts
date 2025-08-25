@@ -5,9 +5,9 @@ import { TRPCError } from '@trpc/server';
 import { z } from 'zod/v4';
 
 import { apiEnv } from '../../env';
+import { CloudDictationService } from '../services/dictation/cloud-dictation.service';
+import { dictationService } from '../services/dictation/dictation.service';
 import { dictionaryService } from '../services/dictionary/dictionary.service';
-import { CloudTranscriptionService } from '../services/transcription/cloud-transcription.service';
-import { transcriptionService } from '../services/transcription/transcription.service';
 import { usageService } from '../services/usage/usage.service';
 import { protectedProcedure } from '../trpc';
 import { feedbackError } from '../types/result';
@@ -15,15 +15,13 @@ import { convertFloat32ToWav } from '../utils/audio-converter';
 import { countWords } from '../utils/word-counter';
 
 const env = apiEnv();
-const cloudTranscriptionService = new CloudTranscriptionService(
-  env.OPENAI_API_KEY
-);
+const cloudDictationService = new CloudDictationService(env.OPENAI_API_KEY);
 const discordAdapter = new DiscordAdapter();
 
 // Feedback constraints
 const MAX_FEEDBACK_LENGTH = 1000; // Stay well under Discord's 1024 character limit
 
-export const transcriptionRouter = {
+export const dictationRouter = {
   create: protectedProcedure
     .input(
       z.object({
@@ -44,19 +42,19 @@ export const transcriptionRouter = {
         // TODO: Implement proper error handling and user-friendly messaging
         throw new TRPCError({
           code: 'FORBIDDEN',
-          message: 'Weekly transcription limit exceeded',
+          message: 'Weekly dictation limit exceeded',
         });
       }
 
-      const result = await transcriptionService.createTranscription({
+      const result = await dictationService.createDictation({
         ...input,
         userId,
       });
 
-      // Update usage tracking after successful transcription
+      // Update usage tracking after successful dictation
       if (result) {
         const wordCount = countWords(input.content);
-        await usageService.updateUsageAfterTranscription(userId, wordCount);
+        await usageService.updateUsageAfterDictation(userId, wordCount);
       }
 
       return result;
@@ -75,7 +73,7 @@ export const transcriptionRouter = {
     .query(async ({ ctx, input }) => {
       const userId = ctx.session.user.id;
       const params = input ?? { limit: 50 };
-      return await transcriptionService.getUserTranscriptions(userId, params);
+      return await dictationService.getUserDictations(userId, params);
     }),
 
   delete: protectedProcedure
@@ -86,7 +84,7 @@ export const transcriptionRouter = {
     )
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.session.user.id;
-      return await transcriptionService.deleteTranscription(input.id, userId);
+      return await dictationService.deleteDictation(input.id, userId);
     }),
 
   cloudTranscribe: protectedProcedure
@@ -110,7 +108,7 @@ export const transcriptionRouter = {
         // TODO: Implement proper error handling and user-friendly messaging
         throw new TRPCError({
           code: 'FORBIDDEN',
-          message: 'Weekly transcription limit exceeded',
+          message: 'Weekly dictation limit exceeded',
         });
       }
 
@@ -121,7 +119,7 @@ export const transcriptionRouter = {
       );
 
       // Transcribe using OpenAI with dictionary prompt
-      const transcript = await cloudTranscriptionService.transcribeAudio(
+      const transcript = await cloudDictationService.transcribeAudio(
         audioBuffer,
         `audio_${Date.now()}.wav`,
         dictionaryPrompt
@@ -130,8 +128,8 @@ export const transcriptionRouter = {
       // Calculate duration
       const durationSeconds = input.audioData.length / input.sampleRate;
 
-      // Save transcription to database
-      const result = await transcriptionService.createTranscription({
+      // Save dictation to database
+      const result = await dictationService.createDictation({
         content: transcript,
         status: transcript.trim() ? 'normal' : 'silent',
         durationSeconds: Math.round(durationSeconds),
@@ -140,22 +138,22 @@ export const transcriptionRouter = {
         userId,
       });
 
-      // Update usage tracking after successful transcription
+      // Update usage tracking after successful dictation
       if (result) {
         const wordCount = countWords(transcript);
-        await usageService.updateUsageAfterTranscription(userId, wordCount);
+        await usageService.updateUsageAfterDictation(userId, wordCount);
       }
 
       return {
         transcript,
-        transcriptionId: result?.id,
+        dictationId: result?.id,
         modelUsed: 'whisper-1',
       };
     }),
   sendFeedback: protectedProcedure
     .input(
       z.object({
-        transcriptionId: z.number(),
+        dictationId: z.number(),
         feedback: z.string().min(1).max(MAX_FEEDBACK_LENGTH),
       })
     )
@@ -182,9 +180,9 @@ export const transcriptionRouter = {
       }
 
       try {
-        // Get the transcription details
-        const transcription = await transcriptionService.getTranscriptionById(
-          input.transcriptionId,
+        // Get the dictation details
+        const dictation = await dictationService.getDictationById(
+          input.dictationId,
           userId
         );
 
@@ -194,10 +192,10 @@ export const transcriptionRouter = {
           message: feedback,
           userId,
           additionalContext: {
-            transcriptionId: input.transcriptionId,
-            transcriptionContent: transcription.content,
-            transcriptionStatus: transcription.status,
-            transcriptionDate: transcription.createdAt.toISOString(),
+            dictationId: input.dictationId,
+            dictationContent: dictation.content,
+            dictationStatus: dictation.status,
+            dictationDate: dictation.createdAt.toISOString(),
           },
           timestamp: new Date().toISOString(),
         });
@@ -213,7 +211,7 @@ export const transcriptionRouter = {
         if (error instanceof TRPCError && error.code === 'NOT_FOUND') {
           return {
             success: false as const,
-            error: feedbackError.transcriptionNotFound(input.transcriptionId),
+            error: feedbackError.dictationNotFound(input.dictationId),
           };
         }
 

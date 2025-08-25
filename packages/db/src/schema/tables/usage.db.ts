@@ -16,7 +16,7 @@ export const UsageTable = pgTable(
       .timestamp('week_start_date', { withTimezone: true })
       .notNull(),
     wordsUsed: t.integer('words_used').notNull().default(0),
-    transcriptionCount: t.integer('transcription_count').notNull().default(0),
+    dictationCount: t.integer('dictation_count').notNull().default(0),
     lastResetAt: t
       .timestamp('last_reset_at', { withTimezone: true })
       .notNull()
