@@ -12,6 +12,7 @@
           "System.Text.Json": "8.0.5",
           "Whisper.net": "1.8.1",
           "Whisper.net.Runtime": "1.8.1",
+          "Whisper.net.Runtime.Vulkan": "1.8.1",
           "runtimepack.Microsoft.NETCore.App.Runtime.win-x64": "8.0.17"
         },
         "runtime": {
@@ -747,7 +748,8 @@
           }
         }
       },
-      "Whisper.net.Runtime/1.8.1": {}
+      "Whisper.net.Runtime/1.8.1": {},
+      "Whisper.net.Runtime.Vulkan/1.8.1": {}
     }
   },
   "libraries": {
@@ -781,6 +783,13 @@
       "sha512": "sha512-DW2JhlBbt0W5W+cIP8Uevt5+7XnjPIsG9b5FyAdeB9taNk9w1WFw9W7TYSNaqgyEbEHHPNOXA6hl+yrmBwOfsQ==",
       "path": "whisper.net.runtime/1.8.1",
       "hashPath": "whisper.net.runtime.1.8.1.nupkg.sha512"
+    },
+    "Whisper.net.Runtime.Vulkan/1.8.1": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-hZmqxZZ6foU3WVmrewuFguIrodMkfb/7uyitBBPrZipo55jK16t/xxKUsWMLETYgEgGVwkZ33YNu8i3+4Kbjpg==",
+      "path": "whisper.net.runtime.vulkan/1.8.1",
+      "hashPath": "whisper.net.runtime.vulkan.1.8.1.nupkg.sha512"
     }
   },
   "runtimes": {
