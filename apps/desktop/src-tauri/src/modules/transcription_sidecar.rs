@@ -125,6 +125,14 @@ impl SidecarManager {
             .stdout(Stdio::piped())
             .stderr(Stdio::inherit()); // Forward stderr to see detailed logs
 
+        // On Windows, ensure no console window is shown
+        #[cfg(target_os = "windows")]
+        {
+            use std::os::windows::process::CommandExt;
+            const CREATE_NO_WINDOW: u32 = 0x08000000;
+            cmd.creation_flags(CREATE_NO_WINDOW);
+        }
+
         let mut child = cmd.spawn().map_err(|e| {
             TranscriptionError::Transcription(format!("Failed to start warm sidecar: {}", e))
         })?;

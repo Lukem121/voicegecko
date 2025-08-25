@@ -32,7 +32,7 @@ import {
   Trash2,
   X,
 } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { useDeleteTranscription } from '~/features/transcription/use-delete-transcription';
 import { useGetTranscriptions } from '~/features/transcription/use-get-transcriptions';
@@ -342,7 +342,8 @@ export const Route = createFileRoute('/_authenticated/')({
 });
 
 function RecordingPage() {
-  const { transcriptions } = useGetTranscriptions();
+  const { transcriptions, refetch: refetchTranscriptions } =
+    useGetTranscriptions();
   const { deleteTranscription } = useDeleteTranscription();
   const [isProcessing, setIsProcessing] = useState(false);
   const [isSearchExpanded, setIsSearchExpanded] = useState(false);
@@ -400,6 +401,13 @@ function RecordingPage() {
     'error:',
     transcriptionError
   );
+
+  // Ensure recents update immediately after a transcription completes
+  useEffect(() => {
+    if (transcriptionStatus === 'complete') {
+      refetchTranscriptions();
+    }
+  }, [transcriptionStatus, refetchTranscriptions]);
 
   const handleMicClick = async () => {
     log.info('[Recording] 🎯 handleMicClick called, status:', recordingStatus);
