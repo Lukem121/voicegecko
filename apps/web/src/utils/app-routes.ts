@@ -11,6 +11,7 @@ export const APP_ROUTES = {
   MARKETING: {
     PRICING: '/pricing',
     DOWNLOAD: '/download',
+    DOWNLOAD_SUCCESS: '/download/success',
   },
 
   AUTH: {

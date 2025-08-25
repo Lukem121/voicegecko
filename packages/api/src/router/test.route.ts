@@ -23,28 +23,28 @@ export const testRouter = {
         sendPaymentFailedEmail({
           user: testUser,
           planName: 'Pro Plan',
-          retryPaymentUrl: 'https://voicegecko.io/billing/retry',
-          accountUrl: 'https://voicegecko.io/account',
+          retryPaymentUrl: 'https://www.voicegecko.io/billing/retry',
+          accountUrl: 'https://www.voicegecko.io/account',
         }),
         sendResetPasswordEmail({
           user: testUser,
-          url: 'https://voicegecko.io/reset-password?token=test-token',
+          url: 'https://www.voicegecko.io/reset-password?token=test-token',
         }),
         sendStudentDiscountEmail({
           user: testUser,
           couponCode: 'STUDENT50',
           discountPercentage: '50',
-          redemptionUrl: 'https://voicegecko.io/pricing?coupon=STUDENT50',
+          redemptionUrl: 'https://www.voicegecko.io/pricing?coupon=STUDENT50',
         }),
         sendSubscriptionCancelledEmail({
           user: testUser,
           planName: 'Pro Plan',
           accessUntilDate: 'December 31, 2024',
-          reactivateUrl: 'https://voicegecko.io/billing/reactivate',
+          reactivateUrl: 'https://www.voicegecko.io/billing/reactivate',
         }),
         sendVerificationEmail({
           user: testUser,
-          url: 'https://voicegecko.io/verify?token=test-verification-token',
+          url: 'https://www.voicegecko.io/verify?token=test-verification-token',
         }),
         sendWelcomeProEmail({
           user: testUser,
