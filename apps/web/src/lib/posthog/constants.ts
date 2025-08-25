@@ -40,7 +40,7 @@ export const SECTION_NAMES = {
   SPEED_COMPARISON: 'speed_comparison',
   AI_VOICE: 'ai_voice',
   GECKOBAR: 'geckobar',
-  TRANSCRIPTION_FEATURES: 'transcription_features',
+  TRANSCRIPTION_FEATURES: 'dictation_features',
   TALK_TO_AI: 'talk_to_ai',
   APP_SCREENSHOT: 'app_screenshot',
   FINAL_CTA: 'final_cta',

@@ -25,35 +25,34 @@ import {
   X,
 } from 'lucide-react';
 import { useState } from 'react';
-
+import { DictationSkeleton } from '~/components/dictation-skeleton';
 import { FeedbackModal } from '~/components/feedback-modal';
-import { TranscriptionSkeleton } from '~/components/transcription-skeleton';
-import { useDeleteTranscription } from '~/features/transcription/use-delete-transcription';
-import { useInfiniteTranscriptions } from '~/features/transcription/use-infinite-transcriptions';
+import { useDeleteDictation } from '~/features/dictation/use-delete-dictation';
+import { useInfiniteDictations } from '~/features/dictation/use-infinite-dictations';
 import { useInfiniteScroll } from '~/hooks/use-infinite-scroll';
 import { analytics } from '~/lib/analytics/posthog-analytics';
 
-type TranscriptionItemData = {
+type DictationItemData = {
   id: number;
   timestamp: string;
   content: string;
   status: 'normal' | 'silent';
 };
 
-export const Route = createFileRoute('/_authenticated/transcriptions')({
-  component: TranscriptionsPage,
+export const Route = createFileRoute('/_authenticated/dictations')({
+  component: DictationsPage,
 });
 
-// Empty state when no transcriptions exist
-function EmptyTranscriptionsState() {
+// Empty state when no dictations exist
+function EmptyDictationsState() {
   return (
     <div className="flex flex-col items-center justify-center py-16 text-center">
       <div className="mb-4 rounded-full bg-muted p-3">
         <MessageSquare className="h-6 w-6 text-muted-foreground" />
       </div>
-      <h3 className="mb-2 font-semibold text-lg">No transcriptions yet</h3>
+      <h3 className="mb-2 font-semibold text-lg">No dictations yet</h3>
       <p className="mb-4 max-w-md text-muted-foreground">
-        Start recording to see your transcriptions appear here. Your voice
+        Start recording to see your dictations appear here. Your voice
         recordings will be automatically transcribed and organized by date.
       </p>
     </div>
@@ -73,10 +72,10 @@ function NoSearchResultsState({
       <div className="mb-4 rounded-full bg-muted p-3">
         <MessageSquare className="h-6 w-6 text-muted-foreground" />
       </div>
-      <h3 className="mb-2 font-semibold text-lg">No transcriptions found</h3>
+      <h3 className="mb-2 font-semibold text-lg">No dictations found</h3>
       <p className="mb-4 max-w-md text-muted-foreground">
-        We couldn't find any transcriptions matching "{searchTerm}". Try
-        adjusting your search terms.
+        We couldn't find any dictations matching "{searchTerm}". Try adjusting
+        your search terms.
       </p>
       <Button
         className="mt-2"
@@ -90,8 +89,8 @@ function NoSearchResultsState({
   );
 }
 
-// Individual transcription item component
-function TranscriptionItem({
+// Individual dictation item component
+function DictationItem({
   item,
   index,
   sectionLength,
@@ -102,7 +101,7 @@ function TranscriptionItem({
   setOpenDropdownId,
   isDeleting,
 }: {
-  item: TranscriptionItemData;
+  item: DictationItemData;
   index: number;
   sectionLength: number;
   deletingId: number | null;
@@ -169,18 +168,18 @@ function TranscriptionItem({
                   <CopyButton
                     className="h-8 w-8 p-0"
                     onClick={() => {
-                      analytics.track('transcription_copied', {
+                      analytics.track('dictation_copied', {
                         transcript_length: item.content.length,
                         method: 'button',
                       });
-                      analytics.trackFeatureFirstUse('copy_transcription');
+                      analytics.trackFeatureFirstUse('copy_dictation');
                     }}
                     text={item.content}
                     variant="ghost"
                   />
                 </TooltipTrigger>
                 <TooltipContent>
-                  <p>Copy transcription</p>
+                  <p>Copy dictation</p>
                 </TooltipContent>
               </Tooltip>
             )}
@@ -220,7 +219,7 @@ function TranscriptionItem({
                   onClick={() => handleDeleteTranscript(item.id)}
                 >
                   <Trash2 className="mr-2 h-4 w-4" />
-                  Delete transcription
+                  Delete dictation
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -231,9 +230,9 @@ function TranscriptionItem({
   );
 }
 
-function TranscriptionsPage() {
+function DictationsPage() {
   const {
-    transcriptions,
+    dictations,
     isLoading,
     isFetchingNextPage,
     searchTerm,
@@ -243,19 +242,19 @@ function TranscriptionsPage() {
     fetchNextPage,
     totalResults,
     isFuzzySearch,
-  } = useInfiniteTranscriptions({ limit: 20 });
+  } = useInfiniteDictations({ limit: 20 });
 
-  const { deleteTranscription, isDeleting } = useDeleteTranscription();
+  const { deleteDictation, isDeleting } = useDeleteDictation();
   const [isSearchExpanded, setIsSearchExpanded] = useState(false);
   const [deletingId, setDeletingId] = useState<number | null>(null);
   const [openDropdownId, setOpenDropdownId] = useState<number | null>(null);
   const [feedbackModal, setFeedbackModal] = useState<{
     isOpen: boolean;
-    transcriptionId: number;
+    dictationId: number;
     content: string;
   }>({
     isOpen: false,
-    transcriptionId: 0,
+    dictationId: 0,
     content: '',
   });
 
@@ -269,12 +268,12 @@ function TranscriptionsPage() {
   const handleSendFeedback = (id: number, content: string) => {
     setFeedbackModal({
       isOpen: true,
-      transcriptionId: id,
+      dictationId: id,
       content,
     });
 
     analytics.track('feedback_submitted', {
-      type: 'transcription_quality',
+      type: 'dictation_quality',
       rating: undefined,
       has_text: content.length > 0,
     });
@@ -282,12 +281,12 @@ function TranscriptionsPage() {
 
   const handleDeleteTranscript = async (id: number) => {
     try {
-      log.info('Deleting transcription:', id);
+      log.info('Deleting dictation:', id);
       setDeletingId(id);
       setOpenDropdownId(null);
-      await deleteTranscription({ id });
+      await deleteDictation({ id });
     } catch (error) {
-      log.error('Failed to delete transcription:', error);
+      log.error('Failed to delete dictation:', error);
     } finally {
       setDeletingId(null);
     }
@@ -295,11 +294,11 @@ function TranscriptionsPage() {
 
   // Determine which content to render
   const getMainContent = () => {
-    if (isLoading && transcriptions.length === 0) {
-      return <TranscriptionSkeleton />;
+    if (isLoading && dictations.length === 0) {
+      return <DictationSkeleton />;
     }
 
-    if (transcriptions.length === 0 && searchTerm && !isLoading) {
+    if (dictations.length === 0 && searchTerm && !isLoading) {
       return (
         <NoSearchResultsState
           clearSearch={clearSearch}
@@ -308,18 +307,18 @@ function TranscriptionsPage() {
       );
     }
 
-    if (transcriptions.length === 0 && !searchTerm && !isLoading) {
-      return <EmptyTranscriptionsState />;
+    if (dictations.length === 0 && !searchTerm && !isLoading) {
+      return <EmptyDictationsState />;
     }
 
-    return transcriptions.map((section) => (
+    return dictations.map((section) => (
       <div className="space-y-3" key={`section-${section.date}`}>
         <h2 className="font-medium text-muted-foreground text-sm uppercase tracking-wide">
           {section.date}
         </h2>
         <div className="overflow-hidden rounded-lg border">
           {section.items.map((item, index) => (
-            <TranscriptionItem
+            <DictationItem
               deletingId={deletingId}
               handleDeleteTranscript={handleDeleteTranscript}
               handleSendFeedback={handleSendFeedback}
@@ -350,7 +349,7 @@ function TranscriptionsPage() {
                   autoFocus
                   className="w-80 pr-12 pl-10"
                   onChange={(e) => handleSearch(e.target.value)}
-                  placeholder="Search transcriptions..."
+                  placeholder="Search dictations..."
                   value={searchTerm}
                 />
                 <div className="-translate-y-1/2 absolute top-1/2 right-1 flex items-center gap-1">
@@ -387,7 +386,7 @@ function TranscriptionsPage() {
               className="h-8 w-8 p-0"
               onClick={() => {
                 setIsSearchExpanded(true);
-                analytics.trackFeatureFirstUse('transcription_search');
+                analytics.trackFeatureFirstUse('dictation_search');
               }}
               size="sm"
               variant="ghost"
@@ -399,12 +398,12 @@ function TranscriptionsPage() {
       </div>
 
       {/* Search results info - only show when we have actual results */}
-      {searchTerm && transcriptions.length > 0 && (
+      {searchTerm && dictations.length > 0 && (
         <div className="flex items-center gap-2 text-muted-foreground text-sm">
           <span>
             {totalResults !== undefined
               ? `Found ${totalResults} result${totalResults !== 1 ? 's' : ''}`
-              : `${transcriptions.reduce((acc, section) => acc + section.items.length, 0)} result${transcriptions.reduce((acc, section) => acc + section.items.length, 0) !== 1 ? 's' : ''}`}
+              : `${dictations.reduce((acc, section) => acc + section.items.length, 0)} result${dictations.reduce((acc, section) => acc + section.items.length, 0) !== 1 ? 's' : ''}`}
             {isFuzzySearch && ' (fuzzy search)'}
           </span>
         </div>
@@ -472,22 +471,22 @@ function TranscriptionsPage() {
       )}
 
       {/* End of results indicator */}
-      {!hasNextPage && transcriptions.length > 0 && !searchTerm && (
+      {!hasNextPage && dictations.length > 0 && !searchTerm && (
         <div className="flex justify-center py-8">
           <p className="text-muted-foreground text-sm">
-            You've reached the end of your transcriptions
+            You've reached the end of your dictations
           </p>
         </div>
       )}
 
       {/* Feedback Modal */}
       <FeedbackModal
+        dictationContent={feedbackModal.content}
+        dictationId={feedbackModal.dictationId}
         isOpen={feedbackModal.isOpen}
         onClose={() =>
-          setFeedbackModal({ isOpen: false, transcriptionId: 0, content: '' })
+          setFeedbackModal({ isOpen: false, dictationId: 0, content: '' })
         }
-        transcriptionContent={feedbackModal.content}
-        transcriptionId={feedbackModal.transcriptionId}
       />
     </div>
   );

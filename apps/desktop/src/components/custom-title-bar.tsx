@@ -171,7 +171,7 @@ export function TitleBar() {
                 </div>
               </TooltipTrigger>
               <TooltipContent className="z-[10000]" side="bottom">
-                <p>Total words processed across all transcriptions</p>
+                <p>Total words processed across all dictations</p>
               </TooltipContent>
             </Tooltip>
 
@@ -205,7 +205,7 @@ export function TitleBar() {
                 </div>
               </TooltipTrigger>
               <TooltipContent className="z-[10000]" side="bottom">
-                <p>Estimated time saved through transcription</p>
+                <p>Estimated time saved through dictation</p>
               </TooltipContent>
             </Tooltip>
 
@@ -239,7 +239,7 @@ export function TitleBar() {
                 </div>
               </TooltipTrigger>
               <TooltipContent className="z-[10000]" side="bottom">
-                <p>Average words per minute transcription speed</p>
+                <p>Average words per minute dictation speed</p>
               </TooltipContent>
             </Tooltip>
           </motion.div>

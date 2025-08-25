@@ -11,7 +11,7 @@ export type GeckoBarDisplayMode =
   | 'hover' // User hovering, show appropriate message
   | 'notification' // Active notification, highest priority
   | 'recording' // Currently recording, expanded
-  | 'transcribing' // Processing transcription, expanded
+  | 'transcribing' // Processing dictation, expanded
   | 'passthrough'; // Pass-through mode active, expanded with countdown
 
 export type GeckoBarDisplayState = {

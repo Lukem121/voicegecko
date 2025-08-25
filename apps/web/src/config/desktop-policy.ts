@@ -3,7 +3,7 @@
 
 export const DESKTOP_POLICY = {
   // Minimal required desktop client version. Clients below this should be forced to upgrade.
-  MIN_SUPPORTED_DESKTOP_VERSION: '0.0.15',
+  MIN_SUPPORTED_DESKTOP_VERSION: '0.0.0',
 
   // Optional: version we recommend upgrading to, shown in UI if you want.
   RECOMMENDED_DESKTOP_VERSION: undefined as string | undefined,

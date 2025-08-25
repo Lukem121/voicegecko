@@ -125,19 +125,18 @@ function CompletionStep() {
               <CardHeader>
                 <CardTitle>Unlock More Features</CardTitle>
                 <p className="text-muted-foreground text-sm">
-                  Upgrade to Pro for unlimited transcriptions and advanced
-                  features
+                  Upgrade to Pro for unlimited dictations and advanced features
                 </p>
               </CardHeader>
               <CardContent className="space-y-3">
                 <ul className="space-y-2 text-sm">
                   <li className="flex items-center gap-2">
                     <Check className="h-3 w-3 text-green-600" />
-                    Unlimited transcriptions
+                    Unlimited dictations
                   </li>
                   <li className="flex items-center gap-2">
                     <Check className="h-3 w-3 text-green-600" />
-                    Priority transcription queue
+                    Priority dictation queue
                   </li>
                   <li className="flex items-center gap-2">
                     <Check className="h-3 w-3 text-green-600" />

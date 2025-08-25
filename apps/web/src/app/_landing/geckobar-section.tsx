@@ -37,7 +37,7 @@ const steps = [
     id: 'use',
     title: 'Use Your Text',
     description:
-      "Your transcription is ready on your clipboard or instantly pasted where you're working.",
+      "Your dictation is ready on your clipboard or instantly pasted where you're working.",
   },
 ];
 
@@ -137,7 +137,7 @@ export default function GeckoBarSection() {
         {/* Main Content */}
         <div className="relative z-10 mx-auto max-w-6xl">
           <SectionHeader
-            description="A persistent, interactive bar that lets you trigger transcription or see exactly what's happening."
+            description="A persistent, interactive bar that lets you trigger dictation or see exactly what's happening."
             descriptionWidth="wide"
             eyebrow="Always Within Reach"
             heading="Meet the GeckoBar"
@@ -291,7 +291,7 @@ export default function GeckoBarSection() {
                     Use Your Text
                   </h3>
                   <p className="mt-1 text-muted-foreground text-sm">
-                    Your transcription is ready on your clipboard or instantly
+                    Your dictation is ready on your clipboard or instantly
                     pasted where you're working.
                   </p>
                 </motion.div>

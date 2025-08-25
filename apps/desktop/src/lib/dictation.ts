@@ -5,15 +5,15 @@ import { dictionaryService } from '~/services/dictionary.service';
 import type { AudioData } from '~/types/events';
 
 /**
- * Invokes the transcription process on the backend using audio buffer data.
- * The transcription results will be handled by the centralized event service.
+ * Invokes the dictation process on the backend using audio buffer data.
+ * The dictation results will be handled by the centralized event service.
  *
  * @param audioData - The audio data including samples, sample rate, and channels.
  */
-export async function invokeTranscriptionFromBuffer(audioData: AudioData) {
+export async function invokeDictationFromBuffer(audioData: AudioData) {
   const frontendStartTime = performance.now();
   log.info('[PERF] ============== FRONTEND TRANSCRIPTION START ==============');
-  log.info('[PERF] Frontend transcription invoked with audio data:', {
+  log.info('[PERF] Frontend dictation invoked with audio data:', {
     samplesLength: audioData.samples.length,
     sampleRate: audioData.sample_rate,
     channels: audioData.channels,
@@ -21,7 +21,7 @@ export async function invokeTranscriptionFromBuffer(audioData: AudioData) {
   });
 
   try {
-    // Fetch dictionary prompt before transcription
+    // Fetch dictionary prompt before dictation
     const dictStartTime = performance.now();
     const dictionaryPrompt = await dictionaryService.getDictionaryPrompt();
     const dictDuration = performance.now() - dictStartTime;
@@ -37,11 +37,11 @@ export async function invokeTranscriptionFromBuffer(audioData: AudioData) {
 
     log.info(`[PERF] Tauri command invocation took: ${invokeDuration}ms`);
     log.info(
-      `[PERF] Total frontend transcription setup took: ${totalFrontendTime}ms`
+      `[PERF] Total frontend dictation setup took: ${totalFrontendTime}ms`
     );
   } catch (error) {
-    log.error('Failed to invoke transcription from buffer:', error);
-    toast.error('Failed to start transcription', {
+    log.error('Failed to invoke dictation from buffer:', error);
+    toast.error('Failed to start dictation', {
       description:
         error instanceof Error ? error.message : 'Could not start process.',
     });

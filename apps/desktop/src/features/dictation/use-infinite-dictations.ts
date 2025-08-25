@@ -5,14 +5,14 @@ import React, { useMemo } from 'react';
 import { useDebouncedSearch } from '~/hooks/use-debounced-search';
 import { analytics } from '~/lib/analytics/posthog-analytics';
 import { trpc } from '~/trpc';
-import { useGetTranscriptions } from './use-get-transcriptions';
+import { useGetDictations } from './use-get-dictations';
 
-export type UseInfiniteTranscriptionsParams = {
+export type UseInfiniteDictationsParams = {
   limit?: number;
   searchDelay?: number;
 };
 
-type TranscriptionGroup = {
+type DictationGroup = {
   date: string;
   items: {
     id: number;
@@ -23,27 +23,27 @@ type TranscriptionGroup = {
   }[];
 };
 
-export const useInfiniteTranscriptions = ({
+export const useInfiniteDictations = ({
   limit = 20,
   searchDelay = 300,
-}: UseInfiniteTranscriptionsParams = {}) => {
+}: UseInfiniteDictationsParams = {}) => {
   const search = useDebouncedSearch({ delay: searchDelay });
 
   // Track search usage
   React.useEffect(() => {
     if (search.debouncedSearchTerm) {
-      analytics.track('transcription_searched', {
+      analytics.track('dictation_searched', {
         search_term_length: search.debouncedSearchTerm.length,
         search_type: 'server_search',
       });
 
-      analytics.trackFeatureFirstUse('transcription_search');
+      analytics.trackFeatureFirstUse('dictation_search');
     }
   }, [search.debouncedSearchTerm]);
 
-  // Main infinite query for transcriptions
+  // Main infinite query for dictations
   const infiniteQuery = useInfiniteQuery(
-    trpc.transcription.getAll.infiniteQueryOptions(
+    trpc.dictation.getAll.infiniteQueryOptions(
       {
         limit,
         search: search.debouncedSearchTerm || undefined,
@@ -63,7 +63,7 @@ export const useInfiniteTranscriptions = ({
       !infiniteQuery.data) &&
     !infiniteQuery.isLoading;
 
-  const { transcriptions: allTranscriptions } = useGetTranscriptions({
+  const { dictations: allDictations } = useGetDictations({
     limit: 50, // Get more for fuzzy search (max allowed by backend is 50)
   });
 
@@ -71,13 +71,13 @@ export const useInfiniteTranscriptions = ({
   const fuzzySearchResults = useMemo(() => {
     if (
       !(shouldUseFuzzySearch && search.debouncedSearchTerm) ||
-      allTranscriptions.length === 0
+      allDictations.length === 0
     ) {
       return [];
     }
 
     // Flatten all items for fuzzy search
-    const allItems = allTranscriptions.flatMap((group) =>
+    const allItems = allDictations.flatMap((group) =>
       group.items.map((item) => ({
         ...item,
         groupDate: group.date,
@@ -156,13 +156,13 @@ export const useInfiniteTranscriptions = ({
         });
       }
       return acc;
-    }, [] as TranscriptionGroup[]);
+    }, [] as DictationGroup[]);
 
     return groupedResults;
-  }, [shouldUseFuzzySearch, search.debouncedSearchTerm, allTranscriptions]);
+  }, [shouldUseFuzzySearch, search.debouncedSearchTerm, allDictations]);
 
   // Flatten, reformat to local, and regroup all items from all pages
-  const serverTranscriptions = useMemo(() => {
+  const serverDictations = useMemo(() => {
     if (!infiniteQuery.data) {
       return [];
     }
@@ -204,7 +204,7 @@ export const useInfiniteTranscriptions = ({
       page.groups.flatMap((group) => group.items)
     );
 
-    const groupsMap = new Map<string, TranscriptionGroup>();
+    const groupsMap = new Map<string, DictationGroup>();
 
     for (const item of allItems) {
       const date = item.createdAt ? new Date(item.createdAt) : undefined;
@@ -255,9 +255,9 @@ export const useInfiniteTranscriptions = ({
     return result;
   }, [infiniteQuery.data]);
 
-  const transcriptions = shouldUseFuzzySearch
+  const dictations = shouldUseFuzzySearch
     ? fuzzySearchResults
-    : serverTranscriptions;
+    : serverDictations;
   const totalResults = shouldUseFuzzySearch
     ? fuzzySearchResults.length
     : infiniteQuery.data?.pages[0]?.totalResults;
@@ -279,7 +279,7 @@ export const useInfiniteTranscriptions = ({
     clearSearch,
 
     // Data
-    transcriptions,
+    dictations,
     totalResults,
 
     // Loading states

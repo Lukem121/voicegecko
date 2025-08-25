@@ -1,6 +1,6 @@
 import type { ShortcutAction } from '~/lib/shortcuts/types';
+import { dictationService } from '~/services/dictation.service';
 import { recordingService } from '~/services/recording.service';
-import { transcriptionService } from '~/services/transcription.service';
 
 // Simple action handlers for keyboard shortcuts
 export const shortcutActions: Record<
@@ -10,8 +10,7 @@ export const shortcutActions: Record<
   'toggle-recording': () =>
     recordingService.toggleRecording({ isKeyboardShortcut: true }),
 
-  'paste-last-transcription': () =>
-    transcriptionService.pasteLastTranscription(),
+  'paste-last-dictation': () => dictationService.pasteLastDictation(),
 
-  'open-last-transcription': () => transcriptionService.openLastTranscription(),
+  'open-last-dictation': () => dictationService.openLastDictation(),
 };

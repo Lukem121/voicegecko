@@ -58,13 +58,13 @@ export const WelcomeProTemplate = ({
 
           <Text className="mb-3 px-2 text-lg leading-6 sm:mb-4 sm:px-0 sm:leading-7">
             Congratulations{name ? `, ${name}` : ''}! You've just unlocked the
-            full power of voice-to-text transcription.
+            full power of voice-to-text dictation.
           </Text>
 
           <Text className="mb-5 px-2 text-base text-gray-700 leading-6 sm:mb-7 sm:px-0">
             Your <strong>{planName}</strong> subscription is now active. Get
-            ready to experience unlimited transcriptions, priority processing,
-            and premium features designed for power users.
+            ready to experience unlimited dictations, priority processing, and
+            premium features designed for power users.
           </Text>
 
           {/* Pro Features Section */}
@@ -76,14 +76,14 @@ export const WelcomeProTemplate = ({
               <li className="flex items-start">
                 <span className="mr-3 text-green-600">✓</span>
                 <span>
-                  <strong>Unlimited Transcriptions</strong> - No more limits,
+                  <strong>Unlimited Dictations</strong> - No more limits,
                   transcribe as much as you need
                 </span>
               </li>
               <li className="flex items-start">
                 <span className="mr-3 text-green-600">✓</span>
                 <span>
-                  <strong>Priority Processing</strong> - Your transcriptions get
+                  <strong>Priority Processing</strong> - Your dictations get
                   processed first
                 </span>
               </li>

@@ -4,7 +4,7 @@
  */
 
 export type TauriEventMap = {
-  'transcription-progress': TranscriptionProgressEvent;
+  'dictation-progress': DictationProgressEvent;
   'recording-state-changed': RecordingStateChangedEvent;
   'recording-error': RecordingErrorEvent;
   'model-download-progress': ModelDownloadProgressEvent;
@@ -18,8 +18,8 @@ export type TauriEventMap = {
   'gecko-bar-notification': GeckoBarNotificationEvent;
 };
 
-// Transcription Events
-export type TranscriptionProgressEvent = {
+// Dictation Events
+export type DictationProgressEvent = {
   status: string;
   data?: string;
   duration_seconds?: number;

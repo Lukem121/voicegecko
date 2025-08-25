@@ -92,9 +92,9 @@ type RecordingEvents = {
   };
 };
 
-// Transcription Events
-type TranscriptionEvents = {
-  transcription_started: {
+// Dictation Events
+type DictationEvents = {
+  dictation_started: {
     model_type: 'cloud' | 'local';
     model_name?: string;
     audio_duration_seconds: number;
@@ -102,7 +102,7 @@ type TranscriptionEvents = {
     has_dictionary_words: boolean;
     dictionary_word_count: number;
   };
-  transcription_completed: {
+  dictation_completed: {
     model_type: 'cloud' | 'local';
     model_name?: string;
     audio_duration_seconds: number;
@@ -112,7 +112,7 @@ type TranscriptionEvents = {
     is_silent: boolean;
     confidence_score?: number;
   };
-  transcription_failed: {
+  dictation_failed: {
     model_type: 'cloud' | 'local';
     model_name?: string;
     error_type: string;
@@ -120,15 +120,15 @@ type TranscriptionEvents = {
     audio_duration_seconds?: number;
     processing_time_seconds?: number;
   };
-  transcription_copied: {
+  dictation_copied: {
     transcript_length: number;
     method: 'button' | 'auto_paste';
   };
-  transcription_deleted: {
-    transcription_id: number;
+  dictation_deleted: {
+    dictation_id: number;
     method: 'user_action' | 'bulk_action';
   };
-  transcription_searched: {
+  dictation_searched: {
     search_term_length: number;
     search_type: 'server_search' | 'fuzzy_search';
   };
@@ -247,7 +247,7 @@ type PerformanceEvents = {
   app_shutdown: {
     session_duration_seconds: number;
     recordings_count: number;
-    transcriptions_count: number;
+    dictations_count: number;
   };
   feature_first_use: {
     feature_name: string;
@@ -265,13 +265,13 @@ type PerformanceEvents = {
 // Business Intelligence Events
 type BusinessEvents = {
   usage_limit_approached: {
-    limit_type: 'transcription' | 'storage';
+    limit_type: 'dictation' | 'storage';
     current_usage: number;
     limit_value: number;
     percentage_used: number;
   };
   usage_limit_exceeded: {
-    limit_type: 'transcription' | 'storage';
+    limit_type: 'dictation' | 'storage';
     attempted_action: string;
   };
   upgrade_prompt_shown: {
@@ -279,7 +279,7 @@ type BusinessEvents = {
     plan_suggested: string;
   };
   feedback_submitted: {
-    type: 'transcription_quality' | 'bug_report' | 'feature_request';
+    type: 'dictation_quality' | 'bug_report' | 'feature_request';
     rating?: number;
     has_text: boolean;
   };
@@ -294,7 +294,7 @@ type BusinessEvents = {
 type AllEvents = UserLifecycleEvents &
   OnboardingEvents &
   RecordingEvents &
-  TranscriptionEvents &
+  DictationEvents &
   DictionaryEvents &
   NavigationEvents &
   SettingsEvents &
@@ -586,9 +586,9 @@ export class RecordingSessionTracker {
 }
 
 /**
- * Track transcription processing from start to finish
+ * Track dictation processing from start to finish
  */
-export class TranscriptionTracker {
+export class DictationTracker {
   private readonly startTime: number;
   private readonly modelType: 'cloud' | 'local';
   private readonly modelName?: string;
@@ -610,7 +610,7 @@ export class TranscriptionTracker {
     dictionaryWordCount: number,
     sampleRate: number
   ) {
-    analytics.track('transcription_started', {
+    analytics.track('dictation_started', {
       model_type: this.modelType,
       model_name: this.modelName,
       audio_duration_seconds: this.audioDuration,
@@ -628,7 +628,7 @@ export class TranscriptionTracker {
     const processingTime = (Date.now() - this.startTime) / 1000;
     const wordCount = transcript.trim().split(WORD_SPLIT_REGEX).length;
 
-    analytics.track('transcription_completed', {
+    analytics.track('dictation_completed', {
       model_type: this.modelType,
       model_name: this.modelName,
       audio_duration_seconds: this.audioDuration,
@@ -642,7 +642,7 @@ export class TranscriptionTracker {
 
   trackFailed(errorType: string, errorMessage: string) {
     const processingTime = (Date.now() - this.startTime) / 1000;
-    analytics.track('transcription_failed', {
+    analytics.track('dictation_failed', {
       model_type: this.modelType,
       model_name: this.modelName,
       error_type: errorType,

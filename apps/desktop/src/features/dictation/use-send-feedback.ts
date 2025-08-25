@@ -3,15 +3,10 @@ import { useMutation } from '@tanstack/react-query';
 import { trpc } from '~/trpc';
 
 export const useSendFeedback = () => {
-  const mutation = useMutation(
-    trpc.transcription.sendFeedback.mutationOptions()
-  );
+  const mutation = useMutation(trpc.dictation.sendFeedback.mutationOptions());
 
   return {
-    sendFeedback: async (input: {
-      transcriptionId: number;
-      feedback: string;
-    }) => {
+    sendFeedback: async (input: { dictationId: number; feedback: string }) => {
       const result = await mutation.mutateAsync(input);
 
       if (!result.success) {

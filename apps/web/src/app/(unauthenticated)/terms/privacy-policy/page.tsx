@@ -299,7 +299,7 @@ export default function PrivacyPage() {
                 active. Deleted if you close your account.
               </li>
               <li>
-                <strong>Transcriptions</strong> – kept until you delete them or
+                <strong>Dictations</strong> – kept until you delete them or
                 close your account.
               </li>
               <li>
@@ -379,7 +379,7 @@ export default function PrivacyPage() {
             <ul>
               <li>
                 Provide and operate the Service (including processing your audio
-                into transcriptions).
+                into dictations).
               </li>
               <li>Process payments and subscriptions.</li>
               <li>
@@ -404,7 +404,7 @@ export default function PrivacyPage() {
             <ul>
               <li>
                 <strong>Contract</strong> – to provide the Service you requested
-                (account setup, transcriptions, billing, support).
+                (account setup, dictations, billing, support).
               </li>
               <li>
                 <strong>Legitimate interests</strong> – to secure and improve
@@ -479,9 +479,9 @@ export default function PrivacyPage() {
             <h3 id="data-you-upload">2.3 Data you upload</h3>
             <p>
               When you use the Service, you may upload audio files and generate
-              transcriptions (“User Content”). Audio is not stored unless
-              required for support or a feature you enable; transcription text
-              is stored so you can access and manage it.
+              dictations (“User Content”). Audio is not stored unless required
+              for support or a feature you enable; dictation text is stored so
+              you can access and manage it.
             </p>
 
             <h3 id="information-from-others">2.4 Information from others</h3>

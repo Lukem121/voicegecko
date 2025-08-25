@@ -1,13 +1,13 @@
 import { Skeleton } from '@acme/ui/components/ui/skeleton';
 
-export function TranscriptionSkeleton() {
+export function DictationSkeleton() {
   return (
     <div className="space-y-6">
       {/* Date header skeleton */}
       <div className="space-y-3">
         <Skeleton className="h-4 w-24" />
 
-        {/* Transcription cards container */}
+        {/* Dictation cards container */}
         <div className="overflow-hidden rounded-lg border">
           {Array.from({ length: 3 }).map((_, index) => (
             <div
@@ -78,7 +78,7 @@ export function TranscriptionSkeleton() {
   );
 }
 
-export function TranscriptionPageSkeleton() {
+export function DictationPageSkeleton() {
   return (
     <div className="flex flex-1 flex-col gap-4">
       {/* Header skeleton */}
@@ -90,7 +90,7 @@ export function TranscriptionPageSkeleton() {
       </div>
 
       {/* Content skeleton */}
-      <TranscriptionSkeleton />
+      <DictationSkeleton />
     </div>
   );
 }

@@ -6,8 +6,8 @@ type PerformanceSession = {
   phases: {
     recordingStopTime?: number;
     audioProcessingTime?: number;
-    transcriptionStartTime?: number;
-    transcriptionCompleteTime?: number;
+    dictationStartTime?: number;
+    dictationCompleteTime?: number;
     clipboardCopyTime?: number;
     pasteCompleteTime?: number;
   };
@@ -118,11 +118,11 @@ class EndToEndPerformanceTracker {
       );
     }
 
-    if (phases.transcriptionCompleteTime && phases.transcriptionStartTime) {
-      const transcriptionDuration =
-        phases.transcriptionCompleteTime - phases.transcriptionStartTime;
+    if (phases.dictationCompleteTime && phases.dictationStartTime) {
+      const dictationDuration =
+        phases.dictationCompleteTime - phases.dictationStartTime;
       log.info(
-        `[PERF] 🤖 Whisper Inference Total: ${transcriptionDuration.toFixed(2)}ms`
+        `[PERF] 🤖 Whisper Inference Total: ${dictationDuration.toFixed(2)}ms`
       );
     }
 

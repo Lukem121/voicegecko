@@ -35,6 +35,7 @@ export const APP_ROUTES = {
   },
   SOCIALS: {
     DISCORD: 'https://discord.gg/BFxNQCzZjB',
+    TWITTER: 'https://twitter.com/VoiceGeckoAI',
   },
 } as const;
 

@@ -1,8 +1,8 @@
 import { and, count, desc, eq, ilike, lt, sql } from '@acme/db';
 import { db } from '@acme/db/client';
-import { TranscriptionTable } from '@acme/db/schema';
+import { DictationTable } from '@acme/db/schema';
 
-export type CreateTranscriptionData = {
+export type CreateDictationData = {
   userId: string;
   content: string;
   status: 'normal' | 'silent';
@@ -13,7 +13,7 @@ export type CreateTranscriptionData = {
   wordCount: number;
 };
 
-export type TranscriptionItem = {
+export type DictationItem = {
   id: number;
   content: string;
   status: 'normal' | 'silent';
@@ -27,16 +27,13 @@ export type FindPaginatedParams = {
 };
 
 export type PaginatedResult = {
-  transcriptions: TranscriptionItem[];
+  dictations: DictationItem[];
   totalResults?: number;
 };
 
-class TranscriptionRepository {
-  async create(data: CreateTranscriptionData) {
-    const [result] = await db
-      .insert(TranscriptionTable)
-      .values(data)
-      .returning();
+class DictationRepository {
+  async create(data: CreateDictationData) {
+    const [result] = await db.insert(DictationTable).values(data).returning();
 
     return result;
   }
@@ -44,14 +41,14 @@ class TranscriptionRepository {
   async findByUserId(userId: string, limit = 100) {
     return await db
       .select({
-        id: TranscriptionTable.id,
-        content: TranscriptionTable.content,
-        status: TranscriptionTable.status,
-        createdAt: TranscriptionTable.createdAt,
+        id: DictationTable.id,
+        content: DictationTable.content,
+        status: DictationTable.status,
+        createdAt: DictationTable.createdAt,
       })
-      .from(TranscriptionTable)
-      .where(eq(TranscriptionTable.userId, userId))
-      .orderBy(desc(TranscriptionTable.createdAt))
+      .from(DictationTable)
+      .where(eq(DictationTable.userId, userId))
+      .orderBy(desc(DictationTable.createdAt))
       .limit(limit)
       .then((results) =>
         results.map((row) => ({
@@ -70,22 +67,19 @@ class TranscriptionRepository {
     // Build the base query
     let query = db
       .select({
-        id: TranscriptionTable.id,
-        content: TranscriptionTable.content,
-        status: TranscriptionTable.status,
-        createdAt: TranscriptionTable.createdAt,
+        id: DictationTable.id,
+        content: DictationTable.content,
+        status: DictationTable.status,
+        createdAt: DictationTable.createdAt,
       })
-      .from(TranscriptionTable)
-      .where(eq(TranscriptionTable.userId, userId))
+      .from(DictationTable)
+      .where(eq(DictationTable.userId, userId))
       .$dynamic();
 
     // Add cursor-based pagination (older than cursor ID)
     if (cursor) {
       query = query.where(
-        and(
-          eq(TranscriptionTable.userId, userId),
-          lt(TranscriptionTable.id, cursor)
-        )
+        and(eq(DictationTable.userId, userId), lt(DictationTable.id, cursor))
       );
     }
 
@@ -94,16 +88,16 @@ class TranscriptionRepository {
       const searchTerm = `%${search.trim()}%`;
       query = query.where(
         and(
-          eq(TranscriptionTable.userId, userId),
-          ilike(TranscriptionTable.content, searchTerm),
-          cursor ? lt(TranscriptionTable.id, cursor) : sql`true`
+          eq(DictationTable.userId, userId),
+          ilike(DictationTable.content, searchTerm),
+          cursor ? lt(DictationTable.id, cursor) : sql`true`
         )
       );
     }
 
     // Execute the main query
-    const transcriptions = await query
-      .orderBy(desc(TranscriptionTable.createdAt))
+    const dictations = await query
+      .orderBy(desc(DictationTable.createdAt))
       .limit(limit)
       .then((results) =>
         results.map((row) => ({
@@ -117,11 +111,11 @@ class TranscriptionRepository {
     if (search?.trim()) {
       const countResult = await db
         .select({ count: count() })
-        .from(TranscriptionTable)
+        .from(DictationTable)
         .where(
           and(
-            eq(TranscriptionTable.userId, userId),
-            ilike(TranscriptionTable.content, `%${search.trim()}%`)
+            eq(DictationTable.userId, userId),
+            ilike(DictationTable.content, `%${search.trim()}%`)
           )
         );
 
@@ -129,7 +123,7 @@ class TranscriptionRepository {
     }
 
     return {
-      transcriptions,
+      dictations,
       totalResults,
     };
   }
@@ -137,19 +131,14 @@ class TranscriptionRepository {
   async findById(id: number, userId: string) {
     const [result] = await db
       .select({
-        id: TranscriptionTable.id,
-        content: TranscriptionTable.content,
-        status: TranscriptionTable.status,
-        createdAt: TranscriptionTable.createdAt,
-        userId: TranscriptionTable.userId,
+        id: DictationTable.id,
+        content: DictationTable.content,
+        status: DictationTable.status,
+        createdAt: DictationTable.createdAt,
+        userId: DictationTable.userId,
       })
-      .from(TranscriptionTable)
-      .where(
-        and(
-          eq(TranscriptionTable.id, id),
-          eq(TranscriptionTable.userId, userId)
-        )
-      )
+      .from(DictationTable)
+      .where(and(eq(DictationTable.id, id), eq(DictationTable.userId, userId)))
       .limit(1);
 
     return result;
@@ -157,17 +146,12 @@ class TranscriptionRepository {
 
   async deleteById(id: number, userId: string) {
     const [result] = await db
-      .delete(TranscriptionTable)
-      .where(
-        and(
-          eq(TranscriptionTable.id, id),
-          eq(TranscriptionTable.userId, userId)
-        )
-      )
+      .delete(DictationTable)
+      .where(and(eq(DictationTable.id, id), eq(DictationTable.userId, userId)))
       .returning();
 
     return result;
   }
 }
 
-export const transcriptionRepository = new TranscriptionRepository();
+export const dictationRepository = new DictationRepository();

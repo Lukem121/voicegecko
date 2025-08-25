@@ -146,7 +146,7 @@ export class RecordingService {
       // Check connectivity second - block recording if API is unavailable
       const connectivityState = useConnectivityStore.getState();
 
-      if (!connectivityState.canSaveTranscriptions) {
+      if (!connectivityState.canSaveDictations) {
         // Show gecko bar notification for all blocked attempts
         // (both keyboard shortcuts and manual clicks should get feedback)
         await showNoInternetNotification();
@@ -205,16 +205,16 @@ export class RecordingService {
   }
 
   /**
-   * Stop recording with proper error handling and transcription
+   * Stop recording with proper error handling and dictation
    */
   private async stopRecording(options: RecordingOptions): Promise<void> {
     try {
       // Set processing state immediately to avoid UI gap
       useEventStore.getState().setRecordingStatus('processing');
 
-      // OPTIMIZATION: Audio processing now starts internal transcription directly in Rust
+      // OPTIMIZATION: Audio processing now starts internal dictation directly in Rust
       // This eliminates the 267ms data transfer overhead by keeping audio processing and
-      // transcription entirely in Rust without round-trip through frontend
+      // dictation entirely in Rust without round-trip through frontend
       const audioData = await invoke<{
         samples: number[];
         sample_rate: number;
@@ -222,14 +222,14 @@ export class RecordingService {
       }>('stop_recording');
 
       log.info(
-        '[PERF] ⚡ OPTIMIZED: Audio processing completed with internal transcription started in Rust'
+        '[PERF] ⚡ OPTIMIZED: Audio processing completed with internal dictation started in Rust'
       );
       log.info('[PERF] Received audio metadata (no heavy data transfer):', {
         samplesLength: audioData.samples.length,
         durationSeconds: audioData.samples.length / audioData.sample_rate,
       });
 
-      // Mark when recording is complete - transcription already started internally
+      // Mark when recording is complete - dictation already started internally
       performanceTracker.markPhase('recordingStopTime');
 
       if (options.playEndSound ?? this.shouldPlayEndSound()) {
@@ -243,14 +243,14 @@ export class RecordingService {
           await invoke('unmute_system_audio');
         } catch (error) {
           log.warn('Failed to unmute system audio:', error);
-          // Don't fail transcription if unmuting fails
+          // Don't fail dictation if unmuting fails
         }
       }
 
-      // OPTIMIZATION: Skip frontend transcription call - it's already happening internally in Rust
+      // OPTIMIZATION: Skip frontend dictation call - it's already happening internally in Rust
       // This saves ~267ms of data serialization and transfer overhead
       log.info(
-        '[PERF] ⚡ Skipping frontend transcription call - already started internally in Rust'
+        '[PERF] ⚡ Skipping frontend dictation call - already started internally in Rust'
       );
     } catch (error) {
       log.error('Failed to stop recording:', error);
@@ -260,7 +260,7 @@ export class RecordingService {
   }
 
   /**
-   * Cancel recording without transcription - discards audio completely
+   * Cancel recording without dictation - discards audio completely
    */
   async cancelRecording(_options: RecordingOptions = {}): Promise<void> {
     try {
@@ -341,7 +341,7 @@ export class RecordingService {
     }
 
     // Only play end sound on recording stop if timing is "start_stop"
-    // "completion_only" and "start_completion" timings are handled by transcription service
+    // "completion_only" and "start_completion" timings are handled by dictation service
     return settings.audio.notificationTiming === 'start_stop';
   }
 

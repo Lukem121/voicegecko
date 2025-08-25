@@ -12,17 +12,15 @@ use tokio::io::{AsyncBufReadExt, AsyncWriteExt as TokioAsyncWriteExt, BufReader}
 use tokio::process::{Child, Command as TokioCommand};
 use tokio::sync::Mutex;
 
-use crate::modules::transcription::{
-    TranscriptionError, TranscriptionEvent, TranscriptionProgress,
-};
+use crate::modules::dictation::{DictationError, DictationEvent, DictationProgress};
 
 #[async_trait]
-pub trait TranscriptionProvider: Send + Sync {
+pub trait DictationProvider: Send + Sync {
     async fn transcribe_buffer(
         &self,
         app: AppHandle,
         audio_samples: Vec<f32>,
-    ) -> Result<String, TranscriptionError>;
+    ) -> Result<String, DictationError>;
 }
 
 struct SidecarProcess {
@@ -37,11 +35,11 @@ pub struct SidecarManager {
 }
 
 #[derive(Clone)]
-pub struct TranscriptionState {
+pub struct DictationState {
     pub manager: Arc<SidecarManager>,
 }
 
-impl Default for TranscriptionState {
+impl Default for DictationState {
     fn default() -> Self {
         Self {
             manager: Arc::new(SidecarManager::new()),
@@ -66,7 +64,7 @@ impl SidecarManager {
         }
     }
 
-    pub async fn prewarm(&self, app: &AppHandle, model_id: &str) -> Result<(), TranscriptionError> {
+    pub async fn prewarm(&self, app: &AppHandle, model_id: &str) -> Result<(), DictationError> {
         self.ensure_running_with_model(app, model_id).await
     }
 
@@ -74,7 +72,7 @@ impl SidecarManager {
         &self,
         app: &AppHandle,
         model_id: &str,
-    ) -> Result<(), TranscriptionError> {
+    ) -> Result<(), DictationError> {
         let mut process_guard = self.process.lock().await;
 
         // Check if process is still alive
@@ -104,12 +102,12 @@ impl SidecarManager {
         let models_dir = app
             .path()
             .app_data_dir()
-            .map_err(|e| TranscriptionError::ModelLoad(e.to_string()))?
+            .map_err(|e| DictationError::ModelLoad(e.to_string()))?
             .join("models");
         let model_path = models_dir.join(&model_file);
 
         if !model_path.exists() {
-            return Err(TranscriptionError::ModelLoad(format!(
+            return Err(DictationError::ModelLoad(format!(
                 "Model file not found at {}",
                 model_path.to_string_lossy()
             )));
@@ -133,16 +131,18 @@ impl SidecarManager {
         }
 
         let mut child = cmd.spawn().map_err(|e| {
-            TranscriptionError::Transcription(format!("Failed to start warm sidecar: {}", e))
+            DictationError::Dictation(format!("Failed to start warm sidecar: {}", e))
         })?;
 
-        let stdin = child.stdin.take().ok_or_else(|| {
-            TranscriptionError::Transcription("Failed to get sidecar stdin".to_string())
-        })?;
+        let stdin = child
+            .stdin
+            .take()
+            .ok_or_else(|| DictationError::Dictation("Failed to get sidecar stdin".to_string()))?;
 
-        let stdout = child.stdout.take().ok_or_else(|| {
-            TranscriptionError::Transcription("Failed to get sidecar stdout".to_string())
-        })?;
+        let stdout = child
+            .stdout
+            .take()
+            .ok_or_else(|| DictationError::Dictation("Failed to get sidecar stdout".to_string()))?;
 
         *process_guard = Some(SidecarProcess {
             child,
@@ -159,27 +159,31 @@ impl SidecarManager {
         app: &AppHandle,
         model_id: &str,
         wav_file_path: &std::path::Path,
-    ) -> Result<String, TranscriptionError> {
+    ) -> Result<String, DictationError> {
         let total_ipc_time = Instant::now();
         self.ensure_running_with_model(app, model_id).await?;
 
         let mut process_guard = self.process.lock().await;
         let sidecar = process_guard
             .as_mut()
-            .ok_or_else(|| TranscriptionError::Transcription("Sidecar not running".to_string()))?;
+            .ok_or_else(|| DictationError::Dictation("Sidecar not running".to_string()))?;
 
         // Send file path as single line
         let send_start = Instant::now();
         let path_str = format!("{}\n", wav_file_path.to_string_lossy());
         let path_bytes = path_str.as_bytes();
 
-        sidecar.stdin.write_all(path_bytes).await.map_err(|e| {
-            TranscriptionError::Transcription(format!("Failed to write file path: {}", e))
-        })?;
+        sidecar
+            .stdin
+            .write_all(path_bytes)
+            .await
+            .map_err(|e| DictationError::Dictation(format!("Failed to write file path: {}", e)))?;
 
-        sidecar.stdin.flush().await.map_err(|e| {
-            TranscriptionError::Transcription(format!("Failed to flush stdin: {}", e))
-        })?;
+        sidecar
+            .stdin
+            .flush()
+            .await
+            .map_err(|e| DictationError::Dictation(format!("Failed to flush stdin: {}", e)))?;
         println!(
             "[PERF] 📤 Rust->Sidecar send took: {:?}",
             send_start.elapsed()
@@ -193,7 +197,7 @@ impl SidecarManager {
             .read_line(&mut response_line)
             .await
             .map_err(|e| {
-                TranscriptionError::Transcription(format!("Failed to read response line: {}", e))
+                DictationError::Dictation(format!("Failed to read response line: {}", e))
             })?;
 
         // Remove all whitespace and control characters, including UTF-8 BOM
@@ -213,7 +217,7 @@ impl SidecarManager {
         let resp: SidecarResponse = serde_json::from_str(&response_line).map_err(|e| {
             // Debug the exact bytes to see what's wrong
             let bytes: Vec<u8> = response_line.bytes().collect();
-            TranscriptionError::Transcription(format!(
+            DictationError::Dictation(format!(
                 "Invalid JSON response: {} | Raw: {} | Bytes: {:?}",
                 e, response_line, bytes
             ))
@@ -235,7 +239,7 @@ impl SidecarWhisperProvider {
         Self { model_id }
     }
 
-    fn resolve_sidecar_path(app: &AppHandle) -> Result<PathBuf, TranscriptionError> {
+    fn resolve_sidecar_path(app: &AppHandle) -> Result<PathBuf, DictationError> {
         // Match how other resources are loaded (e.g., notification sounds use "resources/...")
         let candidates = [
             "resources/binaries/whisper-sidecar/win-x64/whisper-sidecar.exe",
@@ -253,22 +257,21 @@ impl SidecarWhisperProvider {
             }
         }
 
-        Err(TranscriptionError::Transcription(
+        Err(DictationError::Dictation(
             "Sidecar not found under resources/binaries/whisper-sidecar/win-x64".to_string(),
         ))
     }
 
-    fn write_wav_16k_mono(app: &AppHandle, samples: &[f32]) -> Result<PathBuf, TranscriptionError> {
+    fn write_wav_16k_mono(app: &AppHandle, samples: &[f32]) -> Result<PathBuf, DictationError> {
         // Write a simple WAV (PCM16, 16kHz mono) to temp file
         let tmp_dir = app
             .path()
             .temp_dir()
-            .map_err(|e| TranscriptionError::AudioProcessing(format!("Temp dir error: {}", e)))?;
+            .map_err(|e| DictationError::AudioProcessing(format!("Temp dir error: {}", e)))?;
         let file_path = tmp_dir.join(format!("vg_input_{}.wav", std::process::id()));
 
-        let mut file = File::create(&file_path).map_err(|e| {
-            TranscriptionError::AudioProcessing(format!("Create wav failed: {}", e))
-        })?;
+        let mut file = File::create(&file_path)
+            .map_err(|e| DictationError::AudioProcessing(format!("Create wav failed: {}", e)))?;
 
         let sample_rate = 16000u32;
         let num_channels = 1u16;
@@ -280,42 +283,42 @@ impl SidecarWhisperProvider {
 
         // RIFF header
         file.write_all(b"RIFF")
-            .map_err(|e| TranscriptionError::AudioProcessing(e.to_string()))?;
+            .map_err(|e| DictationError::AudioProcessing(e.to_string()))?;
         file.write_all(&file_size.to_le_bytes())
-            .map_err(|e| TranscriptionError::AudioProcessing(e.to_string()))?;
+            .map_err(|e| DictationError::AudioProcessing(e.to_string()))?;
         file.write_all(b"WAVE")
-            .map_err(|e| TranscriptionError::AudioProcessing(e.to_string()))?;
+            .map_err(|e| DictationError::AudioProcessing(e.to_string()))?;
 
         // fmt chunk
         file.write_all(b"fmt ")
-            .map_err(|e| TranscriptionError::AudioProcessing(e.to_string()))?;
+            .map_err(|e| DictationError::AudioProcessing(e.to_string()))?;
         file.write_all(&16u32.to_le_bytes())
-            .map_err(|e| TranscriptionError::AudioProcessing(e.to_string()))?; // chunk size
+            .map_err(|e| DictationError::AudioProcessing(e.to_string()))?; // chunk size
         file.write_all(&1u16.to_le_bytes())
-            .map_err(|e| TranscriptionError::AudioProcessing(e.to_string()))?; // PCM format
+            .map_err(|e| DictationError::AudioProcessing(e.to_string()))?; // PCM format
         file.write_all(&num_channels.to_le_bytes())
-            .map_err(|e| TranscriptionError::AudioProcessing(e.to_string()))?;
+            .map_err(|e| DictationError::AudioProcessing(e.to_string()))?;
         file.write_all(&sample_rate.to_le_bytes())
-            .map_err(|e| TranscriptionError::AudioProcessing(e.to_string()))?;
+            .map_err(|e| DictationError::AudioProcessing(e.to_string()))?;
         file.write_all(&byte_rate.to_le_bytes())
-            .map_err(|e| TranscriptionError::AudioProcessing(e.to_string()))?;
+            .map_err(|e| DictationError::AudioProcessing(e.to_string()))?;
         file.write_all(&block_align.to_le_bytes())
-            .map_err(|e| TranscriptionError::AudioProcessing(e.to_string()))?;
+            .map_err(|e| DictationError::AudioProcessing(e.to_string()))?;
         file.write_all(&bits_per_sample.to_le_bytes())
-            .map_err(|e| TranscriptionError::AudioProcessing(e.to_string()))?;
+            .map_err(|e| DictationError::AudioProcessing(e.to_string()))?;
 
         // data chunk
         file.write_all(b"data")
-            .map_err(|e| TranscriptionError::AudioProcessing(e.to_string()))?;
+            .map_err(|e| DictationError::AudioProcessing(e.to_string()))?;
         file.write_all(&data_size.to_le_bytes())
-            .map_err(|e| TranscriptionError::AudioProcessing(e.to_string()))?;
+            .map_err(|e| DictationError::AudioProcessing(e.to_string()))?;
 
         // frames (convert f32 [-1,1] to i16 PCM)
         for &sample in samples {
             let s = (sample.max(-1.0).min(1.0) * 32767.0).round() as i32;
             let s_clamped = s.clamp(-32768, 32767) as i16;
             file.write_all(&s_clamped.to_le_bytes())
-                .map_err(|e| TranscriptionError::AudioProcessing(e.to_string()))?;
+                .map_err(|e| DictationError::AudioProcessing(e.to_string()))?;
         }
 
         Ok(file_path)
@@ -323,17 +326,17 @@ impl SidecarWhisperProvider {
 }
 
 #[async_trait]
-impl TranscriptionProvider for SidecarWhisperProvider {
+impl DictationProvider for SidecarWhisperProvider {
     async fn transcribe_buffer(
         &self,
         app: AppHandle,
         audio_samples: Vec<f32>,
-    ) -> Result<String, TranscriptionError> {
+    ) -> Result<String, DictationError> {
         let total_time = Instant::now();
 
         app.emit(
-            "transcription-progress",
-            TranscriptionEvent::from(TranscriptionProgress::LoadingModel),
+            "dictation-progress",
+            DictationEvent::from(DictationProgress::LoadingModel),
         )
         .unwrap();
 
@@ -347,13 +350,13 @@ impl TranscriptionProvider for SidecarWhisperProvider {
         );
 
         app.emit(
-            "transcription-progress",
-            TranscriptionEvent::from(TranscriptionProgress::Transcribing),
+            "dictation-progress",
+            DictationEvent::from(DictationProgress::Transcribing),
         )
         .unwrap();
 
         // Use global warm sidecar with fixed line-based IPC
-        let state = app.state::<TranscriptionState>();
+        let state = app.state::<DictationState>();
         let manager = &state.manager;
         let request_start = Instant::now();
         let result = manager
@@ -368,7 +371,7 @@ impl TranscriptionProvider for SidecarWhisperProvider {
         let _ = std::fs::remove_file(&wav_path);
 
         println!(
-            "[PERF] Optimized: Total transcription time: {:?}",
+            "[PERF] Optimized: Total dictation time: {:?}",
             total_time.elapsed()
         );
 

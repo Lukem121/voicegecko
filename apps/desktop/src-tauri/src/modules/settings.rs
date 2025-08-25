@@ -34,7 +34,7 @@ pub struct AutostartConfig {
 impl Default for AutostartConfig {
     fn default() -> Self {
         Self {
-            enabled: false, // Default to not enabled
+            enabled: true, // Enabled by default
         }
     }
 }

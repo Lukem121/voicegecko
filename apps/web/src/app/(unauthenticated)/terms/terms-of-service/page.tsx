@@ -142,11 +142,11 @@ export default function TermsOfServicePage() {
           <section className="scroll-mt-28" id="what-voice-gecko-does">
             <h2>1) What Voice Gecko does</h2>
             <p>
-              Voice Gecko converts audio that you submit into text
-              transcriptions and provides tools to manage those transcriptions.
-              By default we store the text and related metadata (timestamps,
-              language, account identifiers). We do not store your original
-              audio unless you ask us to for support or a specific feature.
+              Voice Gecko converts audio that you submit into text dictations
+              and provides tools to manage those dictations. By default we store
+              the text and related metadata (timestamps, language, account
+              identifiers). We do not store your original audio unless you ask
+              us to for support or a specific feature.
             </p>
             <p>
               A separate Privacy Policy explains how we handle personal data (UK
@@ -274,8 +274,8 @@ export default function TermsOfServicePage() {
             <p>We’re a UK company and follow UK GDPR. We act as:</p>
             <ul>
               <li>
-                a processor for your User Content (transcriptions and related
-                data), and
+                a processor for your User Content (dictations and related data),
+                and
               </li>
               <li>a controller for account, billing and operations data.</li>
             </ul>
@@ -409,8 +409,7 @@ export default function TermsOfServicePage() {
             <h3>5.1 Ownership</h3>
             <p>
               You own the content you provide to us, including uploaded audio,
-              the resulting transcriptions, and related metadata (“User
-              Content”).
+              the resulting dictations, and related metadata (“User Content”).
             </p>
             <h3>5.2 Licence to run the Service</h3>
             <p>

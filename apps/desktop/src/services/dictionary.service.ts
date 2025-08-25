@@ -14,7 +14,7 @@ export class DictionaryService {
   }
 
   /**
-   * Get the dictionary prompt for transcription
+   * Get the dictionary prompt for dictation
    * Uses React Query cache if available, otherwise fetches from server
    */
   async getDictionaryPrompt(): Promise<string | null> {
@@ -28,7 +28,7 @@ export class DictionaryService {
       return prompt || null;
     } catch (error) {
       log.error('[DictionaryService] Failed to get dictionary prompt:', error);
-      // Don't fail transcription if dictionary fetch fails
+      // Don't fail dictation if dictionary fetch fails
       return null;
     }
   }

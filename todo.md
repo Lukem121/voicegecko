@@ -1,6 +1,6 @@
 Todo
 
-- [ ] 
+- [ ]
 
 Pre Launch Checks
 
@@ -17,4 +17,4 @@ After MVP
 🪳 After MVP Bugs
 
 - [ ] Unable to click through the Geckobar window in the transparent sections (stuff under it is uncliclickable).
-- [ ] When the user has reached there usage allowance in the desktop app it will let them do one more transcription before blocking them.
+- [ ] When the user has reached there usage allowance in the desktop app it will let them do one more dictation before blocking them.

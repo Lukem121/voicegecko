@@ -920,7 +920,7 @@ fn get_initial_models() -> HashMap<String, Model> {
         (
             "tiny",
             "Tiny (Multilingual)",
-            "Ultra-compact multilingual model, fastest processing for basic transcription.",
+            "Ultra-compact multilingual model, fastest processing for basic dictation.",
             "75 MiB",
             "~512 MB",
             "be07e048e1e599ad46341c8d2a135645097a7df2",
@@ -1112,7 +1112,7 @@ fn get_initial_models() -> HashMap<String, Model> {
         (
             "medium",
             "Medium (Multilingual)",
-            "High-quality multilingual model for professional transcription with accent support.",
+            "High-quality multilingual model for professional dictation with accent support.",
             "1.5 GiB",
             "~4 GB",
             "345b3b5281bddd61605d6fc76bc5b92d8f20284c4",
@@ -1142,7 +1142,7 @@ fn get_initial_models() -> HashMap<String, Model> {
         (
             "medium.en",
             "Medium English",
-            "High-quality English-only model for professional transcription and dictation.",
+            "High-quality English-only model for professional dictation and dictation.",
             "1.5 GiB",
             "~4 GB",
             "ebf2a2c5bf4d1c9bb1cd9b21e1b4c1a3c4d5e6fb",

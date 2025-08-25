@@ -8,49 +8,49 @@ import { performanceTracker } from '~/lib/performance-tracker';
 import { useSettingsStore } from '~/stores/settings.store';
 import { recordingService } from './recording.service';
 
-export class TranscriptionService {
-  private static instance: TranscriptionService | undefined;
-  private lastTranscription = '';
-  private lastTranscriptionId: string | null = null;
+export class DictationService {
+  private static instance: DictationService | undefined;
+  private lastDictation = '';
+  private lastDictationId: string | null = null;
   private lastPasteAtMs = 0;
 
   private constructor() {
     // Private constructor to prevent instantiation
   }
 
-  static getInstance(): TranscriptionService {
-    TranscriptionService.instance ??= new TranscriptionService();
-    return TranscriptionService.instance;
+  static getInstance(): DictationService {
+    DictationService.instance ??= new DictationService();
+    return DictationService.instance;
   }
 
   /**
-   * Set the last transcription text and optional ID
+   * Set the last dictation text and optional ID
    */
-  setLastTranscription(text: string, id?: string): void {
-    this.lastTranscription = text;
+  setLastDictation(text: string, id?: string): void {
+    this.lastDictation = text;
     if (id) {
-      this.lastTranscriptionId = id;
+      this.lastDictationId = id;
     }
   }
 
   /**
-   * Get the last transcription text
+   * Get the last dictation text
    */
-  getLastTranscription(): string {
-    return this.lastTranscription;
+  getLastDictation(): string {
+    return this.lastDictation;
   }
 
   /**
-   * Get the last transcription ID
+   * Get the last dictation ID
    */
-  getLastTranscriptionId(): string | null {
-    return this.lastTranscriptionId;
+  getLastDictationId(): string | null {
+    return this.lastDictationId;
   }
 
   /**
-   * Paste the last transcription to clipboard
+   * Paste the last dictation to clipboard
    */
-  async pasteLastTranscription(): Promise<void> {
+  async pasteLastDictation(): Promise<void> {
     // Basic rate-limit to avoid spamming from duplicate shortcut events
     const now = Date.now();
     if (now - this.lastPasteAtMs < 500) {
@@ -58,18 +58,18 @@ export class TranscriptionService {
     }
     this.lastPasteAtMs = now;
 
-    if (this.lastTranscription) {
+    if (this.lastDictation) {
       try {
-        log.info('[TranscriptionService] Paste-last invoked');
+        log.info('[DictationService] Paste-last invoked');
         log.info(
-          `[TranscriptionService] Transcript length=${this.lastTranscription.length}`
+          `[DictationService] Transcript length=${this.lastDictation.length}`
         );
         // Debug: Check for unwanted characters in stored transcript
         log.info('[DEBUG] Paste-last transcript check:', {
-          length: this.lastTranscription.length,
-          hasNewlines: this.lastTranscription.includes('\n'),
-          endsWithNewline: this.lastTranscription.endsWith('\n'),
-          lastChars: this.lastTranscription
+          length: this.lastDictation.length,
+          hasNewlines: this.lastDictation.includes('\n'),
+          endsWithNewline: this.lastDictation.endsWith('\n'),
+          lastChars: this.lastDictation
             .slice(-5)
             .split('')
             .map((c) => {
@@ -88,11 +88,11 @@ export class TranscriptionService {
         });
 
         // Clean the transcript before copying to clipboard
-        const cleanedForPaste = this.lastTranscription.trim();
+        const cleanedForPaste = this.lastDictation.trim();
 
         // Copy cleaned transcript to clipboard
         await writeText(cleanedForPaste);
-        log.info('[TranscriptionService] Clipboard write complete');
+        log.info('[DictationService] Clipboard write complete');
 
         // Attempt to paste into the currently focused input field
         try {
@@ -103,7 +103,7 @@ export class TranscriptionService {
           const { settings } = useSettingsStore.getState();
           if (settings.personalization.preventPasteNewlines) {
             log.info(
-              '[TranscriptionService] Using enhanced paste for manual paste'
+              '[DictationService] Using enhanced paste for manual paste'
             );
             await invoke('simulate_paste_with_options', {
               preventAutoNewline: true,
@@ -112,42 +112,34 @@ export class TranscriptionService {
             await invoke('simulate_paste');
           }
 
-          toast.success('Last transcription pasted.');
-          log.info('[TranscriptionService] Simulated paste success');
+          toast.success('Last dictation pasted.');
+          log.info('[DictationService] Simulated paste success');
         } catch {
           // Fallback to copy-only if paste simulation fails
-          toast.success('Last transcription copied to clipboard.');
-          log.warn(
-            '[TranscriptionService] Simulated paste failed; copy fallback'
-          );
+          toast.success('Last dictation copied to clipboard.');
+          log.warn('[DictationService] Simulated paste failed; copy fallback');
         }
       } catch (error) {
-        toast.error('Failed to copy transcription to clipboard');
-        log.error(
-          '[TranscriptionService] Failed during paste-last flow:',
-          error
-        );
+        toast.error('Failed to copy dictation to clipboard');
+        log.error('[DictationService] Failed during paste-last flow:', error);
         throw error;
       }
     } else {
-      toast.info('No transcription available to paste.');
-      log.warn('[TranscriptionService] No last transcription available');
+      toast.info('No dictation available to paste.');
+      log.warn('[DictationService] No last dictation available');
     }
   }
 
   /**
-   * Handle completed transcription with clipboard and state management
+   * Handle completed dictation with clipboard and state management
    */
-  async handleCompletedTranscription(transcript: string): Promise<void> {
-    log.info(
-      '[TranscriptionService] Handling completed transcription:',
-      transcript
-    );
+  async handleCompletedDictation(transcript: string): Promise<void> {
+    log.info('[DictationService] Handling completed dictation:', transcript);
 
     if (transcript) {
       try {
         // Update internal state
-        this.setLastTranscription(transcript);
+        this.setLastDictation(transcript);
 
         // Debug: Log transcript before clipboard copy to check for unwanted characters
         log.info('[DEBUG] Transcript before clipboard copy:', {
@@ -185,12 +177,12 @@ export class TranscriptionService {
         const { settings } = useSettingsStore.getState();
         if (settings.personalization.autoPasteOnCompletion) {
           try {
-            log.info('[TranscriptionService] Auto-pasting transcription...');
+            log.info('[DictationService] Auto-pasting dictation...');
 
             // Use enhanced paste if user has enabled newline prevention
             if (settings.personalization.preventPasteNewlines) {
               log.info(
-                '[TranscriptionService] Using enhanced paste to prevent unwanted newlines'
+                '[DictationService] Using enhanced paste to prevent unwanted newlines'
               );
               await invoke('simulate_paste_with_options', {
                 preventAutoNewline: true,
@@ -202,18 +194,15 @@ export class TranscriptionService {
             performanceTracker.markPhase('pasteCompleteTime');
             performanceTracker.completeSession();
 
-            log.info('[TranscriptionService] ✅ Auto-paste successful');
-            toast.success('Transcription complete and pasted!');
+            log.info('[DictationService] ✅ Auto-paste successful');
+            toast.success('Dictation complete and pasted!');
           } catch (pasteError) {
             performanceTracker.markPhase('pasteCompleteTime');
             performanceTracker.completeSession();
 
-            log.error(
-              '[TranscriptionService] Failed to auto-paste:',
-              pasteError
-            );
+            log.error('[DictationService] Failed to auto-paste:', pasteError);
             // Still show success for clipboard copy even if paste fails
-            toast.success('Transcription complete and copied to clipboard!');
+            toast.success('Dictation complete and copied to clipboard!');
             toast.warning(
               'Auto-paste failed - text copied to clipboard instead'
             );
@@ -224,12 +213,12 @@ export class TranscriptionService {
           performanceTracker.completeSession();
 
           // Show success toast for clipboard copy only
-          toast.success('Transcription complete and copied to clipboard!');
+          toast.success('Dictation complete and copied to clipboard!');
         }
       } catch (error) {
         performanceTracker.completeSession();
 
-        log.error('[TranscriptionService] Failed to copy to clipboard:', error);
+        log.error('[DictationService] Failed to copy to clipboard:', error);
         toast.error('Failed to copy to clipboard', {
           description: error instanceof Error ? error.message : 'Unknown error',
         });
@@ -237,8 +226,8 @@ export class TranscriptionService {
     } else {
       performanceTracker.completeSession();
 
-      log.warn('[TranscriptionService] Empty transcript received');
-      toast.warning('Transcription returned an empty result.');
+      log.warn('[DictationService] Empty transcript received');
+      toast.warning('Dictation returned an empty result.');
     }
   }
 
@@ -252,39 +241,39 @@ export class TranscriptionService {
 
       // First check if interaction sounds are enabled
       if (!settings.personalization.interactionSounds) {
-        log.info('[TranscriptionService] Interaction sounds disabled');
+        log.info('[DictationService] Interaction sounds disabled');
         return;
       }
 
-      // Play end sound on transcription completion for "completion_only" and "start_completion" timings
-      // "start_stop" timing plays sounds when recording starts/stops, not on transcription
+      // Play end sound on dictation completion for "completion_only" and "start_completion" timings
+      // "start_stop" timing plays sounds when recording starts/stops, not on dictation
       if (
         notificationTiming === 'completion_only' ||
         notificationTiming === 'start_completion'
       ) {
-        log.info('[TranscriptionService] Playing end notification sound');
+        log.info('[DictationService] Playing end notification sound');
         await recordingService.playNotificationSound('End');
-        log.info('[TranscriptionService] ✅ End sound played successfully');
+        log.info('[DictationService] ✅ End sound played successfully');
       } else {
-        log.info('[TranscriptionService] End sound disabled by settings');
+        log.info('[DictationService] End sound disabled by settings');
       }
     } catch (error) {
-      log.error('[TranscriptionService] ❌ Failed to play end sound:', error);
-      // Don't throw - notification sound failure shouldn't stop transcription completion
+      log.error('[DictationService] ❌ Failed to play end sound:', error);
+      // Don't throw - notification sound failure shouldn't stop dictation completion
     }
   }
 
   /**
-   * Open last transcription (placeholder for future functionality)
+   * Open last dictation (placeholder for future functionality)
    */
-  openLastTranscription(): void {
-    // Navigate the app to the transcriptions page via app-wide event.
+  openLastDictation(): void {
+    // Navigate the app to the dictations page via app-wide event.
     // The TrayProvider listens for this event and performs router navigation.
-    emit('navigate', '/transcriptions').catch(() => {
+    emit('navigate', '/dictations').catch(() => {
       // As a non-fatal fallback, show a toast so the user gets feedback
-      toast.success('Opened transcriptions');
+      toast.success('Opened dictations');
     });
   }
 }
 
-export const transcriptionService = TranscriptionService.getInstance();
+export const dictationService = DictationService.getInstance();

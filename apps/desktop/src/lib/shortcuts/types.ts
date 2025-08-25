@@ -4,8 +4,8 @@
  */
 export type ShortcutAction =
   | 'toggle-recording'
-  | 'paste-last-transcription'
-  | 'open-last-transcription';
+  | 'paste-last-dictation'
+  | 'open-last-dictation';
 
 /**
  * Special shortcuts that need custom handling beyond simple key press

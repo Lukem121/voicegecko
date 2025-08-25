@@ -498,7 +498,7 @@ export default function DownloadCards({
       {availableDownloads.length > 0 && (
         <div className="text-left">
           <p className="text-muted-foreground text-sm">
-            All versions include: Lightning fast transcription • Global shortcut
+            All versions include: Lightning fast dictation • Global shortcut
             access • Privacy mode
           </p>
         </div>

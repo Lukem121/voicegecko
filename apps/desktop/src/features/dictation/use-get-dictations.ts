@@ -3,26 +3,24 @@ import React from 'react';
 
 import { trpc } from '~/trpc';
 
-export type UseGetTranscriptionsParams = {
+export type UseGetDictationsParams = {
   cursor?: number;
   limit?: number;
   search?: string;
 };
 
-export const useGetTranscriptions = (
-  params: UseGetTranscriptionsParams = {}
-) => {
+export const useGetDictations = (params: UseGetDictationsParams = {}) => {
   const { cursor, limit = 20, search } = params;
 
   const query = useQuery(
-    trpc.transcription.getAll.queryOptions({
+    trpc.dictation.getAll.queryOptions({
       cursor,
       limit,
       search,
     })
   );
 
-  const transcriptions = React.useMemo(() => {
+  const dictations = React.useMemo(() => {
     const groups = query.data?.groups;
     if (!groups) {
       return [] as Array<{
@@ -131,7 +129,7 @@ export const useGetTranscriptions = (
   }, [query.data]);
 
   return {
-    transcriptions,
+    dictations,
     hasNextPage: query.data?.hasNextPage ?? false,
     nextCursor: query.data?.nextCursor,
     totalResults: query.data?.totalResults,
