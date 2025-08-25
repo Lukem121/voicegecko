@@ -20,7 +20,7 @@ export class CloudDictationService {
       // Create a File object from the buffer
       const file = new File([audioBuffer], filename, { type: 'audio/wav' });
 
-      const response = await this.openai.audio.dictations.create({
+      const response = await this.openai.audio.transcriptions.create({
         file,
         model: 'whisper-1',
         language: 'en',
