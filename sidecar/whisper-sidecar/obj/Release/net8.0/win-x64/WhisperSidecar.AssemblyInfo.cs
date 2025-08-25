@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("WhisperSidecar")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Release")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+759094957cc558e6a041ee5d6b02a673840a6e5a")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+6cd598f4dea1cf7d1da67193150ccb75585e8e7e")]
 [assembly: System.Reflection.AssemblyProductAttribute("WhisperSidecar")]
 [assembly: System.Reflection.AssemblyTitleAttribute("WhisperSidecar")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

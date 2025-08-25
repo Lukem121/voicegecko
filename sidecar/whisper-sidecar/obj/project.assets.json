@@ -32,6 +32,12 @@
         "build": {
           "build/Whisper.net.Runtime.targets": {}
         }
+      },
+      "Whisper.net.Runtime.Vulkan/1.8.1": {
+        "type": "package",
+        "build": {
+          "build/Whisper.net.Runtime.Vulkan.targets": {}
+        }
       }
     },
     "net8.0/win-x64": {
@@ -64,6 +70,12 @@
         "type": "package",
         "build": {
           "build/Whisper.net.Runtime.targets": {}
+        }
+      },
+      "Whisper.net.Runtime.Vulkan/1.8.1": {
+        "type": "package",
+        "build": {
+          "build/Whisper.net.Runtime.Vulkan.targets": {}
         }
       }
     }
@@ -259,13 +271,37 @@
         "whisper.net.runtime.1.8.1.nupkg.sha512",
         "whisper.net.runtime.nuspec"
       ]
+    },
+    "Whisper.net.Runtime.Vulkan/1.8.1": {
+      "sha512": "hZmqxZZ6foU3WVmrewuFguIrodMkfb/7uyitBBPrZipo55jK16t/xxKUsWMLETYgEgGVwkZ33YNu8i3+4Kbjpg==",
+      "type": "package",
+      "path": "whisper.net.runtime.vulkan/1.8.1",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "build/Whisper.net.Runtime.Vulkan.targets",
+        "build/linux-x64/libggml-base-whisper.so",
+        "build/linux-x64/libggml-cpu-whisper.so",
+        "build/linux-x64/libggml-vulkan-whisper.so",
+        "build/linux-x64/libggml-whisper.so",
+        "build/linux-x64/libwhisper.so",
+        "build/win-x64/ggml-base-whisper.dll",
+        "build/win-x64/ggml-cpu-whisper.dll",
+        "build/win-x64/ggml-vulkan-whisper.dll",
+        "build/win-x64/ggml-whisper.dll",
+        "build/win-x64/whisper.dll",
+        "content/readme.md",
+        "whisper.net.runtime.vulkan.1.8.1.nupkg.sha512",
+        "whisper.net.runtime.vulkan.nuspec"
+      ]
     }
   },
   "projectFileDependencyGroups": {
     "net8.0": [
       "System.Text.Json >= 8.0.5",
       "Whisper.net >= 1.8.1",
-      "Whisper.net.Runtime >= 1.8.1"
+      "Whisper.net.Runtime >= 1.8.1",
+      "Whisper.net.Runtime.Vulkan >= 1.8.1"
     ]
   },
   "packageFolders": {
@@ -327,6 +363,10 @@
             "version": "[1.8.1, )"
           },
           "Whisper.net.Runtime": {
+            "target": "Package",
+            "version": "[1.8.1, )"
+          },
+          "Whisper.net.Runtime.Vulkan": {
             "target": "Package",
             "version": "[1.8.1, )"
           }

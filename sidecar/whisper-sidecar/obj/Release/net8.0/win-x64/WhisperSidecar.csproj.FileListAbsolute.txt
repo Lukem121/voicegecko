@@ -1,3 +1,13 @@
+D:\Projects\voicegecko\sidecar\whisper-sidecar\bin\Release\net8.0\win-x64\runtimes\vulkan\win-x64\whisper.dll
+D:\Projects\voicegecko\sidecar\whisper-sidecar\bin\Release\net8.0\win-x64\runtimes\vulkan\win-x64\ggml-whisper.dll
+D:\Projects\voicegecko\sidecar\whisper-sidecar\bin\Release\net8.0\win-x64\runtimes\vulkan\win-x64\ggml-base-whisper.dll
+D:\Projects\voicegecko\sidecar\whisper-sidecar\bin\Release\net8.0\win-x64\runtimes\vulkan\win-x64\ggml-cpu-whisper.dll
+D:\Projects\voicegecko\sidecar\whisper-sidecar\bin\Release\net8.0\win-x64\runtimes\vulkan\win-x64\ggml-vulkan-whisper.dll
+D:\Projects\voicegecko\sidecar\whisper-sidecar\bin\Release\net8.0\win-x64\runtimes\vulkan\linux-x64\libwhisper.so
+D:\Projects\voicegecko\sidecar\whisper-sidecar\bin\Release\net8.0\win-x64\runtimes\vulkan\linux-x64\libggml-whisper.so
+D:\Projects\voicegecko\sidecar\whisper-sidecar\bin\Release\net8.0\win-x64\runtimes\vulkan\linux-x64\libggml-base-whisper.so
+D:\Projects\voicegecko\sidecar\whisper-sidecar\bin\Release\net8.0\win-x64\runtimes\vulkan\linux-x64\libggml-cpu-whisper.so
+D:\Projects\voicegecko\sidecar\whisper-sidecar\bin\Release\net8.0\win-x64\runtimes\vulkan\linux-x64\libggml-vulkan-whisper.so
 D:\Projects\voicegecko\sidecar\whisper-sidecar\bin\Release\net8.0\win-x64\runtimes\win-arm64\whisper.dll
 D:\Projects\voicegecko\sidecar\whisper-sidecar\bin\Release\net8.0\win-x64\runtimes\win-arm64\ggml-whisper.dll
 D:\Projects\voicegecko\sidecar\whisper-sidecar\bin\Release\net8.0\win-x64\runtimes\win-arm64\ggml-base-whisper.dll
