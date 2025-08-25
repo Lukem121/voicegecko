@@ -128,7 +128,6 @@ impl SidecarManager {
         // On Windows, ensure no console window is shown
         #[cfg(target_os = "windows")]
         {
-            use std::os::windows::process::CommandExt;
             const CREATE_NO_WINDOW: u32 = 0x08000000;
             cmd.creation_flags(CREATE_NO_WINDOW);
         }

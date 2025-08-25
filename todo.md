@@ -1,6 +1,6 @@
 Todo
 
-- [ ] On startup main window pops up?
+- [ ] 
 
 Pre Launch Checks
 
