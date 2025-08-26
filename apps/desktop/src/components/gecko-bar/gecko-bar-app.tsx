@@ -187,16 +187,10 @@ export function GeckoBarApp() {
     <div className="dark">
       <DropdownMenu
         onOpenChange={(open) => {
-          setIsMenuOpen(open);
-          if (open) {
-            getCurrentWebviewWindow()
-              .setIgnoreCursorEvents(false)
-              .catch((err) => {
-                log.error(
-                  '[GeckoBar] Failed to disable cursor passthrough',
-                  err
-                );
-              });
+          // Only allow dropdown to close via Radix events;
+          // opening is controlled explicitly by right-click.
+          if (!open) {
+            setIsMenuOpen(false);
           }
         }}
         open={isMenuOpen}
@@ -208,6 +202,14 @@ export function GeckoBarApp() {
               // Open fixed-position dropdown on right-click
               e.preventDefault();
               setIsMenuOpen(true);
+              getCurrentWebviewWindow()
+                .setIgnoreCursorEvents(false)
+                .catch((err) => {
+                  log.error(
+                    '[GeckoBar] Failed to disable cursor passthrough',
+                    err
+                  );
+                });
             }}
             onMouseEnter={() => {
               handlers.onMouseEnter();
