@@ -45,7 +45,7 @@ export const PlanCard = ({
       return 'Current plan';
     }
     if (plan.isFree && subscription) {
-      return 'Downgrade';
+      return 'Download App';
     }
     return plan.cta;
   };
