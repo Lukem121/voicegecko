@@ -6,6 +6,7 @@ use sha1::{Digest, Sha1};
 use std::collections::HashMap;
 use std::fs;
 use std::io::Write;
+use std::sync::atomic::{AtomicBool, Ordering};
 use tauri::{AppHandle, Emitter, Manager, Wry};
 use tauri_plugin_store::{Store, StoreExt};
 use thiserror::Error;
@@ -279,97 +280,10 @@ pub fn synchronize_models(app: AppHandle) -> Result<(), ModelManagerError> {
         println!("[Sync] Could not resolve bundled resource path");
     }
 
-    // Check what files actually exist in the models directory
-    // First, check all known models to verify their files still exist and validate checksum when present
-    println!("[Sync] Verifying all known models against filesystem...");
-    let all_models = get_initial_models();
-    let store = app.store(STORE_PATH)?;
-    let mut model_statuses = get_model_statuses(&store)?;
+    // Schedule background verification to avoid blocking startup
+    schedule_background_verification(app.clone());
 
-    for (model_id, _) in &all_models {
-        let expected_file = models_dir.join(format!("ggml-{}.bin", model_id));
-
-        if expected_file.exists() {
-            if let Ok(metadata) = std::fs::metadata(&expected_file) {
-                if metadata.len() > 1_000_000 {
-                    // If checksum doesn't match, remove and mark NotDownloaded
-                    if let Err(e) = verify_model_checksum(app.clone(), model_id.clone()) {
-                        println!("[Sync] Checksum failed for {}: {}", model_id, e);
-                        model_statuses.insert(model_id.clone(), ModelStatus::NotDownloaded);
-                    } else {
-                        if model_statuses.get(model_id) != Some(&ModelStatus::Downloaded) {
-                            println!("[Sync] Found model file, checksum OK: {}", model_id);
-                            model_statuses.insert(model_id.clone(), ModelStatus::Downloaded);
-                        }
-                    }
-                } else {
-                    // File exists but is too small
-                    println!(
-                        "[Sync] Model file too small ({}), marking as not downloaded: {}",
-                        metadata.len(),
-                        model_id
-                    );
-                    model_statuses.insert(model_id.clone(), ModelStatus::NotDownloaded);
-                }
-            }
-        } else {
-            // File doesn't exist
-            if model_statuses.get(model_id) == Some(&ModelStatus::Downloaded) {
-                println!("[Sync] Model file missing, updating status: {}", model_id);
-                model_statuses.insert(model_id.clone(), ModelStatus::NotDownloaded);
-            }
-        }
-    }
-
-    // Save all status updates at once
-    store.set(MODEL_STATUSES_KEY, json!(model_statuses));
-    store.save()?;
-
-    // Also scan for any orphaned files that aren't in our model list
-    if models_dir.exists() {
-        match std::fs::read_dir(&models_dir) {
-            Ok(entries) => {
-                let mut file_count = 0;
-                for entry in entries {
-                    if let Ok(entry) = entry {
-                        file_count += 1;
-                        let path = entry.path();
-                        if let Some(file_name) = path.file_name().and_then(|n| n.to_str()) {
-                            if file_name.ends_with(".bin") && !file_name.ends_with(".partial") {
-                                let model_id = if file_name.starts_with("ggml-") {
-                                    file_name
-                                        .trim_start_matches("ggml-")
-                                        .trim_end_matches(".bin")
-                                } else {
-                                    file_name.trim_end_matches(".bin")
-                                };
-
-                                // Check if this model is in our known list
-                                if !all_models.contains_key(model_id) {
-                                    println!("[Sync] Found orphaned model file: {}", file_name);
-                                }
-                            }
-                        }
-                    }
-                }
-                if file_count == 0 {
-                    println!("[Sync] Models directory is empty");
-                } else {
-                    println!("[Sync] Found {} files in models directory", file_count);
-                }
-            }
-            Err(e) => {
-                println!("[Sync] Error reading models directory: {}", e);
-            }
-        }
-    } else {
-        println!(
-            "[Sync] Models directory does not exist: {}",
-            models_dir.display()
-        );
-    }
-
-    println!("[Sync] Model synchronization completed");
+    println!("[Sync] Model synchronization scheduled in background");
 
     // Ensure a default tier is selected if none is set
     if get_selected_tier(app.clone())?.is_none() {
@@ -378,6 +292,96 @@ pub fn synchronize_models(app: AppHandle) -> Result<(), ModelManagerError> {
     }
 
     Ok(())
+}
+
+// Global guard to prevent duplicate concurrent verifications (e.g., due to Strict Mode double-call)
+static VERIFY_RUNNING: AtomicBool = AtomicBool::new(false);
+
+fn schedule_background_verification(app: AppHandle) {
+    if VERIFY_RUNNING.swap(true, Ordering::SeqCst) {
+        // Already running; skip
+        return;
+    }
+
+    // Spawn in a blocking task since we will do heavy IO/CPU (SHA1 on large files)
+    tauri::async_runtime::spawn(async move {
+        println!("[Sync] (bg) Verifying all known models against filesystem...");
+        let result: Result<(), ModelManagerError> = (|| {
+            let app_data_dir = app
+                .path()
+                .app_data_dir()
+                .map_err(|e| ModelManagerError::PathError(e.to_string()))?;
+            let models_dir = app_data_dir.join("models");
+
+            let all_models = get_initial_models();
+            let store = app.store(STORE_PATH)?;
+            let mut model_statuses = get_model_statuses(&store)?;
+
+            for (model_id, _) in &all_models {
+                let expected_file = models_dir.join(format!("ggml-{}.bin", model_id));
+                if expected_file.exists() {
+                    if let Ok(metadata) = std::fs::metadata(&expected_file) {
+                        if metadata.len() > 1_000_000 {
+                            // Checksum validation (may delete invalid files and update status)
+                            if let Err(e) = verify_model_checksum(app.clone(), model_id.clone()) {
+                                println!("[Sync] (bg) Checksum failed for {}: {}", model_id, e);
+                                model_statuses.insert(model_id.clone(), ModelStatus::NotDownloaded);
+                            } else {
+                                if model_statuses.get(model_id) != Some(&ModelStatus::Downloaded) {
+                                    println!(
+                                        "[Sync] (bg) Found model file, checksum OK: {}",
+                                        model_id
+                                    );
+                                    model_statuses
+                                        .insert(model_id.clone(), ModelStatus::Downloaded);
+                                }
+                            }
+                        } else {
+                            println!(
+                                "[Sync] (bg) Model file too small ({}), marking as not downloaded: {}",
+                                metadata.len(),
+                                model_id
+                            );
+                            model_statuses.insert(model_id.clone(), ModelStatus::NotDownloaded);
+                        }
+                    }
+                } else {
+                    if model_statuses.get(model_id) == Some(&ModelStatus::Downloaded) {
+                        println!(
+                            "[Sync] (bg) Model file missing, updating status: {}",
+                            model_id
+                        );
+                        model_statuses.insert(model_id.clone(), ModelStatus::NotDownloaded);
+                    }
+                }
+            }
+
+            // Save updates
+            store.set(MODEL_STATUSES_KEY, json!(model_statuses));
+            store.save()?;
+
+            // Optional: scan directory for info logs
+            if models_dir.exists() {
+                match std::fs::read_dir(&models_dir) {
+                    Ok(entries) => {
+                        let file_count = entries.filter_map(|e| e.ok()).count();
+                        println!("[Sync] (bg) Found {} files in models directory", file_count);
+                    }
+                    Err(e) => println!("[Sync] (bg) Error reading models directory: {}", e),
+                }
+            }
+
+            Ok(())
+        })();
+
+        if let Err(e) = result {
+            println!("[Sync] (bg) Verification failed: {}", e);
+        } else {
+            println!("[Sync] (bg) Verification completed");
+        }
+
+        VERIFY_RUNNING.store(false, Ordering::SeqCst);
+    });
 }
 
 #[tauri::command]
