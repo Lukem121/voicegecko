@@ -11,6 +11,7 @@ use tauri::{AppHandle, Emitter};
 use tokio::io::{AsyncBufReadExt, AsyncWriteExt as TokioAsyncWriteExt, BufReader};
 use tokio::process::{Child, Command as TokioCommand};
 use tokio::sync::Mutex;
+use tokio::time::{timeout, Duration};
 
 use crate::modules::dictation::{DictationError, DictationEvent, DictationProgress};
 
@@ -113,6 +114,16 @@ impl SidecarManager {
             )));
         }
 
+        // Verify checksum before launching sidecar
+        if let Err(e) =
+            crate::modules::model_manager::verify_model_checksum(app.clone(), model_id.to_string())
+        {
+            return Err(DictationError::ModelLoad(format!(
+                "Model verification failed: {}",
+                e
+            )));
+        }
+
         let mut cmd = TokioCommand::new(sidecar_path);
         cmd.arg("--server")
             .arg("--model")
@@ -150,7 +161,58 @@ impl SidecarManager {
             stdout: BufReader::new(stdout),
         });
 
-        println!("[Sidecar] Warm sidecar started successfully");
+        // Block until the sidecar announces readiness or reports an error.
+        // This prevents the client from sending a request into a process that failed to initialize.
+        if let Some(ref mut sidecar) = process_guard.as_mut() {
+            let mut line = String::new();
+            // Allow ample time for model build on first warm-up
+            match timeout(Duration::from_secs(10), sidecar.stdout.read_line(&mut line)).await {
+                Ok(Ok(n)) => {
+                    let msg = line.trim().trim_start_matches('\u{feff}');
+                    if n == 0 || msg.is_empty() {
+                        // Process may have exited; try to grab status
+                        if let Ok(Some(status)) = sidecar.child.try_wait() {
+                            return Err(DictationError::Dictation(format!(
+                                "Sidecar failed to start (exit: {status})"
+                            )));
+                        }
+                        return Err(DictationError::Dictation(
+                            "Sidecar provided no startup message".to_string(),
+                        ));
+                    }
+
+                    // Try parse as JSON to detect {"ready":true} or {"error":"..."}
+                    if let Ok(val) = serde_json::from_str::<serde_json::Value>(msg) {
+                        if val.get("ready").and_then(|v| v.as_bool()) == Some(true) {
+                            println!("[Sidecar] Warm sidecar started successfully");
+                        } else if let Some(err) = val.get("error").and_then(|v| v.as_str()) {
+                            return Err(DictationError::Dictation(format!(
+                                "Sidecar startup error: {}",
+                                err
+                            )));
+                        } else {
+                            // Unexpected first line; just log and continue
+                            println!("[Sidecar] Unexpected startup message: {}", msg);
+                        }
+                    } else {
+                        println!("[Sidecar] Non-JSON startup message: {}", msg);
+                    }
+                }
+                Ok(Err(e)) => {
+                    return Err(DictationError::Dictation(format!(
+                        "Failed reading sidecar startup: {}",
+                        e
+                    )));
+                }
+                Err(_) => {
+                    // Timeout; assume ready (older builds without handshake) but warn
+                    println!(
+                        "[Sidecar] Startup handshake timed out; proceeding without confirmation"
+                    );
+                }
+            }
+        }
+
         Ok(())
     }
 
@@ -189,39 +251,70 @@ impl SidecarManager {
             send_start.elapsed()
         );
 
-        // Read JSON response as single line using BufReader
+        // Read one or more JSON lines until we get {text: ...} or {error: ...}
         let read_start = Instant::now();
-        let mut response_line = String::new();
-        sidecar
-            .stdout
-            .read_line(&mut response_line)
-            .await
-            .map_err(|e| {
-                DictationError::Dictation(format!("Failed to read response line: {}", e))
-            })?;
+        let resp_text = loop {
+            let mut response_line = String::new();
+            let n = sidecar
+                .stdout
+                .read_line(&mut response_line)
+                .await
+                .map_err(|e| {
+                    DictationError::Dictation(format!("Failed to read response line: {}", e))
+                })?;
 
-        // Remove all whitespace and control characters, including UTF-8 BOM
-        response_line = response_line
-            .trim()
-            .trim_start_matches('\u{feff}')
-            .to_string();
+            let trimmed = response_line
+                .trim()
+                .trim_start_matches('\u{feff}')
+                .to_string();
 
-        println!(
-            "[PERF] 📥 Rust read response took: {:?} | size: {} chars",
-            read_start.elapsed(),
-            response_line.len()
-        );
-        println!("[PERF] 🔍 Raw response: {:?}", response_line);
+            println!(
+                "[PERF] 📥 Rust read response took: {:?} | size: {} chars",
+                read_start.elapsed(),
+                trimmed.len()
+            );
+            println!("[PERF] 🔍 Raw response: {:?}", trimmed);
 
+            if n == 0 && trimmed.is_empty() {
+                return Err(DictationError::Dictation(
+                    "Invalid JSON response: EOF while parsing a value at line 1 column 0 | Raw:  | Bytes: []"
+                        .to_string(),
+                ));
+            }
+
+            // Accept either {"ready":true}, {"text":"..."}, or {"error":"..."}
+            if let Ok(val) = serde_json::from_str::<serde_json::Value>(&trimmed) {
+                if val.get("ready").and_then(|v| v.as_bool()) == Some(true) {
+                    // Ignore handshake and read the next line
+                    continue;
+                }
+                if let Some(err) = val.get("error").and_then(|v| v.as_str()) {
+                    return Err(DictationError::Dictation(format!(
+                        "Dictation failed: {}",
+                        err
+                    )));
+                }
+                if let Some(text) = val.get("text").and_then(|v| v.as_str()) {
+                    break text.trim().to_string();
+                }
+                // Unexpected but non-empty JSON; treat as format error and show bytes
+                let bytes: Vec<u8> = trimmed.bytes().collect();
+                return Err(DictationError::Dictation(format!(
+                    "Invalid JSON response: expected 'text' | Raw: {} | Bytes: {:?}",
+                    trimmed, bytes
+                )));
+            } else {
+                // Not JSON
+                let bytes: Vec<u8> = trimmed.bytes().collect();
+                return Err(DictationError::Dictation(format!(
+                    "Invalid JSON response: expected value at line 1 column 1 | Raw: {} | Bytes: {:?}",
+                    trimmed, bytes
+                )));
+            }
+        };
+
+        let resp = SidecarResponse { text: resp_text };
         let parse_start = Instant::now();
-        let resp: SidecarResponse = serde_json::from_str(&response_line).map_err(|e| {
-            // Debug the exact bytes to see what's wrong
-            let bytes: Vec<u8> = response_line.bytes().collect();
-            DictationError::Dictation(format!(
-                "Invalid JSON response: {} | Raw: {} | Bytes: {:?}",
-                e, response_line, bytes
-            ))
-        })?;
         println!("[PERF] 📥 Rust parse took: {:?}", parse_start.elapsed());
         println!(
             "[PERF] 🔄 Total Rust IPC took: {:?}",

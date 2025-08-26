@@ -41,13 +41,24 @@ export function useSocialAuth({
       callbackURL,
       errorCallbackURL: APP_ROUTES.AUTH.ERROR,
       fetchOptions: {
-        onError: ({ error: onError }) => setError(onError.message),
+        onError: ({ error: onError }) =>
+          setError(
+            onError.message ===
+              'You are being rate limited for requesting too many tokens. Please try again later.'
+              ? 'You are being rate limited. Please try again later.'
+              : onError.message
+          ),
       },
     });
 
     if (socialError) {
       setIsLoading((prev) => ({ ...prev, [provider]: false }));
-      setError(socialError.message ?? 'An unexpected error occurred.');
+      setError(
+        socialError.message ===
+          'You are being rate limited for requesting too many tokens. Please try again later.'
+          ? 'You are being rate limited. Please try again later.'
+          : (socialError.message ?? 'An unexpected error occurred.')
+      );
       return;
     }
   };

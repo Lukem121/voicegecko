@@ -7,7 +7,6 @@ import { onSubscriptionComplete } from '@acme/payment/subscription-handlers/on-s
 import { onSubscriptionDeleted } from '@acme/payment/subscription-handlers/on-subscription-deleted';
 import { onSubscriptionUpdate } from '@acme/payment/subscription-handlers/on-subscription-update';
 import { stripe } from '@better-auth/stripe';
-import { tauri } from '@daveyplate/better-auth-tauri/plugin';
 import { betterAuth } from 'better-auth';
 import { drizzleAdapter } from 'better-auth/adapters/drizzle';
 import { nextCookies } from 'better-auth/next-js';
@@ -17,8 +16,8 @@ import {
   twoFactor,
   username,
 } from 'better-auth/plugins';
-
 import { authEnv } from '../env';
+import { tauri } from './lib/tauri-plugin/plugin/tauri';
 import { handleAfterHook } from './middleware/handle-after-hook';
 import { handleCreateAfterHook } from './middleware/handle-create-after-hook';
 import { usernameValidator } from './schemas/username.schema';
