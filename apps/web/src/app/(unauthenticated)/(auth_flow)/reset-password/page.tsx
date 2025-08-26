@@ -2,6 +2,7 @@
 
 import { ResetPasswordSchema } from '@acme/auth/schemas/auth';
 import { getAuthErrorMessage } from '@acme/auth/utils/auth-error-messages';
+import VoiceGeckoLogo from '@acme/ui/components/logos/logo-full';
 import { Button } from '@acme/ui/components/ui/button';
 import {
   Card,
@@ -20,7 +21,6 @@ import {
   useForm,
 } from '@acme/ui/components/ui/form';
 import { Input } from '@acme/ui/components/ui/input';
-import { toast } from '@acme/ui/components/ui/sonner';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Loader } from 'lucide-react';
 import { useRouter, useSearchParams } from 'next/navigation';
@@ -29,6 +29,7 @@ import type { z } from 'zod/v4';
 
 import { authClient } from '~/lib/auth/client';
 import { APP_ROUTES } from '~/utils/app-routes';
+import TermsAndPrivacyNotice from '../../components/terms-and-privacy-notice';
 
 type FormValues = z.infer<typeof ResetPasswordSchema>;
 
@@ -65,7 +66,6 @@ export default function ResetPasswordPage() {
       fetchOptions: {
         onSuccess: () => {
           router.push(APP_ROUTES.AUTH.SIGN_IN);
-          toast.success('Password reset successful, please sign in.');
           setIsSuccess(true);
         },
       },
@@ -83,87 +83,90 @@ export default function ResetPasswordPage() {
   };
 
   return (
-    <div className={'flex flex-col gap-6'}>
-      <Card>
-        <CardHeader className="text-center">
-          <CardTitle className="text-xl">Reset your password</CardTitle>
-          <CardDescription>
-            Enter your new password and confirm your password.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)}>
-              <div className="grid gap-6">
-                <div className="grid gap-6">
-                  <div className="grid gap-2">
-                    <FormField
-                      control={form.control}
-                      name="password"
-                      render={({ field }) => (
-                        <FormItem>
-                          <div className="flex items-center">
-                            <FormLabel>Password</FormLabel>
-                          </div>
-                          <FormControl>
-                            <Input
-                              autoComplete="password"
-                              inputMode="text"
-                              type="password"
-                              {...field}
-                              disabled={isLoading || isSuccess}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                  <div className="grid gap-2">
-                    <FormField
-                      control={form.control}
-                      name="passwordConfirmation"
-                      render={({ field }) => (
-                        <FormItem>
-                          <div className="flex items-center">
-                            <FormLabel>Confirm Password</FormLabel>
-                          </div>
-                          <FormControl>
-                            <Input
-                              autoComplete="password"
-                              inputMode="text"
-                              type="password"
-                              {...field}
-                              disabled={isLoading || isSuccess}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    {error !== null && (
-                      <p className="font-medium text-[0.8rem] text-red-600">
-                        {error}
-                      </p>
+    <main className="container mx-auto max-w-md px-4 py-8">
+      <div className="flex flex-col gap-6">
+        <Card className="shadow-lg">
+          <CardHeader className="space-y-3">
+            <VoiceGeckoLogo aria-label="Voice Gecko Logo" className="h-10" />
+            <CardTitle className="text-xl">Reset your password</CardTitle>
+            <CardDescription className="">
+              Enter your new password and confirm your password.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Form {...form}>
+              <form
+                className="space-y-6"
+                onSubmit={form.handleSubmit(onSubmit)}
+              >
+                <div className="space-y-4">
+                  <FormField
+                    control={form.control}
+                    name="password"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Password</FormLabel>
+                        <FormControl>
+                          <Input
+                            autoComplete="new-password"
+                            inputMode="text"
+                            type="password"
+                            {...field}
+                            disabled={isLoading || isSuccess}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
                     )}
-                  </div>
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="passwordConfirmation"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Confirm Password</FormLabel>
+                        <FormControl>
+                          <Input
+                            autoComplete="new-password"
+                            inputMode="text"
+                            type="password"
+                            {...field}
+                            disabled={isLoading || isSuccess}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  {error !== null && (
+                    <div
+                      className="rounded-md bg-destructive/10 p-3 text-red-500 text-sm"
+                      role="alert"
+                    >
+                      {error}
+                    </div>
+                  )}
+
                   <Button
                     className="w-full"
                     disabled={isLoading || isSuccess}
                     type="submit"
                   >
                     {isLoading ? (
-                      <Loader className={'animate-spin'} />
+                      <Loader className="h-4 w-4 animate-spin" />
                     ) : (
                       'Reset Password'
                     )}
                   </Button>
                 </div>
-              </div>
-            </form>
-          </Form>
-        </CardContent>
-      </Card>
-    </div>
+              </form>
+            </Form>
+          </CardContent>
+        </Card>
+        <TermsAndPrivacyNotice />
+      </div>
+    </main>
   );
 }

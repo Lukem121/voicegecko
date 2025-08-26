@@ -21,7 +21,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { createFileRoute, Link, useRouter } from '@tanstack/react-router';
 import { Loader } from 'lucide-react';
 import type { z } from 'zod/v4';
-
+import { useAuthError } from '~/stores/auth.store';
 import { SocialSignInButton } from './-components/social-sign-in-button';
 import TermsAndPrivacyNotice from './-components/terms-and-privacy-notice';
 import { useEmailSignup } from './-hooks/use-email-signup';
@@ -51,6 +51,7 @@ function SignUp() {
   const router = useRouter();
   const search = Route.useSearch();
   const callbackURL = search.redirect ?? '/';
+  const storeError = useAuthError();
 
   const {
     signIn: handleSocialSignIn,
@@ -68,7 +69,7 @@ function SignUp() {
   });
 
   const loading = emailLoading || isSocialLoading;
-  const error = emailError || socialError;
+  const error = storeError || emailError || socialError;
 
   const form = useForm({
     resolver: zodResolver(SignUpSchema),
@@ -262,9 +263,9 @@ function SignUp() {
                       onClick={() => handleSocialSignIn('discord')}
                       provider="discord"
                     />
-                    {socialError && (
+                    {(socialError || storeError) && (
                       <p className="text-center font-medium text-[0.8rem] text-red-600">
-                        {socialError}
+                        {storeError ?? socialError}
                       </p>
                     )}
                   </div>

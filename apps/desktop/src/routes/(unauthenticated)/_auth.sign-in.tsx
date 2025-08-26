@@ -25,6 +25,7 @@ import { Loader } from 'lucide-react';
 import { useState } from 'react';
 
 import { authClient } from '~/lib/client';
+import { useAuthError } from '~/stores/auth.store';
 import { trpc } from '~/trpc';
 import { getClientAuthErrorMessage } from '~/utils/client-error-messages';
 import { countdown } from '../../utils/countdown';
@@ -55,6 +56,7 @@ function SignIn() {
   const router = useRouter();
   const search = Route.useSearch();
   const callbackURL = search.redirect ?? '/';
+  const storeError = useAuthError();
 
   const getBanStatus = useMutation(trpc.auth.getBanStatus.mutationOptions());
 
@@ -172,7 +174,7 @@ function SignIn() {
                             className="cursor-pointer text-primary text-xs hover:underline focus:outline-none focus:ring-2 focus:ring-primary sm:text-sm"
                             onClick={() => {
                               openUrl(
-                                `${import.meta.env.VITE_PUBLIC_VOICEGECKO_URL}/auth/forgot-password`
+                                `${import.meta.env.VITE_PUBLIC_VOICEGECKO_URL}/forgot-password`
                               );
                             }}
                             type="button"
@@ -195,12 +197,12 @@ function SignIn() {
                     )}
                   />
 
-                  {error && (
+                  {(storeError || error) && (
                     <div
                       className="rounded-md bg-destructive/10 p-3 text-red-500 text-sm"
                       role="alert"
                     >
-                      {error}
+                      {storeError ?? error}
                     </div>
                   )}
 

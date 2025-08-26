@@ -1,9 +1,11 @@
+import type { FetchError } from '@acme/auth/tauri';
+import { signInSocial } from '@acme/auth/tauri/social';
 import { log } from '@acme/observability/log';
-import { signInSocial } from '@daveyplate/better-auth-tauri';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { analytics } from '~/lib/analytics/posthog-analytics';
 import { authClient } from '~/lib/client';
+import { useAuthError } from '~/stores/auth.store';
 
 export type SocialProvider = 'discord' | 'google';
 
@@ -25,8 +27,16 @@ export function useSocialAuth(): UseSocialAuthReturn {
     google: false,
   });
   const [error, setError] = useState<string | null>(null);
+  const storeAuthError = useAuthError();
 
   const loading = Object.values(isLoading).some(Boolean);
+
+  // Stop spinner if a global auth error occurs (e.g., rate-limited via deep link)
+  useEffect(() => {
+    if (storeAuthError) {
+      setIsLoading({ discord: false, google: false });
+    }
+  }, [storeAuthError]);
 
   const signIn = async (provider: SocialProvider) => {
     setIsLoading((prev) => ({ ...prev, [provider]: true }));
@@ -42,7 +52,8 @@ export function useSocialAuth(): UseSocialAuthReturn {
       authClient,
       provider,
       fetchOptions: {
-        onError: ({ error: callbackError }) => setError(callbackError.message),
+        onError: ({ error: callbackError }: { error: FetchError }) =>
+          setError(callbackError.message ?? 'An unexpected error occurred'),
       },
     });
 
