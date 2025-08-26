@@ -25,6 +25,7 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_sentry::init(&client))
         .manage(DictationState::default())
+        .manage(modules::gecko_bar::SnoozeState::default())
         .plugin(tauri_plugin_positioner::init())
         .plugin(tauri_plugin_clipboard_manager::init())
         .plugin(tauri_plugin_global_shortcut::Builder::new().build())
@@ -86,6 +87,9 @@ pub fn run() {
             modules::gecko_bar::set_gecko_bar_fullscreen_mode,
             modules::gecko_bar::send_gecko_bar_notification,
             modules::gecko_bar::set_gecko_bar_cursor_passthrough,
+            modules::gecko_bar::snooze_gecko_bar_until,
+            modules::gecko_bar::should_show_gecko_bar,
+            modules::gecko_bar::snooze_gecko_bar_for_ms,
             modules::hardware_info::get_hardware_info,
             modules::hardware_info::get_recommended_tier,
             modules::model_manager::list_models,
@@ -142,6 +146,18 @@ pub fn run() {
             } else {
                 println!("[Rust] Keeping main window hidden due to autostart launch");
             }
+
+            // Respect gecko bar snooze preference on startup
+            {
+                let app_handle = app.handle().clone();
+                if let Ok(show) = modules::gecko_bar::should_show_gecko_bar(app_handle.clone()) {
+                    if show {
+                        let _ = modules::gecko_bar::show_gecko_bar(app_handle.clone());
+                    } else {
+                        let _ = modules::gecko_bar::hide_gecko_bar(app_handle.clone());
+                    }
+                }
+            }
             let (_stream, stream_handle) = rodio::OutputStream::try_default().unwrap();
             let sink = rodio::Sink::try_new(&stream_handle).unwrap();
             app.manage(modules::audio::AudioState::new(sink));
@@ -176,6 +192,15 @@ pub fn run() {
 
             // Setup custom updater configuration
             modules::updater::setup_updater(app)?;
+
+            // Start global mouse stream for gecko bar click-through handling
+            {
+                let app_handle = app.handle().clone();
+                // spawn to avoid blocking setup; rdev listener runs in its own thread
+                tauri::async_runtime::spawn(async move {
+                    modules::mouse_hook::start_global_mouse_stream_for_gecko_bar(app_handle);
+                });
+            }
 
             Ok(())
         })

@@ -251,6 +251,31 @@ export async function initializeTauriEvents(
 
     // Listen for gecko bar recording requests (only in main window)
     if (!options.isGeckoBar) {
+      await listen('gecko-bar-navigation', (event) => {
+        const payload = event.payload as { to: string };
+        import('~/lib/router')
+          .then(async ({ navigate }) => {
+            try {
+              // Ensure main window is visible and focused
+              const { getCurrentWebviewWindow } = await import(
+                '@tauri-apps/api/webviewWindow'
+              );
+              const main = getCurrentWebviewWindow();
+              await main.show();
+              await main.unminimize();
+              await main.setFocus();
+            } catch {
+              // non-fatal
+            }
+            await navigate({ to: payload.to });
+          })
+          .catch((error) => {
+            log.error(
+              '[TauriEvents] Failed to navigate from gecko bar:',
+              error
+            );
+          });
+      });
       await listen('gecko-bar-recording-request', (event) => {
         const payload = event.payload as {
           action: 'toggle' | 'cancel' | 'finish';
