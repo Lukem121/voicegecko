@@ -57,9 +57,9 @@ export const WelcomeTemplate = ({ name }: WelcomeEmailProps) => (
           </Text>
 
           <Text className="mb-5 px-2 text-base text-gray-700 leading-6 sm:mb-7 sm:px-0">
-            VoiceGecko provides instant, accurate voice-to-text transcription
-            that works everywhere. Whether you're writing emails, taking notes,
-            or coding, just speak and watch your words appear.
+            VoiceGecko provides instant, accurate voice-to-text dictation that
+            works everywhere. Whether you're writing emails, taking notes, or
+            coding, just speak and watch your words appear.
           </Text>
 
           {/* Tips Section */}
@@ -80,7 +80,7 @@ export const WelcomeTemplate = ({ name }: WelcomeEmailProps) => (
               <li>Don't like the Gecko bar? You can disable it in settings</li>
               <li>
                 Add words to your dictionary in the desktop app to fix recurring
-                transcription errors
+                dictation errors
               </li>
             </ul>
           </Section>

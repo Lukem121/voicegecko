@@ -642,7 +642,7 @@ pub fn stop_recording(
     // Emit audio processing completion event to frontend for performance tracking
     let _ = app.emit("audio-processing-complete", ());
 
-    // MAJOR OPTIMIZATION: Start transcription directly in Rust to eliminate data round-trip
+    // MAJOR OPTIMIZATION: Start dictation directly in Rust to eliminate data round-trip
     // This saves ~267ms of serialization/transfer overhead
     let audio_data = AudioData {
         samples: denoised_samples,
@@ -650,13 +650,13 @@ pub fn stop_recording(
         channels: 1,
     };
 
-    // Trigger immediate internal transcription (async, non-blocking)
-    let app_for_transcription = app.clone();
-    let audio_for_transcription = audio_data.clone();
+    // Trigger immediate internal dictation (async, non-blocking)
+    let app_for_dictation = app.clone();
+    let audio_for_dictation = audio_data.clone();
     tauri::async_runtime::spawn(async move {
-        let _ = crate::modules::transcription::start_internal_transcription(
-            app_for_transcription,
-            audio_for_transcription,
+        let _ = crate::modules::dictation::start_internal_dictation(
+            app_for_dictation,
+            audio_for_dictation,
         )
         .await;
     });
@@ -666,10 +666,10 @@ pub fn stop_recording(
 
 /// Apply Whisper-optimized audio processing: EQ -> Noise Reduction -> Normalization
 ///
-/// This pipeline is specifically tuned for OpenAI's Whisper transcription service:
+/// This pipeline is specifically tuned for OpenAI's Whisper dictation service:
 /// - Preserves natural speech characteristics that Whisper expects
 /// - Uses conservative noise reduction to avoid artifacts
-/// - Normalizes to -16dB RMS for optimal transcription accuracy
+/// - Normalizes to -16dB RMS for optimal dictation accuracy
 /// - Note: Quiet microphones are automatically boosted during recording, before this processing
 fn denoise_audio(samples: Vec<f32>) -> Vec<f32> {
     // Performance testing mode - skip all audio processing for pure speed testing
@@ -811,7 +811,7 @@ fn apply_biquad_filter(samples: Vec<f32>, b0: f32, b1: f32, b2: f32, a1: f32, a2
     filtered
 }
 
-/// Simple noise reduction optimized for Whisper transcription
+/// Simple noise reduction optimized for Whisper dictation
 fn apply_simple_noise_reduction(samples: Vec<f32>) -> Vec<f32> {
     const FRAME_SIZE: usize = 480; // nnnoiseless requires exactly 480 samples per frame
     const BLEND_FACTOR: f32 = 0.25; // Even more conservative - 25% denoised, 75% original for speed
@@ -905,7 +905,7 @@ fn apply_simple_noise_reduction(samples: Vec<f32>) -> Vec<f32> {
     denoised_samples
 }
 
-/// Simple normalization optimized for Whisper transcription
+/// Simple normalization optimized for Whisper dictation
 /// More conservative since we already boost quiet inputs during recording
 fn apply_simple_normalization(samples: Vec<f32>) -> Vec<f32> {
     if samples.is_empty() {

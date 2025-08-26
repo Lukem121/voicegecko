@@ -1,6 +1,6 @@
 {
   "name": "@acme/auth",
-  "version": "0.0.20",
+  "version": "0.0.21",
   "private": true,
   "type": "module",
   "exports": {
@@ -11,6 +11,8 @@
     "./utils/auth-error-messages": "./src/utils/auth-error-messages.ts",
     "./utils/get-session": "./src/utils/get-session.ts",
     "./utils/get-session-cookie": "./src/utils/get-session-cookie.ts",
+    "./tauri": "./src/lib/tauri-plugin/use-better-auth-tauri.ts",
+    "./tauri/social": "./src/lib/tauri-plugin/client/sign-in-social.ts",
     "./env": "./env.ts"
   },
   "scripts": {
@@ -24,8 +26,9 @@
     "@acme/db": "workspace:*",
     "@acme/email": "workspace:*",
     "@acme/notifications": "workspace:*",
+    "@acme/observability": "workspace:*",
     "@acme/payment": "workspace:*",
-    "@daveyplate/better-auth-tauri": "^0.0.24",
+    "@daveyplate/tauri-fetch": "^1.0.4",
     "@t3-oss/env-nextjs": "catalog:",
     "better-auth": "1.3.7",
     "next": "^15.4.7",

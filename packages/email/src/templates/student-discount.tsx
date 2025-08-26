@@ -54,7 +54,7 @@ export const StudentDiscountTemplate = ({
             As a student, we know every dollar counts. That's why we're excited
             to offer you <strong>{discountPercentage}% off</strong> VoiceGecko
             Pro to help power your studies with accurate voice-to-text
-            transcription.
+            dictation.
           </Text>
 
           {/* Coupon Code Section */}

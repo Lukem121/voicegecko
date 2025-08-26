@@ -7,7 +7,7 @@ const FREE_TIER_WEEKLY_WORD_LIMIT = 2000;
 export type UserUsageStatus = {
   wordsUsed: number;
   wordsLimit: number;
-  transcriptionCount: number;
+  dictationCount: number;
   isUnlimited: boolean;
   canTranscribe: boolean;
   weekStartDate: Date;
@@ -15,7 +15,7 @@ export type UserUsageStatus = {
 
 export class UsageService {
   /**
-   * Check if a user can perform a transcription based on their current usage
+   * Check if a user can perform a dictation based on their current usage
    */
   async canUserTranscribe(userId: string): Promise<boolean> {
     const status = await this.getUserUsageStatus(userId);
@@ -34,7 +34,7 @@ export class UsageService {
       return {
         wordsUsed: 0,
         wordsLimit: 0,
-        transcriptionCount: 0,
+        dictationCount: 0,
         isUnlimited: true,
         canTranscribe: true,
         weekStartDate: new Date(),
@@ -54,13 +54,13 @@ export class UsageService {
         userId,
         weekStartDate: currentWeekStart,
         wordsUsed: 0,
-        transcriptionCount: 0,
+        dictationCount: 0,
       });
 
       return {
         wordsUsed: 0,
         wordsLimit: FREE_TIER_WEEKLY_WORD_LIMIT,
-        transcriptionCount: 0,
+        dictationCount: 0,
         isUnlimited: false,
         canTranscribe: true,
         weekStartDate: currentWeekStart,
@@ -70,7 +70,7 @@ export class UsageService {
     return {
       wordsUsed: usage.wordsUsed,
       wordsLimit: FREE_TIER_WEEKLY_WORD_LIMIT,
-      transcriptionCount: usage.transcriptionCount,
+      dictationCount: usage.dictationCount,
       isUnlimited: false,
       canTranscribe: usage.wordsUsed < FREE_TIER_WEEKLY_WORD_LIMIT,
       weekStartDate: usage.weekStartDate,
@@ -78,9 +78,9 @@ export class UsageService {
   }
 
   /**
-   * Update usage after a successful transcription
+   * Update usage after a successful dictation
    */
-  async updateUsageAfterTranscription(
+  async updateUsageAfterDictation(
     userId: string,
     wordCount: number
   ): Promise<void> {
@@ -101,7 +101,7 @@ export class UsageService {
         userId,
         weekStartDate: currentWeekStart,
         wordsUsed: wordCount,
-        transcriptionCount: 1,
+        dictationCount: 1,
       });
     } else {
       // Increment existing usage
@@ -127,12 +127,12 @@ export class UsageService {
       current: currentStatus,
       total: {
         words: totalStats.totalWords,
-        transcriptions: totalStats.totalTranscriptions,
+        dictations: totalStats.totalDictations,
         timeSaved: totalStats.totalWords / 40, // minutes (assume 40 words per minute typing speed)
       },
       monthly: {
         words: monthlyStats.monthlyWords,
-        transcriptions: monthlyStats.monthlyTranscriptions,
+        dictations: monthlyStats.monthlyDictations,
         timeSaved: monthlyStats.monthlyWords / 40, // minutes
       },
       wordsPerMinute,
@@ -170,7 +170,7 @@ export class UsageService {
         userId,
         weekStartDate: weekStart,
         wordsUsed: 0,
-        transcriptionCount: 0,
+        dictationCount: 0,
       });
 
       if (!usage) {

@@ -1,6 +1,9 @@
 use serde::{Deserialize, Serialize};
+use std::sync::Mutex;
 use tauri::{AppHandle, Emitter, Manager, PhysicalPosition, PhysicalSize};
 use tauri_plugin_positioner::{Position as PositionerPosition, WindowExt};
+use tauri_plugin_store::StoreExt;
+use tokio::time::{sleep, Duration};
 
 #[cfg(target_os = "windows")]
 use windows::Win32::Foundation::RECT;
@@ -156,6 +159,104 @@ pub fn hide_gecko_bar(app: AppHandle) -> Result<(), String> {
     } else {
         Err("Gecko bar window not found".to_string())
     }
+}
+
+// In-memory snooze state (session-only)
+pub struct SnoozeState {
+    pub until_ms: Mutex<Option<i64>>, // unix millis
+}
+
+impl Default for SnoozeState {
+    fn default() -> Self {
+        Self {
+            until_ms: Mutex::new(None),
+        }
+    }
+}
+
+#[tauri::command]
+pub fn snooze_gecko_bar_for_ms(
+    app: AppHandle,
+    state: tauri::State<SnoozeState>,
+    ms: i64,
+) -> Result<(), String> {
+    let until = chrono::Utc::now().timestamp_millis() + ms;
+    if let Ok(mut guard) = state.until_ms.lock() {
+        *guard = Some(until);
+    }
+    // Hide now
+    let _ = hide_gecko_bar(app.clone());
+
+    // Schedule wake-up
+    tauri::async_runtime::spawn(async move {
+        if ms > 0 {
+            sleep(Duration::from_millis(ms as u64)).await;
+        }
+        // After delay, re-show only if snooze expired
+        let app_handle = app.clone();
+        if let Some(state) = app_handle.try_state::<SnoozeState>() {
+            let mut should_show = true;
+            if let Ok(mut guard) = state.until_ms.lock() {
+                if let Some(until_ms) = *guard {
+                    let now = chrono::Utc::now().timestamp_millis();
+                    if now >= until_ms {
+                        *guard = None; // clear
+                        should_show = true;
+                    } else {
+                        should_show = false;
+                    }
+                }
+            }
+            if should_show {
+                let _ = show_gecko_bar(app_handle);
+            }
+        }
+    });
+
+    Ok(())
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, Default)]
+pub struct GeckoBarSnoozeConfig {
+    pub enabled: bool,
+    #[serde(default)]
+    pub snooze_until: Option<i64>, // unix millis
+}
+
+#[tauri::command]
+pub fn snooze_gecko_bar_until(app: AppHandle, until_unix_ms: i64) -> Result<(), String> {
+    // Persist snooze-until in the same settings store
+    let store = app.store("settings.json").map_err(|e| e.to_string())?;
+    let key = "geckoBarSnooze".to_string();
+    let data = GeckoBarSnoozeConfig {
+        enabled: true,
+        snooze_until: Some(until_unix_ms),
+    };
+    store.set(key, serde_json::to_value(data).map_err(|e| e.to_string())?);
+    store.save().map_err(|e| e.to_string())?;
+
+    // Hide immediately
+    hide_gecko_bar(app)
+}
+
+#[tauri::command]
+pub fn should_show_gecko_bar(app: AppHandle) -> Result<bool, String> {
+    // If snoozed and not expired, do not show
+    let store = app.store("settings.json").map_err(|e| e.to_string())?;
+    if let Some(value) = store.get("geckoBarSnooze") {
+        if let Ok(cfg) = serde_json::from_value::<GeckoBarSnoozeConfig>(value.clone()) {
+            if let Some(until) = cfg.snooze_until {
+                let now = chrono::Utc::now().timestamp_millis();
+                if now < until {
+                    return Ok(false);
+                }
+            }
+        }
+    }
+
+    // Fallback to gecko bar enabled config
+    let cfg = crate::modules::settings::get_gecko_bar_config(app.clone())?;
+    Ok(cfg.enabled)
 }
 
 fn position_gecko_bar(window: &tauri::WebviewWindow) -> Result<(), String> {

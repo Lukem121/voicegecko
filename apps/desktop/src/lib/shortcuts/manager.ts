@@ -75,7 +75,7 @@ class ShortcutManager {
       log.info(`Successfully registered push-to-talk: ${accelerator}`);
     } else if (shortcut.id in shortcutActions) {
       // Standard shortcuts: separate handlers to keep complexity low
-      if (shortcut.id === 'paste-last-transcription') {
+      if (shortcut.id === 'paste-last-dictation') {
         await register(accelerator, (event?: ShortcutEvent) => {
           log.info(
             `[Shortcuts] Event for ${shortcut.id}: state=${event?.state ?? 'unknown'} accel=${accelerator}`

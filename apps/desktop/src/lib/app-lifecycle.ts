@@ -442,7 +442,7 @@ class AppLifecycleManager {
    * Run non-critical post-initialization tasks
    */
   private async runPostInitializationTasks(): Promise<void> {
-    // Prefetch dictionary prompt for faster transcriptions
+    // Prefetch dictionary prompt for faster dictations
     try {
       await dictionaryService.prefetchDictionaryPrompt();
       log.info('[AppLifecycle] Dictionary prompt prefetched successfully');

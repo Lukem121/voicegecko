@@ -1,6 +1,6 @@
 {
   "productName": "Voice Gecko",
-  "version": "0.0.20",
+  "version": "0.0.21",
   "identifier": "com.voicegecko.desktop",
   "build": {
     "frontendDist": "../dist",
@@ -28,8 +28,8 @@
       {
         "label": "gecko-bar",
         "title": "Voice Gecko Bar",
-        "width": 200,
-        "height": 80,
+        "width": 280,
+        "height": 250,
         "closable": false,
         "minimizable": false,
         "maximizable": false,

@@ -89,7 +89,7 @@ export const PaymentFailedTemplate = ({
               </li>
               <li className="flex items-start">
                 <span className="mr-3 text-green-600">✓</span>
-                <span>No data or transcriptions have been lost</span>
+                <span>No data or dictations have been lost</span>
               </li>
               <li className="flex items-start">
                 <span className="mr-3 text-yellow-600">⚠</span>

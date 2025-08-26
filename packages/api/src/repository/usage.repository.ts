@@ -1,8 +1,8 @@
 import { and, eq, gte, sql } from '@acme/db';
 import { db } from '@acme/db/client';
 import {
+  DictationTable,
   subscription as SubscriptionTable,
-  TranscriptionTable,
   UsageTable,
   user as UserTable,
 } from '@acme/db/schema';
@@ -11,7 +11,7 @@ export type UsageData = {
   userId: string;
   weekStartDate: Date;
   wordsUsed: number;
-  transcriptionCount: number;
+  dictationCount: number;
 };
 
 export type UserSubscriptionInfo = {
@@ -44,7 +44,7 @@ class UsageRepository {
         set: {
           weekStartDate: data.weekStartDate,
           wordsUsed: data.wordsUsed,
-          transcriptionCount: data.transcriptionCount,
+          dictationCount: data.dictationCount,
           lastResetAt: new Date(),
           updatedAt: new Date(),
         },
@@ -64,7 +64,7 @@ class UsageRepository {
         userId,
         weekStartDate: weekStart,
         wordsUsed: wordCount,
-        transcriptionCount: 1,
+        dictationCount: 1,
       });
     }
 
@@ -73,7 +73,7 @@ class UsageRepository {
       .update(UsageTable)
       .set({
         wordsUsed: currentUsage.wordsUsed + wordCount,
-        transcriptionCount: currentUsage.transcriptionCount + 1,
+        dictationCount: currentUsage.dictationCount + 1,
         updatedAt: new Date(),
       })
       .where(eq(UsageTable.userId, userId))
@@ -144,15 +144,15 @@ class UsageRepository {
   async getTotalUsageStats(userId: string) {
     const [result] = await db
       .select({
-        totalWords: sql<number>`COALESCE(SUM(${TranscriptionTable.wordCount}), 0)`,
-        totalTranscriptions: sql<number>`COUNT(*)`,
+        totalWords: sql<number>`COALESCE(SUM(${DictationTable.wordCount}), 0)`,
+        totalDictations: sql<number>`COUNT(*)`,
       })
-      .from(TranscriptionTable)
-      .where(eq(TranscriptionTable.userId, userId));
+      .from(DictationTable)
+      .where(eq(DictationTable.userId, userId));
 
     return {
       totalWords: Number(result?.totalWords || 0),
-      totalTranscriptions: Number(result?.totalTranscriptions || 0),
+      totalDictations: Number(result?.totalDictations || 0),
     };
   }
 
@@ -163,34 +163,34 @@ class UsageRepository {
 
     const [result] = await db
       .select({
-        monthlyWords: sql<number>`COALESCE(SUM(${TranscriptionTable.wordCount}), 0)`,
-        monthlyTranscriptions: sql<number>`COUNT(*)`,
+        monthlyWords: sql<number>`COALESCE(SUM(${DictationTable.wordCount}), 0)`,
+        monthlyDictations: sql<number>`COUNT(*)`,
       })
-      .from(TranscriptionTable)
+      .from(DictationTable)
       .where(
         and(
-          eq(TranscriptionTable.userId, userId),
-          gte(TranscriptionTable.createdAt, startOfMonth)
+          eq(DictationTable.userId, userId),
+          gte(DictationTable.createdAt, startOfMonth)
         )
       );
 
     return {
       monthlyWords: Number(result?.monthlyWords || 0),
-      monthlyTranscriptions: Number(result?.monthlyTranscriptions || 0),
+      monthlyDictations: Number(result?.monthlyDictations || 0),
     };
   }
 
   async getUserWordsPerMinute(userId: string) {
     const [result] = await db
       .select({
-        totalWords: sql<number>`COALESCE(SUM(${TranscriptionTable.wordCount}), 0)`,
-        totalDurationSeconds: sql<number>`COALESCE(SUM(${TranscriptionTable.durationSeconds}), 0)`,
+        totalWords: sql<number>`COALESCE(SUM(${DictationTable.wordCount}), 0)`,
+        totalDurationSeconds: sql<number>`COALESCE(SUM(${DictationTable.durationSeconds}), 0)`,
       })
-      .from(TranscriptionTable)
+      .from(DictationTable)
       .where(
         and(
-          eq(TranscriptionTable.userId, userId),
-          sql`${TranscriptionTable.durationSeconds} IS NOT NULL AND ${TranscriptionTable.durationSeconds} > 0`
+          eq(DictationTable.userId, userId),
+          sql`${DictationTable.durationSeconds} IS NOT NULL AND ${DictationTable.durationSeconds} > 0`
         )
       );
 

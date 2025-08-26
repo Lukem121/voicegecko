@@ -67,7 +67,7 @@ export default function PricingSection({
           </h2>
           <p className="mt-2 max-w-lg text-pretty text-muted-foreground text-sm">
             Start free with 2,000 words per week. Upgrade for unlimited
-            transcription whenever you're ready.
+            dictation whenever you're ready.
           </p>
         </div>
 
@@ -87,7 +87,7 @@ export default function PricingSection({
                   included: true,
                   subtext: 'Reset every Monday',
                 },
-                { text: 'Lightning fast transcription', included: true },
+                { text: 'Lightning fast dictation', included: true },
                 { text: 'Global shortcut access', included: true },
                 { text: 'Add words to dictionary', included: true },
                 { text: 'Privacy mode', included: true },
@@ -110,7 +110,7 @@ export default function PricingSection({
             features={
               [
                 {
-                  text: 'Unlimited transcriptions',
+                  text: 'Unlimited dictations',
                   included: true,
                   subtext: 'No weekly limits',
                 },

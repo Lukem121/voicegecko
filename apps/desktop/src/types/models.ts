@@ -37,8 +37,7 @@ export const tierDisplayInfo: Record<ModelTier, TierDisplayInfo> = {
   },
   minimal: {
     name: 'Minimal',
-    description:
-      'Fast and lightweight for quick notes and basic transcription.',
+    description: 'Fast and lightweight for quick notes and basic dictation.',
     icon: '⚡',
     min_ram_gb: 2,
     typical_model_size_mb: 79,

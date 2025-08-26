@@ -219,7 +219,7 @@ function MicrophoneSetupStep() {
             <Card>
               <CardTitle>Speak to test your microphone</CardTitle>
               <CardDescription>
-                Your computer's built-in mic will ensure optimal transcription
+                Your computer's built-in mic will ensure optimal dictation
               </CardDescription>
 
               <CardContent className="space-y-6">
@@ -267,7 +267,7 @@ function MicrophoneSetupStep() {
             <CardHeader>
               <CardTitle>Speak to test your microphone</CardTitle>
               <CardDescription>
-                Your computer's built-in mic will ensure optimal transcription
+                Your computer's built-in mic will ensure optimal dictation
               </CardDescription>
             </CardHeader>
 
@@ -336,7 +336,7 @@ function MicrophoneSetupStep() {
               <DialogTitle>Choose your microphone</DialogTitle>
               <DialogDescription>
                 Select the microphone device you'd like to use for voice
-                transcription
+                dictation
               </DialogDescription>
             </DialogHeader>
 

@@ -56,9 +56,7 @@ function useRecordingTutorialSteps() {
   // Use the same store pattern as other components
   const recordingStatus = useEventStore((state) => state.recordingStatus);
   const isRecording = useEventStore((state) => state.isRecording());
-  const transcriptionStatus = useEventStore(
-    (state) => state.transcriptionStatus
-  );
+  const dictationStatus = useEventStore((state) => state.dictationStatus);
   const transcript = useEventStore((state) => state.transcript);
 
   const completeStep = React.useCallback((stepIndex: number) => {
@@ -118,20 +116,20 @@ function useRecordingTutorialSteps() {
     };
   }, [isRecording, hasSpoken, completeStep]);
 
-  // Track transcription completion from the store
+  // Track dictation completion from the store
   useEffect(() => {
     log.info(
-      '[Tutorial] Transcription status:',
-      transcriptionStatus,
+      '[Tutorial] Dictation status:',
+      dictationStatus,
       'transcript:',
       transcript
     );
 
-    if (transcriptionStatus === 'complete' && transcript) {
-      log.info('[Tutorial] Transcription completed:', transcript);
-      completeStep(3); // Step 4: Transcription completed
+    if (dictationStatus === 'complete' && transcript) {
+      log.info('[Tutorial] Dictation completed:', transcript);
+      completeStep(3); // Step 4: Dictation completed
     }
-  }, [transcriptionStatus, transcript, completeStep]);
+  }, [dictationStatus, transcript, completeStep]);
 
   const isStepCompleted = React.useCallback(
     (stepIndex: number) => completedSteps.has(stepIndex),
@@ -148,9 +146,9 @@ function useRecordingTutorialSteps() {
     isStepActive,
     isRecording,
     hasSpoken,
-    transcriptionText: transcript ?? '',
+    dictationText: transcript ?? '',
     recordingStatus,
-    transcriptionStatus,
+    dictationStatus,
     isAllStepsCompleted: completedSteps.size === 4, // Now 4 steps total
     resetSteps,
   };
@@ -244,21 +242,20 @@ function RecordingTutorialStep() {
   const sentMessages = React.useRef(new Set<string>());
   const tutorialActionsPerformed = React.useRef(false);
 
-  // Track previous transcription to detect empty results
-  const previousTranscriptionText = React.useRef<string | null>(null);
-  const lastProcessedTranscriptionStatus = React.useRef<string | null>(null);
+  // Track previous dictation to detect empty results
+  const previousDictationText = React.useRef<string | null>(null);
+  const lastProcessedDictationStatus = React.useRef<string | null>(null);
 
-  // Animation state for transcription text area
-  const [shouldAnimateTranscription, setShouldAnimateTranscription] =
-    useState(false);
-  const lastAnimatedTranscription = React.useRef<string>('');
+  // Animation state for dictation text area
+  const [shouldAnimateDictation, setShouldAnimateDictation] = useState(false);
+  const lastAnimatedDictation = React.useRef<string>('');
 
   const {
     currentStep,
     isStepCompleted,
-    transcriptionText,
+    dictationText,
     recordingStatus: _recordingStatus,
-    transcriptionStatus,
+    dictationStatus,
     isAllStepsCompleted,
     resetSteps,
   } = useRecordingTutorialSteps();
@@ -318,14 +315,14 @@ function RecordingTutorialStep() {
       }
     }
 
-    // Reset previous transcription tracking for fresh detection
-    previousTranscriptionText.current = null;
+    // Reset previous dictation tracking for fresh detection
+    previousDictationText.current = null;
 
     // Reset animation tracking for fresh animations on retry
-    lastAnimatedTranscription.current = '';
+    lastAnimatedDictation.current = '';
 
-    // Reset the event store transcription state to break the useEffect loop
-    useEventStore.getState().resetTranscriptionState();
+    // Reset the event store dictation state to break the useEffect loop
+    useEventStore.getState().resetDictationState();
 
     log.info('[Tutorial Messages] ✅ Tutorial reset complete:', {
       clearedMessages,
@@ -349,36 +346,36 @@ function RecordingTutorialStep() {
     });
   }, [sendMessageOnce]);
 
-  // Check for empty transcription separately to handle retries
+  // Check for empty dictation separately to handle retries
   useEffect(() => {
     // Only process when status changes TO "complete", not while it remains "complete"
     if (
-      transcriptionStatus === 'complete' &&
-      lastProcessedTranscriptionStatus.current !== 'complete'
+      dictationStatus === 'complete' &&
+      lastProcessedDictationStatus.current !== 'complete'
     ) {
       // Update the status tracker immediately
-      lastProcessedTranscriptionStatus.current = transcriptionStatus;
+      lastProcessedDictationStatus.current = dictationStatus;
 
-      const isEmptyTranscription =
-        !transcriptionText ||
-        transcriptionText.trim() === '' ||
-        transcriptionText.toLowerCase() === 'audio is silent.';
+      const isEmptyDictation =
+        !dictationText ||
+        dictationText.trim() === '' ||
+        dictationText.toLowerCase() === 'audio is silent.';
 
-      log.info('[Tutorial Messages] Transcription completed:', {
-        isEmptyTranscription,
-        transcriptionText: `"${transcriptionText}"`,
-        previousText: `"${previousTranscriptionText.current}"`,
+      log.info('[Tutorial Messages] Dictation completed:', {
+        isEmptyDictation,
+        dictationText: `"${dictationText}"`,
+        previousText: `"${previousDictationText.current}"`,
       });
 
-      if (isEmptyTranscription) {
-        // Only process if this is a NEW empty transcription (different from what we've seen)
-        if (previousTranscriptionText.current !== transcriptionText) {
+      if (isEmptyDictation) {
+        // Only process if this is a NEW empty dictation (different from what we've seen)
+        if (previousDictationText.current !== dictationText) {
           log.info(
-            '[Tutorial Messages] 🚨 Empty transcription detected! Sending retry message'
+            '[Tutorial Messages] 🚨 Empty dictation detected! Sending retry message'
           );
 
           // Update tracking BEFORE sending message to prevent loops
-          previousTranscriptionText.current = transcriptionText;
+          previousDictationText.current = dictationText;
 
           // Send retry message immediately without the sendMessageOnce deduplication
           sendMascotMessage({
@@ -399,23 +396,18 @@ function RecordingTutorialStep() {
           }, 1500);
         } else {
           log.info(
-            '[Tutorial Messages] ⏭️ Skipping duplicate empty transcription processing'
+            '[Tutorial Messages] ⏭️ Skipping duplicate empty dictation processing'
           );
         }
-      } else if (transcriptionText) {
-        // Update previous transcription reference for successful transcriptions
-        previousTranscriptionText.current = transcriptionText;
+      } else if (dictationText) {
+        // Update previous dictation reference for successful dictations
+        previousDictationText.current = dictationText;
       }
-    } else if (transcriptionStatus !== 'complete') {
+    } else if (dictationStatus !== 'complete') {
       // Reset the status tracker when not complete
-      lastProcessedTranscriptionStatus.current = transcriptionStatus;
+      lastProcessedDictationStatus.current = dictationStatus;
     }
-  }, [
-    transcriptionStatus,
-    transcriptionText,
-    sendMascotMessage,
-    resetForRetry,
-  ]);
+  }, [dictationStatus, dictationText, sendMascotMessage, resetForRetry]);
 
   // Use primitive values to avoid function recreation issues
   const step0Completed = isStepCompleted(0);
@@ -423,8 +415,8 @@ function RecordingTutorialStep() {
   const step2Completed = isStepCompleted(2);
   const step3Completed = isStepCompleted(3);
 
-  // Track the last processed transcription to prevent infinite loops
-  const lastProcessedTranscription = React.useRef<string>('');
+  // Track the last processed dictation to prevent infinite loops
+  const lastProcessedDictation = React.useRef<string>('');
 
   // Helper function to process individual step messages
   const processStepMessages = React.useCallback(() => {
@@ -469,44 +461,44 @@ function RecordingTutorialStep() {
       markStepCompleted('tutorial', 100);
     }
 
-    lastProcessedTranscription.current = transcriptionText;
+    lastProcessedDictation.current = dictationText;
   }, [
     sendMessageOnce,
     triggerMascotAnimation,
     markStepCompleted,
-    transcriptionText,
+    dictationText,
   ]);
 
-  // Trigger animation when new transcription text appears
+  // Trigger animation when new dictation text appears
   useEffect(() => {
     if (
-      transcriptionText &&
-      transcriptionText.trim() !== '' &&
-      transcriptionText !== lastAnimatedTranscription.current
+      dictationText &&
+      dictationText.trim() !== '' &&
+      dictationText !== lastAnimatedDictation.current
     ) {
-      log.info('[Tutorial Animation] Triggering transcription animation:', {
-        transcriptionText,
-        lastAnimatedTranscription: lastAnimatedTranscription.current,
+      log.info('[Tutorial Animation] Triggering dictation animation:', {
+        dictationText,
+        lastAnimatedDictation: lastAnimatedDictation.current,
       });
 
       // Update the ref immediately to prevent duplicate animations
-      lastAnimatedTranscription.current = transcriptionText;
-      setShouldAnimateTranscription(true);
+      lastAnimatedDictation.current = dictationText;
+      setShouldAnimateDictation(true);
 
       // Reset animation state after animation completes
       const timer = setTimeout(() => {
-        setShouldAnimateTranscription(false);
+        setShouldAnimateDictation(false);
       }, 1000);
 
       return () => clearTimeout(timer);
     }
-  }, [transcriptionText]);
+  }, [dictationText]);
 
   // Handle step completion messages with stable dependencies
   useEffect(() => {
-    // Skip if we've already processed this exact transcription state
+    // Skip if we've already processed this exact dictation state
     if (
-      transcriptionText === lastProcessedTranscription.current &&
+      dictationText === lastProcessedDictation.current &&
       isAllStepsCompleted
     ) {
       return;
@@ -518,16 +510,15 @@ function RecordingTutorialStep() {
       isStepCompleted2: step2Completed,
       isStepCompleted3: step3Completed,
       isAllStepsCompleted,
-      transcriptionText: `"${transcriptionText}"`,
+      dictationText: `"${dictationText}"`,
     });
 
-    const hasValidTranscription =
-      transcriptionText && transcriptionText.trim() !== '';
-    const shouldProcessSteps = !step3Completed || hasValidTranscription;
+    const hasValidDictation = dictationText && dictationText.trim() !== '';
+    const shouldProcessSteps = !step3Completed || hasValidDictation;
 
     if (!shouldProcessSteps) {
       log.info(
-        '[Tutorial Messages] ⏭️ Skipping step processing due to empty transcription'
+        '[Tutorial Messages] ⏭️ Skipping step processing due to empty dictation'
       );
       return;
     }
@@ -536,7 +527,7 @@ function RecordingTutorialStep() {
 
     if (
       isAllStepsCompleted &&
-      hasValidTranscription &&
+      hasValidDictation &&
       !sentMessages.current.has('complete')
     ) {
       handleCompletion();
@@ -546,7 +537,7 @@ function RecordingTutorialStep() {
     step1Completed,
     step2Completed,
     step3Completed,
-    transcriptionText,
+    dictationText,
     isAllStepsCompleted,
     processStepMessages,
     handleCompletion,
@@ -600,7 +591,7 @@ function RecordingTutorialStep() {
       instruction: 'Stop recording using your chosen method',
     },
     {
-      title: 'Transcription complete',
+      title: 'Dictation complete',
       description: 'Your text is ready and copied to clipboard!',
       icon: Clipboard,
       instruction: 'Your transcribed text appears below and in the mascot chat',
@@ -619,10 +610,10 @@ function RecordingTutorialStep() {
           >
             <Card className="h-fit shadow-lg">
               <CardHeader>
-                <CardTitle>Transcription Tutorial</CardTitle>
+                <CardTitle>Dictation Tutorial</CardTitle>
                 <CardDescription>
                   Learn how to record and transcribe with VoiceGecko. Your
-                  transcription will appear on the right when ready!
+                  dictation will appear on the right when ready!
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -661,7 +652,7 @@ function RecordingTutorialStep() {
             </Card>
           </motion.div>
 
-          {/* Right Column - Transcription Result */}
+          {/* Right Column - Dictation Result */}
           <motion.div
             animate={{ opacity: 1, x: 0 }}
             initial={{ opacity: 0, x: 30 }}
@@ -674,11 +665,11 @@ function RecordingTutorialStep() {
                     <AudioLines className="h-4 w-4 text-primary" />
                   </div>
                   <div>
-                    <CardTitle>Transcription Result</CardTitle>
+                    <CardTitle>Dictation Result</CardTitle>
                     <CardDescription>
-                      {transcriptionText
+                      {dictationText
                         ? 'Your voice has been converted to text'
-                        : 'Your transcription will appear here'}
+                        : 'Your dictation will appear here'}
                     </CardDescription>
                   </div>
                 </div>
@@ -686,7 +677,7 @@ function RecordingTutorialStep() {
               <CardContent>
                 <motion.div
                   animate={
-                    shouldAnimateTranscription
+                    shouldAnimateDictation
                       ? {
                           borderColor: [
                             'hsl(var(--border))',
@@ -710,12 +701,12 @@ function RecordingTutorialStep() {
                 >
                   <Textarea
                     className="min-h-[120px] resize-none border-0 focus-visible:ring-0"
-                    placeholder="Start the tutorial and your transcription will appear here..."
+                    placeholder="Start the tutorial and your dictation will appear here..."
                     readOnly
-                    value={transcriptionText || ''}
+                    value={dictationText || ''}
                   />
                 </motion.div>
-                {transcriptionText && (
+                {dictationText && (
                   <div className="mt-2 text-muted-foreground text-xs">
                     <span>✓ Automatically copied to clipboard</span>
                   </div>

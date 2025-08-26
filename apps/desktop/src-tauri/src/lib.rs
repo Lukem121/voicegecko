@@ -1,7 +1,7 @@
 use tauri::Manager;
 use tauri_plugin_sentry::{minidump, sentry};
 mod modules;
-use modules::transcription_sidecar::TranscriptionState;
+use modules::dictation_sidecar::DictationState;
 use modules::model_manager;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
@@ -24,7 +24,8 @@ pub fn run() {
 
     tauri::Builder::default()
         .plugin(tauri_plugin_sentry::init(&client))
-        .manage(TranscriptionState::default())
+        .manage(DictationState::default())
+        .manage(modules::gecko_bar::SnoozeState::default())
         .plugin(tauri_plugin_positioner::init())
         .plugin(tauri_plugin_clipboard_manager::init())
         .plugin(tauri_plugin_global_shortcut::Builder::new().build())
@@ -86,6 +87,9 @@ pub fn run() {
             modules::gecko_bar::set_gecko_bar_fullscreen_mode,
             modules::gecko_bar::send_gecko_bar_notification,
             modules::gecko_bar::set_gecko_bar_cursor_passthrough,
+            modules::gecko_bar::snooze_gecko_bar_until,
+            modules::gecko_bar::should_show_gecko_bar,
+            modules::gecko_bar::snooze_gecko_bar_for_ms,
             modules::hardware_info::get_hardware_info,
             modules::hardware_info::get_recommended_tier,
             modules::model_manager::list_models,
@@ -103,7 +107,7 @@ pub fn run() {
             modules::model_manager::get_downloaded_models_for_tier,
             modules::model_manager::auto_download_recommended_model,
             modules::model_manager::check_and_fix_partial_downloads,
-            modules::transcription::transcribe_audio_buffer,
+            modules::dictation::transcribe_audio_buffer,
             modules::settings::get_cpu_count,
             modules::settings::get_gecko_bar_config,
             modules::settings::set_gecko_bar_config,
@@ -114,6 +118,18 @@ pub fn run() {
             modules::tray::update_tray_stats
         ])
         .setup(|app| {
+            // Ensure OS autostart state matches our stored/default config on startup
+            {
+                use tauri_plugin_autostart::ManagerExt;
+                // If there is no stored config, this will return the default (now enabled)
+                let config = modules::settings::get_autostart_config(app.handle().clone())
+                    .unwrap_or_else(|_| modules::settings::AutostartConfig::default());
+                if config.enabled {
+                    let _ = app.autolaunch().enable();
+                } else {
+                    let _ = app.autolaunch().disable();
+                }
+            }
             // Check if the app was launched via autostart
             let args: Vec<String> = std::env::args().collect();
             let is_autostart = args.iter().any(|arg| arg == "--autostart");
@@ -130,6 +146,18 @@ pub fn run() {
             } else {
                 println!("[Rust] Keeping main window hidden due to autostart launch");
             }
+
+            // Respect gecko bar snooze preference on startup
+            {
+                let app_handle = app.handle().clone();
+                if let Ok(show) = modules::gecko_bar::should_show_gecko_bar(app_handle.clone()) {
+                    if show {
+                        let _ = modules::gecko_bar::show_gecko_bar(app_handle.clone());
+                    } else {
+                        let _ = modules::gecko_bar::hide_gecko_bar(app_handle.clone());
+                    }
+                }
+            }
             let (_stream, stream_handle) = rodio::OutputStream::try_default().unwrap();
             let sink = rodio::Sink::try_new(&stream_handle).unwrap();
             app.manage(modules::audio::AudioState::new(sink));
@@ -140,12 +168,12 @@ pub fn run() {
             let app_handle = app.handle().clone();
             tauri::async_runtime::spawn(async move {
                 if let Ok(model_id) = model_manager::get_active_model_id(app_handle.clone()) {
-                    let state = app_handle.state::<TranscriptionState>();
+                    let state = app_handle.state::<DictationState>();
                     let _ = state.manager.prewarm(&app_handle, &model_id).await;
                 }
             });
 
-            // Sidecar-based transcription does not need to preload models here.
+            // Sidecar-based dictation does not need to preload models here.
 
             // Setup system tray
             let tray_manager = modules::tray::TrayManager::new();
@@ -164,6 +192,15 @@ pub fn run() {
 
             // Setup custom updater configuration
             modules::updater::setup_updater(app)?;
+
+            // Start global mouse stream for gecko bar click-through handling
+            {
+                let app_handle = app.handle().clone();
+                // spawn to avoid blocking setup; rdev listener runs in its own thread
+                tauri::async_runtime::spawn(async move {
+                    modules::mouse_hook::start_global_mouse_stream_for_gecko_bar(app_handle);
+                });
+            }
 
             Ok(())
         })

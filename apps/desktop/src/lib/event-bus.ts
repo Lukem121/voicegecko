@@ -23,9 +23,9 @@ type EventMap = {
   'recording:stopped': undefined;
   'recording:error': Error;
 
-  // Transcription events
-  'transcription:complete': { text: string };
-  'transcription:error': Error;
+  // Dictation events
+  'dictation:complete': { text: string };
+  'dictation:error': Error;
 };
 
 type EventListener<T> = (data: T) => void;

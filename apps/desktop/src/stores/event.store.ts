@@ -5,9 +5,9 @@ import { devtools } from 'zustand/middleware';
 
 import { isNetworkError } from '~/hooks/auth';
 import analytics from '~/lib/analytics/posthog-analytics';
+import { createDictation } from '~/lib/dictation-mutations';
 import { showNoInternetNotification } from '~/lib/gecko-bar-notifications';
-import { createTranscription } from '~/lib/transcription-mutations';
-import { transcriptionService } from '~/services/transcription.service';
+import { dictationService } from '~/services/dictation.service';
 import { useConnectivityStore } from '~/stores/connectivity.store';
 
 export type EventState = {
@@ -15,8 +15,8 @@ export type EventState = {
   recordingStatus: 'idle' | 'recording' | 'processing' | 'error';
   recordingError: string | null;
 
-  // Transcription state
-  transcriptionStatus:
+  // Dictation state
+  dictationStatus:
     | 'idle'
     | 'starting'
     | 'loading_model'
@@ -24,8 +24,8 @@ export type EventState = {
     | 'complete'
     | 'error';
   transcript: string | null;
-  transcriptionError: string | null;
-  transcriptionMetadata: {
+  dictationError: string | null;
+  dictationMetadata: {
     duration_seconds?: number;
     model_used?: string;
     sample_rate?: number;
@@ -36,7 +36,7 @@ export type EventState = {
     status: 'idle' | 'recording' | 'processing' | 'error'
   ) => void;
   setRecordingError: (error: string) => void;
-  setTranscriptionProgress: (
+  setDictationProgress: (
     status: string,
     data?: string,
     metadata?: {
@@ -45,7 +45,7 @@ export type EventState = {
       sample_rate?: number;
     }
   ) => void;
-  handleTranscriptionComplete: (
+  handleDictationComplete: (
     transcript: string,
     metadata?: {
       duration_seconds?: number;
@@ -55,7 +55,7 @@ export type EventState = {
   ) => Promise<void>;
 
   // Reset functions
-  resetTranscriptionState: () => void;
+  resetDictationState: () => void;
 
   // Selectors (computed values)
   isRecording: () => boolean;
@@ -68,10 +68,10 @@ export const useEventStore = create<EventState>()(
       // Initial state
       recordingStatus: 'idle',
       recordingError: null,
-      transcriptionStatus: 'idle',
+      dictationStatus: 'idle',
       transcript: null,
-      transcriptionError: null,
-      transcriptionMetadata: null,
+      dictationError: null,
+      dictationMetadata: null,
 
       // Recording actions
       setRecordingStatus: (status) => {
@@ -89,13 +89,13 @@ export const useEventStore = create<EventState>()(
           set({ recordingError: null });
         }
 
-        // Reset transcription state when starting a new recording
+        // Reset dictation state when starting a new recording
         if (status === 'recording') {
           set({
-            transcriptionStatus: 'idle',
+            dictationStatus: 'idle',
             transcript: null,
-            transcriptionError: null,
-            transcriptionMetadata: null,
+            dictationError: null,
+            dictationMetadata: null,
           });
         }
       },
@@ -108,41 +108,36 @@ export const useEventStore = create<EventState>()(
         });
       },
 
-      // Transcription actions
-      setTranscriptionProgress: (status, data, metadata) => {
-        log.info(
-          '[EventStore] Transcription progress:',
-          status,
-          data,
-          metadata
-        );
+      // Dictation actions
+      setDictationProgress: (status, data, metadata) => {
+        log.info('[EventStore] Dictation progress:', status, data, metadata);
 
         switch (status) {
           case 'Starting':
-            set({ transcriptionStatus: 'starting' });
+            set({ dictationStatus: 'starting' });
             break;
           case 'LoadingModel':
-            set({ transcriptionStatus: 'loading_model' });
+            set({ dictationStatus: 'loading_model' });
             break;
           case 'Transcribing':
-            set({ transcriptionStatus: 'transcribing' });
+            set({ dictationStatus: 'transcribing' });
             break;
           case 'Complete':
             set({
-              transcriptionStatus: 'complete',
+              dictationStatus: 'complete',
               transcript: data ?? null,
-              transcriptionError: null,
-              transcriptionMetadata: metadata ?? null,
-              // Also set recording status to idle when transcription completes
+              dictationError: null,
+              dictationMetadata: metadata ?? null,
+              // Also set recording status to idle when dictation completes
               recordingStatus: 'idle',
             });
             break;
           case 'Error':
             set({
-              transcriptionStatus: 'error',
+              dictationStatus: 'error',
               transcript: null,
-              transcriptionError: data ?? 'Unknown error',
-              transcriptionMetadata: null,
+              dictationError: data ?? 'Unknown error',
+              dictationMetadata: null,
               // Also set recording status to idle on error
               recordingStatus: 'idle',
             });
@@ -152,9 +147,9 @@ export const useEventStore = create<EventState>()(
         }
       },
 
-      handleTranscriptionComplete: async (transcript: string, metadata) => {
+      handleDictationComplete: async (transcript: string, metadata) => {
         log.info(
-          '[EventStore] 🔊 handleTranscriptionComplete called (main window only)',
+          '[EventStore] 🔊 handleDictationComplete called (main window only)',
           {
             transcript: transcript.substring(0, 50),
             windowLabel:
@@ -162,24 +157,24 @@ export const useEventStore = create<EventState>()(
           }
         );
 
-        // 1. Check API connectivity first - block transcription if API is down
+        // 1. Check API connectivity first - block dictation if API is down
         const connectivityState = useConnectivityStore.getState();
 
-        if (!connectivityState.canSaveTranscriptions) {
+        if (!connectivityState.canSaveDictations) {
           // Show gecko bar notification
           await showNoInternetNotification();
 
           // Show toast notification
           toast.error('No internet connection', {
             description:
-              'Unable to save transcription. Please check your connection and try again.',
+              'Unable to save dictation. Please check your connection and try again.',
           });
 
           // Exit early - no save, no clipboard copy
           return;
         }
 
-        // 2. Prepare transcription data
+        // 2. Prepare dictation data
 
         const status: 'silent' | 'normal' =
           !transcript.trim() ||
@@ -188,7 +183,7 @@ export const useEventStore = create<EventState>()(
             : 'normal';
         const content = status === 'silent' ? 'Audio is silent.' : transcript;
 
-        const transcriptionData = {
+        const dictationData = {
           content,
           status,
           durationSeconds:
@@ -205,15 +200,15 @@ export const useEventStore = create<EventState>()(
         // 3. Immediate user feedback (fast local operations)
         try {
           // Copy to clipboard and play sound immediately (local operations)
-          await transcriptionService.handleCompletedTranscription(transcript);
-          await transcriptionService.playEndSoundIfEnabled();
+          await dictationService.handleCompletedDictation(transcript);
+          await dictationService.playEndSoundIfEnabled();
         } catch (error) {
           log.error('[EventStore] Failed user feedback operations:', error);
           // Even if clipboard/sound fails, still proceed with background save
         }
 
         // 4. Background database save (don't block user)
-        createTranscription(transcriptionData)
+        createDictation(dictationData)
           .then(() => {
             // Database save successful - silent success
           })
@@ -225,17 +220,17 @@ export const useEventStore = create<EventState>()(
             ) {
               // Track usage limit exceeded
               analytics.track('usage_limit_exceeded', {
-                limit_type: 'transcription',
-                attempted_action: 'save_transcription',
+                limit_type: 'dictation',
+                attempted_action: 'save_dictation',
               });
 
               // Usage limit error - show notification but don't disrupt user
               toast.error('Weekly usage limit reached', {
                 description:
-                  'Future transcriptions may be limited. Upgrade to Pro for unlimited access.',
+                  'Future dictations may be limited. Upgrade to Pro for unlimited access.',
               });
             } else if (isNetworkError(error)) {
-              // Network connectivity error - refresh connectivity state for next transcription
+              // Network connectivity error - refresh connectivity state for next dictation
               connectivityState.checkConnectivity();
             } else {
               // Other unexpected errors - log but don't disrupt user
@@ -243,24 +238,24 @@ export const useEventStore = create<EventState>()(
             }
           });
 
-        // Recording status is now set to idle in setTranscriptionProgress when Complete status is received
+        // Recording status is now set to idle in setDictationProgress when Complete status is received
       },
 
       // Reset functions
-      resetTranscriptionState: () => {
-        log.info('[EventStore] 🔄 Resetting transcription state');
+      resetDictationState: () => {
+        log.info('[EventStore] 🔄 Resetting dictation state');
         set({
-          transcriptionStatus: 'idle',
+          dictationStatus: 'idle',
           transcript: null,
-          transcriptionError: null,
-          transcriptionMetadata: null,
+          dictationError: null,
+          dictationMetadata: null,
         });
       },
 
       // Selectors
       isRecording: () => get().recordingStatus === 'recording',
       isTranscribing: () => {
-        const status = get().transcriptionStatus;
+        const status = get().dictationStatus;
         return status === 'loading_model' || status === 'transcribing';
       },
     }),

@@ -398,8 +398,8 @@ function SettingsPage() {
               <div className="space-y-0.5">
                 <Label>Auto-paste on completion</Label>
                 <p className="text-muted-foreground text-sm">
-                  Automatically paste transcriptions into the active text field
-                  when transcription completes
+                  Automatically paste dictations into the active text field when
+                  dictation completes
                 </p>
               </div>
               <Switch

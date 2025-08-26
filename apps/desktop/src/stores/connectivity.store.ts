@@ -11,7 +11,7 @@ interface ConnectivityStore extends ConnectivityState {
   // Computed values
   hasConnectivityIssue: boolean;
   isApiUnavailable: boolean;
-  canSaveTranscriptions: boolean;
+  canSaveDictations: boolean;
 }
 
 /**
@@ -28,8 +28,8 @@ export const useConnectivityStore = create<ConnectivityStore>((set, _get) => {
       ...newState,
       hasConnectivityIssue: newState.diagnosis !== 'healthy',
       isApiUnavailable: newState.diagnosis === 'api_down',
-      // Only allow transcriptions when we know API is healthy
-      canSaveTranscriptions: newState.diagnosis === 'healthy',
+      // Only allow dictations when we know API is healthy
+      canSaveDictations: newState.diagnosis === 'healthy',
     });
   });
 
@@ -40,8 +40,8 @@ export const useConnectivityStore = create<ConnectivityStore>((set, _get) => {
     // Computed values
     hasConnectivityIssue: initialState.diagnosis !== 'healthy',
     isApiUnavailable: initialState.diagnosis === 'api_down',
-    // Only allow transcriptions when we know API is healthy
-    canSaveTranscriptions: initialState.diagnosis === 'healthy',
+    // Only allow dictations when we know API is healthy
+    canSaveDictations: initialState.diagnosis === 'healthy',
 
     // Actions
     activateMonitoring: () => {

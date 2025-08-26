@@ -6,7 +6,8 @@ import { authClient } from '~/lib/client';
 import '@acme/ui/globals.css';
 import '~/styles/fonts.css';
 
-import { useBetterAuthTauri } from '@daveyplate/better-auth-tauri/react';
+import type { FetchError } from '@acme/auth/tauri';
+import { useBetterAuthTauri } from '@acme/auth/tauri';
 import { createRouter, RouterProvider } from '@tanstack/react-router';
 import ReactDOM from 'react-dom/client';
 
@@ -15,6 +16,7 @@ import { FullscreenDetector } from '~/components/fullscreen-detector';
 import { GeckoBarWindow } from '~/components/gecko-bar-window';
 import { useAuthWithConnectivity } from '~/hooks/use-auth-with-connectivity';
 import { appLifecycle } from '~/lib/app-lifecycle';
+import { setNavigator } from '~/lib/router';
 import { isGeckoBarWindow } from '~/lib/window-detection';
 import { routeTree } from '~/routeTree.gen';
 import { useSettingsStore } from '~/stores/settings.store';
@@ -23,6 +25,7 @@ import { useSession } from './hooks/auth';
 import { analytics, useAnalyticsInit } from './lib/analytics/posthog-analytics';
 import PostHogProvider from './lib/posthog/posthog-provider';
 import { ThemeProvider } from './providers/theme';
+import { useAuthStore } from './stores/auth.store';
 
 // Create a new router instance
 const router = createRouter({
@@ -35,6 +38,9 @@ const router = createRouter({
     },
   },
 });
+
+// Expose navigation for non-React modules (e.g., network layer)
+setNavigator((opts) => router.navigate(opts as never));
 
 // Register the router instance for type safety
 declare module '@tanstack/react-router' {
@@ -54,7 +60,7 @@ function InnerApp() {
 
   // Track user identification and authentication state changes
   useEffect(() => {
-    if (session?.user && auth.isAuthenticated) {
+    if (session?.user) {
       // Identify user with PostHog
       analytics.identify(session.user.id, {
         email: session.user.email,
@@ -81,39 +87,47 @@ function InnerApp() {
     authClient,
     scheme: 'voicegecko',
     debugLogs: true,
-    onRequest: (href) => {
+    onRequest: (href: string) => {
       log.info('🔄 Auth request:', href);
     },
-    onSuccess: (callbackURL) => {
+    onSuccess: (callbackURL?: string | null) => {
       log.info('✅ Auth successful, callback URL:', callbackURL);
-
-      // Refetch session and wait for auth state to update
+      // Clear any prior auth error
+      try {
+        useAuthStore.getState().setError(null);
+      } catch (e) {
+        log.error('[Auth] Failed to clear auth error in store', e);
+      }
       query
         .refetch()
-        .then(() => {
-          // Give a small delay to ensure auth context updates
-          setTimeout(() => {
-            const targetUrl = callbackURL || '/';
-            log.info('🔄 Navigating to:', targetUrl);
-            router.navigate({ to: targetUrl }).catch((error) => {
-              log.error('Navigation failed:', error);
-              // Fallback: force page refresh to reset state if navigation fails
-              log.info('🔄 Fallback: forcing page refresh');
-              window.location.href = targetUrl;
-            });
-          }, 200);
-        })
-        .catch((error) => {
-          log.error('Session refetch failed:', error);
-          // Still try to navigate even if refetch fails
-          const targetUrl = callbackURL || '/';
-          router.navigate({ to: targetUrl }).catch(() => {
-            window.location.href = targetUrl;
-          });
-        });
+        .catch((e) =>
+          log.error('[Auth] Failed to refetch session after success', e)
+        );
+      router
+        .invalidate()
+        .catch((e) =>
+          log.error('[Auth] Failed to invalidate router after success', e)
+        );
+      // Proactively navigate to the desired page to avoid getting stuck on sign-in
+      const target = callbackURL?.startsWith('/') ? callbackURL : '/';
+      router
+        .navigate({ to: target })
+        .catch((e) => log.error('[Auth] Navigate after success failed', e));
     },
-    onError: (error) => {
+    onError: (error: FetchError) => {
       log.error('❌ Auth error:', error);
+      // Surface auth errors (including rate limits) to the UI
+      const message = (
+        error.message ??
+        error.statusText ??
+        'Authentication failed'
+      ).trim();
+      try {
+        useAuthStore.getState().setError(message);
+      } catch (e) {
+        // Non-fatal
+        log.error('[Auth] Failed to set auth error in store', e);
+      }
     },
   });
 

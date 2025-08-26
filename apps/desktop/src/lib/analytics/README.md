@@ -20,7 +20,7 @@ import { analytics } from "~/lib/analytics/posthog-analytics";
 analytics.track("user_signed_in", { method: "email" });
 
 // Track feature first use
-analytics.trackFeatureFirstUse("transcription_search");
+analytics.trackFeatureFirstUse("dictation_search");
 
 // Identify users
 analytics.identify(userId, { email: user.email });
@@ -33,7 +33,7 @@ The analytics service provides:
 - **Type-Safe Events**: Full TypeScript coverage for all event types
 - **Privacy Controls**: Respects user privacy settings
 - **Event Queuing**: Handles initialization timing gracefully
-- **Specialized Trackers**: For complex workflows (recordings, transcriptions)
+- **Specialized Trackers**: For complex workflows (recordings, dictations)
 
 ## 📊 Event Categories
 
@@ -42,7 +42,7 @@ We track 40+ events across 10 categories:
 - User Lifecycle (sign-up, sign-in, etc.)
 - Onboarding Flow
 - Recording Sessions
-- Transcription Processing
+- Dictation Processing
 - Dictionary Management
 - Navigation Patterns
 - Settings Changes

@@ -17,7 +17,6 @@ import { SOURCES } from '~/lib/gtm/constants';
 import { POSTHOG_SOURCES } from '~/lib/posthog/constants';
 import { useCurrency } from '~/providers/currency';
 import { useTRPC } from '~/trpc/react';
-import { useCreateBillingPortalSession } from '../../_hooks/use-create-billing-portal-session';
 import { AlertBanner } from './alert-banner';
 import { BillingToggle } from './billing-toggle';
 import { type Plan, PlanCard } from './plan-card';
@@ -48,7 +47,6 @@ type AlertState = {
 
 export default function Plans({ prices, subscription, error }: PlansProps) {
   const router = useRouter();
-  const createBillingPortalSessionMutation = useCreateBillingPortalSession();
   const [billingPeriod, setBillingPeriod] = useState<BillingPeriod>('annual');
   const { currency } = useCurrency();
   const { trackEvent } = useGTM();
@@ -138,7 +136,7 @@ export default function Plans({ prices, subscription, error }: PlansProps) {
       ),
       subtitle: 'All of our features',
       features: [
-        'Unlimited transcriptions',
+        'Unlimited dictations',
         'Advanced AI processing',
         'Export formats',
         'Priority support',
@@ -150,13 +148,8 @@ export default function Plans({ prices, subscription, error }: PlansProps) {
     },
   ];
 
-  const handleFreePlanWithSubscription = async () => {
-    const result = await createBillingPortalSessionMutation.mutateAsync({
-      returnUrl: '/app/plans',
-    });
-    if (result.url) {
-      router.push(result.url);
-    }
+  const handleFreePlanWithSubscription = () => {
+    router.push('/download');
   };
 
   const handlePaidPlan = async (plan: Plan) => {

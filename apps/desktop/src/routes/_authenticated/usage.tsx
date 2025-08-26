@@ -44,7 +44,7 @@ function UsagePage() {
 
       if (!stats.current.isUnlimited && usagePercentage >= 80) {
         analytics.track('usage_limit_approached', {
-          limit_type: 'transcription',
+          limit_type: 'dictation',
           current_usage: stats.current.wordsUsed,
           limit_value: stats.current.wordsLimit,
           percentage_used: usagePercentage,
@@ -64,15 +64,15 @@ function UsagePage() {
         : stats.current.wordsUsed,
       limit: stats.current.isUnlimited ? 'Unlimited' : stats.current.wordsLimit,
     },
-    transcriptions: {
+    dictations: {
       used: stats.current.isUnlimited
-        ? stats.monthly.transcriptions
-        : stats.current.transcriptionCount,
+        ? stats.monthly.dictations
+        : stats.current.dictationCount,
       limit: stats.current.isUnlimited ? 'Unlimited' : 'this week',
     },
     wordsProcessed: stats.monthly.words,
     timeSaved: stats.monthly.timeSaved,
-    totalTranscriptions: stats.total.transcriptions,
+    totalDictations: stats.total.dictations,
   };
 
   const usageStats = [
@@ -87,12 +87,10 @@ function UsagePage() {
       trend: '',
     },
     {
-      label: 'Avg. Words per Transcription',
+      label: 'Avg. Words per Dictation',
       value:
-        stats.total.transcriptions > 0
-          ? Math.round(
-              stats.total.words / stats.total.transcriptions
-            ).toString()
+        stats.total.dictations > 0
+          ? Math.round(stats.total.words / stats.total.dictations).toString()
           : '0',
       trend: '',
     },
@@ -109,7 +107,7 @@ function UsagePage() {
         <div className="flex-1">
           <h2 className="font-semibold text-2xl">Usage</h2>
           <p className="text-muted-foreground text-sm">
-            Track your transcription usage and performance metrics
+            Track your dictation usage and performance metrics
           </p>
         </div>
       </div>
@@ -169,17 +167,17 @@ function UsagePage() {
           <CardHeader className="pb-3">
             <CardTitle className="flex items-center gap-2 font-medium text-muted-foreground text-sm">
               <FileText className="h-4 w-4" />
-              Transcriptions
+              Dictations
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="font-bold text-2xl">
-              {currentPeriod.transcriptions.used}
+              {currentPeriod.dictations.used}
             </div>
             <p className="mt-1 text-muted-foreground text-xs">
               {stats.current.isUnlimited
                 ? 'this month'
-                : currentPeriod.transcriptions.limit}
+                : currentPeriod.dictations.limit}
             </p>
           </CardContent>
         </Card>
@@ -299,13 +297,13 @@ function UsagePageSkeleton() {
         <div className="flex-1">
           <h2 className="font-semibold text-2xl">Usage</h2>
           <p className="text-muted-foreground text-sm">
-            Track your transcription usage and performance metrics
+            Track your dictation usage and performance metrics
           </p>
         </div>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {['transcriptions', 'words', 'time', 'total'].map((type) => (
+        {['dictations', 'words', 'time', 'total'].map((type) => (
           <Card key={`overview-${type}`}>
             <CardHeader className="pb-3">
               <Skeleton className="h-4 w-24" />

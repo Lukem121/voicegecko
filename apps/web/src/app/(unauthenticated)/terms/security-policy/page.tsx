@@ -125,16 +125,15 @@ export default function SecurityPolicyPage() {
             </p>
             <p>
               <strong>What we process.</strong> Voice Gecko converts
-              user-provided audio into text. By design, we store text
-              transcriptions and related metadata (for example: timestamps,
-              language, and account identifiers). We do not store raw audio
-              unless explicitly agreed for a support case or a
-              customer-requested feature.
+              user-provided audio into text. By design, we store text dictations
+              and related metadata (for example: timestamps, language, and
+              account identifiers). We do not store raw audio unless explicitly
+              agreed for a support case or a customer-requested feature.
             </p>
             <p>
               <strong>GDPR.</strong> As a UK company, we comply with the UK GDPR
               and the Data Protection Act 2018. For most features, Voice Gecko
-              acts as a processor of customer transcription content and as a
+              acts as a processor of customer dictation content and as a
               controller for account administration data (billing, login,
               support).
             </p>
@@ -345,7 +344,7 @@ export default function SecurityPolicyPage() {
             <h3>7.1 Data Types</h3>
             <ul>
               <li>
-                <strong>Customer Content (Transcriptions).</strong> Text derived
+                <strong>Customer Content (Dictations).</strong> Text derived
                 from user-submitted audio and related metadata. May include
                 personal data depending on what users submit.
               </li>
@@ -370,8 +369,8 @@ export default function SecurityPolicyPage() {
             </ul>
             <h3>7.3 Customer Controls</h3>
             <p>
-              Customers can request export or deletion of transcriptions and
-              account data (subject to legal retention requirements). Contact:
+              Customers can request export or deletion of dictations and account
+              data (subject to legal retention requirements). Contact:
               privacy@voicegecko.com.
             </p>
             <p>
@@ -382,7 +381,7 @@ export default function SecurityPolicyPage() {
             <h3>7.4 Retention</h3>
             <ul>
               <li>
-                Transcriptions are retained for as long as the customer account
+                Dictations are retained for as long as the customer account
                 remains active or until the customer deletes them.
               </li>
               <li>
@@ -595,7 +594,7 @@ export default function SecurityPolicyPage() {
             <h2>Optional Appendix A — Data Classification (concise)</h2>
             <ul>
               <li>
-                <strong>Customer Content (Transcriptions):</strong> Highest
+                <strong>Customer Content (Dictations):</strong> Highest
                 protection. Encrypted at rest and in transit. Access strictly
                 limited and logged.
               </li>

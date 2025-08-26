@@ -118,14 +118,14 @@ Our analytics system tracks 10 major categories of events:
 - `recording_cancelled` - User cancels recording
 - `recording_error` - Recording failure
 
-#### 4. **Transcription Events**
+#### 4. **Dictation Events**
 
-- `transcription_started` - Transcription processing begins
-- `transcription_completed` - Transcription success
-- `transcription_failed` - Transcription error
-- `transcription_copied` - User copies transcription
-- `transcription_deleted` - User deletes transcription
-- `transcription_searched` - User searches transcriptions
+- `dictation_started` - Dictation processing begins
+- `dictation_completed` - Dictation success
+- `dictation_failed` - Dictation error
+- `dictation_copied` - User copies dictation
+- `dictation_deleted` - User deletes dictation
+- `dictation_searched` - User searches dictations
 
 #### 5. **Dictionary Events**
 
@@ -143,7 +143,7 @@ Our analytics system tracks 10 major categories of events:
 
 - `settings_changed` - Any setting modification
 - `audio_device_changed` - Audio device selection
-- `model_tier_changed` - Transcription model change
+- `model_tier_changed` - Dictation model change
 - `notification_sound_tested` - Sound test playback
 
 #### 8. **Gecko Bar Events**
@@ -184,11 +184,11 @@ import { analytics } from "~/lib/analytics/posthog-analytics";
 // Simple event tracking
 analytics.track("user_signed_in", {
   method: "email",
-  returning_user: true
+  returning_user: true,
 });
 
 // Feature first-use tracking
-analytics.trackFeatureFirstUse("transcription_search");
+analytics.trackFeatureFirstUse("dictation_search");
 
 // User identification
 analytics.identify(userId, {
@@ -209,11 +209,11 @@ recorder.trackStarted();
 // ... recording process
 recorder.trackCompleted(duration);
 
-// Transcription tracking
-const transcription = new TranscriptionTracker("cloud", audioDuration, "whisper-1");
-transcription.trackStarted();
-// ... transcription process
-transcription.trackCompleted(transcript, isSilent);
+// Dictation tracking
+const dictation = new DictationTracker("cloud", audioDuration, "whisper-1");
+dictation.trackStarted();
+// ... dictation process
+dictation.trackCompleted(transcript, isSilent);
 ```
 
 ### Settings Integration
@@ -226,7 +226,7 @@ analytics.track("settings_changed", {
   category: "audio",
   setting_key: "selectedDevice",
   old_value: oldDevice?.name,
-  new_value: newDevice?.name
+  new_value: newDevice?.name,
 });
 ```
 
@@ -239,7 +239,7 @@ analytics.track("error_occurred", {
   error_type: "connectivity_issue",
   error_message: error.message,
   component: "ConnectivityManager",
-  user_action: "connectivity_check"
+  user_action: "connectivity_check",
 });
 ```
 
@@ -329,7 +329,7 @@ type AllEvents = UserLifecycleEvents &
 ```typescript
 analytics.track("new_feature_used", {
   feature_name: "awesome_feature",
-  context: "main_ui"
+  context: "main_ui",
 });
 ```
 
@@ -349,7 +349,7 @@ export class NewWorkflowTracker {
     const duration = (Date.now() - this.startTime) / 1000;
     analytics.track("workflow_completed", {
       workflow_type: this.workflowType,
-      duration_seconds: duration
+      duration_seconds: duration,
     });
   }
 }

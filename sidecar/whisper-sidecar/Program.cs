@@ -74,6 +74,13 @@ if (isServerMode)
     {
         Console.Error.WriteLine($"[Sidecar] Starting server mode: model={modelPath} lang={lang} threads={Environment.ProcessorCount}");
 
+        // Prepare IPC streams early so we can emit JSON errors if startup fails
+        var stdin = Console.OpenStandardInput();
+        var stdout = Console.OpenStandardOutput();
+        var stdinReader = new StreamReader(stdin);
+        var utf8NoBom = new System.Text.UTF8Encoding(false); // No BOM
+        var stdoutWriter = new StreamWriter(stdout, utf8NoBom, bufferSize: 1) { AutoFlush = true };
+
         // Load model once
         var tModel = Stopwatch.StartNew();
         using var factory = WhisperFactory.FromPath(modelPath!);
@@ -92,14 +99,12 @@ if (isServerMode)
         tBuild.Stop();
         Console.Error.WriteLine($"[Sidecar] Processor built in server mode: {tBuild.Elapsed}");
 
+        // Handshake: tell the client we are ready
+        await stdoutWriter.WriteLineAsync("{\"ready\":true}");
+        await stdoutWriter.FlushAsync();
+        stdout.Flush();
+
         Console.Error.WriteLine("[Sidecar] Server ready, waiting for requests...");
-
-        var stdin = Console.OpenStandardInput();
-        var stdout = Console.OpenStandardOutput();
-
-        var stdinReader = new StreamReader(stdin);
-        var utf8NoBom = new System.Text.UTF8Encoding(false); // No BOM
-        var stdoutWriter = new StreamWriter(stdout, utf8NoBom, bufferSize: 1) { AutoFlush = true };
 
         while (true)
         {
@@ -183,6 +188,15 @@ if (isServerMode)
             catch (Exception ex)
             {
                 Console.Error.WriteLine($"[Sidecar] Request processing error: {ex}");
+                // Also emit a structured error over stdout so the client does not block
+                try
+                {
+                    var errJson = JsonSerializer.Serialize(new { error = ex.Message });
+                    await stdoutWriter.WriteLineAsync(errJson);
+                    await stdoutWriter.FlushAsync();
+                    stdout.Flush();
+                }
+                catch { /* ignore secondary errors */ }
                 // Continue processing other requests
             }
         }
@@ -193,6 +207,17 @@ if (isServerMode)
     catch (Exception ex)
     {
         Console.Error.WriteLine($"[Sidecar] Server mode error: {ex}");
+        // Emit one-line JSON so the client can surface the failure gracefully
+        try
+        {
+            var stdout = Console.OpenStandardOutput();
+            var utf8NoBom = new System.Text.UTF8Encoding(false);
+            using var stdoutWriter = new StreamWriter(stdout, utf8NoBom, bufferSize: 1) { AutoFlush = true };
+            var errJson = JsonSerializer.Serialize(new { error = $"Server startup error: {ex.Message}" });
+            stdoutWriter.WriteLine(errJson);
+            stdout.Flush();
+        }
+        catch { /* ignore secondary errors */ }
         return 1;
     }
 }

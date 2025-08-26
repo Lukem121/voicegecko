@@ -1,6 +1,6 @@
 [package]
 name = "desktop"
-version = "0.0.20"
+version = "0.0.21"
 description = "A Tauri App"
 authors = ["you"]
 edition = "2021"
@@ -48,6 +48,8 @@ num-complex = "0.4"
 nnnoiseless = "0.5"
 sysinfo = "0.32"
 enigo = "0.2"
+rdev = "0.5.3"
+chrono = { version = "0.4", default-features = false, features = ["clock"] }
 
 
 [target."cfg(not(any(target_os = \"android\", target_os = \"ios\")))".dependencies]

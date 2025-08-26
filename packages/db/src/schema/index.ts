@@ -2,6 +2,6 @@
 /** biome-ignore-all lint/performance/noBarrelFile: Need a barrel file for the schemas */
 
 export * from './tables/auth.db';
+export * from './tables/dictation.db';
 export * from './tables/dictionary.db';
-export * from './tables/transcription.db';
 export * from './tables/usage.db';

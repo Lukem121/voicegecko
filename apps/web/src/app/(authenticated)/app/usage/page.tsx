@@ -43,10 +43,10 @@ export default async function UsagePage() {
         : stats.current.wordsUsed,
       limit: stats.current.isUnlimited ? 'Unlimited' : stats.current.wordsLimit,
     },
-    transcriptions: {
+    dictations: {
       used: stats.current.isUnlimited
-        ? stats.monthly.transcriptions
-        : stats.current.transcriptionCount,
+        ? stats.monthly.dictations
+        : stats.current.dictationCount,
       limit: stats.current.isUnlimited ? 'Unlimited' : 'this week',
     },
     wordsProcessed: stats.monthly.words,
@@ -65,12 +65,10 @@ export default async function UsagePage() {
       trend: '',
     },
     {
-      label: 'Avg. Words per Transcription',
+      label: 'Avg. Words per Dictation',
       value:
-        stats.total.transcriptions > 0
-          ? Math.round(
-              stats.total.words / stats.total.transcriptions
-            ).toString()
+        stats.total.dictations > 0
+          ? Math.round(stats.total.words / stats.total.dictations).toString()
           : '0',
       trend: '',
     },
@@ -86,7 +84,7 @@ export default async function UsagePage() {
       <div className="mb-8">
         <h1 className="mb-2 font-semibold text-2xl tracking-tight">Usage</h1>
         <p className="text-muted-foreground">
-          Track your transcription usage and performance metrics
+          Track your dictation usage and performance metrics
         </p>
       </div>
 
@@ -167,16 +165,16 @@ export default async function UsagePage() {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2 text-muted-foreground text-sm">
                   <FileText className="h-4 w-4" />
-                  <span>Transcriptions</span>
+                  <span>Dictations</span>
                 </div>
                 <div className="text-right">
                   <div className="font-bold text-lg">
-                    {currentPeriod.transcriptions.used}
+                    {currentPeriod.dictations.used}
                   </div>
                   <p className="text-muted-foreground text-xs">
                     {stats.current.isUnlimited
                       ? 'this month'
-                      : currentPeriod.transcriptions.limit}
+                      : currentPeriod.dictations.limit}
                   </p>
                 </div>
               </div>
@@ -246,17 +244,17 @@ export default async function UsagePage() {
             <CardHeader className="pb-3">
               <CardTitle className="flex items-center gap-2 font-medium text-muted-foreground text-sm">
                 <FileText className="h-4 w-4" />
-                Transcriptions
+                Dictations
               </CardTitle>
             </CardHeader>
             <CardContent>
               <div className="font-bold text-2xl">
-                {currentPeriod.transcriptions.used}
+                {currentPeriod.dictations.used}
               </div>
               <p className="mt-1 text-muted-foreground text-xs">
                 {stats.current.isUnlimited
                   ? 'this month'
-                  : currentPeriod.transcriptions.limit}
+                  : currentPeriod.dictations.limit}
               </p>
             </CardContent>
           </Card>

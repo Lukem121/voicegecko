@@ -27,15 +27,15 @@ export const DEFAULT_SHORTCUTS: ShortcutCategory[] = [
     name: 'Navigation',
     shortcuts: [
       {
-        id: 'open-last-transcription',
-        name: 'Open most recent transcription',
+        id: 'open-last-dictation',
+        name: 'Open most recent dictation',
         keys: ['CommandOrControl', 'Shift', 'L'],
         global: true,
         enabled: true,
       },
       {
-        id: 'paste-last-transcription',
-        name: 'Paste last transcription into active text field',
+        id: 'paste-last-dictation',
+        name: 'Paste last dictation into active text field',
         keys: ['CommandOrControl', 'Shift', 'V'],
         global: true,
         enabled: true,

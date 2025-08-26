@@ -35,8 +35,8 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    site: '@voicegecko',
-    creator: '@voicegecko',
+    site: '@VoiceGeckoAI',
+    creator: '@VoiceGeckoAI',
     title: 'VoiceGecko | Instant Voice-to-Text for Desktop',
     description:
       'Instant voice-to-text dictation for desktop. Press a shortcut, speak, and instantly get accurate text on your clipboard—perfect for emails, coding, AI prompts, or brain dumps.',

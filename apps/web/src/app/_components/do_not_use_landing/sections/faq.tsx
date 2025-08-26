@@ -26,7 +26,7 @@ export default function FaqSection() {
           </AccordionItem>
           <AccordionItem value="speed">
             <AccordionTrigger className="font-semibold text-foreground text-sm">
-              How fast is transcription?
+              How fast is dictation?
             </AccordionTrigger>
             <AccordionContent className="text-muted-foreground text-sm">
               Most recordings are transcribed in 1–2 seconds.
@@ -37,7 +37,7 @@ export default function FaqSection() {
               Do you support multiple languages or offline mode?
             </AccordionTrigger>
             <AccordionContent className="text-muted-foreground text-sm">
-              Not yet. Today we focus on fast, reliable English transcription.
+              Not yet. Today we focus on fast, reliable English dictation.
             </AccordionContent>
           </AccordionItem>
 

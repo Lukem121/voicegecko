@@ -1,16 +1,16 @@
 # VoiceGecko
 
-> Instant voice-to-text transcription for desktop and web
+> Instant voice-to-text dictation for desktop and web
 
 VoiceGecko transforms how you interact with technology through voice. Press a shortcut, speak, and instantly get accurate text on your clipboard—perfect for emails, coding, AI prompts, or brain dumps.
 
 ## What We Do
 
-VoiceGecko provides instant, accurate voice-to-text transcription that works everywhere. Whether you're writing emails, taking notes, or coding, just speak and watch your words appear exactly where you need them.
+VoiceGecko provides instant, accurate voice-to-text dictation that works everywhere. Whether you're writing emails, taking notes, or coding, just speak and watch your words appear exactly where you need them.
 
 **Key Features:**
 
-- 🎯 **Instant Transcription** - Press a shortcut and speak
+- 🎯 **Instant Dictation** - Press a shortcut and speak
 - 📋 **Clipboard Integration** - Text appears directly on your clipboard
 - ⌨️ **Custom Shortcuts** - Personalized hotkeys for quick access
 - 📖 **Smart Dictionary** - Custom words and technical terms

@@ -11,8 +11,8 @@ import { isSafeToCollapse } from '~/components/gecko-bar/gecko-bar-app.utils';
 import { initializeGeckoBarEvents } from '~/lib/gecko-bar-events';
 import { useEventStore } from '~/stores/event.store';
 import type {
+  DictationProgressEvent,
   RecordingStateChangedEvent,
-  TranscriptionProgressEvent,
 } from '~/types/events';
 import { useAudioProcessor } from './use-audio-processor';
 import { useGeckoBarDisplayState } from './use-gecko-bar-display-state';
@@ -91,7 +91,7 @@ export function useGeckoBarState(): UseGeckoBarStateReturn {
     timeoutManager,
   ]);
 
-  // Clear transition state when transcription starts or after timeout
+  // Clear transition state when dictation starts or after timeout
   useEffect(() => {
     if (isTransitioning) {
       if (isTranscribing) {
@@ -124,11 +124,11 @@ export function useGeckoBarState(): UseGeckoBarStateReturn {
           useEventStore.getState().setRecordingStatus(payload);
         });
 
-        // Listen to transcription progress (UI updates only - NO completion handling)
-        await listen('transcription-progress', (event) => {
-          const payload = event.payload as TranscriptionProgressEvent;
+        // Listen to dictation progress (UI updates only - NO completion handling)
+        await listen('dictation-progress', (event) => {
+          const payload = event.payload as DictationProgressEvent;
           log.info(
-            '[GeckoBar] 📝 Transcription progress (UI only):',
+            '[GeckoBar] 📝 Dictation progress (UI only):',
             payload.status
           );
 
@@ -139,17 +139,13 @@ export function useGeckoBarState(): UseGeckoBarStateReturn {
             sample_rate: payload.sample_rate,
           };
 
-          // Only update transcription progress state (NO completion business logic)
-          store.setTranscriptionProgress(
-            payload.status,
-            payload.data,
-            metadata
-          );
+          // Only update dictation progress state (NO completion business logic)
+          store.setDictationProgress(payload.status, payload.data, metadata);
 
           // NO completion handling - main window handles that!
           if (payload.status === 'Complete') {
             log.info(
-              '[GeckoBar] ✅ Transcription complete (UI updated, business logic handled by main window)'
+              '[GeckoBar] ✅ Dictation complete (UI updated, business logic handled by main window)'
             );
           }
         });
