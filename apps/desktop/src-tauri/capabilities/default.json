@@ -18,6 +18,7 @@
     "core:app:allow-default-window-icon",
     "core:window:allow-unminimize",
     "core:window:allow-set-focus",
+    "core:window:allow-set-ignore-cursor-events",
     "deep-link:allow-register",
     "deep-link:allow-get-current",
     "deep-link:allow-is-registered",

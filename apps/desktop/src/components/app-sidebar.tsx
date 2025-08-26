@@ -366,9 +366,8 @@ export function AppSidebar() {
                       className="cursor-pointer"
                       isActive={
                         isInternal &&
-                        (item.url === '/'
-                          ? location.pathname === item.url
-                          : location.pathname.startsWith(item.url))
+                        (location.pathname === item.url ||
+                          location.pathname === `${item.url}/`)
                       }
                       onClick={
                         isInternal

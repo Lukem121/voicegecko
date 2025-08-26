@@ -18,12 +18,14 @@ export function GeckoBarTooltip({
   return (
     <motion.div
       animate={{ opacity: 1, y: 0, scale: 1 }}
-      className="-translate-x-1/2 absolute bottom-full left-1/2 z-[100]"
+      className="-translate-x-1/2 absolute left-1/2 z-[100]"
       exit={{ opacity: 0, y: 10, scale: 0.9 }}
       initial={{ opacity: 0, y: 10, scale: 0.9 }}
       style={{
         minHeight: 'fit-content',
-        transform: 'translateX(-50%) translateY(0)',
+        // Center horizontally, and offset bottom by 8px above the bar
+        transform: 'translateX(-50%)',
+        bottom: 'calc(100% + 8px)',
       }}
       transition={{
         type: 'spring',
