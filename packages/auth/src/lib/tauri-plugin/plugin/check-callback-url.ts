@@ -26,6 +26,11 @@ export function checkCallbackURL({
 
   // If not Tauri user agent then check callbackURL for deep link redirects
   const searchParams = url.searchParams;
+  const isDesktopRequest = searchParams.get('fromDesktop') === '1';
+  if (isDesktopRequest) {
+    // Desktop deep-link flow – don't modify redirect for web
+    return;
+  }
   // If this request originates from our desktop deep-link follow-up, skip redirect
   // to allow the server to process the OAuth code and set cookies.
   if (searchParams.get('fromDesktop') === '1') {
