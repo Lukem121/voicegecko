@@ -110,9 +110,12 @@ function InnerApp() {
         );
       // Proactively navigate to the desired page to avoid getting stuck on sign-in
       const target = callbackURL?.startsWith('/') ? callbackURL : '/';
-      router
-        .navigate({ to: target })
-        .catch((e) => log.error('[Auth] Navigate after success failed', e));
+      // Delay navigation slightly to allow auth state to settle
+      setTimeout(() => {
+        router
+          .navigate({ to: target })
+          .catch((e) => log.error('[Auth] Navigate after success failed', e));
+      }, 200);
     },
     onError: (error: FetchError) => {
       log.error('❌ Auth error:', error);
