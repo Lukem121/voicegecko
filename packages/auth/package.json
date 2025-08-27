@@ -31,6 +31,7 @@
     "@daveyplate/tauri-fetch": "^1.0.4",
     "@t3-oss/env-nextjs": "catalog:",
     "better-auth": "1.3.7",
+    "friendlier-words": "^1.1.3",
     "next": "^15.4.7",
     "react": "catalog:react19",
     "react-dom": "catalog:react19",
