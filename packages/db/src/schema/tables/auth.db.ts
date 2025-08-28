@@ -1,4 +1,5 @@
 import { index, pgEnum, pgTable } from 'drizzle-orm/pg-core';
+import { createdAt, updatedAt } from '../columns/timestamps';
 
 export const UserRoleEnum = pgEnum('user_role', ['admin', 'user']);
 
@@ -8,11 +9,14 @@ export const user = pgTable(
     id: t.text('id').primaryKey(),
     name: t.text('name').notNull(),
     email: t.text('email').notNull().unique(),
-    emailVerified: t.boolean('email_verified').notNull(),
+    emailVerified: t
+      .boolean('email_verified')
+      .$defaultFn(() => false)
+      .notNull(),
     image: t.text('image'),
-    createdAt: t.timestamp('created_at').notNull(),
-    updatedAt: t.timestamp('updated_at').notNull(),
-    username: t.text('username').unique().notNull(),
+    createdAt,
+    updatedAt,
+    username: t.text('username').unique(),
     displayUsername: t.text('display_username'),
     stripeCustomerId: t.text('stripe_customer_id'),
     role: UserRoleEnum().default('user'),
@@ -32,8 +36,14 @@ export const session = pgTable(
     id: t.text('id').primaryKey(),
     expiresAt: t.timestamp('expires_at').notNull(),
     token: t.text('token').notNull().unique(),
-    createdAt: t.timestamp('created_at').notNull(),
-    updatedAt: t.timestamp('updated_at').notNull(),
+    createdAt: t
+      .timestamp('created_at')
+      .$defaultFn(() => new Date())
+      .notNull(),
+    updatedAt: t
+      .timestamp('updated_at')
+      .$defaultFn(() => new Date())
+      .notNull(),
     ipAddress: t.text('ip_address'),
     userAgent: t.text('user_agent'),
     userId: t
@@ -62,8 +72,14 @@ export const account = pgTable(
     refreshTokenExpiresAt: t.timestamp('refresh_token_expires_at'),
     scope: t.text('scope'),
     password: t.text('password'),
-    createdAt: t.timestamp('created_at').notNull(),
-    updatedAt: t.timestamp('updated_at').notNull(),
+    createdAt: t
+      .timestamp('created_at')
+      .$defaultFn(() => new Date())
+      .notNull(),
+    updatedAt: t
+      .timestamp('updated_at')
+      .$defaultFn(() => new Date())
+      .notNull(),
   }),
   (table) => [index().on(table.userId)]
 );
@@ -75,8 +91,8 @@ export const verification = pgTable(
     identifier: t.text('identifier').notNull(),
     value: t.text('value').notNull(),
     expiresAt: t.timestamp('expires_at').notNull(),
-    createdAt: t.timestamp('created_at').notNull(),
-    updatedAt: t.timestamp('updated_at').notNull(),
+    createdAt,
+    updatedAt,
   }),
   (table) => [index().on(table.identifier)]
 );
