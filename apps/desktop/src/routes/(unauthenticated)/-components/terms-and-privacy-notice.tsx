@@ -1,22 +1,28 @@
-import { Link } from '@tanstack/react-router';
+import { openUrl } from '@tauri-apps/plugin-opener';
 
 export default function TermsAndPrivacyNotice() {
   return (
     <p className="px-8 text-center text-muted-foreground text-sm">
       By continuing, you agree to our{' '}
-      <Link
-        className="underline underline-offset-4 hover:text-primary"
-        to="/legal/terms"
+      <button
+        className="cursor-pointer underline underline-offset-4 hover:text-primary"
+        onClick={() =>
+          openUrl('https://www.voicegecko.io/terms/terms-of-service')
+        }
+        type="button"
       >
         Terms of Service
-      </Link>{' '}
+      </button>{' '}
       and{' '}
-      <Link
-        className="underline underline-offset-4 hover:text-primary"
-        to="/legal/privacy"
+      <button
+        className="cursor-pointer underline underline-offset-4 hover:text-primary"
+        onClick={() =>
+          openUrl('https://www.voicegecko.io/terms/privacy-policy')
+        }
+        type="button"
       >
         Privacy Policy
-      </Link>
+      </button>
       .
     </p>
   );

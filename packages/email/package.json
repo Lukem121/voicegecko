@@ -1,6 +1,6 @@
 {
   "name": "@acme/email",
-  "version": "0.0.21",
+  "version": "0.0.22",
   "private": true,
   "type": "module",
   "exports": {
@@ -19,7 +19,7 @@
     "typecheck": "tsc --noEmit --emitDeclarationOnly false"
   },
   "dependencies": {
-    "@react-email/components": "0.5.0",
+    "@react-email/components": "0.5.1",
     "@sendgrid/mail": "^8.1.5",
     "@t3-oss/env-nextjs": "^0.13.8",
     "react": "catalog:react19",
@@ -30,6 +30,7 @@
     "@acme/tsconfig": "workspace:*",
     "@biomejs/biome": "catalog:",
     "@react-email/preview-server": "4.2.8",
+    "@types/node": "^24.3.0",
     "@types/react": "catalog:react19",
     "@types/react-dom": "catalog:react19",
     "react-email": "^4.2.8",

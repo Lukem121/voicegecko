@@ -17,6 +17,7 @@ import {
   username,
 } from 'better-auth/plugins';
 import { authEnv } from '../env';
+import { generateUniqueUsernameFromEmail } from './utils/generate-unique-username';
 import { tauri } from './lib/tauri-plugin/plugin/tauri';
 import { handleAfterHook } from './middleware/handle-after-hook';
 import { handleCreateAfterHook } from './middleware/handle-create-after-hook';
@@ -131,6 +132,15 @@ export const serverAuth = betterAuth({
     google: {
       clientId: authEnv().AUTH_GOOGLE_CLIENT_ID,
       clientSecret: authEnv().AUTH_GOOGLE_CLIENT_SECRET,
+      mapProfileToUser: async (profile: { email?: string; verified?: boolean }) => {
+        // Better Auth Google returns at least email and name/image in profile
+        const email: string | undefined = profile?.email;
+        const username = await generateUniqueUsernameFromEmail(email ?? null);
+        return {
+          username,
+          emailVerified: profile?.verified ?? true,
+        };
+      },
     },
   },
   trustedOrigins: [

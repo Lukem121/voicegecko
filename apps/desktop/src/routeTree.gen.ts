@@ -25,8 +25,6 @@ import { Route as unauthenticatedAuthRouteImport } from './routes/(unauthenticat
 import { Route as AuthenticatedSettingsIndexRouteImport } from './routes/_authenticated/settings/index'
 import { Route as AuthenticatedSettingsShortcutsRouteImport } from './routes/_authenticated/settings/shortcuts'
 import { Route as AuthenticatedSettingsModelsRouteImport } from './routes/_authenticated/settings/models'
-import { Route as unauthenticatedLegalTermsRouteImport } from './routes/(unauthenticated)/legal/terms'
-import { Route as unauthenticatedLegalPrivacyRouteImport } from './routes/(unauthenticated)/legal/privacy'
 import { Route as unauthenticatedAuthVerifySuccessRouteImport } from './routes/(unauthenticated)/_auth.verify-success'
 import { Route as unauthenticatedAuthVerifyEmailRouteImport } from './routes/(unauthenticated)/_auth.verify-email'
 import { Route as unauthenticatedAuthSignUpRouteImport } from './routes/(unauthenticated)/_auth.sign-up'
@@ -112,18 +110,6 @@ const AuthenticatedSettingsModelsRoute =
     path: '/settings/models',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
-const unauthenticatedLegalTermsRoute =
-  unauthenticatedLegalTermsRouteImport.update({
-    id: '/legal/terms',
-    path: '/legal/terms',
-    getParentRoute: () => unauthenticatedRoute,
-  } as any)
-const unauthenticatedLegalPrivacyRoute =
-  unauthenticatedLegalPrivacyRouteImport.update({
-    id: '/legal/privacy',
-    path: '/legal/privacy',
-    getParentRoute: () => unauthenticatedRoute,
-  } as any)
 const unauthenticatedAuthVerifySuccessRoute =
   unauthenticatedAuthVerifySuccessRouteImport.update({
     id: '/verify-success',
@@ -170,8 +156,6 @@ export interface FileRoutesByFullPath {
   '/sign-up': typeof unauthenticatedAuthSignUpRoute
   '/verify-email': typeof unauthenticatedAuthVerifyEmailRoute
   '/verify-success': typeof unauthenticatedAuthVerifySuccessRoute
-  '/legal/privacy': typeof unauthenticatedLegalPrivacyRoute
-  '/legal/terms': typeof unauthenticatedLegalTermsRoute
   '/settings/models': typeof AuthenticatedSettingsModelsRoute
   '/settings/shortcuts': typeof AuthenticatedSettingsShortcutsRoute
   '/settings': typeof AuthenticatedSettingsIndexRoute
@@ -191,8 +175,6 @@ export interface FileRoutesByTo {
   '/sign-up': typeof unauthenticatedAuthSignUpRoute
   '/verify-email': typeof unauthenticatedAuthVerifyEmailRoute
   '/verify-success': typeof unauthenticatedAuthVerifySuccessRoute
-  '/legal/privacy': typeof unauthenticatedLegalPrivacyRoute
-  '/legal/terms': typeof unauthenticatedLegalTermsRoute
   '/settings/models': typeof AuthenticatedSettingsModelsRoute
   '/settings/shortcuts': typeof AuthenticatedSettingsShortcutsRoute
   '/settings': typeof AuthenticatedSettingsIndexRoute
@@ -216,8 +198,6 @@ export interface FileRoutesById {
   '/(unauthenticated)/_auth/sign-up': typeof unauthenticatedAuthSignUpRoute
   '/(unauthenticated)/_auth/verify-email': typeof unauthenticatedAuthVerifyEmailRoute
   '/(unauthenticated)/_auth/verify-success': typeof unauthenticatedAuthVerifySuccessRoute
-  '/(unauthenticated)/legal/privacy': typeof unauthenticatedLegalPrivacyRoute
-  '/(unauthenticated)/legal/terms': typeof unauthenticatedLegalTermsRoute
   '/_authenticated/settings/models': typeof AuthenticatedSettingsModelsRoute
   '/_authenticated/settings/shortcuts': typeof AuthenticatedSettingsShortcutsRoute
   '/_authenticated/settings/': typeof AuthenticatedSettingsIndexRoute
@@ -239,8 +219,6 @@ export interface FileRouteTypes {
     | '/sign-up'
     | '/verify-email'
     | '/verify-success'
-    | '/legal/privacy'
-    | '/legal/terms'
     | '/settings/models'
     | '/settings/shortcuts'
     | '/settings'
@@ -260,8 +238,6 @@ export interface FileRouteTypes {
     | '/sign-up'
     | '/verify-email'
     | '/verify-success'
-    | '/legal/privacy'
-    | '/legal/terms'
     | '/settings/models'
     | '/settings/shortcuts'
     | '/settings'
@@ -284,8 +260,6 @@ export interface FileRouteTypes {
     | '/(unauthenticated)/_auth/sign-up'
     | '/(unauthenticated)/_auth/verify-email'
     | '/(unauthenticated)/_auth/verify-success'
-    | '/(unauthenticated)/legal/privacy'
-    | '/(unauthenticated)/legal/terms'
     | '/_authenticated/settings/models'
     | '/_authenticated/settings/shortcuts'
     | '/_authenticated/settings/'
@@ -405,20 +379,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSettingsModelsRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
-    '/(unauthenticated)/legal/terms': {
-      id: '/(unauthenticated)/legal/terms'
-      path: '/legal/terms'
-      fullPath: '/legal/terms'
-      preLoaderRoute: typeof unauthenticatedLegalTermsRouteImport
-      parentRoute: typeof unauthenticatedRoute
-    }
-    '/(unauthenticated)/legal/privacy': {
-      id: '/(unauthenticated)/legal/privacy'
-      path: '/legal/privacy'
-      fullPath: '/legal/privacy'
-      preLoaderRoute: typeof unauthenticatedLegalPrivacyRouteImport
-      parentRoute: typeof unauthenticatedRoute
-    }
     '/(unauthenticated)/_auth/verify-success': {
       id: '/(unauthenticated)/_auth/verify-success'
       path: '/verify-success'
@@ -519,14 +479,10 @@ const unauthenticatedAuthRouteWithChildren =
 
 interface unauthenticatedRouteChildren {
   unauthenticatedAuthRoute: typeof unauthenticatedAuthRouteWithChildren
-  unauthenticatedLegalPrivacyRoute: typeof unauthenticatedLegalPrivacyRoute
-  unauthenticatedLegalTermsRoute: typeof unauthenticatedLegalTermsRoute
 }
 
 const unauthenticatedRouteChildren: unauthenticatedRouteChildren = {
   unauthenticatedAuthRoute: unauthenticatedAuthRouteWithChildren,
-  unauthenticatedLegalPrivacyRoute: unauthenticatedLegalPrivacyRoute,
-  unauthenticatedLegalTermsRoute: unauthenticatedLegalTermsRoute,
 }
 
 const unauthenticatedRouteWithChildren = unauthenticatedRoute._addFileChildren(
