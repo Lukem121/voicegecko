@@ -1,6 +1,7 @@
 import type { inferRouterInputs, inferRouterOutputs } from '@trpc/server';
 
 import { authRouter } from './router/auth.route';
+import { contactRouter } from './router/contact.route';
 import { dictationRouter } from './router/dictation.route';
 import { dictionaryRouter } from './router/dictionary.route';
 import { geolocationRouter } from './router/geolocation.route';
@@ -12,6 +13,7 @@ import { createTRPCRouter } from './trpc';
 export const appRouter = createTRPCRouter({
   test: testRouter,
   auth: authRouter,
+  contact: contactRouter,
   dictation: dictationRouter,
   stripe: stripeRouter,
   usage: usageRouter,

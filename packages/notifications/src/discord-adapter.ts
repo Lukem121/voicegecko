@@ -7,6 +7,7 @@ export const DiscordNotificationType = {
   FEEDBACK: 'FEEDBACK',
   USER_SIGNUP: 'USER_SIGNUP',
   SUBSCRIPTION: 'SUBSCRIPTION',
+  CONTACT: 'CONTACT',
 } as const;
 
 // Base interface for all notifications
@@ -26,6 +27,12 @@ export interface FeedbackReport extends BaseNotification {
   feedbackType: 'bug' | 'feature' | 'general';
   message: string;
   rating?: number;
+}
+
+export interface ContactReport extends BaseNotification {
+  name: string;
+  email: string;
+  message: string;
 }
 
 export interface UserSignup extends BaseNotification {
@@ -68,7 +75,7 @@ type DiscordEmbed = {
 export class DiscordAdapter {
   private readonly webhookUrls: Map<
     (typeof DiscordNotificationType)[keyof typeof DiscordNotificationType],
-    string
+    string | undefined
   >;
 
   constructor() {
@@ -88,6 +95,7 @@ export class DiscordAdapter {
         DiscordNotificationType.SUBSCRIPTION,
         env.DISCORD_SUBSCRIPTION_WEBHOOK_URL,
       ],
+      [DiscordNotificationType.CONTACT, env.DISCORD_CONTACT_WEBHOOK_URL],
     ]);
   }
 
@@ -181,6 +189,30 @@ export class DiscordAdapter {
     }
 
     await this.sendWebhook(DiscordNotificationType.FEEDBACK, embed);
+  }
+
+  async sendContactReport(report: ContactReport) {
+    const embed: DiscordEmbed = {
+      title: '📬 New Contact Message',
+      color: 0x72_89_da,
+      timestamp: report.timestamp ?? new Date().toISOString(),
+      fields: [
+        { name: 'Name', value: report.name, inline: true },
+        { name: 'Email', value: report.email, inline: true },
+        { name: 'User ID', value: report.userId ?? 'Anonymous', inline: true },
+        { name: 'Message', value: report.message.slice(0, 1024) },
+        { name: 'URL', value: report.url ?? 'Not available' },
+      ],
+    };
+
+    if (report.additionalContext) {
+      embed.fields.push({
+        name: 'Additional Context',
+        value: `\`\`\`json\n${JSON.stringify(report.additionalContext, null, 2).slice(0, 1000)}\n\`\`\``,
+      });
+    }
+
+    await this.sendWebhook(DiscordNotificationType.CONTACT, embed);
   }
 
   async sendUserSignup(report: UserSignup) {
