@@ -25,6 +25,8 @@
     "@acme/observability": "workspace:*",
     "@acme/validators": "workspace:*",
     "@better-auth/stripe": "^1.3.7",
+    "@t3-oss/env-nextjs": "catalog:",
+    "drizzle-orm": "catalog:",
     "stripe": "^18.5.0",
     "zod": "catalog:"
   },

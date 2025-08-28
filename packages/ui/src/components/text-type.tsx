@@ -5,17 +5,15 @@ import type { ElementType } from 'react';
 import { createElement, useEffect, useRef, useState } from 'react';
 
 // Example usage:
-{
-  /* <TextType 
+/* <TextType 
   text={["Text typing effect", "for your websites", "Happy coding!"]}
   typingSpeed={75}
   pauseDuration={1500}
   showCursor={true}
   cursorCharacter="|"
 /> */
-}
 
-interface TextTypeProps {
+type TextTypeProps = {
   className?: string;
   showCursor?: boolean;
   hideCursorWhileTyping?: boolean;
@@ -34,7 +32,7 @@ interface TextTypeProps {
   onSentenceComplete?: (sentence: string, index: number) => void;
   startOnVisible?: boolean;
   reverseMode?: boolean;
-}
+};
 
 const TextType = ({
   text,
@@ -67,26 +65,32 @@ const TextType = ({
   const textArray = Array.isArray(text) ? text : [text];
 
   const getRandomSpeed = () => {
-    if (!variableSpeed) return typingSpeed;
+    if (!variableSpeed) {
+      return typingSpeed;
+    }
     const { min, max } = variableSpeed;
     return Math.random() * (max - min) + min;
   };
 
   const getCurrentTextColor = () => {
-    if (textColors.length === 0) return;
+    if (textColors.length === 0) {
+      return;
+    }
     return textColors[currentTextIndex % textColors.length];
   };
 
   useEffect(() => {
-    if (!(startOnVisible && containerRef.current)) return;
+    if (!(startOnVisible && containerRef.current)) {
+      return;
+    }
 
     const observer = new IntersectionObserver(
       (entries) => {
-        entries.forEach((entry) => {
+        for (const entry of entries) {
           if (entry.isIntersecting) {
             setIsVisible(true);
           }
-        });
+        }
       },
       { threshold: 0.1 }
     );
@@ -95,8 +99,11 @@ const TextType = ({
     return () => observer.disconnect();
   }, [startOnVisible]);
 
+  // biome-ignore lint/correctness/useExhaustiveDependencies: we need to clear the timeout
   useEffect(() => {
-    if (!isVisible) return;
+    if (!isVisible) {
+      return;
+    }
 
     let timeout: NodeJS.Timeout;
 
