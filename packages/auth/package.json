@@ -40,6 +40,7 @@
     "next": "^15.5.2",
     "react": "catalog:react19",
     "react-dom": "catalog:react19",
+    "unique-username-generator": "^1.5.1",
     "zod": "catalog:"
   },
   "devDependencies": {
