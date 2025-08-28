@@ -8,6 +8,7 @@ export function notificationsEnv() {
       DISCORD_FEEDBACK_WEBHOOK_URL: z.url(),
       DISCORD_USER_SIGNUP_WEBHOOK_URL: z.url(),
       DISCORD_SUBSCRIPTION_WEBHOOK_URL: z.url(),
+      DISCORD_CONTACT_WEBHOOK_URL: z.url(),
     },
     experimental__runtimeEnv: {},
     skipValidation:

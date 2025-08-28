@@ -12,6 +12,8 @@ export const APP_ROUTES = {
     PRICING: '/pricing',
     DOWNLOAD: '/download',
     DOWNLOAD_SUCCESS: '/download/success',
+    CONTACT: '/contact',
+    CONTACT_SUCCESS: '/contact/success',
   },
 
   AUTH: {
