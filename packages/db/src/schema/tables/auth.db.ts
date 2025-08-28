@@ -16,7 +16,7 @@ export const user = pgTable(
     image: t.text('image'),
     createdAt,
     updatedAt,
-    username: t.text('username').unique(),
+    username: t.text('username').unique().notNull(),
     displayUsername: t.text('display_username'),
     stripeCustomerId: t.text('stripe_customer_id'),
     role: UserRoleEnum().default('user'),
