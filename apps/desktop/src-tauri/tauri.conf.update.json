@@ -54,18 +54,14 @@
       "mobile": [
         {
           "host": "voicegecko.io",
-          "pathPrefix": [
-            "/login"
-          ]
+          "pathPrefix": ["/login"]
         },
         {
           "host": "voicegecko.io"
         }
       ],
       "desktop": {
-        "schemes": [
-          "voicegecko"
-        ]
+        "schemes": ["voicegecko"]
       }
     },
     "updater": {
@@ -80,12 +76,10 @@
   "bundle": {
     "active": true,
     "targets": "all",
-    "icon": [
-      "icons/icon.ico"
-    ],
+    "icon": ["icons/icon.ico"],
     "createUpdaterArtifacts": true,
     "resources": [
-      "resources/binaries/whisper-sidecar/win-x64/**",
+      "resources/binaries/whisper-sidecar/win-x64/**/*",
       "resources/sounds/**/*"
     ],
     "macOS": {
