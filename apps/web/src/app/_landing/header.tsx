@@ -103,8 +103,8 @@ export default function Header() {
             <Popover>
               <PopoverTrigger asChild>
                 <Button
-                  id="mobile-menu-toggle"
                   className="group size-8 md:hidden"
+                  id="mobile-menu-toggle"
                   size="icon"
                   variant="ghost"
                 >
