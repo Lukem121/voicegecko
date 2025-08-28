@@ -30,6 +30,7 @@
     "@acme/tsconfig": "workspace:*",
     "@biomejs/biome": "catalog:",
     "@react-email/preview-server": "4.2.8",
+    "@types/node": "^24.3.0",
     "@types/react": "catalog:react19",
     "@types/react-dom": "catalog:react19",
     "react-email": "^4.2.8",
