@@ -19,7 +19,7 @@
     "typecheck": "tsc --noEmit --emitDeclarationOnly false"
   },
   "dependencies": {
-    "@react-email/components": "0.5.0",
+    "@react-email/components": "0.5.1",
     "@sendgrid/mail": "^8.1.5",
     "@t3-oss/env-nextjs": "^0.13.8",
     "react": "catalog:react19",
