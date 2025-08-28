@@ -2,7 +2,7 @@
 import { ImageResponse } from 'next/og';
 
 // Image metadata
-export const alt = 'About Acme';
+export const alt = 'VoiceGecko AI';
 
 export const size = {
   width: 1200,
