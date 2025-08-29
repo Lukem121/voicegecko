@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { authClient } from '~/lib/auth/client';
 import { APP_ROUTES } from '~/utils/app-routes';
@@ -29,12 +29,39 @@ export function useSocialAuth({
     google: false,
   });
   const [error, setError] = useState<string | null>(null);
+  const timeoutRef = useRef<Record<SocialProvider, NodeJS.Timeout | null>>({
+    discord: null,
+    google: null,
+  });
 
   const loading = Object.values(isLoading).some(Boolean);
 
+  // Cleanup timeouts on unmount
+  useEffect(() => {
+    return () => {
+      for (const timeout of Object.values(timeoutRef.current)) {
+        if (timeout) {
+          clearTimeout(timeout);
+        }
+      }
+    };
+  }, []);
+
   const signIn = async (provider: SocialProvider) => {
+    // Clear any existing timeout for this provider
+    if (timeoutRef.current[provider]) {
+      clearTimeout(timeoutRef.current[provider]);
+      timeoutRef.current[provider] = null;
+    }
+
     setIsLoading((prev) => ({ ...prev, [provider]: true }));
     setError(null);
+
+    // Set timeout to clear loading state after 3 seconds
+    timeoutRef.current[provider] = setTimeout(() => {
+      setIsLoading((prev) => ({ ...prev, [provider]: false }));
+      timeoutRef.current[provider] = null;
+    }, 3000);
 
     const { error: socialError } = await authClient.signIn.social({
       provider,
@@ -51,6 +78,12 @@ export function useSocialAuth({
       },
     });
 
+    // Clear the timeout since the operation completed
+    if (timeoutRef.current[provider]) {
+      clearTimeout(timeoutRef.current[provider]);
+      timeoutRef.current[provider] = null;
+    }
+
     if (socialError) {
       setIsLoading((prev) => ({ ...prev, [provider]: false }));
       setError(
@@ -61,6 +94,9 @@ export function useSocialAuth({
       );
       return;
     }
+
+    // Clear loading state on success too (though this should happen via redirect)
+    setIsLoading((prev) => ({ ...prev, [provider]: false }));
   };
 
   return {
