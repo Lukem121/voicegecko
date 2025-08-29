@@ -361,13 +361,11 @@ export default function SignUp() {
                   </div>
                   <div className="flex flex-col gap-4">
                     <SocialSignInButton
-                      disabled={loading}
                       isLoading={socialLoading.google}
                       onClick={() => handleSocialSignIn('google')}
                       provider="google"
                     />
                     <SocialSignInButton
-                      disabled={loading}
                       isLoading={socialLoading.discord}
                       onClick={() => handleSocialSignIn('discord')}
                       provider="discord"
