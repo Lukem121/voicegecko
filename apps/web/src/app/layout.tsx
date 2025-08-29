@@ -9,6 +9,7 @@ import { TRPCReactProvider } from '~/trpc/react';
 import { plusJakartaSans, roobert } from './fonts';
 
 import '@acme/ui/globals.css';
+import Script from 'next/script';
 import { PostHogUserIdentifier } from '~/components/posthog';
 
 export const metadata: Metadata = {
@@ -55,6 +56,13 @@ export default function RootLayout(props: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
       <GoogleTagManager gtmId="GTM-N623RRVD" />
+      <Script
+        async
+        defer
+        id="lucky-orange"
+        src="https://tools.luckyorange.com/core/lo.js?site-id=b5d9ffe4"
+        strategy="afterInteractive"
+      />
       <body
         className={cn(
           'min-h-screen bg-background font-sans text-foreground antialiased',
