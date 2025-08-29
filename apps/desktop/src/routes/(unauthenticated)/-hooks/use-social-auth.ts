@@ -1,7 +1,7 @@
 import type { FetchError } from '@acme/auth/tauri';
 import { signInSocial } from '@acme/auth/tauri/social';
 import { log } from '@acme/observability/log';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { analytics } from '~/lib/analytics/posthog-analytics';
 import { authClient } from '~/lib/client';
@@ -28,6 +28,10 @@ export function useSocialAuth(): UseSocialAuthReturn {
   });
   const [error, setError] = useState<string | null>(null);
   const storeAuthError = useAuthError();
+  const timeoutRef = useRef<Record<SocialProvider, NodeJS.Timeout | null>>({
+    discord: null,
+    google: null,
+  });
 
   const loading = Object.values(isLoading).some(Boolean);
 
@@ -38,9 +42,32 @@ export function useSocialAuth(): UseSocialAuthReturn {
     }
   }, [storeAuthError]);
 
+  // Cleanup timeouts on unmount
+  useEffect(() => {
+    return () => {
+      for (const timeout of Object.values(timeoutRef.current)) {
+        if (timeout) {
+          clearTimeout(timeout);
+        }
+      }
+    };
+  }, []);
+
   const signIn = async (provider: SocialProvider) => {
+    // Clear any existing timeout for this provider
+    if (timeoutRef.current[provider]) {
+      clearTimeout(timeoutRef.current[provider]);
+      timeoutRef.current[provider] = null;
+    }
+
     setIsLoading((prev) => ({ ...prev, [provider]: true }));
     setError(null);
+
+    // Set timeout to clear loading state after 3 seconds
+    timeoutRef.current[provider] = setTimeout(() => {
+      setIsLoading((prev) => ({ ...prev, [provider]: false }));
+      timeoutRef.current[provider] = null;
+    }, 3000);
 
     // Track social sign-in attempt
     analytics.track('user_signed_in', {
@@ -57,12 +84,21 @@ export function useSocialAuth(): UseSocialAuthReturn {
       },
     });
 
+    // Clear the timeout since the operation completed
+    if (timeoutRef.current[provider]) {
+      clearTimeout(timeoutRef.current[provider]);
+      timeoutRef.current[provider] = null;
+    }
+
     if (signInError) {
       log.error('use-social-auth', { error: signInError });
       setIsLoading((prev) => ({ ...prev, [provider]: false }));
       setError(signInError.message ?? 'An unexpected error occurred.');
       return;
     }
+
+    // Clear loading state on success too (though this should happen via redirect)
+    setIsLoading((prev) => ({ ...prev, [provider]: false }));
   };
 
   return {
