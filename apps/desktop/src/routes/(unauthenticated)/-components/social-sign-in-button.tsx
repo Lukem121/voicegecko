@@ -17,12 +17,18 @@ export function SocialSignInButton({
   onClick,
   disabled,
 }: SocialSignInButtonProps) {
+  const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.stopPropagation();
+    e.preventDefault();
+    onClick();
+  };
+
   return (
     <Button
       aria-label={`Sign in with ${provider}`}
       className="flex w-full items-center gap-2 border"
       disabled={disabled}
-      onClick={onClick}
+      onClick={handleClick}
       variant={'secondary'}
     >
       {isLoading ? (
