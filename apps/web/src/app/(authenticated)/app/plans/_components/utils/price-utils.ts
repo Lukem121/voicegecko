@@ -9,8 +9,8 @@ export const formatPrice = (price: PriceWithMetadata, currency: string) => {
   const formatter = new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: currencyData.currency.toUpperCase(),
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
+    minimumFractionDigits: currencyData.unitAmount % 100 === 0 ? 0 : 2,
+    maximumFractionDigits: currencyData.unitAmount % 100 === 0 ? 0 : 2,
   });
   return formatter.format(currencyData.unitAmount / 100); // Convert from cents
 };
@@ -35,8 +35,8 @@ export const formatPricePerUnit = (
   const formatter = new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: currencyData.currency.toUpperCase(),
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
+    minimumFractionDigits: unitAmount % 100 === 0 ? 0 : 2,
+    maximumFractionDigits: unitAmount % 100 === 0 ? 0 : 2,
   });
   return formatter.format(unitAmount / 100); // Convert from cents
 };
@@ -62,8 +62,8 @@ export const formatYearlyAsMonthly = (
   const formatter = new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: currencyData.currency.toUpperCase(),
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
+    minimumFractionDigits: monthlyAmount % 100 === 0 ? 0 : 2,
+    maximumFractionDigits: monthlyAmount % 100 === 0 ? 0 : 2,
   });
   return formatter.format(monthlyAmount / 100); // Convert from cents
 };

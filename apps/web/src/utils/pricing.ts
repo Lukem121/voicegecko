@@ -16,8 +16,9 @@ export function formatPriceForCurrency(
   const formatter = new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: currencyData.currency.toUpperCase(),
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
+    // Show cents when present (e.g., $5.99) but omit for whole dollars
+    minimumFractionDigits: currencyData.unitAmount % 100 === 0 ? 0 : 2,
+    maximumFractionDigits: currencyData.unitAmount % 100 === 0 ? 0 : 2,
   });
   return formatter.format(currencyData.unitAmount / 100);
 }
@@ -37,8 +38,9 @@ export function formatYearlyAsMonthlyForCurrency(
   const formatter = new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: currencyData.currency.toUpperCase(),
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
+    // After division, cents may appear; format accordingly
+    minimumFractionDigits: monthlyAmount % 100 === 0 ? 0 : 2,
+    maximumFractionDigits: monthlyAmount % 100 === 0 ? 0 : 2,
   });
   return formatter.format(monthlyAmount / 100);
 }

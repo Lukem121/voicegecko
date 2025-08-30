@@ -261,8 +261,8 @@ export default function Billing({ prices, subscription, error }: BillingProps) {
     const formatter = new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: currencyData.currency.toUpperCase(),
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
+      minimumFractionDigits: currencyData.unitAmount % 100 === 0 ? 0 : 2,
+      maximumFractionDigits: currencyData.unitAmount % 100 === 0 ? 0 : 2,
     });
     return formatter.format(currencyData.unitAmount / 100); // Convert from cents
   };
