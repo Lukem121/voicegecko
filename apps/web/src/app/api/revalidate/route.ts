@@ -127,7 +127,7 @@ export async function POST(request: NextRequest) {
       message: `Successfully revalidated ${revalidatedPaths.length} paths and ${revalidatedTags.length} tags`,
     });
   } catch (error) {
-    log.error('Error in revalidation endpoint:', error);
+    log.error(error, 'Error in revalidation endpoint:');
 
     return Response.json(
       {

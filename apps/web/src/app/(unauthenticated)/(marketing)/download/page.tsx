@@ -30,7 +30,7 @@ export default async function DownloadPage() {
   } catch (err) {
     downloadError =
       err instanceof Error ? err.message : 'Unable to load download data';
-    log.error('Failed to fetch downloads data:', err);
+    log.error(err, 'Failed to fetch downloads data:');
   }
 
   return (

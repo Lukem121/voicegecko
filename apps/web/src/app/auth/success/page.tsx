@@ -47,13 +47,13 @@ export default function AuthSuccessPage() {
       // Use window.location.assign for better compatibility with deep links
       window.location.assign(decodedUrl);
     } catch (error) {
-      log.error('Direct redirect failed:', error);
+      log.error(error, 'Direct redirect failed:');
 
       // Fallback: try opening in a new tab/window
       try {
         window.open(decodedUrl, '_self');
       } catch (fallbackError) {
-        log.error('Fallback redirect failed:', fallbackError);
+        log.error(fallbackError, 'Fallback redirect failed:');
         clearTimeout(redirectTimeout);
         setTimeoutId(null);
         setRedirectFailed(true);

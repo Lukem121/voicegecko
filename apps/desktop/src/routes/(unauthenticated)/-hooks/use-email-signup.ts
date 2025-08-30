@@ -49,7 +49,7 @@ export function useEmailSignup({
             onSuccess?.();
           },
           onError: ({ error: signUpOnError }) => {
-            log.error('use-email-signup', { error: signUpError });
+            log.error({ error: signUpError }, 'use-email-signup');
 
             if (signUpOnError.code) {
               const errorMessage = getClientAuthErrorMessage(
@@ -69,7 +69,7 @@ export function useEmailSignup({
       });
 
       if (signUpError) {
-        log.error('use-email-signup', { error: signUpError });
+        log.error({ error: signUpError }, 'use-email-signup');
 
         if (signUpError.code) {
           const errorMessage = getClientAuthErrorMessage(
@@ -90,7 +90,7 @@ export function useEmailSignup({
 
       return { success: true };
     } catch (err) {
-      log.error('use-email-signup', { error: err });
+      log.error({ error: err }, 'use-email-signup');
       const errorMessage = 'An unexpected error occurred.';
       setError(errorMessage);
       onError?.(errorMessage);

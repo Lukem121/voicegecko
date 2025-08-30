@@ -33,11 +33,11 @@ export async function navigate(opts: NavigateOptions): Promise<void> {
     // Router not ready yet; queue the navigation
     pending.push(opts);
   } catch (error) {
-    log.error('Navigation failed via router, falling back to location', error);
+    log.error(error, 'Navigation failed via router, falling back to location');
     try {
       window.location.href = opts.to;
     } catch (e) {
-      log.error('Navigation fallback failed', e);
+      log.error(e, 'Navigation fallback failed');
     }
   }
 }

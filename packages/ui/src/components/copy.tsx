@@ -34,7 +34,7 @@ export const CopyButton = ({
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
     } catch (err) {
-      log.error('Failed to copy text: ', err);
+      log.error(err, 'Failed to copy text: ');
     }
   };
 

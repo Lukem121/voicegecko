@@ -17,7 +17,7 @@ export async function GET() {
       data: downloadsData,
     });
   } catch (error) {
-    log.error('Error fetching downloads data:', error);
+    log.error(error, 'Error fetching downloads data:');
 
     if (error instanceof Error && error.message.includes('rate limit')) {
       return NextResponse.json(

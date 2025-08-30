@@ -22,7 +22,7 @@ export function useAutostartSettings() {
         );
         setConfig(autostartConfig);
       } catch (error) {
-        log.error('Failed to load autostart settings:', error);
+        log.error(error, 'Failed to load autostart settings:');
       } finally {
         setIsLoading(false);
       }
@@ -48,7 +48,7 @@ export function useAutostartSettings() {
       try {
         await invoke('set_autostart_config', { config: newConfig });
       } catch (error) {
-        log.error('Failed to update autostart settings:', error);
+        log.error(error, 'Failed to update autostart settings:');
         // Revert the state if the update failed
         setConfig(config);
       }

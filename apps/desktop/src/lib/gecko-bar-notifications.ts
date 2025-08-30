@@ -20,7 +20,7 @@ export async function sendGeckoBarNotification(
       priority: notification.priority,
     });
   } catch (error) {
-    log.error('[GeckoBarNotifications] Failed to send notification:', error);
+    log.error(error, '[GeckoBarNotifications] Failed to send notification:');
   }
 }
 

@@ -29,7 +29,7 @@ export const onSubscriptionDeleted = async ({
   try {
     user = await getUserForEmail(subscription.referenceId);
   } catch (error) {
-    log.error('[Subscription] Error fetching user for notification:', error);
+    log.error(error, '[Subscription] Error fetching user for notification:');
   }
 
   // Send Discord notification for subscription deletion
@@ -56,7 +56,7 @@ export const onSubscriptionDeleted = async ({
       `[Subscription] Discord notification sent for deleted subscription ${subscription.id}`
     );
   } catch (error) {
-    log.error('[Subscription] Error sending Discord notification:', error);
+    log.error(error, '[Subscription] Error sending Discord notification:');
   }
 
   // No special handling needed - when the subscription is deleted,

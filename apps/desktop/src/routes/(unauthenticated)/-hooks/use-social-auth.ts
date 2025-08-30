@@ -91,7 +91,7 @@ export function useSocialAuth(): UseSocialAuthReturn {
     }
 
     if (signInError) {
-      log.error('use-social-auth', { error: signInError });
+      log.error({ error: signInError }, 'use-social-auth');
       setIsLoading((prev) => ({ ...prev, [provider]: false }));
       setError(signInError.message ?? 'An unexpected error occurred.');
       return;

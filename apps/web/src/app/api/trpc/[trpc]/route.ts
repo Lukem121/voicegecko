@@ -43,7 +43,7 @@ const handler = async (request: NextRequest) => {
         auth: serverAuth,
       }),
     onError: ({ error, path }) => {
-      log.error(`❌ tRPC Error on '${path}':`, error);
+      log.error(error, `tRPC error on '${path}'`);
     },
   });
 };

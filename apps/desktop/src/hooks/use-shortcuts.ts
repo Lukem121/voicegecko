@@ -29,7 +29,7 @@ export function useShortcuts() {
             .get<ShortcutCategory[]>('shortcuts')) ?? DEFAULT_SHORTCUTS;
         setShortcuts(loadedCategories);
       } catch (error) {
-        log.error('Failed to load shortcuts:', error);
+        log.error(error, 'Failed to load shortcuts:');
         // Fall back to defaults if loading fails
         setShortcuts(DEFAULT_SHORTCUTS);
       } finally {

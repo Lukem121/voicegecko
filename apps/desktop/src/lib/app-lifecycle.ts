@@ -224,7 +224,7 @@ class AppLifecycleManager {
       }
     } catch (error) {
       // Don't throw - app should continue even if updates fail
-      log.error('[AppLifecycle] ❌ Update check failed:', error);
+      log.error(error, '[AppLifecycle] ❌ Update check failed:');
       this.notifyStatusChange('error');
       log.info('[AppLifecycle] 🚀 Continuing with app startup...');
     }
@@ -240,7 +240,7 @@ class AppLifecycleManager {
         // Re-use the same check logic but do not auto-install
         await this.performUpdateCheck();
       } catch (e) {
-        log.warn('[AppLifecycle] Periodic update check failed:', e);
+        log.warn(e, '[AppLifecycle] Periodic update check failed:');
       }
     };
 
@@ -339,7 +339,7 @@ class AppLifecycleManager {
 
       await relaunch();
     } catch (error) {
-      log.error('[AppLifecycle] ❌ Forced update failed:', error);
+      log.error(error, '[AppLifecycle] ❌ Forced update failed:');
       this.notifyStatusChange('error');
       try {
         useUpdateStore.getState().setInstalling(false);
@@ -382,7 +382,7 @@ class AppLifecycleManager {
           );
         }
       } catch (error) {
-        log.warn('[AppLifecycle] Failed to check partial downloads:', error);
+        log.warn(error, '[AppLifecycle] Failed to check partial downloads:');
       }
 
       // Initialize stores
@@ -415,10 +415,10 @@ class AppLifecycleManager {
 
       // Post-initialization optimizations (non-blocking)
       this.runPostInitializationTasks().catch((error) => {
-        log.warn('[AppLifecycle] Post-initialization tasks failed:', error);
+        log.warn(error, '[AppLifecycle] Post-initialization tasks failed:');
       });
     } catch (error) {
-      log.error('[AppLifecycle] ❌ Failed to initialize core systems:', error);
+      log.error(error, '[AppLifecycle] ❌ Failed to initialize core systems:');
 
       // Clear initialization flag even on failure
       setInitializationFlag(false);
@@ -447,7 +447,7 @@ class AppLifecycleManager {
       await dictionaryService.prefetchDictionaryPrompt();
       log.info('[AppLifecycle] Dictionary prompt prefetched successfully');
     } catch (error) {
-      log.warn('[AppLifecycle] Failed to prefetch dictionary prompt:', error);
+      log.warn(error, '[AppLifecycle] Failed to prefetch dictionary prompt:');
     }
 
     // Trigger automatic download of recommended model (non-blocking)

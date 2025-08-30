@@ -1,5 +1,5 @@
 import type { inferRouterInputs, inferRouterOutputs } from '@trpc/server';
-
+import { adminRouter } from './router/admin.route';
 import { authRouter } from './router/auth.route';
 import { contactRouter } from './router/contact.route';
 import { dictationRouter } from './router/dictation.route';
@@ -11,6 +11,7 @@ import { usageRouter } from './router/usage.route';
 import { createTRPCRouter } from './trpc';
 
 export const appRouter = createTRPCRouter({
+  admin: adminRouter,
   test: testRouter,
   auth: authRouter,
   contact: contactRouter,

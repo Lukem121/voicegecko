@@ -52,7 +52,7 @@ function useAppInitialization(onReady: () => void) {
 
         log.info('[AppLauncher] Initialization complete, waiting for auth...');
       } catch (caughtError) {
-        log.error('Failed to initialize app:', caughtError);
+        log.error(caughtError, 'Failed to initialize app:');
         setError(
           caughtError instanceof Error ? caughtError.message : 'Unknown error'
         );
@@ -170,10 +170,13 @@ export function AppLauncher({ onReady }: { onReady: () => void }) {
     const authReady = !auth.isLoading;
 
     if (authReady) {
-      log.info('App launcher: Authentication ready', {
-        authLoading: auth.isLoading,
-        authState: auth.getAuthState(),
-      });
+      log.info(
+        {
+          authLoading: auth.isLoading,
+          authState: auth.getAuthState(),
+        },
+        'App launcher: Authentication ready'
+      );
       onReady();
     }
   }, [auth.isLoading, auth.getAuthState, onReady]);

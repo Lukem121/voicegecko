@@ -35,7 +35,7 @@ export async function getUserForEmail(
       name: userRecord.name || undefined,
     };
   } catch (error) {
-    log.error('[Email] Error fetching user for email:', error);
+    log.error(error, '[Email] Error fetching user for email:');
     return null;
   }
 }
@@ -80,7 +80,7 @@ export function extractSubscriptionPricing(
       intervalCount: price.recurring.interval_count,
     };
   } catch (error) {
-    log.error('[Subscription] Error extracting pricing info:', error);
+    log.error(error, '[Subscription] Error extracting pricing info:');
     return null;
   }
 }

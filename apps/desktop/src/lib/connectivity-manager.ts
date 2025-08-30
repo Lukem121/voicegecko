@@ -133,7 +133,7 @@ class ConnectivityManager {
         });
       }
     } catch (error) {
-      log.error('💥 [ConnectivityManager] Check failed:', error);
+      log.error(error, '💥 [ConnectivityManager] Check failed:');
 
       // Track connectivity check failure
       analytics.track('error_occurred', {
@@ -188,7 +188,7 @@ class ConnectivityManager {
       log.info('✅ [ConnectivityManager] Internet: ONLINE');
     } catch (error) {
       isOnline = false;
-      log.info('❌ [ConnectivityManager] Internet: OFFLINE', error);
+      log.info(error, '❌ [ConnectivityManager] Internet: OFFLINE');
     }
 
     // Step 2: API check (only if internet works)
@@ -214,7 +214,7 @@ class ConnectivityManager {
         );
       } catch (error) {
         isApiReachable = false;
-        log.info('❌ [ConnectivityManager] API: FAILED', error);
+        log.info(error, '❌ [ConnectivityManager] API: FAILED');
       }
     } else {
       log.info('⏭️ [ConnectivityManager] Skipping API check (no internet)');

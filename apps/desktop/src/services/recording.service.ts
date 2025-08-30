@@ -199,7 +199,7 @@ export class RecordingService {
 
       await invoke('start_recording', { device: deviceName });
     } catch (error) {
-      log.error('Failed to start recording:', error);
+      log.error(error, 'Failed to start recording:');
       throw error;
     }
   }
@@ -253,7 +253,7 @@ export class RecordingService {
         '[PERF] ⚡ Skipping frontend dictation call - already started internally in Rust'
       );
     } catch (error) {
-      log.error('Failed to stop recording:', error);
+      log.error(error, 'Failed to stop recording:');
 
       throw error;
     }
@@ -281,7 +281,7 @@ export class RecordingService {
 
       log.info('[RecordingService] Recording canceled successfully');
     } catch (error) {
-      log.error('Failed to cancel recording:', error);
+      log.error(error, 'Failed to cancel recording:');
       throw error;
     }
   }
@@ -304,8 +304,8 @@ export class RecordingService {
       log.info(`[RecordingService] ✅ ${variant} sound played successfully`);
     } catch (error) {
       log.error(
-        `[RecordingService] ❌ Failed to play ${variant} sound:`,
-        error
+        error,
+        `[RecordingService] ❌ Failed to play ${variant} sound:`
       );
       // Don't throw - notification sound failure shouldn't stop recording
     }
@@ -357,7 +357,7 @@ export class RecordingService {
       const usageQueryKey = trpc.usage.getStatus.queryKey();
       queryClient.setQueryData(usageQueryKey, usageStatus);
     } catch (error) {
-      log.warn('[RecordingService] Async usage check failed:', error);
+      log.warn(error, '[RecordingService] Async usage check failed:');
       // Don't throw - this is a background operation
     }
   }
