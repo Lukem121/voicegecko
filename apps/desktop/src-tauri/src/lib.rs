@@ -158,9 +158,21 @@ pub fn run() {
                     }
                 }
             }
-            let (_stream, stream_handle) = rodio::OutputStream::try_default().unwrap();
-            let sink = rodio::Sink::try_new(&stream_handle).unwrap();
-            app.manage(modules::audio::AudioState::new(sink));
+            // Initialize optional audio sink gracefully (handle systems with no output device)
+            let mut managed = false;
+            if let Ok((_stream, stream_handle)) = rodio::OutputStream::try_default() {
+                if let Ok(sink) = rodio::Sink::try_new(&stream_handle) {
+                    app.manage(modules::audio::AudioState::new(Some(sink)));
+                    // Keep the stream alive for the duration of the app
+                    std::mem::forget(_stream);
+                    std::mem::forget(stream_handle);
+                    managed = true;
+                }
+            }
+            if !managed {
+                // Fall back to no sink; sound playback and volume changes will be no-ops
+                app.manage(modules::audio::AudioState::new(None));
+            }
 
             modules::model_manager::synchronize_models(app.handle().clone())?;
 
@@ -180,9 +192,7 @@ pub fn run() {
             tray_manager.setup_tray(&app.handle()).expect("Failed to setup system tray");
             app.manage(tray_manager);
 
-            // Keep the stream alive for the duration of the app
-            std::mem::forget(_stream);
-            std::mem::forget(stream_handle);
+            // Output stream may or may not be initialized above.
 
             #[cfg(any(windows, target_os = "linux"))]
             {
