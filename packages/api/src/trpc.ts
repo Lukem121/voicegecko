@@ -105,3 +105,15 @@ export const protectedProcedure = t.procedure.use(({ ctx, next }) => {
     },
   });
 });
+
+/**
+ * Admin-only (authenticated + role check) procedure
+ * Ensures the caller is logged in and has role === 'admin'
+ */
+export const adminProcedure = protectedProcedure.use(({ ctx, next }) => {
+  const role = ctx.session.user?.role;
+  if (role !== 'admin') {
+    throw new TRPCError({ code: 'FORBIDDEN' });
+  }
+  return next();
+});

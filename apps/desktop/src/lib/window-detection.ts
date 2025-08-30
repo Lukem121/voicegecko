@@ -6,7 +6,7 @@ export function getCurrentWindowLabel() {
     const window = getCurrentWebviewWindow();
     return window.label;
   } catch (error) {
-    log.error('Failed to get current window label:', error);
+    log.error(error, 'Failed to get current window label:');
     return 'main'; // Default fallback
   }
 }

@@ -1,8 +1,8 @@
 import { log } from '@acme/observability/log';
+import { getVersion } from '@tauri-apps/api/app';
 import { toast } from 'sonner';
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
-
 import { isNetworkError } from '~/hooks/auth';
 import analytics from '~/lib/analytics/posthog-analytics';
 import { createDictation } from '~/lib/dictation-mutations';
@@ -101,7 +101,7 @@ export const useEventStore = create<EventState>()(
       },
 
       setRecordingError: (error) => {
-        log.info('[EventStore] ❌ Recording error:', error);
+        log.info(error, '[EventStore] ❌ Recording error:');
         set({
           recordingStatus: 'error',
           recordingError: error,
@@ -110,7 +110,7 @@ export const useEventStore = create<EventState>()(
 
       // Dictation actions
       setDictationProgress: (status, data, metadata) => {
-        log.info('[EventStore] Dictation progress:', status, data, metadata);
+        log.info(status, data, metadata, '[EventStore] Dictation progress:');
 
         switch (status) {
           case 'Starting':
@@ -183,6 +183,13 @@ export const useEventStore = create<EventState>()(
             : 'normal';
         const content = status === 'silent' ? 'Audio is silent.' : transcript;
 
+        let appVersion: string | undefined;
+        try {
+          appVersion = await getVersion();
+        } catch (error) {
+          log.warn('Failed to get app version', { error });
+        }
+
         const dictationData = {
           content,
           status,
@@ -193,8 +200,7 @@ export const useEventStore = create<EventState>()(
               : undefined,
           modelUsed: metadata?.model_used,
           sampleRate: metadata?.sample_rate,
-          // TODO: Get app version
-          // appVersion: undefined,
+          appVersion,
         };
 
         // 3. Immediate user feedback (fast local operations)
@@ -203,7 +209,7 @@ export const useEventStore = create<EventState>()(
           await dictationService.handleCompletedDictation(transcript);
           await dictationService.playEndSoundIfEnabled();
         } catch (error) {
-          log.error('[EventStore] Failed user feedback operations:', error);
+          log.error(error, '[EventStore] Failed user feedback operations:');
           // Even if clipboard/sound fails, still proceed with background save
         }
 
@@ -234,7 +240,7 @@ export const useEventStore = create<EventState>()(
               connectivityState.checkConnectivity();
             } else {
               // Other unexpected errors - log but don't disrupt user
-              log.error('Background save error:', error);
+              log.error(error, 'Background save error:');
             }
           });
 

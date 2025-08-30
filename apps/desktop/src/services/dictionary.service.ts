@@ -27,7 +27,7 @@ export class DictionaryService {
 
       return prompt || null;
     } catch (error) {
-      log.error('[DictionaryService] Failed to get dictionary prompt:', error);
+      log.error(error, '[DictionaryService] Failed to get dictionary prompt:');
       // Don't fail dictation if dictionary fetch fails
       return null;
     }
@@ -42,8 +42,8 @@ export class DictionaryService {
       log.info('[DictionaryService] Dictionary prompt prefetched');
     } catch (error) {
       log.error(
-        '[DictionaryService] Failed to prefetch dictionary prompt:',
-        error
+        error,
+        '[DictionaryService] Failed to prefetch dictionary prompt:'
       );
     }
   }

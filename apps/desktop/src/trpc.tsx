@@ -65,7 +65,7 @@ const handle401Error = async () => {
     // This prevents page refresh loops
     log.info('✅ Session cleared - router will handle redirect');
   } catch (error) {
-    log.error('Error during session cleanup:', error);
+    log.error(error, 'Error during session cleanup:');
     // Even if cleanup fails, the router should still handle the redirect
   } finally {
     // Reset the flag after a shorter delay since we're not doing redirects
@@ -149,7 +149,7 @@ export const trpcClient = createTRPCClient<AppRouter>({
 
             // Don't await this to avoid blocking the current request
             handle401Error().catch((error) => {
-              log.error('Error handling 401:', error);
+              log.error(error, 'Error handling 401:');
             });
 
             // Still return the response to let TRPC handle the error appropriately
@@ -162,7 +162,7 @@ export const trpcClient = createTRPCClient<AppRouter>({
             // Navigate user to update page and start forced update in the background
             // Don't await navigation to avoid blocking
             navigate({ to: '/update-required', replace: true }).catch((e) => {
-              log.error('Failed to navigate to update-required:', e);
+              log.error(e, 'Failed to navigate to update-required:');
             });
             // Start the update without blocking fetch
             import('./lib/app-lifecycle')
@@ -170,7 +170,7 @@ export const trpcClient = createTRPCClient<AppRouter>({
                 // eslint-disable-next-line @typescript-eslint/no-floating-promises
                 m.appLifecycle.forceUpdateNow();
               })
-              .catch((e) => log.error('Failed to load appLifecycle:', e));
+              .catch((e) => log.error(e, 'Failed to load appLifecycle:'));
 
             return response;
           }

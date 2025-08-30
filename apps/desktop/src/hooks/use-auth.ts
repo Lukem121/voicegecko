@@ -28,7 +28,7 @@ export const useAuth = () => {
 
   useEffect(() => {
     if (error) {
-      log.error('Auth error', error);
+      log.error(error, 'Auth error');
     }
   }, [error]);
 

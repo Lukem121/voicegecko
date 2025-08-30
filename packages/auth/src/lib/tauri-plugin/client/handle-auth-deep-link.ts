@@ -43,7 +43,7 @@ export async function handleAuthDeepLink({
       sessionStorage.setItem(key, JSON.stringify(processed));
     } catch (e) {
       if (debugLogs) {
-        log.error('[Better Auth Tauri] Failed to update processed states', e);
+        log.error(e, '[Better Auth Tauri] Failed to update processed states');
       }
     }
   }

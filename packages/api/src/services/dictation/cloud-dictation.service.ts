@@ -30,7 +30,7 @@ export class CloudDictationService {
 
       return response;
     } catch (error) {
-      log.error('OpenAI dictation error:', error);
+      log.error(error, 'OpenAI dictation error:');
       throw new TRPCError({
         code: 'INTERNAL_SERVER_ERROR',
         message: 'Failed to transcribe audio',

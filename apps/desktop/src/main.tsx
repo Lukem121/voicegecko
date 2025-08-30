@@ -96,17 +96,17 @@ function InnerApp() {
       try {
         useAuthStore.getState().setError(null);
       } catch (e) {
-        log.error('[Auth] Failed to clear auth error in store', e);
+        log.error(e, '[Auth] Failed to clear auth error in store');
       }
       query
         .refetch()
         .catch((e) =>
-          log.error('[Auth] Failed to refetch session after success', e)
+          log.error(e, '[Auth] Failed to refetch session after success')
         );
       router
         .invalidate()
         .catch((e) =>
-          log.error('[Auth] Failed to invalidate router after success', e)
+          log.error(e, '[Auth] Failed to invalidate router after success')
         );
       // Proactively navigate to the desired page to avoid getting stuck on sign-in
       const target = callbackURL?.startsWith('/') ? callbackURL : '/';
@@ -114,11 +114,11 @@ function InnerApp() {
       setTimeout(() => {
         router
           .navigate({ to: target })
-          .catch((e) => log.error('[Auth] Navigate after success failed', e));
+          .catch((e) => log.error(e, '[Auth] Navigate after success failed'));
       }, 200);
     },
     onError: (error: FetchError) => {
-      log.error('❌ Auth error:', error);
+      log.error(error, '❌ Auth error:');
       // Surface auth errors (including rate limits) to the UI
       const message = (
         error.message ??
@@ -129,13 +129,13 @@ function InnerApp() {
         useAuthStore.getState().setError(message);
       } catch (e) {
         // Non-fatal
-        log.error('[Auth] Failed to set auth error in store', e);
+        log.error(e, '[Auth] Failed to set auth error in store');
       }
     },
   });
 
   useEffect(() => {
-    log.info('Auth state changed', session, query.isPending);
+    log.info({ session, isPending: query.isPending }, 'Auth state changed');
     router.invalidate();
   }, [session, query.isPending]);
 
@@ -200,7 +200,7 @@ async function initializeApp() {
 
     log.info('[Main] ✅ Core systems initialization complete');
   } catch (error) {
-    log.error('[Main] ❌ Core systems initialization failed:', error);
+    log.error(error, '[Main] ❌ Core systems initialization failed:');
     // Continue with React startup even if initialization fails
   }
 }
@@ -232,7 +232,7 @@ if (!rootElement.innerHTML) {
       );
     })
     .catch((error) => {
-      log.error('[Main] Failed to initialize app:', error);
+      log.error(error, '[Main] Failed to initialize app:');
 
       // Still start React even if initialization fails
       const root = ReactDOM.createRoot(rootElement);

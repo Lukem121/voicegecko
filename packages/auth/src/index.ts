@@ -17,11 +17,11 @@ import {
   username,
 } from 'better-auth/plugins';
 import { authEnv } from '../env';
-import { generateUniqueUsernameFromEmail } from './utils/generate-unique-username';
 import { tauri } from './lib/tauri-plugin/plugin/tauri';
 import { handleAfterHook } from './middleware/handle-after-hook';
 import { handleCreateAfterHook } from './middleware/handle-create-after-hook';
 import { usernameValidator } from './schemas/username.schema';
+import { generateUniqueUsernameFromEmail } from './utils/generate-unique-username';
 
 export const serverAuth = betterAuth({
   appName: 'Voice Gecko',
@@ -132,12 +132,15 @@ export const serverAuth = betterAuth({
     google: {
       clientId: authEnv().AUTH_GOOGLE_CLIENT_ID,
       clientSecret: authEnv().AUTH_GOOGLE_CLIENT_SECRET,
-      mapProfileToUser: async (profile: { email?: string; verified?: boolean }) => {
+      mapProfileToUser: async (profile: {
+        email?: string;
+        verified?: boolean;
+      }) => {
         // Better Auth Google returns at least email and name/image in profile
         const email: string | undefined = profile?.email;
-        const username = await generateUniqueUsernameFromEmail(email ?? null);
+        const username2 = await generateUniqueUsernameFromEmail(email ?? null);
         return {
-          username,
+          username: username2,
           emailVerified: profile?.verified ?? true,
         };
       },
@@ -156,3 +159,4 @@ export const serverAuth = betterAuth({
 
 export type Auth = typeof serverAuth;
 export type Session = typeof serverAuth.$Infer.Session;
+export type User = (typeof serverAuth.$Infer.Session)['user'];

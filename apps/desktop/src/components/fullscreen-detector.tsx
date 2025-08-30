@@ -21,7 +21,7 @@ export function FullscreenDetector({
       // If fullscreen detection is disabled but gecko bar is enabled,
       // ensure the gecko bar is visible
       invoke('show_gecko_bar').catch((error) => {
-        log.error('Failed to show gecko bar:', error);
+        log.error(error, 'Failed to show gecko bar:');
       });
     }
   }, [enabled, geckoBarEnabled]);

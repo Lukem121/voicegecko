@@ -99,7 +99,7 @@ export function DesktopRedirectHandler({
           onRedirectFailed?.();
         }, 3000);
       } catch (error) {
-        log.error('❌ Desktop redirect failed:', error);
+        log.error(error, '❌ Desktop redirect failed:');
         onRedirectFailed?.();
       }
     };
@@ -183,7 +183,7 @@ export function useDesktopRedirect() {
 
       return true;
     } catch (error) {
-      log.error('❌ Manual desktop redirect failed:', error);
+      log.error(error, '❌ Manual desktop redirect failed:');
       setRedirectFailed(true);
       setIsRedirecting(false);
       return false;

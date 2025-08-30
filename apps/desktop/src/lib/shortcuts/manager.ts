@@ -118,7 +118,7 @@ class ShortcutManager {
     try {
       await unregisterAll();
     } catch (error) {
-      log.warn('Failed to unregister all shortcuts:', error);
+      log.warn(error, 'Failed to unregister all shortcuts:');
     }
 
     // Clear existing errors before re-registering
@@ -147,8 +147,8 @@ class ShortcutManager {
         await this.registerSingleShortcut(shortcut, accelerator);
       } catch (error) {
         log.error(
-          `Failed to register shortcut ${accelerator} for ${shortcut.id}:`,
-          error
+          error,
+          `[Shortcuts] Failed to register shortcut ${accelerator} for ${shortcut.id}:`
         );
         const message =
           error instanceof Error ? error.message : 'Registration failed';
@@ -176,7 +176,7 @@ class ShortcutManager {
     try {
       await recordingService.startPushToTalk({ isKeyboardShortcut: true });
     } catch (error) {
-      log.error('Failed to start push-to-talk recording:', error);
+      log.error(error, 'Failed to start push-to-talk recording:');
     }
   }
 
@@ -184,7 +184,7 @@ class ShortcutManager {
     try {
       await recordingService.stopPushToTalk();
     } catch (error) {
-      log.error('Failed to stop push-to-talk recording:', error);
+      log.error(error, 'Failed to stop push-to-talk recording:');
     }
   }
 }

@@ -52,7 +52,7 @@ export async function createDictation(input: CreateDictationInput) {
     });
     log.info('[DictationMutations] ✅ Strategy 2 complete: tRPC specific key');
   } catch (error) {
-    log.error('[DictationMutations] ❌ Strategy 2 failed:', error);
+    log.error(error, '[DictationMutations] ❌ Strategy 2 failed:');
   }
 
   // Strategy 3: Predicate-based invalidation
@@ -105,7 +105,7 @@ export async function createDictation(input: CreateDictationInput) {
     const freshData = await trpcClient.dictation.getAll.query({ limit: 5 });
     log.info('[DictationMutations] 📋 Fresh data from database:', freshData);
   } catch (error) {
-    log.error('[DictationMutations] ❌ Manual refetch failed:', error);
+    log.error(error, '[DictationMutations] ❌ Manual refetch failed:');
   }
 
   log.info('[DictationMutations] 🏁 Cache invalidation completed');

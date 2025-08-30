@@ -33,7 +33,7 @@ export const onSubscriptionUpdate = async ({
   try {
     user = await getUserForEmail(subscription.referenceId);
   } catch (error) {
-    log.error('[Subscription] Error fetching user for notifications:', error);
+    log.error(error, '[Subscription] Error fetching user for notifications:');
   }
 
   if (isPaymentFailure) {
@@ -63,7 +63,7 @@ export const onSubscriptionUpdate = async ({
         );
       }
     } catch (error) {
-      log.error('[Subscription] Error sending payment failed email:', error);
+      log.error(error, '[Subscription] Error sending payment failed email:');
     }
   }
 
@@ -95,7 +95,7 @@ export const onSubscriptionUpdate = async ({
       `[Subscription] Discord notification sent for updated subscription ${subscription.id}`
     );
   } catch (error) {
-    log.error('[Subscription] Error sending Discord notification:', error);
+    log.error(error, '[Subscription] Error sending Discord notification:');
   }
 
   // No special handling needed - our usage service already checks

@@ -234,7 +234,7 @@ export const useSettingsStore = create<SettingsState>()(
             get().refreshModels();
           });
         } catch (error) {
-          log.error('[Settings] Failed to initialize:', error);
+          log.error(error, '[Settings] Failed to initialize:');
           set({ isLoading: false });
           throw error;
         }
@@ -410,7 +410,7 @@ export const useSettingsStore = create<SettingsState>()(
             await invoke<AudioDevice[]>('list_audio_devices');
           set({ audioDevices });
         } catch (error) {
-          log.error('Failed to refresh audio devices:', error);
+          log.error(error, 'Failed to refresh audio devices:');
         }
       },
 
@@ -494,7 +494,7 @@ export const useSettingsStore = create<SettingsState>()(
             },
           }));
         } catch (error) {
-          log.error('[Store] Failed to refresh models:', error);
+          log.error(error, '[Store] Failed to refresh models:');
         }
       },
 

@@ -412,7 +412,7 @@ class PostHogAnalyticsService {
       this.posthog.setPersonProperties(properties);
       log.info('[Analytics] Set user properties', properties);
     } catch (error) {
-      log.error('[Analytics] Failed to set user properties:', error);
+      log.error(error, '[Analytics] Failed to set user properties:');
     }
   }
 
@@ -428,7 +428,7 @@ class PostHogAnalyticsService {
       this.posthog.reset();
       log.info('[Analytics] Reset analytics');
     } catch (error) {
-      log.error('[Analytics] Failed to reset analytics:', error);
+      log.error(error, '[Analytics] Failed to reset analytics:');
     }
   }
 

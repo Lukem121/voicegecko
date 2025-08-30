@@ -36,7 +36,7 @@ export class SettingsMigrationManager {
         const error = new Error(
           `Configuration error: CURRENT_SETTINGS_VERSION (${CURRENT_SETTINGS_VERSION}) doesn't match latest migration version`
         );
-        log.error('[Migration]', error.message);
+        log.error(error.message, '[Migration]');
         return {
           success: false,
           fromVersion: 0,
@@ -68,7 +68,7 @@ export class SettingsMigrationManager {
             '[Migration] 🎉 New installation detected! Tracked app_installed event'
           );
         } catch (error) {
-          log.warn('[Migration] Failed to track installation event:', error);
+          log.warn(error, '[Migration] Failed to track installation event:');
           // Don't fail the migration if analytics tracking fails
         }
 
@@ -214,8 +214,8 @@ export class SettingsMigrationManager {
           });
         } catch (analyticsError) {
           log.warn(
-            '[Migration] Failed to track migration completion:',
-            analyticsError
+            analyticsError,
+            '[Migration] Failed to track migration completion:'
           );
         }
 
@@ -241,7 +241,7 @@ export class SettingsMigrationManager {
         },
       };
     } catch (error) {
-      log.error('[Migration] Migration failed:', error);
+      log.error(error, '[Migration] Migration failed:');
       return {
         success: false,
         fromVersion: 0,

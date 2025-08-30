@@ -61,7 +61,9 @@ export const useUpdateStore = create<UpdateState>((set, get) => ({
   setError: (message) => set({ error: message ?? null }),
 
   checkForUpdates: async () => {
-    if (get().isChecking) return;
+    if (get().isChecking) {
+      return;
+    }
     set({ isChecking: true, error: null });
     try {
       const update = await check();
@@ -84,7 +86,9 @@ export const useUpdateStore = create<UpdateState>((set, get) => ({
   },
 
   installUpdate: async () => {
-    if (get().isInstalling) return;
+    if (get().isInstalling) {
+      return;
+    }
     set({ isInstalling: true, progress: 0, error: null });
     try {
       const update = await check();
@@ -123,7 +127,7 @@ export const useUpdateStore = create<UpdateState>((set, get) => ({
       await relaunch();
     } catch (e) {
       const message = e instanceof Error ? e.message : String(e);
-      log.error('[UpdateStore] Install failed', { message });
+      log.error(message, '[UpdateStore] Install failed');
       toast.error('Install failed. Please try again.');
       set({ isInstalling: false });
     }

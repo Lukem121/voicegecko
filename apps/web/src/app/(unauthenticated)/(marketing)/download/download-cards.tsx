@@ -363,7 +363,7 @@ function PlatformCard({
 
             return filteredDownloads.map((download, index) => (
               <button
-                className="flex w-full cursor-pointer items-center justify-center gap-3 rounded-xl bg-primary px-6 py-4 font-semibold text-white transition-all hover:bg-primary/90"
+                className="flex w-full cursor-pointer items-center justify-center gap-3 whitespace-nowrap rounded-xl bg-primary px-6 py-4 font-semibold text-white transition-all hover:bg-primary/90"
                 key={`${download.name}-${index}`}
                 onClick={() => handleDownload(download)}
                 type="button"
@@ -445,7 +445,7 @@ export default function DownloadCards({
               Download Voice Gecko for your platform
             </p>
           </div>
-          <div className="grid gap-6 md:grid-cols-3">
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {downloadPlatforms.map((platform) => {
               const platformData = downloadsData?.platforms[platform.key];
               const isAvailable =
@@ -482,7 +482,7 @@ export default function DownloadCards({
             Help us prioritize which platforms to build next
           </p>
         </div>
-        <div className="grid gap-4 md:grid-cols-3">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
           {votingPlatforms.map((platform) => (
             <VotingCard
               description={platform.description}
