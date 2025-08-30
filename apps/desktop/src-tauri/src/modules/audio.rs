@@ -48,13 +48,13 @@ pub struct AudioLevel {
 }
 
 pub struct AudioState {
-    pub sink: Arc<Mutex<Sink>>,
+    pub sink: Arc<Mutex<Option<Sink>>>,
     pub recording_thread: Arc<Mutex<Option<(thread::JoinHandle<()>, Sender<AudioCommand>)>>>,
     pub recorded_audio: Arc<Mutex<Option<Vec<f32>>>>,
 }
 
 impl AudioState {
-    pub fn new(sink: Sink) -> Self {
+    pub fn new(sink: Option<Sink>) -> Self {
         Self {
             sink: Arc::new(Mutex::new(sink)),
             recording_thread: Arc::new(Mutex::new(None)),
@@ -1129,7 +1129,11 @@ pub fn play_notification_sound(
         SoundVariant::End => source.speed(0.85).convert_samples::<f32>(),
     };
 
-    state.sink.lock().unwrap().append(modified_source);
+    if let Some(ref mut sink) = *state.sink.lock().unwrap() {
+        sink.append(modified_source);
+    } else {
+        // No output device available; silently ignore playing sound
+    }
     Ok(())
 }
 
@@ -1141,7 +1145,11 @@ pub fn set_volume(state: tauri::State<AudioState>, volume: f32) -> Result<(), St
             volume
         ));
     }
-    state.sink.lock().unwrap().set_volume(volume);
+    if let Some(ref mut sink) = *state.sink.lock().unwrap() {
+        sink.set_volume(volume);
+    } else {
+        // No output device available; ignore volume change
+    }
     Ok(())
 }
 
