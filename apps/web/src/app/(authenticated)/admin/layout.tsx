@@ -17,7 +17,7 @@ const AppLayout = async ({ children }: AppLayoutProperties) => {
 
   // MUST BE AN ADMIN
   if (session.user.role !== 'admin') {
-    return redirect(APP_ROUTES.APP.ROOT);
+    return redirect(APP_ROUTES.HOME);
   }
 
   return children;
