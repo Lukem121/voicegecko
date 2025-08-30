@@ -40,7 +40,7 @@ export async function invokeDictationFromBuffer(audioData: AudioData) {
       `[PERF] Total frontend dictation setup took: ${totalFrontendTime}ms`
     );
   } catch (error) {
-    log.error('Failed to invoke dictation from buffer:', error);
+    log.error(error, 'Failed to invoke dictation from buffer:');
     toast.error('Failed to start dictation', {
       description:
         error instanceof Error ? error.message : 'Could not start process.',

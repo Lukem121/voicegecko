@@ -64,7 +64,7 @@ class StoreRegistry {
         // For now, we'll continue with initialization
       }
     } catch (error) {
-      log.error('[StoreRegistry] Migration failed:', error);
+      log.error(error, '[StoreRegistry] Migration failed:');
       // Decide if you want to fail fast or continue
       // throw error;
     }
@@ -77,8 +77,8 @@ class StoreRegistry {
         log.info(`[StoreRegistry] ✅ ${store.name} initialized`);
       } catch (error) {
         log.error(
-          `[StoreRegistry] ❌ Failed to initialize ${store.name}:`,
-          error
+          error,
+          `[StoreRegistry] ❌ Failed to initialize ${store.name}:`
         );
         throw error; // Fail fast on store initialization errors
       }

@@ -38,7 +38,7 @@ export function useFullscreenDetection(enabled = true) {
           try {
             await invoke('hide_gecko_bar');
           } catch (error) {
-            log.error('Failed to hide gecko bar:', error);
+            log.error(error, 'Failed to hide gecko bar:');
           }
         } else {
           // Show gecko bar when exiting fullscreen (backend will check if it should be visible)
@@ -47,13 +47,13 @@ export function useFullscreenDetection(enabled = true) {
             try {
               await invoke('show_gecko_bar');
             } catch (error) {
-              log.error('Failed to show gecko bar:', error);
+              log.error(error, 'Failed to show gecko bar:');
             }
           }, 1000); // Increased delay to ensure window state has settled
         }
       }
     } catch (error) {
-      log.error('Failed to check fullscreen state:', error);
+      log.error(error, 'Failed to check fullscreen state:');
     }
   }, [isFullscreen]);
 

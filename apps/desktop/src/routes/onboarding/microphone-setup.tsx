@@ -76,7 +76,7 @@ function MicrophoneSetupStep() {
       const unlistenError = await listen<string>(
         'microphone-test-error',
         (event) => {
-          log.error('[Onboarding] Microphone test error:', event.payload);
+          log.error(event.payload, '[Onboarding] Microphone test error:');
           setMicrophoneTestError(event.payload);
         }
       );
@@ -92,7 +92,7 @@ function MicrophoneSetupStep() {
         device: device?.name ?? null,
       });
     } catch (error) {
-      log.error('[Onboarding] Failed to start microphone test:', error);
+      log.error(error, '[Onboarding] Failed to start microphone test:');
       setMicrophoneTestError(
         error instanceof Error ? error.message : 'Unknown error'
       );
@@ -167,7 +167,7 @@ function MicrophoneSetupStep() {
           microphoneTestUnlistenRef.current();
         }
       } catch (error) {
-        log.error('Failed to stop previous test:', error);
+        log.error(error, 'Failed to stop previous test:');
       }
 
       await startMicrophoneTest(device);

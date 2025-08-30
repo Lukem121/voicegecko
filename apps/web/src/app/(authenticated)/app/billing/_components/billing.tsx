@@ -337,7 +337,7 @@ export default function Billing({ prices, subscription, error }: BillingProps) {
         router.push(result.url);
       }
     } catch (unknownError) {
-      log.error('Error managing subscription:', unknownError);
+      log.error(unknownError, 'Error managing subscription:');
       showAlert('Billing Portal Error', 'Failed to open billing portal.');
     } finally {
       setIsLoading(false);
@@ -367,7 +367,7 @@ export default function Billing({ prices, subscription, error }: BillingProps) {
         }, 2000);
       }
     } catch (unknownError) {
-      log.error('Error restoring subscription:', unknownError);
+      log.error(unknownError, 'Error restoring subscription:');
       showAlert(
         'Restore Failed',
         'Failed to restore subscription. Please try again.'

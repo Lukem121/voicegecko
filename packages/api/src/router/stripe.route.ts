@@ -68,7 +68,7 @@ export const stripeRouter = {
           },
         };
       } catch (error) {
-        log.error('Error restoring subscription:', error);
+        log.error(error, 'Error restoring subscription:');
         throw new Error('Failed to restore subscription');
       }
     }),
@@ -131,7 +131,7 @@ export const stripeRouter = {
         email: ctx.session.user.email,
       };
     } catch (error) {
-      log.error('Error getting recent purchase:', error);
+      log.error(error, 'Error getting recent purchase:');
       return null;
     }
   }),
@@ -196,7 +196,7 @@ export const stripeRouter = {
           },
         };
       } catch (error) {
-        log.error('Error sending student discount email:', error);
+        log.error(error, 'Error sending student discount email:');
         return {
           success: false,
           error: {

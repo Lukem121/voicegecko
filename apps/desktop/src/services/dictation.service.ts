@@ -121,7 +121,7 @@ export class DictationService {
         }
       } catch (error) {
         toast.error('Failed to copy dictation to clipboard');
-        log.error('[DictationService] Failed during paste-last flow:', error);
+        log.error(error, '[DictationService] Failed during paste-last flow:');
         throw error;
       }
     } else {
@@ -134,7 +134,7 @@ export class DictationService {
    * Handle completed dictation with clipboard and state management
    */
   async handleCompletedDictation(transcript: string): Promise<void> {
-    log.info('[DictationService] Handling completed dictation:', transcript);
+    log.info(transcript, '[DictationService] Handling completed dictation:');
 
     if (transcript) {
       try {
@@ -200,7 +200,7 @@ export class DictationService {
             performanceTracker.markPhase('pasteCompleteTime');
             performanceTracker.completeSession();
 
-            log.error('[DictationService] Failed to auto-paste:', pasteError);
+            log.error(pasteError, '[DictationService] Failed to auto-paste:');
             // Still show success for clipboard copy even if paste fails
             toast.success('Dictation complete and copied to clipboard!');
             toast.warning(
@@ -218,7 +218,7 @@ export class DictationService {
       } catch (error) {
         performanceTracker.completeSession();
 
-        log.error('[DictationService] Failed to copy to clipboard:', error);
+        log.error(error, '[DictationService] Failed to copy to clipboard:');
         toast.error('Failed to copy to clipboard', {
           description: error instanceof Error ? error.message : 'Unknown error',
         });
@@ -258,7 +258,7 @@ export class DictationService {
         log.info('[DictationService] End sound disabled by settings');
       }
     } catch (error) {
-      log.error('[DictationService] ❌ Failed to play end sound:', error);
+      log.error(error, '[DictationService] ❌ Failed to play end sound:');
       // Don't throw - notification sound failure shouldn't stop dictation completion
     }
   }

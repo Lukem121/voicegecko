@@ -192,7 +192,7 @@ export default function Plans({ prices, subscription, error }: PlansProps) {
         await handlePaidPlan(plan);
       }
     } catch (unknownError) {
-      log.error('Error handling plan:', unknownError);
+      log.error(unknownError, 'Error handling plan:');
       showAlert('Error', 'An error occurred. Please try again.');
     }
   };

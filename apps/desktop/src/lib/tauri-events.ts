@@ -120,7 +120,7 @@ function handleDictationError(
   error: unknown,
   dictationTracker: DictationTracker
 ): void {
-  log.error('[TauriEvents] Cloud dictation error:', error);
+  log.error(error, '[TauriEvents] Cloud dictation error:');
 
   // Track dictation failure
   dictationTracker.trackFailed(
@@ -236,14 +236,14 @@ export async function initializeTauriEvents(
 
       // Execute without awaiting to avoid blocking the event listener
       handleCloudDictation().catch((error) => {
-        log.error('[TauriEvents] Unhandled cloud dictation error:', error);
+        log.error(error, '[TauriEvents] Unhandled cloud dictation error:');
       });
     });
 
     // Listen for recording errors
     await listen('recording-error', (event) => {
       const payload = event.payload as RecordingErrorEvent;
-      log.info('[TauriEvents] ❌ Recording error:', payload);
+      log.info(payload, '[TauriEvents] ❌ Recording error:');
 
       useEventStore.getState().setRecordingError(payload);
       toast.error('Recording error', { description: payload });
@@ -271,8 +271,8 @@ export async function initializeTauriEvents(
           })
           .catch((error) => {
             log.error(
-              '[TauriEvents] Failed to navigate from gecko bar:',
-              error
+              error,
+              '[TauriEvents] Failed to navigate from gecko bar:'
             );
           });
       });
@@ -295,24 +295,24 @@ export async function initializeTauriEvents(
                   .toggleRecording({ isKeyboardShortcut: false })
                   .catch((error) => {
                     log.error(
-                      '[TauriEvents] Failed to toggle recording from gecko bar:',
-                      error
+                      error,
+                      '[TauriEvents] Failed to toggle recording from gecko bar:'
                     );
                   });
                 break;
               case 'cancel':
                 recordingService.cancelRecording().catch((error) => {
                   log.error(
-                    '[TauriEvents] Failed to cancel recording from gecko bar:',
-                    error
+                    error,
+                    '[TauriEvents] Failed to cancel recording from gecko bar:'
                   );
                 });
                 break;
               case 'finish':
                 recordingService.toggleRecording().catch((error) => {
                   log.error(
-                    '[TauriEvents] Failed to finish recording from gecko bar:',
-                    error
+                    error,
+                    '[TauriEvents] Failed to finish recording from gecko bar:'
                   );
                 });
                 break;
@@ -325,8 +325,8 @@ export async function initializeTauriEvents(
           })
           .catch((error) => {
             log.error(
-              '[TauriEvents] Failed to import recording service:',
-              error
+              error,
+              '[TauriEvents] Failed to import recording service:'
             );
           });
       });
@@ -371,8 +371,8 @@ export async function initializeTauriEvents(
     log.info('[TauriEvents] ✅ Tauri event listeners initialized successfully');
   } catch (error) {
     log.error(
-      '[TauriEvents] ❌ Failed to initialize Tauri event listeners:',
-      error
+      error,
+      '[TauriEvents] ❌ Failed to initialize Tauri event listeners:'
     );
     initialized = false;
     throw error;

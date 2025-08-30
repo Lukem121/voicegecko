@@ -54,7 +54,7 @@ export function useTrayManager() {
           wordsPerMinute: wordsPerMinuteParam,
         });
       } catch (error) {
-        log.error('Failed to update tray stats:', error);
+        log.error(error, 'Failed to update tray stats:');
       }
     },
     []

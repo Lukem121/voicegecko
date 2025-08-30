@@ -281,12 +281,12 @@ function DictationsPage() {
 
   const handleDeleteTranscript = async (id: number) => {
     try {
-      log.info('Deleting dictation:', id);
+      log.info(id, 'Deleting dictation:');
       setDeletingId(id);
       setOpenDropdownId(null);
       await deleteDictation({ id });
     } catch (error) {
-      log.error('Failed to delete dictation:', error);
+      log.error(error, 'Failed to delete dictation:');
     } finally {
       setDeletingId(null);
     }

@@ -407,7 +407,7 @@ function RecordingPage() {
   }, [dictationStatus, refetchDictations]);
 
   const handleMicClick = async () => {
-    log.info('[Recording] 🎯 handleMicClick called, status:', recordingStatus);
+    log.info(recordingStatus, '[Recording] 🎯 handleMicClick called, status:');
 
     if (recordingStatus === 'recording') {
       setIsProcessing(true);
@@ -418,7 +418,7 @@ function RecordingPage() {
       await recordingService.toggleRecording();
       log.info('[Recording] ✅ Recording toggled successfully');
     } catch (error) {
-      log.error('[Recording] ❌ Error during recording flow:', error);
+      log.error(error, '[Recording] ❌ Error during recording flow:');
     } finally {
       setIsProcessing(false);
     }
@@ -429,14 +429,14 @@ function RecordingPage() {
   };
 
   const handleSendFeedback = (id: number) => {
-    log.info('Send feedback for:', id);
+    log.info(id, 'Send feedback for:');
   };
 
   const handleDeleteTranscript = async (id: number) => {
     try {
       await deleteDictation({ id });
     } catch (error) {
-      log.error('Failed to delete dictation:', error);
+      log.error(error, 'Failed to delete dictation:');
     }
   };
 

@@ -97,7 +97,7 @@ export function FeedbackModal({
       setFeedback('');
       onClose();
     } catch (error) {
-      log.error('Failed to send feedback:', error);
+      log.error(error, 'Failed to send feedback:');
       // The error message from the backend should be user-friendly
       const errorMessage =
         error instanceof Error

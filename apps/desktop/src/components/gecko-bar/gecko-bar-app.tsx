@@ -332,7 +332,7 @@ export function GeckoBarApp() {
                 .then(({ invoke }) =>
                   invoke('snooze_gecko_bar_for_ms', { ms: HOUR_MS })
                 )
-                .catch((err) => log.error('[GeckoBar] Snooze failed', err));
+                .catch((err) => log.error(err, '[GeckoBar] Snooze failed'));
               setIsMenuOpen(false);
             }}
           >

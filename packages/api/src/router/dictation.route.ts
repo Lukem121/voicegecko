@@ -205,7 +205,7 @@ export const dictationRouter = {
           data: { message: 'Feedback sent successfully' },
         };
       } catch (error) {
-        log.error('Failed to send feedback:', error);
+        log.error(error, 'Failed to send feedback:');
 
         // Handle specific error types
         if (error instanceof TRPCError && error.code === 'NOT_FOUND') {

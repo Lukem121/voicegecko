@@ -33,7 +33,7 @@ export default async function PricingPage() {
   try {
     prices = await getCachedPricingData();
   } catch (error) {
-    log.error('Error fetching pricing data', { error });
+    log.error(error, 'Error fetching pricing data');
     prices = null;
   }
 

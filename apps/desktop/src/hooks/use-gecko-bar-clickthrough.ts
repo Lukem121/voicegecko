@@ -40,7 +40,7 @@ export function useGeckoBarClickthrough(
           const pos = await webview.outerPosition();
           windowPosRef.current = { x: pos.x, y: pos.y };
         } catch (e) {
-          log.error('[Clickthrough] Failed to get window position', e);
+          log.error(e, '[Clickthrough] Failed to get window position');
         }
 
         // Update cached window position on move
@@ -50,7 +50,7 @@ export function useGeckoBarClickthrough(
             windowPosRef.current = { x: pos.x, y: pos.y };
           } catch (err) {
             // non-fatal
-            log.error('[Clickthrough] Failed to refresh window position', err);
+            log.error(err, '[Clickthrough] Failed to refresh window position');
           }
         });
         cleanupFns.push(unlistenMove);
@@ -87,14 +87,14 @@ export function useGeckoBarClickthrough(
               cachedIsIgnoredRef.current = shouldIgnore;
               // Best-effort; ignore failures
               webview.setIgnoreCursorEvents(shouldIgnore).catch((err) => {
-                log.error('[Clickthrough] setIgnoreCursorEvents failed', err);
+                log.error(err, '[Clickthrough] setIgnoreCursorEvents failed');
               });
             }
           }
         );
         cleanupFns.push(unlistenMouse);
       } catch (error) {
-        log.error('[Clickthrough] Initialization failed', error);
+        log.error(error, '[Clickthrough] Initialization failed');
       }
     }
 
@@ -104,7 +104,7 @@ export function useGeckoBarClickthrough(
       isMounted = false;
       // Ensure interactions are re-enabled on unmount
       webview.setIgnoreCursorEvents(false).catch((err) => {
-        log.error('[Clickthrough] Failed to reset ignore cursor events', err);
+        log.error(err, '[Clickthrough] Failed to reset ignore cursor events');
       });
       for (const fn of cleanupFns) {
         fn();

@@ -152,7 +152,7 @@ export function useGeckoBarState(): UseGeckoBarStateReturn {
 
         log.info('[GeckoBar] ✅ UI-only event listeners initialized');
       } catch (error) {
-        log.error('Failed to initialize Gecko Bar UI events:', error);
+        log.error(error, 'Failed to initialize Gecko Bar UI events:');
       }
     }
 
@@ -182,7 +182,7 @@ export function useGeckoBarState(): UseGeckoBarStateReturn {
       // Send event to main window to handle the business logic
       emit('gecko-bar-recording-request', { action: 'toggle' }).catch(
         (error) => {
-          log.error('[GeckoBar] Failed to emit recording request:', error);
+          log.error(error, '[GeckoBar] Failed to emit recording request:');
         }
       );
     }
@@ -204,7 +204,7 @@ export function useGeckoBarState(): UseGeckoBarStateReturn {
         // Send event to main window to handle the business logic
         await emit('gecko-bar-recording-request', { action: 'cancel' });
       } catch (error) {
-        log.error('[GeckoBar] Failed to emit cancel request:', error);
+        log.error(error, '[GeckoBar] Failed to emit cancel request:');
       } finally {
         setIsLoading(false);
       }
@@ -228,7 +228,7 @@ export function useGeckoBarState(): UseGeckoBarStateReturn {
         // Send event to main window to handle the business logic
         await emit('gecko-bar-recording-request', { action: 'finish' });
       } catch (error) {
-        log.error('[GeckoBar] Failed to emit finish request:', error);
+        log.error(error, '[GeckoBar] Failed to emit finish request:');
         setIsTransitioning(false);
       } finally {
         setIsLoading(false);
@@ -281,15 +281,15 @@ export function useGeckoBarState(): UseGeckoBarStateReturn {
               log.info('[GeckoBar] ✋ Pass-through mode disabled');
             } catch (error) {
               log.error(
-                '[GeckoBar] Failed to disable pass-through mode:',
-                error
+                error,
+                '[GeckoBar] Failed to disable pass-through mode:'
               );
             }
           },
           5000
         );
       } catch (error) {
-        log.error('[GeckoBar] Failed to enable pass-through mode:', error);
+        log.error(error, '[GeckoBar] Failed to enable pass-through mode:');
       }
     },
     [isPassthroughMode, isLoading, timeoutManager]

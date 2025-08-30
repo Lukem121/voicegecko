@@ -28,7 +28,7 @@ async function fetchFromAllReleases(): Promise<GitHubRelease | null> {
 
     return releases.length > 0 ? (releases[0] as GitHubRelease) : null;
   } catch (listError) {
-    log.error('Error fetching releases list:', listError);
+    log.error(listError, 'Error fetching releases list:');
     return null;
   }
 }

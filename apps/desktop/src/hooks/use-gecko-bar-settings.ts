@@ -27,7 +27,7 @@ export function useGeckoBarSettings() {
         };
         setConfig(migratedConfig);
       } catch (error) {
-        log.error('Failed to load gecko bar settings:', error);
+        log.error(error, 'Failed to load gecko bar settings:');
       } finally {
         setIsLoading(false);
       }
@@ -51,7 +51,7 @@ export function useGeckoBarSettings() {
           await invoke('hide_gecko_bar');
         }
       } catch (error) {
-        log.error('Failed to update gecko bar settings:', error);
+        log.error(error, 'Failed to update gecko bar settings:');
         // Revert the state if the update failed
         setConfig(config);
       }
@@ -67,7 +67,7 @@ export function useGeckoBarSettings() {
       try {
         await invoke('set_gecko_bar_config', { config: newConfig });
       } catch (error) {
-        log.error('Failed to update gecko bar fullscreen setting:', error);
+        log.error(error, 'Failed to update gecko bar fullscreen setting:');
         // Revert the state if the update failed
         setConfig(config);
       }

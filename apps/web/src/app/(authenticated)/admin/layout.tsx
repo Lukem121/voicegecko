@@ -1,8 +1,8 @@
 import { getServerSession } from '@acme/auth/utils/get-session';
 import { redirect } from 'next/navigation';
 import type { ReactNode } from 'react';
-
 import { APP_ROUTES } from '~/utils/app-routes';
+import { AdminNav } from './_components/admin-nav';
 
 type AppLayoutProperties = {
   readonly children: ReactNode;
@@ -20,7 +20,12 @@ const AppLayout = async ({ children }: AppLayoutProperties) => {
     return redirect(APP_ROUTES.HOME);
   }
 
-  return children;
+  return (
+    <div className="mx-auto max-w-6xl px-4">
+      <AdminNav />
+      {children}
+    </div>
+  );
 };
 
 export default AppLayout;

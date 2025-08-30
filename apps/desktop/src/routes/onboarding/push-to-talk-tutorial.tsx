@@ -99,7 +99,7 @@ function useRecordingTutorialSteps() {
 
           // Detect speech when recording and audio level is above threshold
           if (audioData.level > 0.05) {
-            log.info('[Tutorial] Speech detected, level:', audioData.level);
+            log.info(audioData.level, '[Tutorial] Speech detected, level:');
             setHasSpoken(true);
             completeStep(1); // Step 2: Speaking detected
           }
@@ -108,7 +108,7 @@ function useRecordingTutorialSteps() {
     };
 
     setupAudioLevelListener().catch((error) => {
-      log.error('Failed to setup audio level listener:', error);
+      log.error(error, 'Failed to setup audio level listener:');
     });
 
     return () => {

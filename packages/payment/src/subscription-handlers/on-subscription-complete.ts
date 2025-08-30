@@ -61,7 +61,7 @@ export const onSubscriptionComplete = async ({
       );
     }
   } catch (error) {
-    log.error('[Subscription] Error sending welcome email:', error);
+    log.error(error, '[Subscription] Error sending welcome email:');
   }
 
   // Send Discord notification for new subscription
@@ -102,7 +102,7 @@ export const onSubscriptionComplete = async ({
       `[Subscription] Discord notification sent for new subscription ${subscription.id}`
     );
   } catch (error) {
-    log.error('[Subscription] Error sending Discord notification:', error);
+    log.error(error, '[Subscription] Error sending Discord notification:');
   }
 
   // No special handling needed - our usage service already checks

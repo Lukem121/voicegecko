@@ -6,7 +6,7 @@ export function useAudioHelpers() {
     try {
       await invoke('play_test_sound');
     } catch (error) {
-      log.error('Failed to play test sound:', error);
+      log.error(error, 'Failed to play test sound:');
     }
   };
 

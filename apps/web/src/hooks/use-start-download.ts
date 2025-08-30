@@ -78,7 +78,7 @@ export function useStartDownload() {
 
         setTimeout(() => router.push('/download/success'), 50);
       } catch (error) {
-        log.error('Failed to start download from landing CTA', error);
+        log.error(error, 'Failed to start download from landing CTA');
         // As a fallback, go to the regular download page
         router.push('/download');
       }
