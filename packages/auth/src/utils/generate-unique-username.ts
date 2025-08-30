@@ -1,9 +1,9 @@
 import { db } from '@acme/db/client';
 import {
   adjectives,
-  nouns,
   generateFromEmail,
   generateUniqueAsync,
+  nouns,
   uniqueUsernameGenerator,
 } from 'unique-username-generator';
 import { usernameValidator } from '../schemas/username.schema';
@@ -23,7 +23,9 @@ function sanitizeUsername(input: string): string {
 }
 
 async function isTakenOrInvalid(candidate: string): Promise<boolean> {
-  if (!usernameValidator(candidate)) return true;
+  if (!usernameValidator(candidate)) {
+    return true;
+  }
   const existing = await db.query.user.findFirst({
     where: (table, { eq: eqFn }) => eqFn(table.username, candidate),
   });
@@ -39,7 +41,9 @@ async function tryEmailBased(email: string): Promise<string | null> {
       leadingFallback: 'member',
     });
     const candidate = sanitizeUsername(base);
-    if (candidate.length < MIN_USERNAME_LENGTH) continue;
+    if (candidate.length < MIN_USERNAME_LENGTH) {
+      continue;
+    }
     if (!(await isTakenOrInvalid(candidate))) {
       return candidate;
     }
@@ -52,7 +56,9 @@ export async function generateUniqueUsernameFromEmail(
 ): Promise<string> {
   if (email) {
     const fromEmail = await tryEmailBased(email);
-    if (fromEmail) return fromEmail;
+    if (fromEmail) {
+      return fromEmail;
+    }
   }
 
   // Fallback: use dictionaries, underscore separator, lower case, with digits
@@ -83,5 +89,3 @@ export async function generateUniqueUsernameFromEmail(
 
   return candidate.slice(0, MAX_USERNAME_LENGTH);
 }
-
-

@@ -27,7 +27,7 @@ const formatCompactNumber = (num: number): string => {
 // Format time intelligently (minutes for < 60min, hours for 60min+)
 const formatTime = (minutes: number): string => {
   if (minutes < 60) {
-    return `${Math.round(minutes)}min`;
+    return `${Math.round(minutes)} min`;
   }
   const hours = minutes / 60;
   return `${hours.toFixed(1).replace(REGEX_NUM_FORMAT, '')}h`;
