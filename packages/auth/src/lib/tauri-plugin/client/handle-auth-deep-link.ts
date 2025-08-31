@@ -50,6 +50,7 @@ export async function handleAuthDeepLink({
 
   if (
     !(
+      url.startsWith(`${scheme}:${basePath}`) ||
       url.startsWith(`${scheme}:/${basePath}`) ||
       newUrl.pathname.startsWith(basePath)
     )
@@ -60,7 +61,9 @@ export async function handleAuthDeepLink({
   const href = `/${
     newUrl.protocol.startsWith('http')
       ? url.replace(newUrl.origin, '').replace(basePath, '')
-      : url.replace(`${scheme}:/${basePath}`, '')
+      : url
+          .replace(`${scheme}:${basePath}`, '')
+          .replace(`${scheme}:/${basePath}`, '')
   }`;
 
   if (debugLogs) {

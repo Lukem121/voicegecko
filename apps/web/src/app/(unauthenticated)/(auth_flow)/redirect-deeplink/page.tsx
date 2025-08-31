@@ -20,8 +20,9 @@ export default function Page() {
   const [countdown, setCountdown] = useState(3);
 
   const tauriRedirect = searchParams.get('tauriRedirect');
+  const httpURL = searchParams.get('httpURL');
 
-  // Handle automatic redirect
+  // Handle automatic redirect (ensure cookies set first if httpURL present)
   useEffect(() => {
     if (!tauriRedirect) {
       setRedirectState('error');
@@ -32,6 +33,18 @@ export default function Page() {
       try {
         // Small delay to show loading state
         await new Promise((resolve) => setTimeout(resolve, 500));
+
+        // If server passed an httpURL, call it first to ensure browser cookies are set
+        if (httpURL) {
+          try {
+            await fetch(httpURL, {
+              credentials: 'include',
+              redirect: 'follow',
+            });
+          } catch {
+            // Non-fatal: proceed to deep link regardless
+          }
+        }
 
         // Attempt to redirect to desktop app
         window.location.href = tauriRedirect;
@@ -52,7 +65,7 @@ export default function Page() {
     };
 
     attemptRedirect();
-  }, [tauriRedirect]);
+  }, [tauriRedirect, httpURL]);
 
   // Countdown timer for manual state
   useEffect(() => {

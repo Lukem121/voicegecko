@@ -34,14 +34,12 @@ export function setupBetterAuthTauri({
     return;
   }
 
+  // Use native fetch only on macOS when running under tauri: protocol (original behavior)
   if (window.location.protocol === 'tauri:' && platform() === 'macos') {
     if (debugLogs) {
       log.info('[Better Auth Tauri] setupTauriFetch');
     }
-
-    setupTauriFetch({
-      matcher,
-    });
+    setupTauriFetch({ matcher });
   } else if (debugLogs) {
     log.info('[Better Auth Tauri] skip setupTauriFetch');
   }
