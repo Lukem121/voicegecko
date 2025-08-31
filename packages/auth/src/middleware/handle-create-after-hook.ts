@@ -1,4 +1,4 @@
-import { sendWelcomeEmail } from '@acme/email/send/welcome';
+// import { sendWelcomeEmail } from '@acme/email/send/welcome';
 import { DiscordAdapter } from '@acme/notifications/discord-adapter';
 import type { GenericEndpointContext, User } from 'better-auth';
 
@@ -15,11 +15,11 @@ export const handleCreateAfterHook = async (
       username: user.name,
       timestamp: new Date().toISOString(),
     }),
-    sendWelcomeEmail({
-      user: {
-        email: user.email,
-        name: user.name,
-      },
-    }),
+    // sendWelcomeEmail({
+    //   user: {
+    //     email: user.email,
+    //     name: user.name,
+    //   },
+    // }),
   ]);
 };
