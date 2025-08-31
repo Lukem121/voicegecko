@@ -26,7 +26,7 @@ import { useState } from 'react';
 
 import { authClient } from '~/lib/client';
 import { useAuthError } from '~/stores/auth.store';
-import { trpc } from '~/trpc';
+import { queryClient, trpc } from '~/trpc';
 import { getClientAuthErrorMessage } from '~/utils/client-error-messages';
 import { countdown } from '../../utils/countdown';
 import { SocialSignInButton } from './-components/social-sign-in-button';
@@ -89,12 +89,18 @@ function SignIn() {
     const { error: signInError } = await authClient.signIn.email({
       email: values.email,
       password: values.password,
-      fetchOptions: {
-        onSuccess: () => router.navigate({ to: callbackURL }),
-      },
     });
 
     if (!signInError) {
+      try {
+        await queryClient.invalidateQueries({
+          queryKey: trpc.auth.getSession.queryKey(),
+        });
+        await router.invalidate();
+      } catch {}
+      setTimeout(() => {
+        router.navigate({ to: callbackURL }).catch(() => {});
+      }, 200);
       return;
     }
 
