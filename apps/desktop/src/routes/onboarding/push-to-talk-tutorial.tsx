@@ -1,14 +1,4 @@
 import { log } from '@acme/observability/log';
-import {
-  Stepper,
-  StepperDescription,
-  StepperIndicator,
-  StepperItem,
-  StepperSeparator,
-  StepperTitle,
-  StepperTrigger,
-} from '@acme/ui/components/stepper-vertical';
-
 import { Badge } from '@acme/ui/components/ui/badge';
 import {
   Card,
@@ -20,16 +10,12 @@ import {
 import { Textarea } from '@acme/ui/components/ui/textarea';
 import { createFileRoute } from '@tanstack/react-router';
 import { listen } from '@tauri-apps/api/event';
-import {
-  AudioLines,
-  CheckCircle,
-  Clipboard,
-  KeyRound,
-  Mic,
-} from 'lucide-react';
-import { motion } from 'motion/react';
+import { AudioLines, GraduationCap } from 'lucide-react';
+import { motion, useReducedMotion } from 'motion/react';
 import React, { useEffect, useState } from 'react';
+import { AudioVisualizer } from '~/components/audio-visualizer';
 import { useOnboarding } from '~/components/onboarding/onboarding-provider';
+import { useAudioProcessor } from '~/hooks/use-audio-processor';
 import { useShortcuts } from '~/hooks/use-shortcuts';
 import { formatKeysForDisplay, getOS } from '~/lib/shortcuts/utils';
 import { useEventStore } from '~/stores/event.store';
@@ -39,13 +25,7 @@ export const Route = createFileRoute('/onboarding/push-to-talk-tutorial')({
   component: RecordingTutorialStep,
 });
 
-// Type for tutorial steps
-type TutorialStep = {
-  title: string;
-  description: React.ReactNode;
-  icon: React.ComponentType<{ className?: string }>;
-  instruction: string;
-};
+// Removed in favor of simplified stacked layout
 
 // Hook to track recording tutorial steps using the app's event store
 function useRecordingTutorialSteps() {
@@ -155,23 +135,34 @@ function useRecordingTutorialSteps() {
 }
 
 // Component to render keyboard shortcuts with proper styling
-const ShortcutBadge = ({ keys }: { keys: string[] }) => (
-  <span className="mx-1 inline-flex items-center gap-1">
-    {keys.map((key, index) => (
-      <React.Fragment key={key}>
-        <Badge
-          className="inline-flex px-1.5 py-0.5 font-mono text-xs"
-          variant="outline"
-        >
-          {key}
-        </Badge>
-        {index < keys.length - 1 && (
-          <span className="text-muted-foreground text-xs">+</span>
-        )}
-      </React.Fragment>
-    ))}
-  </span>
-);
+const ShortcutBadge = ({
+  keys,
+  size = 'md',
+}: {
+  keys: string[];
+  size?: 'sm' | 'md';
+}) => {
+  const sizeClasses =
+    size === 'md' ? 'px-2 py-1 text-sm' : 'px-1.5 py-0.5 text-xs';
+  const plusSize = size === 'md' ? 'text-sm' : 'text-xs';
+  return (
+    <span className="mx-1 inline-flex items-center gap-1">
+      {keys.map((key, index) => (
+        <React.Fragment key={key}>
+          <Badge
+            className={`inline-flex font-mono ${sizeClasses}`}
+            variant="outline"
+          >
+            {key}
+          </Badge>
+          {index < keys.length - 1 && (
+            <span className={`text-muted-foreground ${plusSize}`}>+</span>
+          )}
+        </React.Fragment>
+      ))}
+    </span>
+  );
+};
 
 // Component to show OR separator
 const OrSeparator = () => (
@@ -235,12 +226,10 @@ const RecordingMethodOptions = ({
 );
 
 function RecordingTutorialStep() {
-  const { markStepCompleted, sendMascotMessage, triggerMascotAnimation } =
-    useOnboarding();
+  const { markStepCompleted } = useOnboarding();
 
   // Track which messages have been sent to prevent duplicates
   const sentMessages = React.useRef(new Set<string>());
-  const tutorialActionsPerformed = React.useRef(false);
 
   // Track previous dictation to detect empty results
   const previousDictationText = React.useRef<string | null>(null);
@@ -251,10 +240,10 @@ function RecordingTutorialStep() {
   const lastAnimatedDictation = React.useRef<string>('');
 
   const {
-    currentStep,
     isStepCompleted,
+    isRecording,
     dictationText,
-    recordingStatus: _recordingStatus,
+    recordingStatus,
     dictationStatus,
     isAllStepsCompleted,
     resetSteps,
@@ -281,23 +270,6 @@ function RecordingTutorialStep() {
   const toggleKeys = toggleShortcut
     ? formatKeysForDisplay(toggleShortcut.keys, os)
     : ['Ctrl', 'Shift', 'R']; // Fallback to default
-
-  // Helper to send message only once with persistence
-  const sendMessageOnce = React.useCallback(
-    (messageId: string, message: Parameters<typeof sendMascotMessage>[0]) => {
-      if (sentMessages.current.has(messageId)) {
-        log.info(
-          `[Tutorial Messages] Skipping duplicate message: ${messageId}`
-        );
-        return;
-      }
-
-      log.info(`[Tutorial Messages] Sending message: ${messageId}`, message);
-      sentMessages.current.add(messageId);
-      sendMascotMessage({ ...message, persist: true });
-    },
-    [sendMascotMessage]
-  );
 
   // Helper to reset tutorial steps for retry
   const resetForRetry = React.useCallback(() => {
@@ -330,22 +302,6 @@ function RecordingTutorialStep() {
     });
   }, [resetSteps]);
 
-  // Send initial tutorial message
-  useEffect(() => {
-    if (tutorialActionsPerformed.current) {
-      return;
-    }
-    tutorialActionsPerformed.current = true;
-
-    sendMessageOnce('initial', {
-      content:
-        "Perfect! Your microphone is all set up and ready to go. Now let's learn how to record! You can use either method: Push-to-talk (hold to record) or Toggle (press once to start/stop). Try whichever feels more comfortable!",
-      type: 'celebration',
-      duration: 8000,
-      priority: 'high',
-    });
-  }, [sendMessageOnce]);
-
   // Check for empty dictation separately to handle retries
   useEffect(() => {
     // Only process when status changes TO "complete", not while it remains "complete"
@@ -377,16 +333,6 @@ function RecordingTutorialStep() {
           // Update tracking BEFORE sending message to prevent loops
           previousDictationText.current = dictationText;
 
-          // Send retry message immediately without the sendMessageOnce deduplication
-          sendMascotMessage({
-            content:
-              "Hmm, I didn't catch that. Remember to hold the key down and speak clearly. Let's try again!",
-            type: 'warning',
-            duration: 5000,
-            priority: 'high',
-            persist: true,
-          });
-
           // Reset tutorial state after sending the message
           setTimeout(() => {
             log.info(
@@ -407,7 +353,7 @@ function RecordingTutorialStep() {
       // Reset the status tracker when not complete
       lastProcessedDictationStatus.current = dictationStatus;
     }
-  }, [dictationStatus, dictationText, sendMascotMessage, resetForRetry]);
+  }, [dictationStatus, dictationText, resetForRetry]);
 
   // Use primitive values to avoid function recreation issues
   const step0Completed = isStepCompleted(0);
@@ -418,60 +364,20 @@ function RecordingTutorialStep() {
   // Track the last processed dictation to prevent infinite loops
   const lastProcessedDictation = React.useRef<string>('');
 
-  // Helper function to process individual step messages
-  const processStepMessages = React.useCallback(() => {
-    if (step0Completed && !sentMessages.current.has('step0')) {
-      sendMessageOnce('step0', {
-        content: `Great! You started recording! Now say "I love Voice Gecko"`,
-        type: 'info',
-        duration: 2000,
-        priority: 'high',
-      });
-    }
-
-    if (step1Completed && !sentMessages.current.has('step1')) {
-      sendMessageOnce('step1', {
-        content: 'Perfect! I hear you! 👂',
-        type: 'info',
-        duration: 2000,
-        priority: 'high',
-      });
-    }
-  }, [step0Completed, step1Completed, sendMessageOnce]);
-
   // Helper function to handle completion celebration
   const handleCompletion = React.useCallback(() => {
-    if (!sentMessages.current.has('complete')) {
-      sendMessageOnce('complete', {
-        content:
-          "🎉 Congratulations! You've mastered recording with VoiceGecko!",
-        type: 'success',
-        duration: 4000,
-        priority: 'high',
-      });
-    }
-
-    if (!sentMessages.current.has('immediate-celebration')) {
-      sentMessages.current.add('immediate-celebration');
-      triggerMascotAnimation('dancing');
-    }
-
     if (!sentMessages.current.has('tutorial-completed')) {
       sentMessages.current.add('tutorial-completed');
       markStepCompleted('tutorial', 100);
     }
 
     lastProcessedDictation.current = dictationText;
-  }, [
-    sendMessageOnce,
-    triggerMascotAnimation,
-    markStepCompleted,
-    dictationText,
-  ]);
+  }, [markStepCompleted, dictationText]);
 
-  // Trigger animation when new dictation text appears
+  // Trigger animation when a dictation completes and new text appears
   useEffect(() => {
     if (
+      dictationStatus === 'complete' &&
       dictationText &&
       dictationText.trim() !== '' &&
       dictationText !== lastAnimatedDictation.current
@@ -488,11 +394,11 @@ function RecordingTutorialStep() {
       // Reset animation state after animation completes
       const timer = setTimeout(() => {
         setShouldAnimateDictation(false);
-      }, 1000);
+      }, 900);
 
       return () => clearTimeout(timer);
     }
-  }, [dictationText]);
+  }, [dictationText, dictationStatus]);
 
   // Handle step completion messages with stable dependencies
   useEffect(() => {
@@ -523,8 +429,6 @@ function RecordingTutorialStep() {
       return;
     }
 
-    processStepMessages();
-
     if (
       isAllStepsCompleted &&
       hasValidDictation &&
@@ -539,123 +443,148 @@ function RecordingTutorialStep() {
     step3Completed,
     dictationText,
     isAllStepsCompleted,
-    processStepMessages,
     handleCompletion,
   ]);
 
-  const steps: TutorialStep[] = [
-    {
-      title: 'Start recording',
-      description: (
-        <>
-          <span>Choose your recording method:</span>
-          <RecordingMethodOptions
-            pushToTalkKeys={pushToTalkKeys}
-            toggleKeys={toggleKeys}
-          />
-        </>
-      ),
-      icon: KeyRound,
-      instruction:
-        'Use either push-to-talk (hold) or toggle (press once) to start recording',
-    },
-    {
-      title: 'Speak your message',
-      description: (
-        <>
-          Say something like <strong>I love VoiceGecko</strong>
-        </>
-      ),
-      icon: Mic,
-      instruction: 'Try saying: I love VoiceGecko',
-    },
-    {
-      title: 'Stop recording',
-      description: (
-        <div className="mt-2 space-y-2">
-          <MethodOption
-            action={<strong>Release</strong>}
-            description="the key (push-to-talk)"
-            label="A"
-          />
-          <OrSeparator />
-          <MethodOption
-            action={<strong>Press</strong>}
-            description="again (toggle)"
-            label="B"
-            shortcut={<ShortcutBadge keys={toggleKeys} />}
-          />
-        </div>
-      ),
-      icon: CheckCircle,
-      instruction: 'Stop recording using your chosen method',
-    },
-    {
-      title: 'Dictation complete',
-      description: 'Your text is ready and copied to clipboard!',
-      icon: Clipboard,
-      instruction: 'Your transcribed text appears below and in the mascot chat',
-    },
-  ];
+  // Derived transcribing state based on dictation status
+  const isDictationTranscribing = useEventStore((state) =>
+    state.isTranscribing()
+  );
+
+  // Live audio level + status for quick visual feedback
+  const { audioLevel, isActive } = useAudioProcessor({
+    isRecording: Boolean(isRecording),
+    isTranscribing: isDictationTranscribing,
+    isTransitioning: recordingStatus === 'processing',
+    recordingStatus: recordingStatus ?? 'idle',
+  });
+
+  const getStatusBadge = () => {
+    if (recordingStatus === 'recording') {
+      return (
+        <Badge className="bg-red-50 text-red-600" variant="secondary">
+          Recording
+        </Badge>
+      );
+    }
+    if (recordingStatus === 'processing' || isDictationTranscribing) {
+      return (
+        <Badge className="bg-amber-50 text-amber-600" variant="secondary">
+          Processing
+        </Badge>
+      );
+    }
+    if (dictationStatus === 'complete') {
+      return (
+        <Badge className="bg-emerald-50 text-emerald-700" variant="secondary">
+          Ready
+        </Badge>
+      );
+    }
+    return (
+      <Badge className="bg-muted/50" variant="secondary">
+        Idle
+      </Badge>
+    );
+  };
+
+  const prefersReducedMotion = useReducedMotion();
+
+  const dictationAnimation = React.useMemo(() => {
+    if (!shouldAnimateDictation) {
+      return {};
+    }
+    if (prefersReducedMotion) {
+      return {
+        borderColor: [
+          'hsl(var(--border))',
+          'hsl(var(--primary))',
+          'hsl(var(--border))',
+        ],
+      };
+    }
+    return {
+      borderColor: [
+        'hsl(var(--border))',
+        'hsl(var(--primary))',
+        'hsl(var(--border))',
+      ],
+      boxShadow: [
+        '0 0 0 0 rgba(0, 0, 0, 0)',
+        '0 0 0 5px rgba(59, 130, 246, 0.24), 0 0 14px rgba(59, 130, 246, 0.18)',
+        '0 0 0 0 rgba(0, 0, 0, 0)',
+      ],
+    };
+  }, [shouldAnimateDictation, prefersReducedMotion]);
 
   return (
     <div className="flex min-h-full flex-col">
       <div className="flex flex-1 px-6 py-8">
-        <div className="mx-auto grid w-full max-w-7xl grid-cols-1 gap-8 lg:grid-cols-[3fr_2fr]">
+        <div className="mx-auto grid w-full max-w-3xl grid-cols-1 gap-8">
           {/* Left Column - Tutorial Steps */}
           <motion.div
-            animate={{ opacity: 1, x: 0 }}
-            initial={{ opacity: 0, x: -30 }}
+            animate={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.6, delay: 0.1 }}
           >
             <Card className="h-fit shadow-lg">
               <CardHeader>
-                <CardTitle>Dictation Tutorial</CardTitle>
-                <CardDescription>
-                  Learn how to record and transcribe with VoiceGecko. Your
-                  dictation will appear on the right when ready!
-                </CardDescription>
+                <div className="flex items-center gap-2">
+                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10">
+                    <GraduationCap className="h-4 w-4 text-primary" />
+                  </div>
+                  <div>
+                    <CardTitle>Learn to record</CardTitle>
+                    <CardDescription>
+                      Two ways to record. Try one now — your text will appear
+                      below.
+                    </CardDescription>
+                  </div>
+                </div>
               </CardHeader>
               <CardContent>
-                <Stepper
-                  className="w-full"
-                  orientation="vertical"
-                  value={currentStep}
-                >
-                  {steps.map((step, index) => (
-                    <StepperItem
-                      className="relative not-last:flex-1 items-start"
-                      completed={isStepCompleted(index)}
-                      key={step.title}
-                      step={index + 1}
-                    >
-                      <StepperTrigger className="items-start rounded pb-8 last:pb-0">
-                        <StepperIndicator>
-                          <step.icon className="h-3 w-3" />
-                        </StepperIndicator>
-                        <div className="mt-0.5 space-y-0.5 px-2 text-left">
-                          <StepperTitle className="font-semibold text-sm">
-                            {step.title}
-                          </StepperTitle>
-                          <StepperDescription className="text-muted-foreground text-xs">
-                            {step.description}
-                          </StepperDescription>
+                {/* Quick Start: Methods + Live Indicator */}
+                <div className="mb-4 grid grid-cols-1 gap-3 md:grid-cols-[2fr_1fr]">
+                  <div className="rounded-md border bg-muted/10 p-3">
+                    <div className="mb-2 text-muted-foreground text-xs">
+                      Recording methods
+                    </div>
+                    <RecordingMethodOptions
+                      pushToTalkKeys={pushToTalkKeys}
+                      toggleKeys={toggleKeys}
+                    />
+                  </div>
+                  <div className="flex flex-col gap-4 rounded-md border bg-muted/10 p-3">
+                    <div className="flex items-center gap-2">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10">
+                        <AudioLines className="h-4 w-4 text-primary" />
+                      </div>
+                      <div className="text-xs">
+                        <div className="font-medium">Live input</div>
+                        <div className="text-muted-foreground">
+                          Speak to see activity
                         </div>
-                      </StepperTrigger>
-                      {index < steps.length - 1 && (
-                        <StepperSeparator className="-order-1 -translate-x-1/2 absolute inset-y-0 top-[calc(1.5rem+0.125rem)] left-3 m-0 group-data-[orientation=vertical]/stepper:h-[calc(100%-1.5rem-0.25rem)] group-data-[orientation=horizontal]/stepper:w-[calc(100%-1.5rem-0.25rem)] group-data-[orientation=horizontal]/stepper:flex-none" />
-                      )}
-                    </StepperItem>
-                  ))}
-                </Stepper>
+                      </div>
+                    </div>
+                    <div className="flex h-14 items-center justify-between gap-2">
+                      <AudioVisualizer
+                        audioLevel={audioLevel as AudioLevelEvent}
+                        className="ml-4"
+                        isRecording={Boolean(isActive || isRecording)}
+                        size="large"
+                      />
+                      {getStatusBadge()}
+                    </div>
+                  </div>
+                </div>
               </CardContent>
             </Card>
           </motion.div>
 
           {/* Right Column - Dictation Result */}
           <motion.div
-            animate={{ opacity: 1, x: 0 }}
-            initial={{ opacity: 0, x: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0, y: 20 }}
             transition={{ duration: 0.6, delay: 0.2 }}
           >
             <Card className="h-fit">
@@ -665,7 +594,7 @@ function RecordingTutorialStep() {
                     <AudioLines className="h-4 w-4 text-primary" />
                   </div>
                   <div>
-                    <CardTitle>Dictation Result</CardTitle>
+                    <CardTitle>Dictation result</CardTitle>
                     <CardDescription>
                       {dictationText
                         ? 'Your voice has been converted to text'
@@ -676,22 +605,7 @@ function RecordingTutorialStep() {
               </CardHeader>
               <CardContent>
                 <motion.div
-                  animate={
-                    shouldAnimateDictation
-                      ? {
-                          borderColor: [
-                            'hsl(var(--border))',
-                            'hsl(217, 91%, 60%)',
-                            'hsl(var(--border))',
-                          ],
-                          boxShadow: [
-                            '0 0 0 0 rgba(59, 130, 246, 0)',
-                            '0 0 0 3px rgba(59, 130, 246, 0.3), 0 0 8px rgba(59, 130, 246, 0.2)',
-                            '0 0 0 0 rgba(59, 130, 246, 0)',
-                          ],
-                        }
-                      : {}
-                  }
+                  animate={dictationAnimation}
                   className="rounded-md border border-input"
                   transition={{
                     duration: 1.2,
@@ -700,8 +614,9 @@ function RecordingTutorialStep() {
                   }}
                 >
                   <Textarea
+                    aria-label="Dictation result"
                     className="min-h-[120px] resize-none border-0 focus-visible:ring-0"
-                    placeholder="Start the tutorial and your dictation will appear here..."
+                    placeholder="Speak now and your dictation will appear here..."
                     readOnly
                     value={dictationText || ''}
                   />

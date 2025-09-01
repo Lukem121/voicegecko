@@ -1,4 +1,3 @@
-import { log } from '@acme/observability/log';
 import { Button } from '@acme/ui/components/ui/button';
 import {
   Card,
@@ -9,6 +8,7 @@ import {
 } from '@acme/ui/components/ui/card';
 import { createFileRoute } from '@tanstack/react-router';
 import { openUrl } from '@tauri-apps/plugin-opener';
+import confetti from 'canvas-confetti';
 import {
   BookOpen,
   Check,
@@ -25,8 +25,37 @@ export const Route = createFileRoute('/onboarding/completion')({
   component: CompletionStep,
 });
 
+const handleConfetti = () => {
+  const end = Date.now() + 250; // 3 seconds
+
+  const frame = () => {
+    if (Date.now() > end) {
+      return;
+    }
+
+    confetti({
+      particleCount: 5,
+      angle: 60,
+      spread: 55,
+      startVelocity: 60,
+      origin: { x: -0.1, y: 0.5 },
+    });
+    confetti({
+      particleCount: 5,
+      angle: 120,
+      spread: 55,
+      startVelocity: 60,
+      origin: { x: 1.1, y: 0.5 },
+    });
+
+    requestAnimationFrame(frame);
+  };
+
+  frame();
+};
+
 function CompletionStep() {
-  const { markStepCompleted, sendMascotMessage } = useOnboarding();
+  const { markStepCompleted } = useOnboarding();
 
   const completionActionsPerformed = React.useRef(false);
 
@@ -37,25 +66,17 @@ function CompletionStep() {
     }
     completionActionsPerformed.current = true;
 
-    // Send completion message
-    sendMascotMessage({
-      content:
-        "🎉 Setup complete! You're ready to start transcribing with VoiceGecko.",
-      type: 'celebration',
-      persist: true,
-    });
-
     // Mark step completed
+    handleConfetti();
     markStepCompleted('completion', 100);
-  }, [markStepCompleted, sendMascotMessage]);
+  }, [markStepCompleted]);
 
   const handleJoinDiscord = () => {
     openUrl('https://discord.gg/BFxNQCzZjB');
   };
 
   const handleUpgradeToPro = () => {
-    // TODO: Open upgrade modal or navigate to subscription page
-    log.info('Navigate to pro upgrade');
+    openUrl('https://www.voicegecko.io/pricing');
   };
 
   return (

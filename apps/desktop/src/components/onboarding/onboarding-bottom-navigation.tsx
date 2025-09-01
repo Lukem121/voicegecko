@@ -1,5 +1,5 @@
 import { Button } from '@acme/ui/components/ui/button';
-import { ChevronLeft, ChevronRight, ChevronsRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 import { useOnboarding } from './onboarding-provider';
 
@@ -16,7 +16,7 @@ export function OnboardingBottomNavigation() {
   const currentStepIndex = currentStep ? getStepIndex(currentStep.id) : 0;
   const hasPreviousStep = currentStepIndex > 0;
   const hasNextStep = currentStepIndex < steps.length - 1;
-  const isLastStep = currentStepIndex === steps.length - 1;
+  // const isLastStep = currentStepIndex === steps.length - 1;
 
   return (
     <div className="border-border/50 border-t bg-white/50 px-8 py-4 backdrop-blur-sm dark:bg-gray-900/50">
@@ -40,7 +40,7 @@ export function OnboardingBottomNavigation() {
         {/* Right Side - Next/Skip/Complete Buttons */}
         <div className="flex items-center space-x-2">
           {/* Skip Button - Show on all steps except last */}
-          {!isLastStep && (
+          {/* {!isLastStep && (
             <Button
               className="flex items-center gap-2"
               onClick={() => skipOnboarding()}
@@ -49,7 +49,7 @@ export function OnboardingBottomNavigation() {
               Skip
               <ChevronsRight className="h-4 w-4" />
             </Button>
-          )}
+          )} */}
 
           {/* Next/Complete Button */}
           {hasNextStep ? (

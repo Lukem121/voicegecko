@@ -32,13 +32,8 @@ export const Route = createFileRoute('/onboarding/microphone-setup')({
 });
 
 function MicrophoneSetupStep() {
-  const {
-    markStepCompleted,
-    nextStep,
-    sendMascotMessage,
-    setCanProceed,
-    setStepProgress,
-  } = useOnboarding();
+  const { markStepCompleted, nextStep, setCanProceed, setStepProgress } =
+    useOnboarding();
 
   const {
     audioDevices,
@@ -110,16 +105,7 @@ function MicrophoneSetupStep() {
 
     // Start microphone test immediately with system default device
     startMicrophoneTest();
-
-    sendMascotMessage({
-      content:
-        "Now let's set up your microphone! I'll test it automatically - just speak and see if the bars light up!",
-      type: 'guidance',
-      persist: true,
-      duration: 5000,
-      priority: 'high',
-    });
-  }, [refreshAudioDevices, sendMascotMessage, startMicrophoneTest]);
+  }, [refreshAudioDevices, startMicrophoneTest]);
 
   // Auto-select first device for UI display (don't restart test)
   useEffect(() => {
@@ -171,15 +157,8 @@ function MicrophoneSetupStep() {
       }
 
       await startMicrophoneTest(device);
-
-      sendMascotMessage({
-        content: `Testing "${device.name}" now! Speak and see if the bars light up!`,
-        type: 'info',
-        duration: 4000,
-        priority: 'high',
-      });
     },
-    [audioDevices, updateAudioDevice, startMicrophoneTest, sendMascotMessage]
+    [audioDevices, updateAudioDevice, startMicrophoneTest]
   );
 
   const handleConfirmMicrophone = useCallback(() => {
