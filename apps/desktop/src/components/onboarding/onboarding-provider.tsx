@@ -12,8 +12,6 @@ import {
   useRef,
 } from 'react';
 
-import type { MascotMessage } from '~/components/mascot/mascot-chat-provider';
-import { useMascotChat } from '~/components/mascot/mascot-chat-provider';
 import { analytics } from '~/lib/analytics/posthog-analytics';
 import { useSettingsStore } from '~/stores/settings.store';
 
@@ -26,14 +24,6 @@ export type OnboardingStepConfig = {
   canSkip?: boolean;
   autoAdvance?: boolean;
   dependencies?: string[];
-  mascotAnimation?:
-    | 'idle'
-    | 'listening'
-    | 'thinking'
-    | 'celebrating'
-    | 'welcoming'
-    | 'processing'
-    | 'dancing';
 };
 
 export type OnboardingEvent = {
@@ -73,19 +63,6 @@ export type OnboardingContextValue = {
 
   // Event system (simplified)
   emitEvent: (type: string, data?: Record<string, unknown>) => void;
-
-  // Mascot integration
-  sendMascotMessage: (message: Omit<MascotMessage, 'id'>) => void;
-  triggerMascotAnimation: (
-    animation:
-      | 'idle'
-      | 'listening'
-      | 'thinking'
-      | 'celebrating'
-      | 'welcoming'
-      | 'processing'
-      | 'dancing'
-  ) => void;
 
   // Utilities
   canAdvanceToStep: (stepId: string) => boolean;
@@ -215,7 +192,6 @@ export function OnboardingProvider({
   const [state, dispatch] = useReducer(onboardingReducer, initialState);
   const navigate = useNavigate();
   const { updateOnboardingCompleted } = useSettingsStore();
-  const mascotChat = useMascotChat();
 
   // Initialize only once
   const isInitializedRef = useRef(false);
@@ -379,18 +355,10 @@ export function OnboardingProvider({
 
     await updateOnboardingCompleted(true);
     emitEvent('onboarding_completed');
-
-    mascotChat.celebrate(
-      "🎉 Congratulations! You've completed the onboarding! Welcome to VoiceGecko!"
-    );
-
-    setTimeout(async () => {
-      await navigate({ to: '/' });
-    }, 2000);
+    await navigate({ to: '/' });
   }, [
     updateOnboardingCompleted,
     emitEvent,
-    mascotChat,
     navigate,
     state.completedSteps.size,
     steps.length,
@@ -420,44 +388,6 @@ export function OnboardingProvider({
   const setCanProceed = useCallback((canProceed: boolean) => {
     dispatch({ type: 'SET_CAN_PROCEED', payload: canProceed });
   }, []);
-
-  // Mascot integration
-  const sendMascotMessage = useCallback(
-    (message: Omit<MascotMessage, 'id'>) => {
-      mascotChat.sendMessage(message);
-    },
-    [mascotChat]
-  );
-
-  const triggerMascotAnimation = useCallback(
-    (
-      animation:
-        | 'idle'
-        | 'listening'
-        | 'thinking'
-        | 'celebrating'
-        | 'welcoming'
-        | 'processing'
-        | 'dancing'
-    ) => {
-      const validAnimations = [
-        'idle',
-        'listening',
-        'thinking',
-        'celebrating',
-        'welcoming',
-        'processing',
-        'dancing',
-      ];
-      if (validAnimations.includes(animation)) {
-        mascotChat.setAnimation({
-          type: animation,
-          duration: 3000,
-        });
-      }
-    },
-    [mascotChat]
-  );
 
   const nextStep = useCallback(
     async (assumeCompleted?: string) => {
@@ -501,42 +431,6 @@ export function OnboardingProvider({
     [steps, state.currentStepId, emitEvent, nextStep]
   );
 
-  // Update mascot animation when step changes (simplified)
-  const prevStepIdRef = useRef<string | null>(null);
-  const lastSetAnimationRef = useRef<string | null>(null);
-
-  useEffect(() => {
-    // If tutorial is completed, show dancing animation only once
-    if (
-      state.completedSteps.has('tutorial') &&
-      lastSetAnimationRef.current !== 'dancing-tutorial-complete'
-    ) {
-      lastSetAnimationRef.current = 'dancing-tutorial-complete';
-      mascotChat.setAnimation({
-        type: 'dancing',
-        duration: 3000,
-      });
-      return;
-    }
-
-    // Otherwise, use step-based animation
-    if (
-      currentStep?.mascotAnimation &&
-      prevStepIdRef.current !== currentStep.id
-    ) {
-      prevStepIdRef.current = currentStep.id;
-      mascotChat.setAnimation({
-        type: currentStep.mascotAnimation,
-        duration: 3000,
-      });
-    }
-  }, [
-    currentStep?.id,
-    currentStep?.mascotAnimation,
-    mascotChat,
-    state.completedSteps,
-  ]);
-
   // Build context value with stable reference
   const contextValue = useMemo<OnboardingContextValue>(
     () => ({
@@ -552,8 +446,6 @@ export function OnboardingProvider({
       setStepProgress,
       setCanProceed,
       emitEvent,
-      sendMascotMessage,
-      triggerMascotAnimation,
       canAdvanceToStep,
       getStepIndex,
       getNextStepId,
@@ -572,8 +464,6 @@ export function OnboardingProvider({
       setStepProgress,
       setCanProceed,
       emitEvent,
-      sendMascotMessage,
-      triggerMascotAnimation,
       canAdvanceToStep,
       getStepIndex,
       getNextStepId,

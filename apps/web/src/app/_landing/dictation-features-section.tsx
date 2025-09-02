@@ -5,6 +5,9 @@ import { cn } from '@acme/ui/lib/utils';
 import { ArrowRight } from 'lucide-react';
 import { motion } from 'motion/react';
 import Image from 'next/image';
+import LightDictionaryAddModal from 'public/assets/images/app-screenshots/light-dictionary-add-modal.png';
+import LightDictations from 'public/assets/images/app-screenshots/light-transcriptions.png';
+import ShortcutsRecording from 'public/assets/images/app-screenshots/shortcuts-recording.png';
 import { APP_ROUTES } from '~/utils/app-routes';
 import SectionWrapper from './section-wrapper';
 
@@ -51,9 +54,7 @@ export default function DictationFeaturesSection() {
                 <Image
                   alt="VoiceGecko dictation history interface"
                   className="h-full w-full object-cover object-top"
-                  height={400}
-                  src="/assets/images/app-screenshots/light-dictations.png"
-                  width={600}
+                  src={LightDictations}
                 />
               </div>
             </div>
@@ -84,9 +85,7 @@ export default function DictationFeaturesSection() {
                 <Image
                   alt="VoiceGecko custom dictionary interface"
                   className="h-full w-full object-contain"
-                  height={400}
-                  src="/assets/images/app-screenshots/light-dictionary-add-modal.png"
-                  width={600}
+                  src={LightDictionaryAddModal}
                 />
               </div>
             </div>
@@ -117,9 +116,7 @@ export default function DictationFeaturesSection() {
                 <Image
                   alt="VoiceGecko keyboard shortcuts settings"
                   className="h-full w-full object-cover object-top"
-                  height={400}
-                  src="/assets/images/app-screenshots/shortcuts-recording.png"
-                  width={600}
+                  src={ShortcutsRecording}
                 />
               </div>
             </div>
