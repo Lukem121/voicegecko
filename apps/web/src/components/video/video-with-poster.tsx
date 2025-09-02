@@ -33,7 +33,6 @@ export default function VideoWithPoster({
   }, []);
 
   const startPlayback = () => {
-    setIsReady(false);
     setIsPlaying(true);
   };
 
