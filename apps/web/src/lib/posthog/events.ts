@@ -176,4 +176,50 @@ export type PostHogEvent =
   | StudentDiscountInitiatedEvent
   | ErrorOccurredEvent
   | SocialProofViewedEvent
-  | GenerateLeadEvent;
+  | GenerateLeadEvent
+  // Video interactions
+  | VideoPlayClickedEvent
+  | VideoStartedEvent
+  | VideoPausedEvent
+  | VideoEndedEvent
+  | VideoErrorEvent;
+
+// Video events
+export type VideoPlayClickedEvent = BasePostHogEvent & {
+  event: 'video_play_clicked';
+  video_id?: string;
+  video_url?: string;
+  source?: string;
+};
+
+export type VideoStartedEvent = BasePostHogEvent & {
+  event: 'video_started';
+  video_id?: string;
+  video_url?: string;
+  current_time?: number;
+  source?: string;
+};
+
+export type VideoPausedEvent = BasePostHogEvent & {
+  event: 'video_paused';
+  video_id?: string;
+  video_url?: string;
+  current_time?: number;
+  source?: string;
+};
+
+export type VideoEndedEvent = BasePostHogEvent & {
+  event: 'video_ended';
+  video_id?: string;
+  video_url?: string;
+  duration?: number;
+  source?: string;
+};
+
+export type VideoErrorEvent = BasePostHogEvent & {
+  event: 'video_error';
+  video_id?: string;
+  video_url?: string;
+  error_message?: string;
+  source?: string;
+};
