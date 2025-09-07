@@ -36,6 +36,53 @@ export default function middleware(request: NextRequest) {
 
   const pathname = new URL(request.url).pathname;
 
+  // Lightweight server-side first-touch attribution cookie (optional)
+  try {
+    const url = request.nextUrl;
+    const params = url.searchParams;
+    const hasAttributionCookie = request.cookies.has('vg_attrib_initial');
+    const hasParams =
+      params.has('ref') ||
+      params.has('utm_source') ||
+      params.has('utm_medium') ||
+      params.has('utm_campaign') ||
+      params.has('utm_content') ||
+      params.has('utm_term') ||
+      params.has('gclid') ||
+      params.has('wbraid') ||
+      params.has('gbraid');
+
+    if (!hasAttributionCookie && hasParams) {
+      const referrer = request.headers.get('referer');
+      const payload = {
+        ref: params.get('ref'),
+        utm_source: params.get('utm_source') || (params.get('ref') ? `ref:${params.get('ref')}` : null),
+        utm_medium: params.get('utm_medium'),
+        utm_campaign: params.get('utm_campaign'),
+        utm_content: params.get('utm_content'),
+        utm_term: params.get('utm_term'),
+        gclid: params.get('gclid'),
+        wbraid: params.get('wbraid'),
+        gbraid: params.get('gbraid'),
+        referrer,
+        landing_page: url.pathname + url.search,
+        timestamp: new Date().toISOString(),
+      };
+
+      const response = NextResponse.next();
+      response.cookies.set('vg_attrib_initial', JSON.stringify(payload), {
+        httpOnly: true,
+        sameSite: 'lax',
+        secure: true,
+        path: '/',
+        maxAge: 60 * 60 * 24 * 180, // 180 days
+      });
+      return response;
+    }
+  } catch {
+    // ignore attribution cookie errors
+  }
+
   // Skip API routes - they have their own auth handling
   if (pathname.startsWith('/api/') || pathname.startsWith('/assets/')) {
     return NextResponse.next();
