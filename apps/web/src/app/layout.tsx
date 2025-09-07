@@ -11,6 +11,7 @@ import { plusJakartaSans, roobert } from './fonts';
 import '@acme/ui/globals.css';
 import Script from 'next/script';
 import { PostHogUserIdentifier } from '~/components/posthog';
+import AttributionTracker from '~/components/attribution-tracker';
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://www.voicegecko.io'),
@@ -74,6 +75,7 @@ export default function RootLayout(props: { children: React.ReactNode }) {
           <NuqsAdapter>
             <TRPCReactProvider>
               <CurrencyProvider>
+                <AttributionTracker />
                 <PostHogUserIdentifier />
                 {props.children}
               </CurrencyProvider>
