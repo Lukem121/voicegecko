@@ -4,6 +4,8 @@ import { cn } from '@acme/ui/lib/utils';
 import Image from 'next/image';
 import { useEffect, useRef, useState } from 'react';
 import ReactPlayer from 'react-player';
+import { usePostHog } from '~/hooks/use-posthog';
+import { SECTION_NAMES } from '~/lib/posthog/constants';
 import PlayButton from './play-button';
 
 type VideoWithPosterProps = {
@@ -27,6 +29,7 @@ export default function VideoWithPoster({
   const [isPlaying, setIsPlaying] = useState(false);
   const [isReady, setIsReady] = useState(false);
   const playerRef = useRef<ReactPlayer | null>(null);
+  const { trackEvent } = usePostHog();
 
   useEffect(() => {
     setMounted(true);
@@ -34,6 +37,12 @@ export default function VideoWithPoster({
 
   const startPlayback = () => {
     setIsPlaying(true);
+    trackEvent({
+      event: 'video_play_clicked',
+      video_url: videoUrl,
+      source: SECTION_NAMES.APP_SCREENSHOT,
+      platform: 'web',
+    });
   };
 
   const handleKeyDown: React.KeyboardEventHandler<HTMLButtonElement> = (
@@ -61,9 +70,40 @@ export default function VideoWithPoster({
             if (playerRef.current) {
               playerRef.current.seekTo(0);
             }
+            trackEvent({
+              event: 'video_ended',
+              video_url: videoUrl,
+              source: SECTION_NAMES.APP_SCREENSHOT,
+              platform: 'web',
+            });
+          }}
+          onError={(e) => {
+            trackEvent({
+              event: 'video_error',
+              video_url: videoUrl,
+              error_message: String(e),
+              source: SECTION_NAMES.APP_SCREENSHOT,
+              platform: 'web',
+            });
+          }}
+          onPause={() => {
+            trackEvent({
+              event: 'video_paused',
+              video_url: videoUrl,
+              source: SECTION_NAMES.APP_SCREENSHOT,
+              platform: 'web',
+            });
           }}
           onReady={() => {
             setIsReady(true);
+            if (isPlaying) {
+              trackEvent({
+                event: 'video_started',
+                video_url: videoUrl,
+                source: SECTION_NAMES.APP_SCREENSHOT,
+                platform: 'web',
+              });
+            }
           }}
           playing={isPlaying}
           ref={playerRef}

@@ -17,7 +17,7 @@ export const DEFAULT_SHORTCUTS: ShortcutCategory[] = [
       {
         id: 'toggle-recording',
         name: 'Toggle recording on/off',
-        keys: ['CommandOrControl', 'Shift', 'R'],
+        keys: ['CommandOrControl', 'Shift', 'Z'],
         global: true,
         enabled: true,
       },
