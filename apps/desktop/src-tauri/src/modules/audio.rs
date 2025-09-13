@@ -11,6 +11,8 @@ use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 use tauri::{Emitter, Manager};
+use tauri_plugin_sentry::sentry;
+use tauri_plugin_sentry::sentry::Level;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct AudioDevice {
@@ -248,38 +250,69 @@ pub fn start_recording(
                 let mut buffer = audio_buffer.lock().unwrap();
                 if !buffer.is_empty() {
                     let mut resampler = resampler.lock().unwrap();
-                    let required_len = resampler.input_frames_next() * resampler_channels;
-                    let missing = required_len.saturating_sub(buffer.len());
-                    if missing > 0 {
-                        buffer.extend_from_slice(&vec![0.0; missing]);
+
+                    // Ensure buffer length is a multiple of input_channels (whole frames)
+                    let input_channels_usize = input_channels as usize;
+                    let remainder = buffer.len() % input_channels_usize;
+                    if remainder > 0 {
+                        buffer
+                            .extend(std::iter::repeat(0.0).take(input_channels_usize - remainder));
                     }
 
-                    let waves_in = if resampler_channels == 2 {
-                        let mut left = Vec::with_capacity(buffer.len() / 2);
-                        let mut right = Vec::with_capacity(buffer.len() / 2);
+                    // Pad with silence up to the next input_frames_next() frames per channel
+                    let required_frames = resampler.input_frames_next();
+                    let frames_in_buffer = buffer.len() / input_channels_usize;
+                    if frames_in_buffer < required_frames {
+                        let frames_missing = required_frames - frames_in_buffer;
+                        let samples_missing = frames_missing * input_channels_usize;
+                        if samples_missing > 0 {
+                            buffer.extend(std::iter::repeat(0.0).take(samples_missing));
+                        }
+                    }
+
+                    // Build channelized input for the resampler
+                    let waves_in = if input_channels >= 2 {
+                        let mut left = Vec::with_capacity(required_frames);
+                        let mut right = Vec::with_capacity(required_frames);
 
                         if input_channels == 2 {
                             for chunk in buffer.chunks_exact(2) {
                                 left.push(chunk[0]);
                                 right.push(chunk[1]);
                             }
-                        } else if input_channels > 2 {
-                            // Multi-channel: take first 2 channels
-                            for chunk in buffer.chunks_exact(input_channels as usize) {
+                        } else {
+                            // Multi-channel: take first two channels
+                            for chunk in buffer.chunks_exact(input_channels_usize) {
                                 left.push(chunk[0]);
-                                right.push(chunk.get(1).copied().unwrap_or(chunk[0]));
+                                right.push(*chunk.get(1).unwrap_or(&chunk[0]));
                             }
                         }
                         vec![left, right]
                     } else {
+                        // Mono input
                         vec![buffer.clone()]
                     };
 
-                    let resampled_waves = resampler.process(&waves_in, None).unwrap();
-                    collect_resampled_samples(
-                        &mut output_samples.lock().unwrap(),
-                        &resampled_waves,
-                    );
+                    match resampler.process(&waves_in, None) {
+                        Ok(resampled_waves) => {
+                            collect_resampled_samples(
+                                &mut output_samples.lock().unwrap(),
+                                &resampled_waves,
+                            );
+                        }
+                        Err(e) => {
+                            // Capture to Sentry and continue gracefully
+                            sentry::capture_message(
+                                &format!(
+                                    "Resampler error during flush: {} | frames_in_buffer={} required_frames={}",
+                                    e,
+                                    waves_in[0].len(),
+                                    resampler.input_frames_next()
+                                ),
+                                Level::Error,
+                            );
+                        }
+                    }
                 }
 
                 // Store the recorded audio
@@ -342,8 +375,23 @@ fn process_samples_to_buffer(
             vec![chunk_to_process]
         };
 
-        let resampled_waves = resampler.process(&waves_in, None).unwrap();
-        collect_resampled_samples(output_samples, &resampled_waves);
+        match resampler.process(&waves_in, None) {
+            Ok(resampled_waves) => {
+                collect_resampled_samples(output_samples, &resampled_waves);
+            }
+            Err(e) => {
+                sentry::capture_message(
+                    &format!(
+                        "Resampler error during processing: {} | chunk_frames={} expected_frames={}",
+                        e,
+                        waves_in[0].len(),
+                        resampler.input_frames_next()
+                    ),
+                    Level::Error,
+                );
+                return;
+            }
+        }
     }
 }
 

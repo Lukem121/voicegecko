@@ -206,6 +206,42 @@ jobs:
           args: ${{ matrix.args }} --config ${{ matrix.config_file }}
           projectPath: apps/desktop
 
+      # Upload native debug symbols (PDB/DWARF) to Sentry for symbolication
+      - name: Upload debug symbols to Sentry (Windows/Self-hosted)
+        if: matrix.platform == 'self-hosted' || contains(matrix.platform, 'windows')
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: ${{ vars.SENTRY_ORG }}
+          SENTRY_PROJECT: ${{ vars.SENTRY_PROJECT }}
+        shell: powershell
+        run: |
+          if (-not $env:SENTRY_AUTH_TOKEN -or -not $env:SENTRY_ORG -or -not $env:SENTRY_PROJECT) {
+            Write-Error "Sentry env vars missing: ensure SENTRY_AUTH_TOKEN (secret), SENTRY_ORG (var), and SENTRY_PROJECT (var) are set"
+            exit 1
+          }
+          $cli = "$env:TEMP\sentry-cli.exe"
+          Invoke-WebRequest -Uri "https://github.com/getsentry/sentry-cli/releases/latest/download/sentry-cli-Windows-x86_64.exe" -OutFile $cli
+          & $cli --version
+
+          # Upload all debug info files found under target/release (PDBs, PE) recursively
+          & $cli upload-dif --include-sources --wait "target/release"
+
+      - name: Upload debug symbols to Sentry (macOS/Linux)
+        if: matrix.platform == 'macos-latest' || matrix.platform == 'ubuntu-22.04'
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: ${{ vars.SENTRY_ORG }}
+          SENTRY_PROJECT: ${{ vars.SENTRY_PROJECT }}
+        shell: bash
+        run: |
+          if [[ -z "$SENTRY_AUTH_TOKEN" || -z "$SENTRY_ORG" || -z "$SENTRY_PROJECT" ]]; then
+            echo "Sentry env vars missing: ensure SENTRY_AUTH_TOKEN (secret), SENTRY_ORG (var), and SENTRY_PROJECT (var) are set" >&2
+            exit 1
+          fi
+          curl -sL https://sentry.io/get-cli/ | bash
+          sentry-cli --version
+          sentry-cli upload-dif --include-sources --wait target/release
+
       # Publish to separate public releases repository
       - name: Create ${{ matrix.build_type }} Release (Windows/Self-hosted)
         if: matrix.platform == 'self-hosted' || contains(matrix.platform, 'windows')
