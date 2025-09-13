@@ -30,7 +30,7 @@ export default function AdminDashboardPage() {
 
   // Placeholder queries for initial dashboard (can be replaced with real KPIs)
   const usersQuery = useQuery(
-    trpc.admin.users.list.queryOptions({ limit: 10, activityWindowDays: 30 })
+    trpc.admin.users.list.queryOptions({ activityWindowDays: 30 })
   );
 
   const topUsers = useMemo(
@@ -61,9 +61,7 @@ export default function AdminDashboardPage() {
               </CardHeader>
               <CardContent>
                 <div className="font-bold text-3xl">{topUsers.length}</div>
-                <p className="text-muted-foreground text-sm">
-                  preview (first page)
-                </p>
+                <p className="text-muted-foreground text-sm">Total users</p>
               </CardContent>
             </Card>
             <Card>
