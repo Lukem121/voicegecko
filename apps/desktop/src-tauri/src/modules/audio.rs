@@ -4,6 +4,8 @@ use nnnoiseless::DenoiseState;
 use rodio::{Decoder, Sink, Source};
 use rubato::{FftFixedIn, Resampler};
 use rustfft::{num_complex::Complex, FftPlanner};
+use sentry;
+use sentry::Level;
 use serde::{Deserialize, Serialize};
 use std::fs::{self, File};
 use std::io::{BufReader, Write};
@@ -11,8 +13,6 @@ use std::sync::{Arc, Mutex};
 use std::thread;
 use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
 use tauri::{Emitter, Manager};
-use tauri_plugin_sentry::sentry;
-use tauri_plugin_sentry::sentry::Level;
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
 pub struct AudioDevice {
