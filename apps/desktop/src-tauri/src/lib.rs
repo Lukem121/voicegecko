@@ -1,5 +1,6 @@
 use tauri::Manager;
-use tauri_plugin_sentry::{minidump, sentry};
+use sentry;
+use tauri_plugin_sentry::{minidump};
 mod modules;
 use modules::dictation_sidecar::DictationState;
 use modules::model_manager;
