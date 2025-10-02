@@ -9,8 +9,9 @@ use tokio::time::{sleep, Duration};
 use windows::Win32::Foundation::RECT;
 #[cfg(target_os = "windows")]
 use windows::Win32::UI::WindowsAndMessaging::{
-    GetForegroundWindow, GetSystemMetrics, GetWindowRect, SystemParametersInfoW, SM_CXSCREEN,
-    SM_CYSCREEN, SPI_GETWORKAREA, SYSTEM_PARAMETERS_INFO_UPDATE_FLAGS,
+    GetClassNameW, GetForegroundWindow, GetSystemMetrics, GetWindowLongW, GetWindowRect,
+    SystemParametersInfoW, GWL_STYLE, SM_CXSCREEN, SM_CYSCREEN, SPI_GETWORKAREA,
+    SYSTEM_PARAMETERS_INFO_UPDATE_FLAGS, WINDOW_STYLE, WS_CAPTION, WS_THICKFRAME,
 };
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -415,13 +416,41 @@ pub fn is_fullscreen_app_active(_app: AppHandle) -> Result<bool, String> {
                 return Ok(false);
             }
 
+            // Check if the foreground window is the desktop (Show Desktop button pressed)
+            // Desktop windows have class names like "Progman" or "WorkerW"
+            let mut class_name: [u16; 256] = [0; 256];
+            let class_len = GetClassNameW(foreground_window, &mut class_name);
+
+            if class_len > 0 {
+                let class_str = String::from_utf16_lossy(&class_name[..class_len as usize]);
+                // Desktop windows should not be considered fullscreen
+                if class_str == "Progman" || class_str == "WorkerW" {
+                    return Ok(false);
+                }
+            }
+
+            // Get window style to check if it has borders/caption
+            let style = GetWindowLongW(foreground_window, GWL_STYLE);
+            let window_style = WINDOW_STYLE(style as u32);
+
+            // Check if window has typical window decorations
+            // Fullscreen windows typically don't have caption or thick frame
+            let has_caption = (window_style.0 & WS_CAPTION.0) != 0;
+            let has_thick_frame = (window_style.0 & WS_THICKFRAME.0) != 0;
+
+            // If the window has standard decorations (caption bar, thick frame),
+            // it's very likely a normal/maximized window, not fullscreen
+            if has_caption || has_thick_frame {
+                return Ok(false);
+            }
+
             // Get the window rect
             let mut window_rect = RECT::default();
             if GetWindowRect(foreground_window, &mut window_rect).is_err() {
                 return Ok(false);
             }
 
-            // Get screen dimensions
+            // Get primary screen dimensions
             let screen_width = GetSystemMetrics(SM_CXSCREEN);
             let screen_height = GetSystemMetrics(SM_CYSCREEN);
 
@@ -429,13 +458,24 @@ pub fn is_fullscreen_app_active(_app: AppHandle) -> Result<bool, String> {
             let window_width = window_rect.right - window_rect.left;
             let window_height = window_rect.bottom - window_rect.top;
 
-            // Check if window covers the entire screen (with small tolerance for rounding errors)
-            // Increased tolerance to 10 pixels to better handle different window styles
-            let tolerance = 10;
-            let is_fullscreen = window_rect.left <= tolerance
-                && window_rect.top <= tolerance
-                && window_width >= screen_width - tolerance
-                && window_height >= screen_height - tolerance;
+            // A window is considered fullscreen if:
+            // 1. It has no caption (title bar) and no thick frame (resize border) - already checked above
+            // 2. It covers most/all of the screen (with tolerance for different screen configurations)
+            // 3. Its position is at or near the top-left corner (0,0)
+            // 4. It's not the desktop window - already checked above
+
+            // Use a tighter tolerance for more reliable detection
+            let position_tolerance = 5;
+            let size_tolerance = 20; // Slightly larger tolerance for size to handle DPI scaling issues
+
+            let at_origin = window_rect.left.abs() <= position_tolerance
+                && window_rect.top.abs() <= position_tolerance;
+
+            let covers_screen = window_width >= screen_width - size_tolerance
+                && window_height >= screen_height - size_tolerance;
+
+            // True fullscreen requires: no decorations + at screen origin + covering screen
+            let is_fullscreen = !has_caption && !has_thick_frame && at_origin && covers_screen;
 
             Ok(is_fullscreen)
         }
