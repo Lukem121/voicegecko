@@ -34,6 +34,10 @@ export const serverAuth = betterAuth({
     provider: 'pg',
   }),
   secret: authEnv().AUTH_SECRET,
+  session: {
+    expiresIn: 60 * 60 * 24 * 365 * 10, // 10 years
+    updateAge: 60 * 60 * 24 * 7, // Refresh session every 7 days of use
+  },
   advanced: {
     cookies: {
       session_token: {
