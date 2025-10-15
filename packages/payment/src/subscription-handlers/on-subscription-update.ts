@@ -1,3 +1,6 @@
+import { eq } from '@acme/db';
+import { db } from '@acme/db/client';
+import { subscription as SubscriptionTable } from '@acme/db/schema';
 import { sendPaymentFailedEmail } from '@acme/email/send/payment-failed';
 import { DiscordAdapter } from '@acme/notifications/discord-adapter';
 import { log } from '@acme/observability/log';
@@ -96,6 +99,22 @@ export const onSubscriptionUpdate = async ({
     );
   } catch (error) {
     log.error(error, '[Subscription] Error sending Discord notification:');
+  }
+
+  // Persist seats if present on subscription
+  try {
+    if (typeof subscription.seats === 'number') {
+      await db
+        .update(SubscriptionTable)
+        .set({ seats: subscription.seats })
+        .where(eq(SubscriptionTable.id, subscription.id));
+      log.info('[Subscription] Seats updated', {
+        subscriptionId: subscription.id,
+        seats: subscription.seats,
+      });
+    }
+  } catch (error) {
+    log.error(error, '[Subscription] Error updating seats:');
   }
 
   // No special handling needed - our usage service already checks

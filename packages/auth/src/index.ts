@@ -35,7 +35,7 @@ export const serverAuth = betterAuth({
   }),
   secret: authEnv().AUTH_SECRET,
   session: {
-    expiresIn: 60 * 60 * 24 * 365 * 10, // 10 years
+    expiresIn: 60 * 60 * 24 * 365, // 1 year (365 days)
     updateAge: 60 * 60 * 24 * 7, // Refresh session every 7 days of use
   },
   advanced: {

@@ -4,4 +4,5 @@
 export * from './tables/auth.db';
 export * from './tables/dictation.db';
 export * from './tables/dictionary.db';
+export * from './tables/team.db';
 export * from './tables/usage.db';

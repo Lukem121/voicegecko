@@ -3,9 +3,9 @@
 import type { PriceWithMetadata } from '@acme/api/src/services/stripe/stripe.service';
 import { log } from '@acme/observability/log';
 import type { Subscription } from '@better-auth/stripe';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
-
 import { DesktopRedirectHandler } from '~/components/desktop-redirect-handler';
 import { StudentDiscountModal } from '~/components/student-discount-modal';
 import { useGTM } from '~/hooks/use-gtm';
@@ -23,7 +23,11 @@ import { type Plan, PlanCard } from './plan-card';
 import { PlanComparison } from './plan-comparison';
 import { PlansErrorState } from './plans-error-state';
 import { StudentDiscountCard } from './student-discount-card';
-import { getPriceDisplay, getYearlyPriceAsMonthly } from './utils/price-utils';
+import {
+  getPerUnitPriceDisplay,
+  getPriceDisplay,
+  getYearlyPriceAsMonthly,
+} from './utils/price-utils';
 
 type BillingPeriod = 'monthly' | 'annual';
 
@@ -58,12 +62,19 @@ export default function Plans({ prices, subscription, error }: PlansProps) {
     message: '',
   });
   const { data: session } = authClient.useSession();
+  const trpcClient = useTRPC();
+  const effectiveSubOptions =
+    trpcClient.stripe.getEffectiveSubscription.queryOptions();
+  const effectiveSubQuery = useQuery(effectiveSubOptions);
   const {
     isOpen: isStudentModalOpen,
     openModal: openStudentModal,
     closeModal: closeStudentModal,
   } = useStudentDiscountModal();
-  const _trpc = useTRPC();
+  const trpc = useTRPC();
+  const teamCheckoutOptions =
+    trpc.stripe.createTeamCheckoutSession.mutationOptions();
+  const teamCheckout = useMutation(teamCheckoutOptions);
 
   const showAlert = (
     title: string,
@@ -146,6 +157,31 @@ export default function Plans({ prices, subscription, error }: PlansProps) {
       cta: 'Upgrade',
       variant: 'outline',
     },
+    {
+      name: 'Team',
+      id: 'voice gecko team',
+      stripeId: 'voice gecko team',
+      monthlyPrice: getPerUnitPriceDisplay(prices, {
+        planId: 'voice gecko team',
+        interval: 'monthly',
+        currency,
+        fallback: '$5.99',
+      }),
+      yearlyMonthlyPrice: getYearlyPriceAsMonthly(
+        prices,
+        'voice gecko team',
+        currency,
+        '$4.79'
+      ),
+      subtitle: 'Per seat pricing (min 3 seats)',
+      features: [
+        'Unlimited dictations (per seat)',
+        'Invite team members',
+        'Manage seats in billing portal',
+      ],
+      cta: 'Start Team Plan',
+      variant: 'outline',
+    },
   ];
 
   const handleFreePlanWithSubscription = () => {
@@ -154,7 +190,27 @@ export default function Plans({ prices, subscription, error }: PlansProps) {
 
   const handlePaidPlan = async (plan: Plan) => {
     if (plan.stripeId) {
-      await upgrade(plan.stripeId as 'voice gecko pro', isYearly);
+      // For Team plan, use custom checkout to enable adjustable quantity
+      if (plan.stripeId === 'voice gecko team') {
+        try {
+          const result = await teamCheckout.mutateAsync({
+            interval: isYearly ? 'yearly' : 'monthly',
+            initialQuantity: 3,
+          });
+
+          if (result?.url) {
+            router.push(result.url);
+            return;
+          }
+        } catch (teamCheckoutError) {
+          log.error(teamCheckoutError, 'Failed to initiate team checkout');
+        }
+      } else {
+        await upgrade(
+          plan.stripeId as 'voice gecko pro' | 'voice gecko team',
+          isYearly
+        );
+      }
     }
   };
 
@@ -198,10 +254,11 @@ export default function Plans({ prices, subscription, error }: PlansProps) {
   };
 
   const getCurrentPlanStatus = (planId: string) => {
-    if (!subscription && planId === 'basic') {
+    const effective = effectiveSubQuery.data ?? subscription;
+    if (!effective && planId === 'basic') {
       return 'current';
     }
-    if (subscription?.plan === planId) {
+    if (effective?.plan === planId) {
       return 'current';
     }
     return null;
@@ -252,8 +309,10 @@ export default function Plans({ prices, subscription, error }: PlansProps) {
       <div className="mb-8 grid gap-6 md:grid-cols-2">
         {plans.map((plan) => {
           const isCurrent = getCurrentPlanStatus(plan.id) === 'current';
-          // Use the hook's isUpgrading state for all plans
-          const isLoading = isUpgrading;
+          // Loading state: upgrading via BetterAuth OR team checkout pending for team plan
+          const isLoading =
+            isUpgrading ||
+            (plan.stripeId === 'voice gecko team' && teamCheckout.isPending);
 
           // On mobile, show Pro plan first (order-1), Basic plan second (order-2)
           // On desktop, maintain normal order

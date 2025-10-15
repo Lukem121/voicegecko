@@ -5,16 +5,17 @@ import { caller } from '~/trpc/server';
 import Billing from './_components/billing';
 
 export default async function BillingPage() {
-  const [prices, subscriptionData] = await Promise.all([
+  const [prices, subscriptionData, effective] = await Promise.all([
     caller.stripe.getPrices(),
     authClient.subscription.list({
       fetchOptions: {
         headers: await headers(),
       },
     }),
+    caller.stripe.getEffectiveSubscription(),
   ]);
 
-  const subscription = subscriptionData.data?.at(0);
+  const subscription = effective ?? subscriptionData.data?.at(0);
   const error = subscriptionData.error;
 
   return (

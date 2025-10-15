@@ -1,3 +1,11 @@
+import { eq } from '@acme/db';
+import { db } from '@acme/db/client';
+import {
+  subscription as SubscriptionTable,
+  TeamMemberTable,
+  TeamRoleEnum,
+  TeamTable,
+} from '@acme/db/schema';
 import { sendWelcomeProEmail } from '@acme/email/send/welcome-pro';
 import { DiscordAdapter } from '@acme/notifications/discord-adapter';
 import { log } from '@acme/observability/log';
@@ -107,4 +115,45 @@ export const onSubscriptionComplete = async ({
 
   // No special handling needed - our usage service already checks
   // subscription status and will automatically grant unlimited access
+  // For team plan, ensure a team exists and an owner membership is present
+  try {
+    if (plan.name === 'voice gecko team') {
+      const ownerUserId = subscription.referenceId;
+
+      // Ensure a team exists for this owner (id = owner user id for simplicity)
+      const teamId = ownerUserId;
+
+      // Upsert team
+      await db
+        .insert(TeamTable)
+        .values({ id: teamId, ownerUserId, name: null as unknown as string })
+        .onConflictDoNothing();
+
+      // Upsert owner membership
+      await db
+        .insert(TeamMemberTable)
+        .values({
+          teamId,
+          email: user?.email ?? '',
+          userId: ownerUserId,
+          role: TeamRoleEnum.enumValues[0] as 'owner',
+          status: 'active',
+        })
+        .onConflictDoNothing();
+
+      // Persist initial seats from Stripe quantity so UI shows available seats immediately
+      const quantity = stripeSubscription.items?.data?.[0]?.quantity;
+      if (typeof quantity === 'number') {
+        await db
+          .update(SubscriptionTable)
+          .set({ seats: quantity })
+          .where(eq(SubscriptionTable.id, subscription.id));
+      }
+    }
+  } catch (error) {
+    log.error(
+      error,
+      '[Subscription] Error ensuring team and owner membership:'
+    );
+  }
 };
