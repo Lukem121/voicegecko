@@ -31,13 +31,13 @@ cd apps/desktop && pnpm dev
 
 - **Framework**: Tauri + React + TypeScript
 - **Router**: TanStack Router
-- **Version**: Currently 0.0.25
+- **Version**: Currently 0.0.26
 - **Updater**: See `docs/UPDATER.md` for architecture and release playbook
 
 ### Web App (`apps/web/`)
 
 - **Framework**: Next.js + React + TypeScript
-- **Version**: Currently 0.0.25 (needs sync with desktop)
+- **Version**: Currently 0.0.26 (needs sync with desktop)
 - **Forced update enforcement**: TRPC route enforces `MIN_SUPPORTED_DESKTOP_VERSION` via HTTP 426
 
 ## Common Tasks

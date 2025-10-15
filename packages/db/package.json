@@ -1,6 +1,6 @@
 {
   "name": "@acme/db",
-  "version": "0.0.25",
+  "version": "0.0.26",
   "private": true,
   "type": "module",
   "exports": {
@@ -28,7 +28,6 @@
   },
   "dependencies": {
     "@neondatabase/serverless": "^1.0.1",
-    "@vercel/postgres": "^0.10.0",
     "drizzle-orm": "catalog:",
     "drizzle-zod": "^0.8.3",
     "zod": "catalog:"

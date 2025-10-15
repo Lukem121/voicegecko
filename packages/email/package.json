@@ -1,6 +1,6 @@
 {
   "name": "@acme/email",
-  "version": "0.0.25",
+  "version": "0.0.26",
   "private": true,
   "type": "module",
   "exports": {
@@ -11,7 +11,8 @@
     "./send/subscription-cancelled": "./src/send/subscription-cancelled.ts",
     "./send/verification": "./src/send/verification.ts",
     "./send/welcome": "./src/send/welcome.ts",
-    "./send/welcome-pro": "./src/send/welcome-pro.ts"
+    "./send/welcome-pro": "./src/send/welcome-pro.ts",
+    "./send/team-member-added": "./src/send/team-member-added.ts"
   },
   "scripts": {
     "dev": "email dev --dir ./src/emails --port 3001",

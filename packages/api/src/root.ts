@@ -6,6 +6,7 @@ import { dictationRouter } from './router/dictation.route';
 import { dictionaryRouter } from './router/dictionary.route';
 import { geolocationRouter } from './router/geolocation.route';
 import { stripeRouter } from './router/stripe.route';
+import { teamRouter } from './router/team.route';
 import { testRouter } from './router/test.route';
 import { usageRouter } from './router/usage.route';
 import { createTRPCRouter } from './trpc';
@@ -20,6 +21,7 @@ export const appRouter = createTRPCRouter({
   usage: usageRouter,
   dictionary: dictionaryRouter,
   geolocation: geolocationRouter,
+  team: teamRouter,
 });
 
 export type AppRouter = typeof appRouter;

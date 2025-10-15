@@ -13,6 +13,7 @@ import {
   Package,
   PanelLeftIcon,
   User2,
+  Users,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -52,6 +53,12 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       icon: User2,
       isActive:
         pathname === '/app/profile' || pathname.startsWith('/app/profile'),
+    },
+    {
+      href: '/app/team',
+      label: 'Team',
+      icon: Users,
+      isActive: pathname === '/app/team' || pathname.startsWith('/app/team'),
     },
   ];
 

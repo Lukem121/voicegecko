@@ -32,7 +32,7 @@ import {
   Trash2,
   X,
 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import { useDeleteDictation } from '~/features/dictation/use-delete-dictation';
 import { useGetDictations } from '~/features/dictation/use-get-dictations';
@@ -368,6 +368,17 @@ function RecordingPage() {
   // Flatten all dictations for search
   const allDictations = dictations.flatMap((section) => section.items);
 
+  // Map dictation id to section date for grouping in recents/search
+  const itemIdToDate = useMemo(() => {
+    const map = new Map<number, string>();
+    for (const section of dictations) {
+      for (const item of section.items) {
+        map.set(item.id, section.date);
+      }
+    }
+    return map;
+  }, [dictations]);
+
   // Filter and limit recent dictations for display
   const filteredDictations = (() => {
     if (!search.debouncedSearchTerm) {
@@ -387,6 +398,21 @@ function RecordingPage() {
     // Return up to 10 search results (more than normal since user is actively searching)
     return fuzzyResults.slice(0, 10).map((result) => result.item);
   })();
+
+  // Group filtered dictations by date (to match dictations page styling)
+  const groupedFilteredDictations = useMemo(() => {
+    const groups = new Map<string, DictationItem[]>();
+    for (const item of filteredDictations) {
+      const date = itemIdToDate.get(item.id) ?? 'Unknown Date';
+      const arrayForDate = groups.get(date) ?? [];
+      arrayForDate.push(item);
+      groups.set(date, arrayForDate);
+    }
+    return Array.from(groups.entries()).map(([date, items]) => ({
+      date,
+      items,
+    }));
+  }, [filteredDictations, itemIdToDate]);
 
   log.info(
     '[RecordingPage] Component render - transcript:',
@@ -465,15 +491,15 @@ function RecordingPage() {
             setIsSearchExpanded={setIsSearchExpanded}
           />
 
-          {/* Recent Dictations */}
-          <div className="overflow-hidden rounded-lg border">
-            {filteredDictations.length === 0 ? (
+          {/* Recent Dictations - grouped by day/date like dictations page */}
+          {filteredDictations.length === 0 ? (
+            <div className="overflow-hidden rounded-lg border">
               <div className="p-8 text-center text-muted-foreground">
                 {search.debouncedSearchTerm ? (
                   <>
                     <p>
                       No dictations found matching "{search.debouncedSearchTerm}
-                      ".
+                      " .
                     </p>
                     <p className="text-sm">Try adjusting your search terms.</p>
                   </>
@@ -486,20 +512,29 @@ function RecordingPage() {
                   </>
                 )}
               </div>
-            ) : (
-              filteredDictations.map((item, index) => (
-                <DictationItem
-                  index={index}
-                  item={item}
-                  key={item.id}
-                  onCopy={handleCopy}
-                  onDelete={handleDeleteTranscript}
-                  onSendFeedback={handleSendFeedback}
-                  totalItems={filteredDictations.length}
-                />
-              ))
-            )}
-          </div>
+            </div>
+          ) : (
+            groupedFilteredDictations.map((section) => (
+              <div className="space-y-3" key={`section-${section.date}`}>
+                <h2 className="font-medium text-muted-foreground text-sm uppercase tracking-wide">
+                  {section.date}
+                </h2>
+                <div className="overflow-hidden rounded-lg border">
+                  {section.items.map((item, index) => (
+                    <DictationItem
+                      index={index}
+                      item={item}
+                      key={item.id}
+                      onCopy={handleCopy}
+                      onDelete={handleDeleteTranscript}
+                      onSendFeedback={handleSendFeedback}
+                      totalItems={section.items.length}
+                    />
+                  ))}
+                </div>
+              </div>
+            ))
+          )}
 
           {/* View all dictations link */}
           {(search.debouncedSearchTerm || allDictations.length > 5) && (

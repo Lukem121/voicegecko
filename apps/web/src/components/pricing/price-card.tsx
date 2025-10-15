@@ -17,7 +17,7 @@ export type PriceCardProps = {
   originalPrice?: string;
   features: FeatureItem[];
   cta: string;
-  planType: 'basic' | 'pro';
+  planType: 'basic' | 'pro' | 'team';
   isLoggedIn: boolean;
   isAnnual?: boolean;
   highlight?: boolean;
@@ -35,6 +35,7 @@ function PriceCardHeader({
   price,
   highlight,
   subtitle,
+  isAnnual,
 }: {
   name: string;
   popular?: boolean;
@@ -43,11 +44,14 @@ function PriceCardHeader({
   price: string;
   highlight?: boolean;
   subtitle?: string;
+  isAnnual?: boolean;
 }) {
   return (
     <div
       className={cn(
-        'flex h-full flex-col space-y-1.5 border-b p-4 md:p-5',
+        'flex flex-col gap-1.5 border-b p-4 md:p-5',
+        // Align headers across cards based on billing period
+        isAnnual ? 'md:h-[216px]' : 'md:h-[184px]',
         highlight ? 'border-primary/20 bg-primary/5' : 'border-border'
       )}
     >
@@ -86,7 +90,7 @@ function PriceCardHeader({
           </span>
         )}
       </div>
-      <p className="pt-1 pb-1.5 font-medium text-[15px] text-muted-foreground">
+      <p className="pt-1 pb-3 font-medium text-[15px] text-muted-foreground">
         {subtitle}
       </p>
     </div>
@@ -157,7 +161,7 @@ export function PriceCard({
   return (
     <div
       className={cn(
-        'relative grid h-full w-full grid-rows-[auto_1fr_auto] overflow-hidden rounded-2xl bg-card shadow-sm transition-all md:grid-rows-[170px_1fr_auto]',
+        'relative grid h-full w-full grid-rows-[auto_1fr_auto] overflow-hidden rounded-2xl bg-card shadow-sm transition-all md:grid-rows-[auto_1fr_auto]',
         highlight
           ? 'ring-1 ring-primary/30 hover:ring-primary/40'
           : 'ring-1 ring-border/70',
@@ -167,6 +171,7 @@ export function PriceCard({
     >
       <PriceCardHeader
         highlight={highlight}
+        isAnnual={isAnnual}
         name={name}
         originalPrice={originalPrice}
         period={period}
