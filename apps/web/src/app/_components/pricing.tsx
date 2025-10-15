@@ -76,7 +76,7 @@ export default function PricingSection({
         </div>
       </div>
       <div>
-        <div className="mt-6 grid gap-6 md:h-[33rem] md:grid-cols-2">
+        <div className="mt-6 grid gap-6 md:h-[33rem] md:grid-cols-3">
           <PriceCard
             className="order-2 md:order-1"
             cta={isLoggedIn ? 'Download App' : 'Get Started'}
@@ -146,6 +146,38 @@ export default function PricingSection({
                 : getPriceDisplay('voice gecko pro', 'monthly', '$29')
             }
             subtitle="For power users and professionals"
+          />
+          <PriceCard
+            className="order-3"
+            cta={isLoggedIn ? 'Start Team Plan' : 'Get Started'}
+            features={
+              [
+                {
+                  text: 'Unlimited dictations (per seat)',
+                  included: true,
+                },
+                { text: 'Invite team members', included: true },
+                { text: 'Manage seats in billing portal', included: true },
+                { text: 'Priority support', included: true },
+              ] as FeatureItem[]
+            }
+            highlight={false}
+            isAnnual={isYearly}
+            isLoggedIn={isLoggedIn}
+            name="Team"
+            originalPrice={
+              isYearly
+                ? getPriceDisplay('voice gecko team', 'monthly', '$5.99')
+                : undefined
+            }
+            period="month"
+            planType="team"
+            price={
+              isYearly
+                ? getYearlyPriceAsMonthly('voice gecko team', '$4.79')
+                : getPriceDisplay('voice gecko team', 'monthly', '$5.99')
+            }
+            subtitle="Per seat pricing (min 3 seats)"
           />
         </div>
         <div className="mt-8 md:mt-12">

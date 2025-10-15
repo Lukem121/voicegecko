@@ -1,5 +1,4 @@
-'use client';
-
+import { getServerSession } from '@acme/auth/utils/get-session';
 import {
   Avatar,
   AvatarFallback,
@@ -16,10 +15,9 @@ import {
 import { Separator } from '@acme/ui/components/ui/separator';
 import { Calendar, Mail, Shield, User2 } from 'lucide-react';
 
-import { useUser } from '~/hooks/auth';
-
-export default function WebProfilePage() {
-  const user = useUser();
+export default async function WebProfilePage() {
+  const session = await getServerSession();
+  const user = session?.user ?? null;
 
   return (
     <div className="space-y-8">
@@ -38,7 +36,6 @@ export default function WebProfilePage() {
           </p>
         </div>
         <div className="grid gap-6 md:grid-cols-2">
-          {/* Profile Overview */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2 font-semibold text-lg">

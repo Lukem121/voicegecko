@@ -11,7 +11,7 @@ import { useCurrency } from '../providers/currency';
 import { usePostHog } from './use-posthog';
 import { usePaymentRedirection } from './use-redirection-nextjs';
 
-export type SubscriptionPlan = 'voice gecko pro';
+export type SubscriptionPlan = 'voice gecko pro' | 'voice gecko team';
 
 export type UseSubscriptionUpgradeOptions = {
   successUrl?: string;

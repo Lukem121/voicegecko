@@ -24,13 +24,7 @@ export const formatPricePerUnit = (
 ) => {
   const currencyData =
     price.currencies[currency as keyof typeof price.currencies];
-  let unitAmount = currencyData.unitAmount;
-
-  // If the price has a minimum quantity (like Teams plan with minimum 3 seats),
-  // divide by that quantity to get per-unit price
-  if (price.minimumQuantity && price.minimumQuantity > 1) {
-    unitAmount /= price.minimumQuantity;
-  }
+  const unitAmount = currencyData.unitAmount; // Stripe unit amount is already per seat
 
   const formatter = new Intl.NumberFormat('en-US', {
     style: 'currency',
@@ -51,13 +45,7 @@ export const formatYearlyAsMonthly = (
 ) => {
   const currencyData =
     price.currencies[currency as keyof typeof price.currencies];
-  let monthlyAmount = currencyData.unitAmount / 12; // Divide yearly price by 12
-
-  // If the price has a minimum quantity (like Teams plan with minimum 3 seats),
-  // divide by that quantity to get per-unit monthly price
-  if (price.minimumQuantity && price.minimumQuantity > 1) {
-    monthlyAmount /= price.minimumQuantity;
-  }
+  const monthlyAmount = currencyData.unitAmount / 12; // Per seat per month
 
   const formatter = new Intl.NumberFormat('en-US', {
     style: 'currency',

@@ -31,7 +31,7 @@ export class UsageService {
 
     if (hasSubscription) {
       // Pro users have unlimited usage
-      return {
+      const result = {
         wordsUsed: 0,
         wordsLimit: 0,
         dictationCount: 0,
@@ -39,6 +39,7 @@ export class UsageService {
         canTranscribe: true,
         weekStartDate: new Date(),
       };
+      return result;
     }
 
     // Get or create usage record
@@ -150,11 +151,12 @@ export class UsageService {
       return false;
     }
 
-    // Check if subscription is active and not cancelled
-    return (
-      subscriptionInfo.subscription.status === 'active' &&
-      !subscriptionInfo.subscription.cancelAtPeriodEnd
-    );
+    // Treat active (and trialing, if Stripe reports it) as entitled.
+    // If cancelAtPeriodEnd is true, Stripe keeps status active until period end,
+    // so users retain access for the remainder of the billing period.
+    const status = subscriptionInfo.subscription.status;
+    const entitled = status === 'active' || status === 'trialing';
+    return entitled;
   }
 
   /**

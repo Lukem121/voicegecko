@@ -7,7 +7,7 @@ import { useSubscriptionUpgrade } from '~/hooks/use-subscription-upgrade';
 import { authClient } from '~/lib/auth/client';
 
 export type UpgradeButtonProps = {
-  planType: 'basic' | 'pro';
+  planType: 'basic' | 'pro' | 'team';
   isLoggedIn: boolean;
   isAnnual?: boolean;
   highlight?: boolean;
@@ -108,9 +108,14 @@ function InteractiveUpgradeButton({
       return;
     }
 
-    // Pro plan - if not logged in, go to download
+    // If not logged in
     if (!isLoggedIn) {
-      router.push('/download');
+      // Team requires sign-in to start checkout; Pro keeps existing behavior
+      if (planType === 'team') {
+        router.push('/sign-in');
+      } else {
+        router.push('/download');
+      }
       return;
     }
 
@@ -119,8 +124,15 @@ function InteractiveUpgradeButton({
       return;
     }
 
-    // Pro plan - logged in, initiate upgrade
-    await upgrade('voice gecko pro', isAnnual);
+    // Logged in - initiate upgrade for selected plan
+    if (planType === 'pro') {
+      await upgrade('voice gecko pro', isAnnual);
+      return;
+    }
+    if (planType === 'team') {
+      await upgrade('voice gecko team', isAnnual);
+      return;
+    }
   };
 
   let displayText = children as React.ReactNode;

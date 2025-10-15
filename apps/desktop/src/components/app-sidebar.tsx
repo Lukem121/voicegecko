@@ -47,7 +47,6 @@ import {
   CreditCard,
   ExternalLink,
   FileText,
-  HelpCircle,
   Keyboard,
   LogOut,
   MessageCircle,
@@ -161,11 +160,6 @@ const data: NavigationData = {
       url: '/settings/shortcuts',
       icon: Keyboard,
     },
-    {
-      title: 'Help & Support',
-      url: '#support',
-      icon: HelpCircle,
-    },
   ],
 };
 
@@ -261,6 +255,12 @@ export function AppSidebar() {
     ? (usageStatus.wordsUsed / usageStatus.wordsLimit) * 100
     : 0;
 
+  // Hide Plans link for paid plans (isUnlimited implies paid)
+  const hasPaidPlan = Boolean(usageStatus?.isUnlimited);
+  const navSecondaryItems = hasPaidPlan
+    ? data.navSecondary.filter((item) => item.title !== 'Plans')
+    : data.navSecondary;
+
   return (
     <Sidebar
       className="top-12 h-[calc(100svh-3rem)] border-border border-r"
@@ -354,7 +354,7 @@ export function AppSidebar() {
         <SidebarGroup className="mt-auto">
           <SidebarGroupContent>
             <SidebarMenu>
-              {data.navSecondary.map((item) => {
+              {navSecondaryItems.map((item) => {
                 const isInternal = shouldUseAsChild(item.url);
                 const showExternalIcon =
                   isSpecialLink(item.url) || isExternalLink(item.url);

@@ -3,7 +3,6 @@ import { DiscordAdapter } from '@acme/notifications/discord-adapter';
 import { log } from '@acme/observability/log';
 import type { Subscription } from '@better-auth/stripe';
 import type { Stripe } from 'stripe';
-
 import { paymentEnv } from '../../env';
 import {
   extractSubscriptionPricing,

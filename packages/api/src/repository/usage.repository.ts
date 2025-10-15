@@ -3,9 +3,13 @@ import { db } from '@acme/db/client';
 import {
   DictationTable,
   subscription as SubscriptionTable,
+  TeamMemberTable,
+  TeamTable,
   UsageTable,
   user as UserTable,
 } from '@acme/db/schema';
+import { stripeClient } from '@acme/payment/stripe';
+import { apiEnv } from '../../env';
 
 export type UsageData = {
   userId: string;
@@ -89,7 +93,8 @@ class UsageRepository {
       .where(eq(UserTable.id, userId));
 
     if (!userRecord?.stripeCustomerId) {
-      return { stripeCustomerId: null, subscription: null };
+      // No personal customer; check team membership by owner
+      return await this.getTeamBackedSubscriptionInfo(userId);
     }
 
     // Get all subscriptions for this customer
@@ -130,7 +135,7 @@ class UsageRepository {
     // Get the first subscription (which will be active if one exists)
     const subscription = sortedSubscriptions[0];
 
-    return {
+    const personal = {
       stripeCustomerId: userRecord.stripeCustomerId,
       subscription: subscription
         ? {
@@ -138,7 +143,133 @@ class UsageRepository {
             cancelAtPeriodEnd: subscription.cancelAtPeriodEnd,
           }
         : null,
-    };
+    } satisfies UserSubscriptionInfo;
+
+    // Only treat personal subscription as effective if active/trialing
+    if (
+      personal.subscription &&
+      (personal.subscription.status === 'active' ||
+        personal.subscription.status === 'trialing')
+    ) {
+      return personal;
+    }
+
+    // Fallback: query Stripe live for personal customer
+    if (userRecord.stripeCustomerId) {
+      const list = await stripeClient.subscriptions.list({
+        customer: userRecord.stripeCustomerId,
+        status: 'active',
+        limit: 1,
+      });
+      const active = list.data.at(0) ?? null;
+      if (active) {
+        return {
+          stripeCustomerId: userRecord.stripeCustomerId,
+          subscription: {
+            status: active.status,
+            cancelAtPeriodEnd: active.cancel_at_period_end ?? false,
+          },
+        };
+      }
+    }
+
+    // Fallback to team-backed subscription
+    return await this.getTeamBackedSubscriptionInfo(userId);
+  }
+
+  /**
+   * Resolve subscription via team owner if user is an active team member
+   */
+  private async getTeamBackedSubscriptionInfo(
+    userId: string
+  ): Promise<UserSubscriptionInfo> {
+    // Find teams where this user is an active member
+    const members = await db
+      .select({ teamId: TeamMemberTable.teamId })
+      .from(TeamMemberTable)
+      .where(eq(TeamMemberTable.userId, userId));
+
+    if (members.length === 0) {
+      return { stripeCustomerId: null, subscription: null };
+    }
+
+    // For simplicity, use the first team
+    const teamId = members[0]?.teamId;
+    if (!teamId) {
+      return { stripeCustomerId: null, subscription: null };
+    }
+
+    // Get owner of the team
+    const [team] = await db
+      .select({ ownerUserId: TeamTable.ownerUserId })
+      .from(TeamTable)
+      .where(eq(TeamTable.id, teamId));
+
+    if (!team?.ownerUserId) {
+      return { stripeCustomerId: null, subscription: null };
+    }
+
+    // Get owner's stripe customer id
+    const [owner] = await db
+      .select({ stripeCustomerId: UserTable.stripeCustomerId })
+      .from(UserTable)
+      .where(eq(UserTable.id, team.ownerUserId));
+
+    if (!owner?.stripeCustomerId) {
+      return { stripeCustomerId: null, subscription: null };
+    }
+
+    const subscriptions = await db
+      .select({
+        status: SubscriptionTable.status,
+        cancelAtPeriodEnd: SubscriptionTable.cancelAtPeriodEnd,
+        plan: SubscriptionTable.plan,
+      })
+      .from(SubscriptionTable)
+      .where(eq(SubscriptionTable.stripeCustomerId, owner.stripeCustomerId));
+
+    // Prefer team plan with active or trialing status; do not grant via owner's individual plan
+    const effective =
+      subscriptions.find(
+        (s) =>
+          (s.status === 'active' || s.status === 'trialing') &&
+          s.plan === 'voice gecko team'
+      ) ?? null;
+
+    if (effective) {
+      return {
+        stripeCustomerId: owner.stripeCustomerId,
+        subscription: {
+          status: effective.status,
+          cancelAtPeriodEnd: effective.cancelAtPeriodEnd,
+        },
+      };
+    }
+
+    // Fallback: query Stripe live for owner's customer to detect active team sub
+    const list = await stripeClient.subscriptions.list({
+      customer: owner.stripeCustomerId,
+      status: 'active',
+      limit: 5,
+      expand: ['data.items'],
+    });
+    const activeStripe = list.data.find((s) => s.items?.data?.length);
+    const item = activeStripe?.items?.data?.[0];
+    const priceId = item?.price?.id;
+    const isTeam =
+      priceId === apiEnv().STRIPE_PRICE_ID_TEAM_MONTHLY ||
+      priceId === apiEnv().STRIPE_PRICE_ID_TEAM_YEARLY;
+    if (activeStripe && isTeam) {
+      return {
+        stripeCustomerId: owner.stripeCustomerId,
+        subscription: {
+          status: activeStripe.status,
+          cancelAtPeriodEnd: activeStripe.cancel_at_period_end ?? false,
+        },
+      };
+    }
+
+    return { stripeCustomerId: owner.stripeCustomerId, subscription: null };
   }
 
   async getTotalUsageStats(userId: string) {

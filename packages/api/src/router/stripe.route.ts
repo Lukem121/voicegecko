@@ -7,12 +7,19 @@ import type { TRPCRouterRecord } from '@trpc/server';
 import { z } from 'zod/v4';
 import { apiEnv } from '../../env';
 import { EDUCATIONAL_DOMAINS } from '../consts/educational-domains';
+import { subscriptionRepository } from '../repository/subscription.repository';
 import { stripeService } from '../services/stripe/stripe.service';
 import { protectedProcedure, publicProcedure } from '../trpc';
 
 export const stripeRouter = {
   getPrices: protectedProcedure.query(() => {
     return stripeService.getPrices();
+  }),
+
+  getEffectiveSubscription: protectedProcedure.query(async ({ ctx }) => {
+    return await subscriptionRepository.findEffectiveForUser(
+      ctx.session.user.id
+    );
   }),
 
   createBillingPortalSession: protectedProcedure
@@ -42,6 +49,54 @@ export const stripeRouter = {
       return {
         url: billingPortalSession.url,
       };
+    }),
+
+  createTeamCheckoutSession: protectedProcedure
+    .input(
+      z.object({
+        interval: z.enum(['monthly', 'yearly']).default('monthly'),
+        successUrl: z
+          .string()
+          .optional()
+          .default('/app/plans?sub_success=true'),
+        cancelUrl: z.string().optional().default('/app/plans'),
+        initialQuantity: z.number().int().min(3).optional().default(3),
+      })
+    )
+    .mutation(async ({ input, ctx }) => {
+      const user = ctx.session.user as typeof ctx.session.user & {
+        stripeCustomerId?: string;
+      };
+      const customerId = user.stripeCustomerId;
+
+      if (!customerId) {
+        throw new Error('No Stripe customer found for user');
+      }
+
+      const priceId =
+        input.interval === 'yearly'
+          ? apiEnv().STRIPE_PRICE_ID_TEAM_YEARLY
+          : apiEnv().STRIPE_PRICE_ID_TEAM_MONTHLY;
+
+      const successUrl = `${apiEnv().VOICEGECKO_APP_URL}${input.successUrl}`;
+      const cancelUrl = `${apiEnv().VOICEGECKO_APP_URL}${input.cancelUrl}`;
+
+      const session = await stripeClient.checkout.sessions.create({
+        mode: 'subscription',
+        customer: customerId,
+        allow_promotion_codes: true,
+        success_url: successUrl,
+        cancel_url: cancelUrl,
+        line_items: [
+          {
+            price: priceId,
+            quantity: input.initialQuantity,
+            adjustable_quantity: { enabled: true, minimum: 3 },
+          },
+        ],
+      });
+
+      return { url: session.url };
     }),
 
   restoreSubscription: protectedProcedure
