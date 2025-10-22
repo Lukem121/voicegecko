@@ -109,8 +109,14 @@ impl TrayManager {
     pub fn setup_tray<R: Runtime>(&self, app: &tauri::AppHandle<R>) -> tauri::Result<()> {
         let menu = self.create_menu(app)?;
 
-        let _tray = TrayIconBuilder::with_id("main")
-            .icon(app.default_window_icon().unwrap().clone())
+        let mut tray_builder = TrayIconBuilder::with_id("main");
+
+        // Safely handle the icon - only set it if available
+        if let Some(icon) = app.default_window_icon() {
+            tray_builder = tray_builder.icon(icon.clone());
+        }
+
+        let _tray = tray_builder
             .menu(&menu)
             .on_menu_event(move |app, event| match event.id.as_ref() {
                 "open_voice_gecko" => {
