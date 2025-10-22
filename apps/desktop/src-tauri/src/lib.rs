@@ -188,9 +188,22 @@ pub fn run() {
 
             // Sidecar-based dictation does not need to preload models here.
 
-            // Setup system tray
+            // Setup system tray - allow app to continue even if tray setup fails
             let tray_manager = modules::tray::TrayManager::new();
-            tray_manager.setup_tray(&app.handle()).expect("Failed to setup system tray");
+            match tray_manager.setup_tray(&app.handle()) {
+                Ok(_) => {
+                    println!("[Rust] System tray initialized successfully");
+                }
+                Err(e) => {
+                    // Log the error but don't crash - the app can still function without a tray icon
+                    // This can happen when Windows Explorer is not running properly or system tray is unavailable
+                    eprintln!("[Rust] Warning: Failed to setup system tray: {}. App will continue without tray icon.", e);
+                    sentry::capture_message(
+                        &format!("System tray setup failed (non-fatal): {}", e),
+                        sentry::Level::Warning,
+                    );
+                }
+            }
             app.manage(tray_manager);
 
             // Output stream may or may not be initialized above.

@@ -111,16 +111,42 @@ pub fn start_recording(
 
     let thread_handle = thread::spawn(move || {
         let host = cpal::default_host();
-        let input_device = if let Some(name) = device {
-            host.input_devices()
-                .unwrap()
-                .find(|d| d.name().map(|n| n == name).unwrap_or(false))
-                .unwrap()
+        let input_device = match if let Some(name) = device.clone() {
+            match host.input_devices() {
+                Ok(mut devices) => devices
+                    .find(|d| d.name().map(|n| n == name).unwrap_or(false))
+                    .ok_or_else(|| format!("Audio device '{}' not found during spawn", name)),
+                Err(e) => Err(format!("Failed to list input devices: {}", e)),
+            }
         } else {
-            host.default_input_device().unwrap()
+            host.default_input_device()
+                .ok_or_else(|| "No default input device".to_string())
+        } {
+            Ok(d) => d,
+            Err(err_msg) => {
+                let _ = app.emit("recording-error", err_msg.clone());
+                sentry::capture_message(
+                    &format!(
+                        "audio:start_recording: device acquisition failed: {}",
+                        err_msg
+                    ),
+                    Level::Error,
+                );
+                return;
+            }
         };
-
-        let config = input_device.default_input_config().unwrap();
+        let config = match input_device.default_input_config() {
+            Ok(cfg) => cfg,
+            Err(e) => {
+                let msg = format!("Failed to get default input config: {}", e);
+                let _ = app.emit("recording-error", msg.clone());
+                sentry::capture_message(
+                    &format!("audio:start_recording: default_input_config failed: {}", e),
+                    Level::Error,
+                );
+                return;
+            }
+        };
         let input_sample_rate = config.sample_rate().0;
         let input_channels = config.channels();
 
@@ -132,14 +158,24 @@ pub fn start_recording(
         let resampler_channels = input_channels.min(2) as usize;
 
         // Setup resampler
-        let resampler = FftFixedIn::<f32>::new(
+        let resampler = match FftFixedIn::<f32>::new(
             input_sample_rate as usize,
             TARGET_SAMPLE_RATE as usize,
             chunk_size,         // chunk size
             resampler_channels, // Max 2 channels for resampler
             resampler_channels,
-        )
-        .unwrap();
+        ) {
+            Ok(r) => r,
+            Err(e) => {
+                let msg = format!("Failed to create resampler: {}", e);
+                let _ = app.emit("recording-error", msg.clone());
+                sentry::capture_message(
+                    &format!("audio:start_recording: resampler init failed: {}", e),
+                    Level::Error,
+                );
+                return;
+            }
+        };
         let resampler = Arc::new(Mutex::new(resampler));
 
         let audio_buffer = Arc::new(Mutex::new(Vec::new()));
@@ -154,12 +190,16 @@ pub fn start_recording(
         let app_clone_for_err = app.clone();
         let err_fn = move |err: cpal::StreamError| {
             eprintln!("an error occurred on stream: {}", err);
-            app_clone_for_err
-                .emit("recording-error", err.to_string())
-                .unwrap();
+            if let Err(e) = app_clone_for_err.emit("recording-error", err.to_string()) {
+                eprintln!("Failed to emit recording error event: {}", e);
+            }
+            sentry::capture_message(
+                &format!("audio:start_recording: stream error: {}", err),
+                Level::Error,
+            );
         };
 
-        let stream = match config.sample_format() {
+        let stream_result = match config.sample_format() {
             cpal::SampleFormat::I16 => {
                 let resampler_i16 = resampler_clone.clone();
                 let audio_buffer_i16 = audio_buffer_clone.clone();
@@ -167,37 +207,77 @@ pub fn start_recording(
                 let last_level_emit_i16 = last_level_emit_clone.clone();
                 let app_i16 = app_clone.clone();
 
-                input_device
-                    .build_input_stream(
-                        &config.into(),
-                        move |data: &[i16], _: &cpal::InputCallbackInfo| {
-                            let f32_samples: Vec<f32> =
-                                data.iter().map(|s| *s as f32 / 32768.0).collect();
+                input_device.build_input_stream(
+                    &config.into(),
+                    move |data: &[i16], _: &cpal::InputCallbackInfo| {
+                        let f32_samples: Vec<f32> =
+                            data.iter().map(|s| *s as f32 / 32768.0).collect();
 
-                            // Emit audio level events (throttled to ~30 FPS)
-                            let now = Instant::now();
-                            let mut last_emit = last_level_emit_i16.lock().unwrap();
-                            if now.duration_since(*last_emit) >= Duration::from_millis(33) {
-                                let level = calculate_audio_level(&f32_samples);
-                                if let Err(e) = app_i16.emit("audio-level", level) {
-                                    eprintln!("Failed to emit audio level: {}", e);
-                                }
-                                *last_emit = now;
+                        // Emit audio level events (throttled to ~30 FPS)
+                        let now = Instant::now();
+                        let mut last_emit = last_level_emit_i16.lock().unwrap();
+                        if now.duration_since(*last_emit) >= Duration::from_millis(33) {
+                            let level = calculate_audio_level(&f32_samples);
+                            if let Err(e) = app_i16.emit("audio-level", level) {
+                                eprintln!("Failed to emit audio level: {}", e);
                             }
+                            *last_emit = now;
+                        }
 
-                            process_samples_to_buffer(
-                                &mut resampler_i16.lock().unwrap(),
-                                &mut audio_buffer_i16.lock().unwrap(),
-                                &mut output_samples_i16.lock().unwrap(),
-                                &f32_samples,
-                                input_channels,
-                                chunk_size,
-                            );
-                        },
-                        err_fn,
-                        None,
-                    )
-                    .unwrap()
+                        process_samples_to_buffer(
+                            &mut resampler_i16.lock().unwrap(),
+                            &mut audio_buffer_i16.lock().unwrap(),
+                            &mut output_samples_i16.lock().unwrap(),
+                            &f32_samples,
+                            input_channels,
+                            chunk_size,
+                        );
+                    },
+                    err_fn,
+                    None,
+                )
+            }
+            cpal::SampleFormat::U16 => {
+                let resampler_u16 = resampler_clone.clone();
+                let audio_buffer_u16 = audio_buffer_clone.clone();
+                let output_samples_u16 = output_samples_clone.clone();
+                let last_level_emit_u16 = last_level_emit_clone.clone();
+                let app_u16 = app_clone.clone();
+
+                input_device.build_input_stream(
+                    &config.into(),
+                    move |data: &[u16], _: &cpal::InputCallbackInfo| {
+                        // Convert unsigned 16-bit to centered f32 [-1.0, 1.0]
+                        let f32_samples: Vec<f32> = data
+                            .iter()
+                            .map(|&s| {
+                                // Map 0..=65535 to -1.0..=1.0
+                                (s as f32 / 65535.0) * 2.0 - 1.0
+                            })
+                            .collect();
+
+                        let now = Instant::now();
+                        let mut last_emit = last_level_emit_u16.lock().unwrap();
+                        if now.duration_since(*last_emit) >= Duration::from_millis(33) {
+                            let level = calculate_audio_level(&f32_samples);
+                            if let Err(e) = app_u16.emit("audio-level", level) {
+                                eprintln!("Failed to emit audio level: {}", e);
+                            }
+                            *last_emit = now;
+                        }
+
+                        process_samples_to_buffer(
+                            &mut resampler_u16.lock().unwrap(),
+                            &mut audio_buffer_u16.lock().unwrap(),
+                            &mut output_samples_u16.lock().unwrap(),
+                            &f32_samples,
+                            input_channels,
+                            chunk_size,
+                        );
+                    },
+                    err_fn,
+                    None,
+                )
             }
             cpal::SampleFormat::F32 => {
                 let resampler_f32 = resampler_clone.clone();
@@ -206,39 +286,62 @@ pub fn start_recording(
                 let last_level_emit_f32 = last_level_emit_clone.clone();
                 let app_f32 = app_clone.clone();
 
-                input_device
-                    .build_input_stream(
-                        &config.into(),
-                        move |data: &[f32], _: &cpal::InputCallbackInfo| {
-                            // Emit audio level events (throttled to ~30 FPS)
-                            let now = Instant::now();
-                            let mut last_emit = last_level_emit_f32.lock().unwrap();
-                            if now.duration_since(*last_emit) >= Duration::from_millis(33) {
-                                let level = calculate_audio_level(data);
-                                if let Err(e) = app_f32.emit("audio-level", level) {
-                                    eprintln!("Failed to emit audio level: {}", e);
-                                }
-                                *last_emit = now;
+                input_device.build_input_stream(
+                    &config.into(),
+                    move |data: &[f32], _: &cpal::InputCallbackInfo| {
+                        // Emit audio level events (throttled to ~30 FPS)
+                        let now = Instant::now();
+                        let mut last_emit = last_level_emit_f32.lock().unwrap();
+                        if now.duration_since(*last_emit) >= Duration::from_millis(33) {
+                            let level = calculate_audio_level(data);
+                            if let Err(e) = app_f32.emit("audio-level", level) {
+                                eprintln!("Failed to emit audio level: {}", e);
                             }
+                            *last_emit = now;
+                        }
 
-                            process_samples_to_buffer(
-                                &mut resampler_f32.lock().unwrap(),
-                                &mut audio_buffer_f32.lock().unwrap(),
-                                &mut output_samples_f32.lock().unwrap(),
-                                data,
-                                input_channels,
-                                chunk_size,
-                            );
-                        },
-                        err_fn,
-                        None,
-                    )
-                    .unwrap()
+                        process_samples_to_buffer(
+                            &mut resampler_f32.lock().unwrap(),
+                            &mut audio_buffer_f32.lock().unwrap(),
+                            &mut output_samples_f32.lock().unwrap(),
+                            data,
+                            input_channels,
+                            chunk_size,
+                        );
+                    },
+                    err_fn,
+                    None,
+                )
             }
-            sample_format => panic!("Unsupported sample format '{sample_format}'"),
+            sample_format => {
+                let msg = format!("Unsupported input sample format: {:?}", sample_format);
+                let _ = app_clone.emit("recording-error", msg.clone());
+                sentry::capture_message(&format!("audio:start_recording: {}", msg), Level::Error);
+                return;
+            }
+        };
+        let stream = match stream_result {
+            Ok(s) => s,
+            Err(e) => {
+                let msg = format!("Failed to build input stream: {}", e);
+                let _ = app.emit("recording-error", msg.clone());
+                sentry::capture_message(
+                    &format!("audio:start_recording: build_input_stream failed: {}", e),
+                    Level::Error,
+                );
+                return;
+            }
         };
 
-        stream.play().unwrap();
+        if let Err(e) = stream.play() {
+            let msg = format!("Failed to start input stream: {}", e);
+            let _ = app.emit("recording-error", msg.clone());
+            sentry::capture_message(
+                &format!("audio:start_recording: stream.play failed: {}", e),
+                Level::Error,
+            );
+            return;
+        }
 
         // Block until a stop message is received
         match rx.recv() {
@@ -1037,16 +1140,40 @@ pub fn start_microphone_test(
 
     let thread_handle = thread::spawn(move || {
         let host = cpal::default_host();
-        let input_device = if let Some(name) = device {
-            host.input_devices()
-                .unwrap()
-                .find(|d| d.name().map(|n| n == name).unwrap_or(false))
-                .unwrap()
+        let input_device = match if let Some(name) = device.clone() {
+            match host.input_devices() {
+                Ok(mut devices) => devices
+                    .find(|d| d.name().map(|n| n == name).unwrap_or(false))
+                    .ok_or_else(|| format!("Audio device '{}' not found during test", name)),
+                Err(e) => Err(format!("Failed to list input devices: {}", e)),
+            }
         } else {
-            host.default_input_device().unwrap()
+            host.default_input_device()
+                .ok_or_else(|| "No default input device".to_string())
+        } {
+            Ok(d) => d,
+            Err(err_msg) => {
+                let _ = app.emit("microphone-test-error", err_msg.clone());
+                sentry::capture_message(
+                    &format!("audio:mic_test: device acquisition failed: {}", err_msg),
+                    Level::Error,
+                );
+                return;
+            }
         };
 
-        let config = input_device.default_input_config().unwrap();
+        let config = match input_device.default_input_config() {
+            Ok(cfg) => cfg,
+            Err(e) => {
+                let msg = format!("Failed to get default input config: {}", e);
+                let _ = app.emit("microphone-test-error", msg.clone());
+                sentry::capture_message(
+                    &format!("audio:mic_test: default_input_config failed: {}", e),
+                    Level::Error,
+                );
+                return;
+            }
+        };
         let last_level_emit = Arc::new(Mutex::new(Instant::now()));
 
         let last_level_emit_clone = last_level_emit.clone();
@@ -1054,74 +1181,130 @@ pub fn start_microphone_test(
         let app_clone_for_err = app.clone();
         let err_fn = move |err: cpal::StreamError| {
             eprintln!("microphone test error: {}", err);
-            app_clone_for_err
-                .emit("microphone-test-error", err.to_string())
-                .unwrap();
+            if let Err(e) = app_clone_for_err.emit("microphone-test-error", err.to_string()) {
+                eprintln!("Failed to emit microphone test error event: {}", e);
+            }
+            sentry::capture_message(
+                &format!("audio:mic_test: stream error: {}", err),
+                Level::Error,
+            );
         };
 
-        let stream = match config.sample_format() {
+        let stream_result = match config.sample_format() {
             cpal::SampleFormat::I16 => {
                 let last_level_emit_i16 = last_level_emit_clone.clone();
                 let app_i16 = app_clone.clone();
 
-                input_device
-                    .build_input_stream(
-                        &config.into(),
-                        move |data: &[i16], _: &cpal::InputCallbackInfo| {
-                            let f32_samples: Vec<f32> =
-                                data.iter().map(|s| *s as f32 / 32768.0).collect();
+                input_device.build_input_stream(
+                    &config.into(),
+                    move |data: &[i16], _: &cpal::InputCallbackInfo| {
+                        let f32_samples: Vec<f32> =
+                            data.iter().map(|s| *s as f32 / 32768.0).collect();
 
-                            // Emit audio level events for microphone testing (30 FPS)
-                            let now = Instant::now();
-                            let mut last_emit = last_level_emit_i16.lock().unwrap();
-                            if now.duration_since(*last_emit) >= Duration::from_millis(33) {
-                                let level = calculate_audio_level(&f32_samples);
-                                if let Err(e) = app_i16.emit("microphone-test-level", level) {
-                                    eprintln!("Failed to emit microphone test level: {}", e);
-                                }
-                                *last_emit = now;
+                        // Emit audio level events for microphone testing (30 FPS)
+                        let now = Instant::now();
+                        let mut last_emit = last_level_emit_i16.lock().unwrap();
+                        if now.duration_since(*last_emit) >= Duration::from_millis(33) {
+                            let level = calculate_audio_level(&f32_samples);
+                            if let Err(e) = app_i16.emit("microphone-test-level", level) {
+                                eprintln!("Failed to emit microphone test level: {}", e);
                             }
-                        },
-                        err_fn,
-                        None,
-                    )
-                    .unwrap()
+                            *last_emit = now;
+                        }
+                    },
+                    err_fn,
+                    None,
+                )
+            }
+            cpal::SampleFormat::U16 => {
+                let last_level_emit_u16 = last_level_emit_clone.clone();
+                let app_u16 = app_clone.clone();
+
+                input_device.build_input_stream(
+                    &config.into(),
+                    move |data: &[u16], _: &cpal::InputCallbackInfo| {
+                        let f32_samples: Vec<f32> = data
+                            .iter()
+                            .map(|&s| (s as f32 / 65535.0) * 2.0 - 1.0)
+                            .collect();
+
+                        let now = Instant::now();
+                        let mut last_emit = last_level_emit_u16.lock().unwrap();
+                        if now.duration_since(*last_emit) >= Duration::from_millis(33) {
+                            let level = calculate_audio_level(&f32_samples);
+                            if let Err(e) = app_u16.emit("microphone-test-level", level) {
+                                eprintln!("Failed to emit microphone test level: {}", e);
+                            }
+                            *last_emit = now;
+                        }
+                    },
+                    err_fn,
+                    None,
+                )
             }
             cpal::SampleFormat::F32 => {
                 let last_level_emit_f32 = last_level_emit_clone.clone();
                 let app_f32 = app_clone.clone();
 
-                input_device
-                    .build_input_stream(
-                        &config.into(),
-                        move |data: &[f32], _: &cpal::InputCallbackInfo| {
-                            // Emit audio level events for microphone testing (30 FPS)
-                            let now = Instant::now();
-                            let mut last_emit = last_level_emit_f32.lock().unwrap();
-                            if now.duration_since(*last_emit) >= Duration::from_millis(33) {
-                                let level = calculate_audio_level(data);
-                                if let Err(e) = app_f32.emit("microphone-test-level", level) {
-                                    eprintln!("Failed to emit microphone test level: {}", e);
-                                }
-                                *last_emit = now;
+                input_device.build_input_stream(
+                    &config.into(),
+                    move |data: &[f32], _: &cpal::InputCallbackInfo| {
+                        // Emit audio level events for microphone testing (30 FPS)
+                        let now = Instant::now();
+                        let mut last_emit = last_level_emit_f32.lock().unwrap();
+                        if now.duration_since(*last_emit) >= Duration::from_millis(33) {
+                            let level = calculate_audio_level(data);
+                            if let Err(e) = app_f32.emit("microphone-test-level", level) {
+                                eprintln!("Failed to emit microphone test level: {}", e);
                             }
-                        },
-                        err_fn,
-                        None,
-                    )
-                    .unwrap()
+                            *last_emit = now;
+                        }
+                    },
+                    err_fn,
+                    None,
+                )
             }
-            sample_format => panic!("Unsupported sample format '{sample_format}'"),
+            sample_format => {
+                let msg = format!(
+                    "Unsupported input sample format for mic test: {:?}",
+                    sample_format
+                );
+                let _ = app_clone.emit("microphone-test-error", msg.clone());
+                sentry::capture_message(&format!("audio:mic_test: {}", msg), Level::Error);
+                return;
+            }
+        };
+        let stream = match stream_result {
+            Ok(s) => s,
+            Err(e) => {
+                let msg = format!("Failed to build mic test input stream: {}", e);
+                let _ = app.emit("microphone-test-error", msg.clone());
+                sentry::capture_message(
+                    &format!("audio:mic_test: build_input_stream failed: {}", e),
+                    Level::Error,
+                );
+                return;
+            }
         };
 
-        stream.play().unwrap();
+        if let Err(e) = stream.play() {
+            let msg = format!("Failed to start mic test stream: {}", e);
+            let _ = app.emit("microphone-test-error", msg.clone());
+            sentry::capture_message(
+                &format!("audio:mic_test: stream.play failed: {}", e),
+                Level::Error,
+            );
+            return;
+        }
 
         // Block until a stop message is received
         match rx.recv() {
             Ok(AudioCommand::Stop) => {
                 // Stream is dropped here, which stops the microphone test
                 drop(stream);
-                app.emit("microphone-test-stopped", ()).unwrap();
+                if let Err(e) = app.emit("microphone-test-stopped", ()) {
+                    eprintln!("Failed to emit microphone-test-stopped event: {}", e);
+                }
             }
             Err(_) => {
                 // Channel disconnected
