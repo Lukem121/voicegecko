@@ -15,7 +15,7 @@ export const adminRouter = {
       .input(
         z.object({
           search: z.string().optional(),
-          limit: z.number().min(1).max(100).default(50),
+          limit: z.number().min(1).max(100).optional(),
           cursor: z.string().optional(), // userId cursor for pagination
           activityWindowDays: z
             .number()
@@ -25,7 +25,7 @@ export const adminRouter = {
         })
       )
       .query(async ({ input }) => {
-        const params = input ?? { limit: 50 };
+        const params = input;
         return await adminService.getUsersList(params);
       }),
 

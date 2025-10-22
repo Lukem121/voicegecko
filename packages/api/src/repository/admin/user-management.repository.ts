@@ -4,7 +4,7 @@ import { DictationTable, UsageTable, user as UserTable } from '@acme/db/schema';
 
 export type UserListParams = {
   search?: string;
-  limit: number;
+  limit?: number;
   cursor?: string;
   activityWindowDays: number;
 };
