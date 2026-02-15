@@ -54,7 +54,7 @@ export function useSubscriptionUpgrade(
   const purchase = recentPurchase.data;
 
   const {
-    successUrl: optionsSuccessUrl = '/app/plans?sub_success=true',
+    successUrl: optionsSuccessUrl = '/download?sub_success=true',
     cancelUrl: optionsCancelUrl = '/app/plans',
     onSuccess,
     onError,

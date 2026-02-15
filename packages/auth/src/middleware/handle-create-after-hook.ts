@@ -10,7 +10,7 @@ const discordAdapter = new DiscordAdapter();
 
 export const handleCreateAfterHook = async (
   user: User,
-  _?: GenericEndpointContext
+  _?: GenericEndpointContext | null
 ) => {
   await Promise.all([
     discordAdapter.sendUserSignup({

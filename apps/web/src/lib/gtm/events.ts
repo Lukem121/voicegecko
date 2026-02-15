@@ -68,7 +68,7 @@ export type PurchaseEvent = BaseGTMEvent & {
 // Engagement events
 export type PlanSelectedEvent = BaseGTMEvent & {
   event: 'plan_selected';
-  plan_type: 'free' | 'pro';
+  plan_type: 'free' | 'pro' | 'team';
   billing_period: 'monthly' | 'yearly';
   source: string;
 };

@@ -7,8 +7,19 @@ import {
   CardTitle,
 } from '@acme/ui/components/ui/card';
 import { cn } from '@acme/ui/lib/utils';
-import type { Subscription } from '@better-auth/stripe';
 import { Check, Loader2 } from 'lucide-react';
+
+/** Compatible with both EffectiveSubscription and @better-auth Subscription */
+export type PlansSubscription = {
+  cancelAtPeriodEnd?: boolean | null;
+  id: string;
+  plan: string | null;
+  periodEnd?: Date | string | null;
+  periodStart?: Date | string | null;
+  seats?: number | null;
+  status: string | null;
+  stripeSubscriptionId?: string | null;
+} | null;
 
 export type Plan = {
   name: string;
@@ -16,7 +27,6 @@ export type Plan = {
   stripeId: string | null;
   monthlyPrice: string;
   yearlyMonthlyPrice: string;
-  isFree?: boolean;
   subtitle: string;
   features: string[];
   cta: string;
@@ -28,7 +38,7 @@ type PlanCardProps = {
   isYearly: boolean;
   isCurrent: boolean;
   isLoading: boolean;
-  subscription: Subscription | null;
+  subscription: PlansSubscription;
   onPlanClick: (plan: Plan) => void;
 };
 
@@ -43,9 +53,6 @@ export const PlanCard = ({
   const getButtonText = () => {
     if (isCurrent) {
       return 'Current plan';
-    }
-    if (plan.isFree && subscription) {
-      return 'Download App';
     }
     return plan.cta;
   };
@@ -66,16 +73,10 @@ export const PlanCard = ({
           )}
         </div>
         <div className="mt-2 flex items-baseline gap-1">
-          {plan.isFree ? (
-            <span className="font-bold text-2xl">Free</span>
-          ) : (
-            <>
               <span className="font-bold text-2xl">
                 {isYearly ? plan.yearlyMonthlyPrice : plan.monthlyPrice}
               </span>
               <span className="text-muted-foreground text-sm">/mo</span>
-            </>
-          )}
         </div>
         <p className="mt-1 text-muted-foreground text-xs">{plan.subtitle}</p>
       </CardHeader>

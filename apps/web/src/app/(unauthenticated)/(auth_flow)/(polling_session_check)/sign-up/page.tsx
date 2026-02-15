@@ -59,7 +59,8 @@ type LoadingState = {
 export default function SignUp() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const callbackURL = searchParams.get('redirect') ?? APP_ROUTES.HOME;
+  const callbackURL =
+    searchParams.get('redirect') ?? APP_ROUTES.MARKETING.PRICING;
   const { trackEvent } = useGTM();
   const { trackEvent: trackPostHogEvent } = usePostHog();
 
@@ -178,7 +179,10 @@ export default function SignUp() {
           });
 
           router.push(
-            buildUrl(APP_ROUTES.AUTH.VERIFY_EMAIL, { email: values.email })
+            buildUrl(APP_ROUTES.AUTH.VERIFY_EMAIL, {
+              email: values.email,
+              redirect: callbackURL,
+            })
           );
         },
         onRequest: () => {

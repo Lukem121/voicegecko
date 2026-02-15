@@ -3,6 +3,7 @@
 
 type ExtendedErrorCodes =
   | 'USER_ALREADY_EXISTS'
+  | 'USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL'
   | 'USER_BANNED'
   | 'BANNED_USER'
   | 'FAILED_TO_CREATE_SESSION'
@@ -28,6 +29,10 @@ const errorCodes = {
   USER_ALREADY_EXISTS: {
     en: 'User already exists',
     es: 'Usuario ya existe',
+  },
+  USER_ALREADY_EXISTS_USE_ANOTHER_EMAIL: {
+    en: 'That email is already in use. Please use another email or sign in.',
+    es: 'Ese correo electrónico ya está en uso. Por favor, use otro o inicie sesión.',
   },
   USER_BANNED: {
     en: 'Your account has been banned. Please contact support for more information.',

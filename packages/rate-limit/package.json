@@ -1,6 +1,6 @@
 {
   "name": "@acme/rate-limit",
-  "version": "0.0.28",
+  "version": "0.1.0",
   "private": true,
   "scripts": {
     "clean": "git clean -xdf .cache .turbo dist node_modules",
@@ -8,8 +8,8 @@
   },
   "dependencies": {
     "@t3-oss/env-nextjs": "catalog:",
-    "@upstash/ratelimit": "^2.0.6",
-    "@upstash/redis": "^1.35.3",
+    "@upstash/ratelimit": "^2.0.8",
+    "@upstash/redis": "^1.36.2",
     "zod": "catalog:"
   },
   "devDependencies": {

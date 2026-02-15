@@ -28,7 +28,7 @@ export default function VideoWithPoster({
   const [mounted, setMounted] = useState(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isReady, setIsReady] = useState(false);
-  const playerRef = useRef<ReactPlayer | null>(null);
+  const playerRef = useRef<HTMLVideoElement | null>(null);
   const { trackEvent } = usePostHog();
 
   useEffect(() => {
@@ -62,13 +62,13 @@ export default function VideoWithPoster({
     >
       {mounted ? (
         <ReactPlayer
-          config={{ file: { attributes: { controlsList: 'nodownload' } } }}
+          config={{ html: { attributes: { controlsList: 'nodownload' } } }}
           controls={isPlaying}
           height="100%"
           onEnded={() => {
             setIsPlaying(false);
             if (playerRef.current) {
-              playerRef.current.seekTo(0);
+              playerRef.current.currentTime = 0;
             }
             trackEvent({
               event: 'video_ended',
@@ -107,7 +107,7 @@ export default function VideoWithPoster({
           }}
           playing={isPlaying}
           ref={playerRef}
-          url={videoUrl}
+          src={videoUrl}
           volume={isPlaying ? undefined : initialVolume}
           width="100%"
         />

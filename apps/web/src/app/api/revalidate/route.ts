@@ -49,7 +49,7 @@ function performRevalidations(
   if (tags && tags.length > 0) {
     for (const tag of tags) {
       try {
-        revalidateTag(tag);
+        revalidateTag(tag, { expire: 0 });
         revalidatedTags.push(tag);
         log.info(`Revalidated tag: ${tag}`);
       } catch (error) {

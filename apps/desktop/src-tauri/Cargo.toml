@@ -1,6 +1,6 @@
 [package]
 name = "desktop"
-version = "0.0.28"
+version = "0.1.0"
 description = "A Tauri App"
 authors = ["you"]
 edition = "2021"
@@ -13,7 +13,7 @@ crate-type = ["staticlib", "cdylib", "lib"]
 name = "app_lib"
 
 [build-dependencies]
-tauri-build = {version = "2.3.1", features = [] }
+tauri-build = {version = "2.5.5", features = [] }
 reqwest = { version = "0.12", features = ["blocking"] }
 sha1 = "0.10"
 
@@ -21,14 +21,15 @@ sha1 = "0.10"
 async-trait = "0.1"
 serde = {version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-tauri = { version = "2.7.0", features = ["tray-icon", "devtools"] }
+tauri = { version = "2.10.2", features = ["tray-icon", "devtools"] }
 tauri-plugin-deep-link = "2"
 tauri-plugin-http = "2.5.0"
-tauri-plugin-opener = "2"
+tauri-plugin-opener = "2.5.3"
 tauri-plugin-os = "2"
 tauri-plugin-shell = "2.3.0"
 tauri-plugin-store = "2.3.0"
 tauri-plugin-process = "2"
+tauri-plugin-notification = "2"
 sentry = "0.42"
 tauri-plugin-sentry = "0.5"
 url = "2.4"

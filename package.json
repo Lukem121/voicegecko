@@ -5,7 +5,7 @@
     "node": ">=22.14.0",
     "pnpm": ">=9.6.0"
   },
-  "packageManager": "pnpm@10.15.0",
+  "packageManager": "pnpm@10.29.3",
   "scripts": {
     "build": "turbo run build",
     "clean": "git clean -xdf node_modules",
@@ -29,9 +29,9 @@
   },
   "devDependencies": {
     "@biomejs/biome": "catalog:",
-    "@turbo/gen": "^2.5.6",
-    "glob": "^11.0.3",
-    "turbo": "^2.5.6",
-    "ultracite": "5.2.5"
+    "@turbo/gen": "^2.8.9",
+    "glob": "^13.0.3",
+    "turbo": "^2.8.9",
+    "ultracite": "7.2.1"
   }
 }

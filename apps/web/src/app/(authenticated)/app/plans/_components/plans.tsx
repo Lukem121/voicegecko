@@ -2,10 +2,9 @@
 
 import type { PriceWithMetadata } from '@acme/api/src/services/stripe/stripe.service';
 import { log } from '@acme/observability/log';
-import type { Subscription } from '@better-auth/stripe';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { useRouter } from 'next/navigation';
-import { useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import { DesktopRedirectHandler } from '~/components/desktop-redirect-handler';
 import { StudentDiscountModal } from '~/components/student-discount-modal';
 import { useGTM } from '~/hooks/use-gtm';
@@ -19,7 +18,7 @@ import { useCurrency } from '~/providers/currency';
 import { useTRPC } from '~/trpc/react';
 import { AlertBanner } from './alert-banner';
 import { BillingToggle } from './billing-toggle';
-import { type Plan, PlanCard } from './plan-card';
+import { type Plan, type PlansSubscription, PlanCard } from './plan-card';
 import { PlanComparison } from './plan-comparison';
 import { PlansErrorState } from './plans-error-state';
 import { StudentDiscountCard } from './student-discount-card';
@@ -33,7 +32,7 @@ type BillingPeriod = 'monthly' | 'annual';
 
 type PlansProps = {
   prices: Record<string, PriceWithMetadata>;
-  subscription: Subscription | null;
+  subscription: PlansSubscription;
   error: {
     code?: string | undefined;
     message?: string | undefined;
@@ -51,6 +50,7 @@ type AlertState = {
 
 export default function Plans({ prices, subscription, error }: PlansProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [billingPeriod, setBillingPeriod] = useState<BillingPeriod>('annual');
   const { currency } = useCurrency();
   const { trackEvent } = useGTM();
@@ -75,6 +75,7 @@ export default function Plans({ prices, subscription, error }: PlansProps) {
   const teamCheckoutOptions =
     trpc.stripe.createTeamCheckoutSession.mutationOptions();
   const teamCheckout = useMutation(teamCheckoutOptions);
+  const [autoCheckoutAttempted, setAutoCheckoutAttempted] = useState(false);
 
   const showAlert = (
     title: string,
@@ -90,7 +91,7 @@ export default function Plans({ prices, subscription, error }: PlansProps) {
   };
 
   const { upgrade, isUpgrading } = useSubscriptionUpgrade({
-    subscriptionId: subscription?.stripeSubscriptionId,
+    subscriptionId: subscription?.stripeSubscriptionId ?? undefined,
     onError: (upgradeError) => {
       showAlert(
         'Subscription Error',
@@ -112,23 +113,6 @@ export default function Plans({ prices, subscription, error }: PlansProps) {
 
   // Dynamic plans with prices from Stripe
   const plans: Plan[] = [
-    {
-      name: 'Basic',
-      id: 'basic',
-      stripeId: null, // No Stripe subscription for free plan
-      monthlyPrice: '$0',
-      yearlyMonthlyPrice: '$0',
-      isFree: true,
-      subtitle: 'Start of your productivity journey',
-      features: [
-        '2,000 words per week',
-        'Lightning fast voice typing',
-        'Add words to dictionary',
-        'Privacy mode',
-      ],
-      cta: 'Get started',
-      variant: 'outline',
-    },
     {
       name: 'Pro',
       id: 'voice gecko pro',
@@ -184,17 +168,13 @@ export default function Plans({ prices, subscription, error }: PlansProps) {
     },
   ];
 
-  const handleFreePlanWithSubscription = () => {
-    router.push('/download');
-  };
-
-  const handlePaidPlan = async (plan: Plan) => {
+  const handlePaidPlan = async (plan: Plan, billingIsAnnual: boolean) => {
     if (plan.stripeId) {
       // For Team plan, use custom checkout to enable adjustable quantity
       if (plan.stripeId === 'voice gecko team') {
         try {
           const result = await teamCheckout.mutateAsync({
-            interval: isYearly ? 'yearly' : 'monthly',
+            interval: billingIsAnnual ? 'yearly' : 'monthly',
             initialQuantity: 3,
           });
 
@@ -208,23 +188,38 @@ export default function Plans({ prices, subscription, error }: PlansProps) {
       } else {
         await upgrade(
           plan.stripeId as 'voice gecko pro' | 'voice gecko team',
-          isYearly
+          billingIsAnnual
         );
       }
     }
   };
 
-  const handlePlanClick = async (plan: Plan) => {
+  const handlePlanClick = async (
+    plan: Plan,
+    billingOverride?: BillingPeriod
+  ) => {
+    const billingValue = billingOverride ?? (isYearly ? 'annual' : 'monthly');
+    const billingIsAnnual = billingValue === 'annual';
+
+    if (!billingOverride && billingValue !== billingPeriod) {
+      setBillingPeriod(billingValue);
+    }
+
     if (!session?.user) {
-      router.push('/sign-in');
+      const redirectTarget = `/app/plans?auto=1&plan=${encodeURIComponent(
+        plan.id
+      )}&billing=${billingValue}`;
+      router.push(`/sign-in?redirect=${encodeURIComponent(redirectTarget)}`);
       return;
     }
 
-    // Track plan selection
+    // Track plan selection (map annual → yearly for analytics)
+    const billingForAnalytics =
+      billingValue === 'annual' ? 'yearly' : billingValue;
     trackEvent({
       event: 'plan_selected',
-      plan_type: plan.isFree ? 'free' : 'pro',
-      billing_period: isYearly ? 'yearly' : 'monthly',
+      plan_type: plan.id === 'voice gecko team' ? 'team' : 'pro',
+      billing_period: billingForAnalytics,
       source: SOURCES.PLANS_PAGE,
       timestamp: new Date().toISOString(),
     });
@@ -232,21 +227,14 @@ export default function Plans({ prices, subscription, error }: PlansProps) {
     // PostHog tracking
     trackPostHogEvent({
       event: 'plan_selected',
-      plan_type: plan.isFree ? 'free' : 'pro',
-      billing_period: isYearly ? 'yearly' : 'monthly',
+      plan_type: plan.id === 'voice gecko team' ? 'team' : 'pro',
+      billing_period: billingForAnalytics,
       source: POSTHOG_SOURCES.PLANS_PAGE,
       timestamp: new Date().toISOString(),
     });
 
     try {
-      if (plan.isFree && subscription) {
-        await handleFreePlanWithSubscription();
-        return;
-      }
-
-      if (!plan.isFree) {
-        await handlePaidPlan(plan);
-      }
+      await handlePaidPlan(plan, billingIsAnnual);
     } catch (unknownError) {
       log.error(unknownError, 'Error handling plan:');
       showAlert('Error', 'An error occurred. Please try again.');
@@ -255,14 +243,52 @@ export default function Plans({ prices, subscription, error }: PlansProps) {
 
   const getCurrentPlanStatus = (planId: string) => {
     const effective = effectiveSubQuery.data ?? subscription;
-    if (!effective && planId === 'basic') {
-      return 'current';
-    }
     if (effective?.plan === planId) {
       return 'current';
     }
     return null;
   };
+
+  useEffect(() => {
+    if (autoCheckoutAttempted) {
+      return;
+    }
+
+    if (!searchParams || searchParams.get('auto') !== '1') {
+      return;
+    }
+
+    if (!session?.user) {
+      return;
+    }
+
+    const planIdParam = searchParams.get('plan');
+    const billingParam = searchParams.get('billing') === 'annual' ? 'annual' : 'monthly';
+
+    if (!planIdParam) {
+      return;
+    }
+
+    const targetPlan = plans.find((plan) => plan.id === planIdParam);
+    if (!targetPlan) {
+      return;
+    }
+
+    setAutoCheckoutAttempted(true);
+
+    if (billingParam !== billingPeriod) {
+      setBillingPeriod(billingParam);
+    }
+
+    void handlePlanClick(targetPlan, billingParam);
+
+    const cleaned = new URLSearchParams(searchParams.toString());
+    cleaned.delete('auto');
+    cleaned.delete('plan');
+    cleaned.delete('billing');
+    const remaining = cleaned.toString();
+    router.replace(`/app/plans${remaining ? `?${remaining}` : ''}`);
+  }, [autoCheckoutAttempted, billingPeriod, handlePlanClick, plans, router, searchParams, session?.user]);
 
   return (
     <div>
@@ -309,28 +335,20 @@ export default function Plans({ prices, subscription, error }: PlansProps) {
       <div className="mb-8 grid gap-6 md:grid-cols-2">
         {plans.map((plan) => {
           const isCurrent = getCurrentPlanStatus(plan.id) === 'current';
-          // Loading state: upgrading via BetterAuth OR team checkout pending for team plan
           const isLoading =
             isUpgrading ||
             (plan.stripeId === 'voice gecko team' && teamCheckout.isPending);
 
-          // On mobile, show Pro plan first (order-1), Basic plan second (order-2)
-          // On desktop, maintain normal order
-          const mobileOrder = plan.isFree
-            ? 'order-2 md:order-none'
-            : 'order-1 md:order-none';
-
           return (
-            <div className={mobileOrder} key={plan.name}>
-              <PlanCard
-                isCurrent={isCurrent}
-                isLoading={isLoading}
-                isYearly={isYearly}
-                onPlanClick={handlePlanClick}
-                plan={plan}
-                subscription={subscription}
-              />
-            </div>
+            <PlanCard
+              isCurrent={isCurrent}
+              isLoading={isLoading}
+              isYearly={isYearly}
+              key={plan.name}
+              onPlanClick={handlePlanClick}
+              plan={plan}
+              subscription={subscription}
+            />
           );
         })}
       </div>
