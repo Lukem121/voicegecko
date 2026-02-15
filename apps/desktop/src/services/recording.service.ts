@@ -2,6 +2,7 @@ import { log } from '@acme/observability/log';
 import { invoke } from '@tauri-apps/api/core';
 
 import {
+  showMicrophoneNotFoundNotification,
   showNoInternetNotification,
   showUsageLimitNotification,
 } from '~/lib/gecko-bar-notifications';
@@ -11,6 +12,9 @@ import { useConnectivityStore } from '~/stores/connectivity.store';
 import { useEventStore } from '~/stores/event.store';
 import { useSettingsStore } from '~/stores/settings.store';
 import { queryClient, trpc, trpcClient } from '~/trpc';
+
+const DEVICE_UNAVAILABLE_PATTERN =
+  /not found|no default.*(audio|input) device|no default input device|no longer available|unplugged/i;
 
 export type RecordingOptions = {
   device?: string;
@@ -200,6 +204,19 @@ export class RecordingService {
       await invoke('start_recording', { device: deviceName });
     } catch (error) {
       log.error(error, 'Failed to start recording:');
+
+      const errorMessage =
+        typeof error === 'string'
+          ? error
+          : (error instanceof Error ? error.message : String(error));
+      const isDeviceUnavailable = DEVICE_UNAVAILABLE_PATTERN.test(errorMessage);
+
+      if (isDeviceUnavailable) {
+        useEventStore.getState().setRecordingError(errorMessage);
+        await showMicrophoneNotFoundNotification();
+        return;
+      }
+
       throw error;
     }
   }

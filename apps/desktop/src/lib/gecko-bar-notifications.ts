@@ -45,3 +45,15 @@ export function showNoInternetNotification(): Promise<void> {
     priority: 'high',
   });
 }
+
+/**
+ * Show a microphone not detected notification in the gecko bar.
+ * Used when the selected microphone is unplugged or unavailable.
+ */
+export function showMicrophoneNotFoundNotification(): Promise<void> {
+  return sendGeckoBarNotification({
+    message: 'Microphone not detected. Please reconnect your microphone and try again.',
+    duration: 5000, // 5 seconds - slightly longer so user can read
+    priority: 'high',
+  });
+}

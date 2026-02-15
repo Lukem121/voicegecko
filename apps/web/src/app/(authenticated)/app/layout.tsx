@@ -46,13 +46,28 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       return;
     }
 
+    // Don't redirect when the API call failed - we can't verify subscription status,
+    // so avoid incorrectly redirecting users with valid subscriptions (e.g. during outages).
+    if (subscriptionQuery.isError) {
+      return;
+    }
+
     const hasActiveSubscription = Boolean(subscriptionQuery.data);
     const isPlansPage = pathname.startsWith('/app/plans');
 
-    if (!hasActiveSubscription && !isPlansPage) {
-      router.replace('/app/plans');
+    if (hasActiveSubscription || isPlansPage) {
+      return;
     }
-  }, [pathname, router, session?.user, subscriptionQuery.data, subscriptionQuery.isLoading]);
+
+    router.replace('/app/plans');
+  }, [
+    pathname,
+    router,
+    session?.user,
+    subscriptionQuery.data,
+    subscriptionQuery.isError,
+    subscriptionQuery.isLoading,
+  ]);
 
   // Navigation links array for mobile popover menu
   const navigationLinks = [
