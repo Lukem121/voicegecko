@@ -59,7 +59,8 @@ type LoadingState = {
 export default function SignUp() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const callbackURL = searchParams.get('redirect') ?? APP_ROUTES.HOME;
+  const callbackURL =
+    searchParams.get('redirect') ?? APP_ROUTES.MARKETING.PRICING;
   const { trackEvent } = useGTM();
   const { trackEvent: trackPostHogEvent } = usePostHog();
 
@@ -145,7 +146,7 @@ export default function SignUp() {
             event: 'signup_completed',
             user_id: `temp_user_${Date.now()}`,
             method: 'email',
-            plan_type: 'free',
+            plan_type: 'pro',
             timestamp: new Date().toISOString(),
           });
 
@@ -162,7 +163,7 @@ export default function SignUp() {
           trackPostHogEvent({
             event: 'signup_completed',
             method: 'email',
-            plan_type: 'free',
+            plan_type: 'pro',
             source: POSTHOG_SOURCES.ORGANIC,
             user_id: `temp_user_${Date.now()}`,
             timestamp: new Date().toISOString(),
@@ -178,7 +179,10 @@ export default function SignUp() {
           });
 
           router.push(
-            buildUrl(APP_ROUTES.AUTH.VERIFY_EMAIL, { email: values.email })
+            buildUrl(APP_ROUTES.AUTH.VERIFY_EMAIL, {
+              email: values.email,
+              redirect: callbackURL,
+            })
           );
         },
         onRequest: () => {

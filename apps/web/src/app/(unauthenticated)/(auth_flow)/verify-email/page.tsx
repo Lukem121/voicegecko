@@ -180,7 +180,7 @@ export default function VerifyEmail() {
           )}
           <Link
             className="mt-4 text-sm hover:underline focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
-            href={APP_ROUTES.AUTH.SIGN_IN}
+            href={`${APP_ROUTES.AUTH.SIGN_IN}?redirect=${encodeURIComponent(redirect)}`}
           >
             Back to Sign In
           </Link>

@@ -6,17 +6,23 @@ import { Separator } from '@acme/ui/components/ui/separator';
 import type { Metadata } from 'next';
 import { unstable_cache } from 'next/cache';
 import Link from 'next/link';
+import { redirect } from 'next/navigation';
 import PricingSection from '~/app/_components/pricing';
 import Section from '~/app/_components/section';
+import {
+  clearPlanIntentCookie,
+  readPlanIntentCookie,
+} from '~/lib/pricing/plan-intent.server';
+import { caller } from '~/trpc/server';
 
 export const metadata: Metadata = {
   title: 'Pricing — Voice Gecko',
   description:
-    'Simple, transparent pricing. Start free, upgrade when you need unlimited dictation and advanced features.',
+    'Start free with 2,000 words per week. Upgrade to Pro or Team for unlimited dictation and advanced features.',
   openGraph: {
     title: 'Pricing — Voice Gecko',
     description:
-      'Simple, transparent pricing. Start free, upgrade when you need unlimited dictation and advanced features.',
+      'Start free with 2,000 words per week. Upgrade to Pro or Team for unlimited dictation and advanced features.',
   },
 };
 
@@ -29,6 +35,47 @@ const getCachedPricingData = unstable_cache(
 );
 
 export default async function PricingPage() {
+  const planIntent = await readPlanIntentCookie();
+  const validPlanIds = new Set(['voice gecko pro', 'voice gecko team']);
+
+  const session = await caller.auth.getSession();
+
+  let effectiveSubscription: Awaited<
+    ReturnType<typeof caller.stripe.getEffectiveSubscription>
+  > | null = null;
+  let hasActiveSubscription = false;
+
+  if (session?.user) {
+    try {
+      effectiveSubscription = await caller.stripe.getEffectiveSubscription();
+      hasActiveSubscription = Boolean(effectiveSubscription);
+    } catch (error) {
+      log.warn(error, 'Failed to fetch effective subscription on pricing page');
+    }
+  }
+
+  let autoCheckoutPlan: 'voice gecko pro' | 'voice gecko team' | undefined;
+  let autoCheckoutBilling: 'annual' | 'monthly' | undefined;
+  let shouldAutoCheckout = false;
+
+  if (planIntent && !validPlanIds.has(planIntent.planId)) {
+    clearPlanIntentCookie();
+  } else if (planIntent && validPlanIds.has(planIntent.planId)) {
+    if (!session?.user) {
+      return redirect(`/sign-up?redirect=${encodeURIComponent('/pricing')}`);
+    }
+
+    if (!hasActiveSubscription) {
+      autoCheckoutPlan = planIntent.planId as
+        | 'voice gecko pro'
+        | 'voice gecko team';
+      autoCheckoutBilling = planIntent.billing;
+      shouldAutoCheckout = true;
+    }
+
+    clearPlanIntentCookie();
+  }
+
   let prices: Record<string, PriceWithMetadata> | null = null;
   try {
     prices = await getCachedPricingData();
@@ -40,7 +87,12 @@ export default async function PricingPage() {
   return (
     <>
       {/* Primary pricing cards reused from landing, with live prices when available */}
-      <PricingSection prices={prices} />
+      <PricingSection
+        autoCheckoutBilling={autoCheckoutBilling}
+        autoCheckoutPlan={autoCheckoutPlan}
+        prices={prices}
+        shouldAutoCheckout={shouldAutoCheckout}
+      />
       <Section className="py-6 md:py-12">
         {/* Plan comparison */}
         <section className="">
@@ -51,32 +103,32 @@ export default async function PricingPage() {
           <div className="mt-6 overflow-hidden rounded-lg border">
             <div className="grid grid-cols-3 bg-muted/40 p-4 font-medium text-sm">
               <div>Feature</div>
-              <div>Basic</div>
               <div>Pro</div>
+              <div>Team</div>
             </div>
             <Separator />
             <div className="grid grid-cols-3 p-4 text-sm">
-              <div className="font-medium">Weekly word allowance</div>
-              <div>2,000</div>
+              <div className="font-medium">Dictation limit</div>
               <div>Unlimited</div>
+              <div>Unlimited (per seat)</div>
             </div>
             <Separator />
             <div className="grid grid-cols-3 p-4 text-sm">
-              <div className="font-medium">Processing speed</div>
-              <div>Standard</div>
-              <div>Priority</div>
+              <div className="font-medium">Priority processing</div>
+              <div>Included</div>
+              <div>Included</div>
             </div>
             <Separator />
             <div className="grid grid-cols-3 p-4 text-sm">
-              <div className="font-medium">Custom dictionary</div>
-              <div>Basic</div>
-              <div>Advanced</div>
+              <div className="font-medium">Advanced dictionary</div>
+              <div>Included</div>
+              <div>Included</div>
             </div>
             <Separator />
             <div className="grid grid-cols-3 p-4 text-sm">
-              <div className="font-medium">Support</div>
-              <div>Email</div>
-              <div>Priority</div>
+              <div className="font-medium">Team management</div>
+              <div>Single user</div>
+              <div>Invite teammates, manage seats</div>
             </div>
           </div>
         </section>
@@ -87,8 +139,8 @@ export default async function PricingPage() {
           <div className="mt-6 grid gap-4 md:grid-cols-2">
             {[
               {
-                q: 'Can I use Voice Gecko for free?',
-                a: 'Yes. The Basic plan gives you 2,000 words per week, reset every Monday. Upgrade to Pro for unlimited usage.',
+                q: 'Which plan gives me unlimited dictation?',
+                a: 'Both Pro and Team unlock unlimited dictations immediately. Pick Pro if you are a solo user or Team if you collaborate with others.',
               },
               {
                 q: 'Do you offer refunds?',
@@ -121,9 +173,9 @@ export default async function PricingPage() {
           <div className="mt-4">
             <Link
               className="inline-flex items-center rounded-md bg-primary px-4 py-2 font-medium text-primary-foreground hover:bg-primary/90"
-              href="/sign-up"
+              href="/pricing#pricing"
             >
-              Get started free
+              View plans
             </Link>
           </div>
         </section>

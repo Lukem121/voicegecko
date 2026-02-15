@@ -49,7 +49,7 @@ export function useEmailSignup({
             onSuccess?.();
           },
           onError: ({ error: signUpOnError }) => {
-            log.error({ error: signUpError }, 'use-email-signup');
+            log.error({ error: signUpOnError }, 'use-email-signup');
 
             if (signUpOnError.code) {
               const errorMessage = getClientAuthErrorMessage(

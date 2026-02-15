@@ -4,29 +4,30 @@ import { buttonVariants } from '@acme/ui/components/ui/button';
 import { cn } from '@acme/ui/lib/utils';
 import { AnimatePresence, motion } from 'motion/react';
 import Image from 'next/image';
+import { useRouter } from 'next/navigation';
 import GeckoInvisibleWall from 'public/assets/images/geckos/gecko-invisible-wall.png';
 import React from 'react';
-import { FaWindows } from 'react-icons/fa';
 import { HiX } from 'react-icons/hi';
 import { usePostHog } from '~/hooks/use-posthog';
 // import { APP_ROUTES } from '~/utils/app-routes';
-import { useStartDownload } from '~/hooks/use-start-download';
 import { POSTHOG_SOURCES } from '~/lib/posthog/constants';
 
 export default function StickyCta() {
   const [show, setShow] = React.useState(false);
   const [dismissed, setDismissed] = React.useState(false);
   const { trackEvent } = usePostHog();
-  const { startDownload } = useStartDownload();
+  const router = useRouter();
 
   const handleStickyCTAClick = () => {
     trackEvent({
       event: 'hero_cta_clicked',
-      cta_text: 'Download for Windows',
+      cta_text: 'Download',
       cta_location: 'sticky',
       source: POSTHOG_SOURCES.STICKY_CTA,
       timestamp: new Date().toISOString(),
     });
+
+    router.push('/download');
   };
 
   const handleDismiss = () => {
@@ -63,7 +64,7 @@ export default function StickyCta() {
           <div className="relative flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center sm:gap-3">
             {/* Dismiss button - positioned absolutely on mobile for better UX */}
             <button
-              aria-label="Dismiss download bar"
+              aria-label="Dismiss pricing bar"
               className="-top-1 -right-1 absolute rounded-full p-2 text-muted-foreground hover:text-foreground sm:static sm:order-last sm:rounded-md sm:px-2 sm:py-1"
               onClick={handleDismiss}
               type="button"
@@ -88,17 +89,12 @@ export default function StickyCta() {
               <button
                 className={cn(
                   buttonVariants({ variant: 'default', size: 'default' }),
-                  'w-full gap-2 px-4 py-2.5 text-white sm:w-auto sm:px-6 sm:text-base'
+                  'w-full px-4 py-2.5 text-white sm:w-auto sm:px-6 sm:text-base'
                 )}
-                onClick={() => {
-                  handleStickyCTAClick();
-                  startDownload({ source: 'sticky_cta' });
-                  // Success page no longer needs query params
-                }}
+                onClick={handleStickyCTAClick}
                 type="button"
               >
-                <FaWindows aria-hidden className="h-4 w-4" />
-                <span>Download for Windows</span>
+                <span>Download</span>
               </button>
             </div>
           </div>
