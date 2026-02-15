@@ -31,11 +31,11 @@ import { useTRPC } from '~/trpc/react';
 export default function AdminUsersPage() {
   const trpc = useTRPC();
   const [search, setSearch] = useState('');
-  const [activityWindow, setActivityWindow] = useState<7 | 30>(30);
+  const [timeFilter, setTimeFilter] = useState<'all' | '30'>('all');
 
   const query = useInfiniteQuery(
     trpc.admin.users.list.infiniteQueryOptions(
-      { limit: 50, activityWindowDays: activityWindow },
+      { limit: 50, activityWindowDays: 30 },
       {
         getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
       }
@@ -57,11 +57,35 @@ export default function AdminUsersPage() {
   }, [users]);
 
   const filtered = useMemo(() => {
-    if (!search.trim()) {
-      return users;
+    let result = users;
+
+    if (search.trim()) {
+      result = fuse.search(search.trim()).map((r) => r.item);
     }
-    return fuse.search(search.trim()).map((r) => r.item);
-  }, [fuse, users, search]);
+
+    // Sort by the selected time filter
+    return result.sort((a, b) => {
+      const aWords =
+        timeFilter === 'all' ? (a.totalWords ?? 0) : (a.recentWords ?? 0);
+      const bWords =
+        timeFilter === 'all' ? (b.totalWords ?? 0) : (b.recentWords ?? 0);
+      const wordsDiff = bWords - aWords;
+
+      if (wordsDiff !== 0) {
+        return wordsDiff;
+      }
+
+      const aDictations =
+        timeFilter === 'all'
+          ? (a.totalDictations ?? 0)
+          : (a.recentDictations ?? 0);
+      const bDictations =
+        timeFilter === 'all'
+          ? (b.totalDictations ?? 0)
+          : (b.recentDictations ?? 0);
+      return bDictations - aDictations;
+    });
+  }, [fuse, users, search, timeFilter]);
 
   useEffect(() => {
     const onScroll = () => {
@@ -88,16 +112,14 @@ export default function AdminUsersPage() {
           <CardTitle>Users</CardTitle>
           <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
             <Select
-              onValueChange={(value) =>
-                setActivityWindow(Number(value) as 7 | 30)
-              }
-              value={activityWindow.toString()}
+              onValueChange={(value) => setTimeFilter(value as 'all' | '30')}
+              value={timeFilter}
             >
               <SelectTrigger className="w-[180px]">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="7">Last 7 days</SelectItem>
+                <SelectItem value="all">All Time</SelectItem>
                 <SelectItem value="30">Last 30 days</SelectItem>
               </SelectContent>
             </Select>
@@ -116,8 +138,14 @@ export default function AdminUsersPage() {
               <TableRow>
                 <TableHead>User</TableHead>
                 <TableHead>Email</TableHead>
-                <TableHead>Recent Words (30d)</TableHead>
-                <TableHead>Recent Dictations (30d)</TableHead>
+                <TableHead>
+                  {timeFilter === 'all' ? 'Total Words' : 'Words (30d)'}
+                </TableHead>
+                <TableHead>
+                  {timeFilter === 'all'
+                    ? 'Total Dictations'
+                    : 'Dictations (30d)'}
+                </TableHead>
                 <TableHead>Role</TableHead>
                 <TableHead>Joined</TableHead>
               </TableRow>
@@ -134,8 +162,16 @@ export default function AdminUsersPage() {
                     </Link>
                   </TableCell>
                   <TableCell>{u.email}</TableCell>
-                  <TableCell>{u.recentWords ?? 0}</TableCell>
-                  <TableCell>{u.recentDictations ?? 0}</TableCell>
+                  <TableCell>
+                    {timeFilter === 'all'
+                      ? (u.totalWords ?? 0)
+                      : (u.recentWords ?? 0)}
+                  </TableCell>
+                  <TableCell>
+                    {timeFilter === 'all'
+                      ? (u.totalDictations ?? 0)
+                      : (u.recentDictations ?? 0)}
+                  </TableCell>
                   <TableCell>{u.role}</TableCell>
                   <TableCell>
                     {u.createdAt

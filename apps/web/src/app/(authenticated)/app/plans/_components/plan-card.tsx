@@ -16,7 +16,6 @@ export type Plan = {
   stripeId: string | null;
   monthlyPrice: string;
   yearlyMonthlyPrice: string;
-  isFree?: boolean;
   subtitle: string;
   features: string[];
   cta: string;
@@ -44,9 +43,6 @@ export const PlanCard = ({
     if (isCurrent) {
       return 'Current plan';
     }
-    if (plan.isFree && subscription) {
-      return 'Download App';
-    }
     return plan.cta;
   };
 
@@ -66,16 +62,10 @@ export const PlanCard = ({
           )}
         </div>
         <div className="mt-2 flex items-baseline gap-1">
-          {plan.isFree ? (
-            <span className="font-bold text-2xl">Free</span>
-          ) : (
-            <>
               <span className="font-bold text-2xl">
                 {isYearly ? plan.yearlyMonthlyPrice : plan.monthlyPrice}
               </span>
               <span className="text-muted-foreground text-sm">/mo</span>
-            </>
-          )}
         </div>
         <p className="mt-1 text-muted-foreground text-xs">{plan.subtitle}</p>
       </CardHeader>

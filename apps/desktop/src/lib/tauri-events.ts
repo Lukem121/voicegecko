@@ -1,6 +1,7 @@
 import { log } from '@acme/observability/log';
 import { emit, listen } from '@tauri-apps/api/event';
 import { toast } from 'sonner';
+import { showMicrophoneNotFoundNotification } from '~/lib/gecko-bar-notifications';
 import { dictationService } from '~/services/dictation.service';
 import { useEventStore } from '~/stores/event.store';
 import { queryClient, trpcClient } from '~/trpc';
@@ -17,6 +18,9 @@ import { performanceTracker } from './performance-tracker';
 
 let initialized = false;
 let initializationId: string | null = null;
+
+const DEVICE_UNAVAILABLE_PATTERN =
+  /not found|no default.*(audio|input) device|no default input device|no longer available|unplugged/i;
 
 type InitializeOptions = {
   isGeckoBar?: boolean;
@@ -246,7 +250,27 @@ export async function initializeTauriEvents(
       log.info(payload, '[TauriEvents] ❌ Recording error:');
 
       useEventStore.getState().setRecordingError(payload);
-      toast.error('Recording error', { description: payload });
+
+      const isDeviceUnavailable =
+        typeof payload === 'string' && DEVICE_UNAVAILABLE_PATTERN.test(payload);
+
+      if (isDeviceUnavailable) {
+        showMicrophoneNotFoundNotification();
+      } else {
+        toast.error('Recording error', { description: payload });
+      }
+    });
+
+    // Listen for microphone test errors (device unplugged during test, etc.)
+    await listen('microphone-test-error', (event) => {
+      const payload = event.payload as string;
+      log.info(payload, '[TauriEvents] ❌ Microphone test error:');
+
+      const isDeviceUnavailable = DEVICE_UNAVAILABLE_PATTERN.test(payload);
+
+      if (isDeviceUnavailable) {
+        showMicrophoneNotFoundNotification();
+      }
     });
 
     // Listen for gecko bar recording requests (only in main window)
