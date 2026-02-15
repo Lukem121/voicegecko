@@ -1,5 +1,6 @@
 'use client';
 
+import { toast } from '@acme/ui/components/ui/sonner';
 import { cn } from '@acme/ui/lib/utils';
 import { useRouter } from 'next/navigation';
 import { Suspense, useEffect, useState } from 'react';
@@ -108,14 +109,34 @@ function InteractiveUpgradeButton({
       return;
     }
 
-    // If not logged in
-    if (!isLoggedIn) {
-      // Team requires sign-in to start checkout; Pro keeps existing behavior
-      if (planType === 'team') {
-        router.push('/sign-in');
-      } else {
-        router.push('/download');
+    // Pro/Team: set plan intent and handle auth
+    const planId = planType === 'team' ? 'voice gecko team' : 'voice gecko pro';
+    const billing = isAnnual ? 'annual' : 'monthly';
+
+    try {
+      const response = await fetch('/api/pricing/intent', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ planId, billing }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to persist plan selection');
       }
+    } catch (error) {
+      toast.error('Unable to start checkout', {
+        description:
+          error instanceof Error
+            ? error.message
+            : 'Please try again in a moment.',
+      });
+      return;
+    }
+
+    if (!isLoggedIn) {
+      router.push(`/sign-up?redirect=${encodeURIComponent('/pricing')}`);
       return;
     }
 

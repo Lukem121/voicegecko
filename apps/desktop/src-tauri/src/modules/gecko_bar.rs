@@ -1,6 +1,7 @@
 use serde::{Deserialize, Serialize};
 use std::sync::Mutex;
 use tauri::{AppHandle, Emitter, Manager, PhysicalPosition, PhysicalSize};
+use tauri_plugin_notification::NotificationExt;
 use tauri_plugin_positioner::{Position as PositionerPosition, WindowExt};
 use tauri_plugin_store::StoreExt;
 use tokio::time::{sleep, Duration};
@@ -508,13 +509,25 @@ pub fn send_gecko_bar_notification(
     priority: Option<String>,
 ) -> Result<(), String> {
     let notification = GeckoBarNotification {
-        message,
+        message: message.clone(),
         duration,
         priority,
     };
 
-    // Try to show gecko bar if it's enabled
-    let _ = show_gecko_bar(app.clone());
+    // Check if gecko bar will be visible (enabled in settings and not snoozed)
+    let gecko_bar_visible = should_show_gecko_bar(app.clone()).unwrap_or(false);
 
-    emit_gecko_bar_notification(&app, notification)
+    if gecko_bar_visible {
+        // Show gecko bar and emit notification
+        let _ = show_gecko_bar(app.clone());
+        emit_gecko_bar_notification(&app, notification)
+    } else {
+        // Gecko bar is hidden - fall back to system notification so user still gets alerted
+        app.notification()
+            .builder()
+            .title("VoiceGecko")
+            .body(&message)
+            .show()
+            .map_err(|e| e.to_string())
+    }
 }

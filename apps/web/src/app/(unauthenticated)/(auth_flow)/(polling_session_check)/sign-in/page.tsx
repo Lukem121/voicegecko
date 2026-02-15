@@ -50,7 +50,8 @@ export default function SignIn() {
   const trpc = useTRPC();
   const router = useRouter();
   const searchParams = useSearchParams();
-  const callbackURL = searchParams.get('redirect') ?? APP_ROUTES.HOME;
+  const callbackURL =
+    searchParams.get('redirect') ?? APP_ROUTES.MARKETING.PRICING;
   const { trackEvent } = usePostHog();
 
   const getBanStatus = useMutation(trpc.auth.getBanStatus.mutationOptions());

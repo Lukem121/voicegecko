@@ -6,11 +6,12 @@ import { Card } from '@acme/ui/components/ui/card';
 import Image from 'next/image';
 import Link from 'next/link';
 import GeckoStudentSitting from 'public/assets/images/geckos/gecko-student-sitting.png';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { HiCheck } from 'react-icons/hi';
 import { type FeatureItem, PriceCard } from '~/components/pricing/price-card';
 import { StudentDiscountModal } from '~/components/student-discount-modal';
 import { useStudentDiscountModal } from '~/hooks/use-student-discount-modal';
+import { useSubscriptionUpgrade } from '~/hooks/use-subscription-upgrade';
 import { authClient } from '~/lib/auth/client';
 import { useCurrency } from '~/providers/currency';
 import {
@@ -21,18 +22,65 @@ import Section from './section';
 
 type BillingPeriod = 'monthly' | 'yearly';
 
+type PricingSectionProps = {
+  prices: Record<string, PriceWithMetadata> | null;
+  pricingError?: string;
+  autoCheckoutPlan?: 'voice gecko pro' | 'voice gecko team';
+  autoCheckoutBilling?: 'annual' | 'monthly';
+  shouldAutoCheckout?: boolean;
+};
+
 export default function PricingSection({
   prices,
   pricingError,
-}: {
-  prices: Record<string, PriceWithMetadata> | null;
-  pricingError?: string;
-}) {
+  autoCheckoutPlan,
+  autoCheckoutBilling,
+  shouldAutoCheckout = false,
+}: PricingSectionProps) {
   const { data: session } = authClient.useSession();
   const [billingPeriod, setBillingPeriod] = useState<BillingPeriod>('yearly');
   const { currency } = useCurrency();
   const isYearly = billingPeriod === 'yearly';
   const isLoggedIn = !!session?.user;
+  const { upgrade } = useSubscriptionUpgrade();
+  const autoCheckoutTriggeredRef = useRef(false);
+
+  useEffect(() => {
+    if (autoCheckoutBilling === 'annual') {
+      setBillingPeriod('yearly');
+      return;
+    }
+
+    if (autoCheckoutBilling === 'monthly') {
+      setBillingPeriod('monthly');
+    }
+  }, [autoCheckoutBilling]);
+
+  useEffect(() => {
+    if (!shouldAutoCheckout) {
+      return;
+    }
+
+    if (!autoCheckoutPlan) {
+      return;
+    }
+
+    if (autoCheckoutTriggeredRef.current) {
+      return;
+    }
+
+    autoCheckoutTriggeredRef.current = true;
+
+    const isAnnual = autoCheckoutBilling !== 'monthly';
+
+    const runCheckout = async () => {
+      await upgrade(autoCheckoutPlan, isAnnual);
+    };
+
+    runCheckout().catch(() => {
+      autoCheckoutTriggeredRef.current = false;
+    });
+  }, [autoCheckoutPlan, autoCheckoutBilling, shouldAutoCheckout, upgrade]);
 
   const getPriceDisplay = (
     planId: string,
@@ -75,6 +123,11 @@ export default function PricingSection({
           <Toggle selected={billingPeriod} setSelected={setBillingPeriod} />
         </div>
       </div>
+      {shouldAutoCheckout && (
+        <output className="mt-6 block rounded-lg border border-primary/30 bg-primary/5 px-4 py-3 text-primary text-sm">
+          Redirecting you to secure checkout...
+        </output>
+      )}
       <div>
         <div className="mt-6 grid gap-6 md:h-[33rem] md:grid-cols-3">
           <PriceCard

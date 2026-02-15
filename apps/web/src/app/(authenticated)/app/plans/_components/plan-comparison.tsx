@@ -6,8 +6,8 @@ type ComparisonTableProps = {
   firstColumnHeader: string;
   data: {
     feature: string;
-    basic: CellValue;
     pro: CellValue;
+    team: CellValue;
   }[];
 };
 
@@ -35,8 +35,8 @@ const ComparisonTable = ({ firstColumnHeader, data }: ComparisonTableProps) => {
               <th className="w-1/3 px-4 py-3 text-left font-medium">
                 {firstColumnHeader}
               </th>
-              <th className="w-1/3 px-4 py-3 text-center font-medium">Basic</th>
               <th className="w-1/3 px-4 py-3 text-center font-medium">Pro</th>
+              <th className="w-1/3 px-4 py-3 text-center font-medium">Team</th>
             </tr>
           </thead>
           <tbody>
@@ -46,8 +46,8 @@ const ComparisonTable = ({ firstColumnHeader, data }: ComparisonTableProps) => {
                 key={`${row.feature}-${index}`}
               >
                 <td className="w-1/3 px-4 py-3 text-sm">{row.feature}</td>
-                <td className="w-1/3 px-4 py-3">{renderCell(row.basic)}</td>
                 <td className="w-1/3 px-4 py-3">{renderCell(row.pro)}</td>
+                <td className="w-1/3 px-4 py-3">{renderCell(row.team)}</td>
               </tr>
             ))}
           </tbody>
@@ -59,55 +59,70 @@ const ComparisonTable = ({ firstColumnHeader, data }: ComparisonTableProps) => {
 
 const devicePlatformData = [
   {
-    feature: 'Desktop Mac',
-    basic: 'check' as const,
+    feature: 'Desktop macOS',
     pro: 'check' as const,
+    team: 'check' as const,
   },
   {
     feature: 'Desktop Windows',
-    basic: 'check' as const,
     pro: 'check' as const,
+    team: 'check' as const,
   },
   {
     feature: 'iPhone',
-    basic: 'Coming soon',
     pro: 'Coming soon',
+    team: 'Coming soon',
   },
   {
     feature: 'Android',
-    basic: 'Coming soon',
     pro: 'Coming soon',
+    team: 'Coming soon',
   },
 ];
 
-const voiceTypingData = [
+const coreDictationData = [
   {
-    feature: 'Word Limit',
-    basic: '2,000 a week',
+    feature: 'Dictation limit',
     pro: 'Unlimited',
+    team: 'Unlimited (per seat)',
   },
   {
-    feature: 'Add Words to Dictionary',
-    basic: 'check' as const,
+    feature: 'Priority processing',
     pro: 'check' as const,
+    team: 'check' as const,
   },
   {
-    feature: 'Prioritized Feature Requests',
-    basic: 'x' as const,
+    feature: 'Advanced custom dictionary',
     pro: 'check' as const,
+    team: 'check' as const,
   },
   {
-    feature: 'Early Access to New Features',
-    basic: 'x' as const,
+    feature: 'Desktop shortcuts & workflows',
     pro: 'check' as const,
+    team: 'check' as const,
   },
 ];
 
 const teamCollaborationData = [
   {
-    feature: 'Customer Support',
-    basic: 'Standard',
-    pro: 'Prioritized',
+    feature: 'Invite teammates',
+    pro: 'x' as const,
+    team: 'check' as const,
+  },
+  {
+    feature: 'Seat management & billing',
+    pro: 'x' as const,
+    team: 'check' as const,
+  },
+  {
+    feature: 'Shared dictionaries',
+    pro: 'x' as const,
+    team: 'check' as const,
+  },
+  {
+    feature: 'Priority support',
+    pro: 'check' as const,
+    team: 'check' as const,
   },
 ];
 
@@ -122,7 +137,7 @@ export const PlanComparison = () => {
       </div>
 
       <ComparisonTable
-        data={voiceTypingData}
+        data={coreDictationData}
         firstColumnHeader="Effortless Voice Typing"
       />
       <ComparisonTable
