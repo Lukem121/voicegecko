@@ -2,7 +2,6 @@
 
 import type { PriceWithMetadata } from '@acme/api/src/services/stripe/stripe.service';
 import { log } from '@acme/observability/log';
-import type { Subscription } from '@better-auth/stripe';
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -19,7 +18,7 @@ import { useCurrency } from '~/providers/currency';
 import { useTRPC } from '~/trpc/react';
 import { AlertBanner } from './alert-banner';
 import { BillingToggle } from './billing-toggle';
-import { type Plan, PlanCard } from './plan-card';
+import { type Plan, type PlansSubscription, PlanCard } from './plan-card';
 import { PlanComparison } from './plan-comparison';
 import { PlansErrorState } from './plans-error-state';
 import { StudentDiscountCard } from './student-discount-card';
@@ -33,7 +32,7 @@ type BillingPeriod = 'monthly' | 'annual';
 
 type PlansProps = {
   prices: Record<string, PriceWithMetadata>;
-  subscription: Subscription | null;
+  subscription: PlansSubscription;
   error: {
     code?: string | undefined;
     message?: string | undefined;
@@ -92,7 +91,7 @@ export default function Plans({ prices, subscription, error }: PlansProps) {
   };
 
   const { upgrade, isUpgrading } = useSubscriptionUpgrade({
-    subscriptionId: subscription?.stripeSubscriptionId,
+    subscriptionId: subscription?.stripeSubscriptionId ?? undefined,
     onError: (upgradeError) => {
       showAlert(
         'Subscription Error',
@@ -214,11 +213,13 @@ export default function Plans({ prices, subscription, error }: PlansProps) {
       return;
     }
 
-    // Track plan selection
+    // Track plan selection (map annual → yearly for analytics)
+    const billingForAnalytics =
+      billingValue === 'annual' ? 'yearly' : billingValue;
     trackEvent({
       event: 'plan_selected',
       plan_type: plan.id === 'voice gecko team' ? 'team' : 'pro',
-      billing_period: billingValue,
+      billing_period: billingForAnalytics,
       source: SOURCES.PLANS_PAGE,
       timestamp: new Date().toISOString(),
     });
@@ -227,7 +228,7 @@ export default function Plans({ prices, subscription, error }: PlansProps) {
     trackPostHogEvent({
       event: 'plan_selected',
       plan_type: plan.id === 'voice gecko team' ? 'team' : 'pro',
-      billing_period: billingValue,
+      billing_period: billingForAnalytics,
       source: POSTHOG_SOURCES.PLANS_PAGE,
       timestamp: new Date().toISOString(),
     });

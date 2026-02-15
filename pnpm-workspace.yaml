@@ -30,5 +30,6 @@ onlyBuiltDependencies:
   - core-js
   - core-js-pure
   - esbuild
+  - protobufjs
   - sharp
   - utf-8-validate

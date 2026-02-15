@@ -61,8 +61,10 @@ export const claimEndpoint = createAuthEndpoint(
       );
     }
 
-    const session = await ctx.context.internalAdapter
-      .createSession(user.id, ctx, false)
+    const session = await ctx.context.internalAdapter.createSession(
+      user.id,
+      false
+    )
       .catch(() => {
         return null;
       });

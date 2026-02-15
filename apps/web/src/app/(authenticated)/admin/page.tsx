@@ -116,8 +116,12 @@ export default function AdminDashboardPage() {
                 <AreaChart data={daily} margin={{ left: 12, right: 12 }}>
                   <CartesianGrid vertical={false} />
                   <XAxis axisLine={false} dataKey="day" tickLine={false} />
-                  <ChartTooltip content={<ChartTooltipContent />} />
-                  <ChartLegend content={<ChartLegendContent payload={[]} />} />
+                  <ChartTooltip
+                    content={({ content: _content, ...props }) => (
+                      <ChartTooltipContent {...props} />
+                    )}
+                  />
+                  <ChartLegend content={<ChartLegendContent />} />
                   <Area
                     dataKey="words"
                     fill="var(--color-words)"

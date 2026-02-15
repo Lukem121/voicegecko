@@ -8,8 +8,6 @@
 // You should NOT make any changes in this file as it will be overwritten.
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
-import { createFileRoute } from '@tanstack/react-router'
-
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as UpdateRequiredRouteImport } from './routes/update-required'
 import { Route as OnboardingRouteImport } from './routes/onboarding'
@@ -31,12 +29,6 @@ import { Route as unauthenticatedAuthSignUpRouteImport } from './routes/(unauthe
 import { Route as unauthenticatedAuthSignInRouteImport } from './routes/(unauthenticated)/_auth.sign-in'
 import { Route as unauthenticatedAuthAuthenticationErrorRouteImport } from './routes/(unauthenticated)/_auth.authentication-error'
 
-const unauthenticatedRouteImport = createFileRoute('/(unauthenticated)')()
-
-const unauthenticatedRoute = unauthenticatedRouteImport.update({
-  id: '/(unauthenticated)',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const UpdateRequiredRoute = UpdateRequiredRouteImport.update({
   id: '/update-required',
   path: '/update-required',
@@ -89,8 +81,8 @@ const AuthenticatedDictationsRoute = AuthenticatedDictationsRouteImport.update({
   getParentRoute: () => AuthenticatedRoute,
 } as any)
 const unauthenticatedAuthRoute = unauthenticatedAuthRouteImport.update({
-  id: '/_auth',
-  getParentRoute: () => unauthenticatedRoute,
+  id: '/(unauthenticated)/_auth',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedSettingsIndexRoute =
   AuthenticatedSettingsIndexRouteImport.update({
@@ -142,9 +134,9 @@ const unauthenticatedAuthAuthenticationErrorRoute =
   } as any)
 
 export interface FileRoutesByFullPath {
+  '/': typeof AuthenticatedIndexRoute
   '/onboarding': typeof OnboardingRouteWithChildren
   '/update-required': typeof UpdateRequiredRoute
-  '/': typeof AuthenticatedIndexRoute
   '/dictations': typeof AuthenticatedDictationsRoute
   '/dictionary': typeof AuthenticatedDictionaryRoute
   '/usage': typeof AuthenticatedUsageRoute
@@ -158,18 +150,18 @@ export interface FileRoutesByFullPath {
   '/verify-success': typeof unauthenticatedAuthVerifySuccessRoute
   '/settings/models': typeof AuthenticatedSettingsModelsRoute
   '/settings/shortcuts': typeof AuthenticatedSettingsShortcutsRoute
-  '/settings': typeof AuthenticatedSettingsIndexRoute
+  '/settings/': typeof AuthenticatedSettingsIndexRoute
 }
 export interface FileRoutesByTo {
   '/onboarding': typeof OnboardingRouteWithChildren
   '/update-required': typeof UpdateRequiredRoute
-  '/': typeof AuthenticatedIndexRoute
   '/dictations': typeof AuthenticatedDictationsRoute
   '/dictionary': typeof AuthenticatedDictionaryRoute
   '/usage': typeof AuthenticatedUsageRoute
   '/onboarding/completion': typeof OnboardingCompletionRoute
   '/onboarding/microphone-setup': typeof OnboardingMicrophoneSetupRoute
   '/onboarding/push-to-talk-tutorial': typeof OnboardingPushToTalkTutorialRoute
+  '/': typeof AuthenticatedIndexRoute
   '/authentication-error': typeof unauthenticatedAuthAuthenticationErrorRoute
   '/sign-in': typeof unauthenticatedAuthSignInRoute
   '/sign-up': typeof unauthenticatedAuthSignUpRoute
@@ -184,7 +176,6 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/onboarding': typeof OnboardingRouteWithChildren
   '/update-required': typeof UpdateRequiredRoute
-  '/(unauthenticated)': typeof unauthenticatedRouteWithChildren
   '/(unauthenticated)/_auth': typeof unauthenticatedAuthRouteWithChildren
   '/_authenticated/dictations': typeof AuthenticatedDictationsRoute
   '/_authenticated/dictionary': typeof AuthenticatedDictionaryRoute
@@ -205,9 +196,9 @@ export interface FileRoutesById {
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
+    | '/'
     | '/onboarding'
     | '/update-required'
-    | '/'
     | '/dictations'
     | '/dictionary'
     | '/usage'
@@ -221,18 +212,18 @@ export interface FileRouteTypes {
     | '/verify-success'
     | '/settings/models'
     | '/settings/shortcuts'
-    | '/settings'
+    | '/settings/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/onboarding'
     | '/update-required'
-    | '/'
     | '/dictations'
     | '/dictionary'
     | '/usage'
     | '/onboarding/completion'
     | '/onboarding/microphone-setup'
     | '/onboarding/push-to-talk-tutorial'
+    | '/'
     | '/authentication-error'
     | '/sign-in'
     | '/sign-up'
@@ -246,7 +237,6 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/onboarding'
     | '/update-required'
-    | '/(unauthenticated)'
     | '/(unauthenticated)/_auth'
     | '/_authenticated/dictations'
     | '/_authenticated/dictionary'
@@ -269,18 +259,11 @@ export interface RootRouteChildren {
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
   OnboardingRoute: typeof OnboardingRouteWithChildren
   UpdateRequiredRoute: typeof UpdateRequiredRoute
-  unauthenticatedRoute: typeof unauthenticatedRouteWithChildren
+  unauthenticatedAuthRoute: typeof unauthenticatedAuthRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/(unauthenticated)': {
-      id: '/(unauthenticated)'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof unauthenticatedRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/update-required': {
       id: '/update-required'
       path: '/update-required'
@@ -298,7 +281,7 @@ declare module '@tanstack/react-router' {
     '/_authenticated': {
       id: '/_authenticated'
       path: ''
-      fullPath: ''
+      fullPath: '/'
       preLoaderRoute: typeof AuthenticatedRouteImport
       parentRoute: typeof rootRouteImport
     }
@@ -353,15 +336,15 @@ declare module '@tanstack/react-router' {
     }
     '/(unauthenticated)/_auth': {
       id: '/(unauthenticated)/_auth'
-      path: '/'
-      fullPath: '/'
+      path: ''
+      fullPath: ''
       preLoaderRoute: typeof unauthenticatedAuthRouteImport
-      parentRoute: typeof unauthenticatedRoute
+      parentRoute: typeof rootRouteImport
     }
     '/_authenticated/settings/': {
       id: '/_authenticated/settings/'
       path: '/settings'
-      fullPath: '/settings'
+      fullPath: '/settings/'
       preLoaderRoute: typeof AuthenticatedSettingsIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
@@ -477,23 +460,11 @@ const unauthenticatedAuthRouteChildren: unauthenticatedAuthRouteChildren = {
 const unauthenticatedAuthRouteWithChildren =
   unauthenticatedAuthRoute._addFileChildren(unauthenticatedAuthRouteChildren)
 
-interface unauthenticatedRouteChildren {
-  unauthenticatedAuthRoute: typeof unauthenticatedAuthRouteWithChildren
-}
-
-const unauthenticatedRouteChildren: unauthenticatedRouteChildren = {
-  unauthenticatedAuthRoute: unauthenticatedAuthRouteWithChildren,
-}
-
-const unauthenticatedRouteWithChildren = unauthenticatedRoute._addFileChildren(
-  unauthenticatedRouteChildren,
-)
-
 const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
   OnboardingRoute: OnboardingRouteWithChildren,
   UpdateRequiredRoute: UpdateRequiredRoute,
-  unauthenticatedRoute: unauthenticatedRouteWithChildren,
+  unauthenticatedAuthRoute: unauthenticatedAuthRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

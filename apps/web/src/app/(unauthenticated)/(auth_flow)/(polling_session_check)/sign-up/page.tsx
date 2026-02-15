@@ -146,7 +146,7 @@ export default function SignUp() {
             event: 'signup_completed',
             user_id: `temp_user_${Date.now()}`,
             method: 'email',
-            plan_type: 'pro',
+            plan_type: 'free',
             timestamp: new Date().toISOString(),
           });
 
@@ -163,7 +163,7 @@ export default function SignUp() {
           trackPostHogEvent({
             event: 'signup_completed',
             method: 'email',
-            plan_type: 'pro',
+            plan_type: 'free',
             source: POSTHOG_SOURCES.ORGANIC,
             user_id: `temp_user_${Date.now()}`,
             timestamp: new Date().toISOString(),
