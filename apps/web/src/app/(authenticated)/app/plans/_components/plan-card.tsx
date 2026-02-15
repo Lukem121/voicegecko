@@ -7,8 +7,19 @@ import {
   CardTitle,
 } from '@acme/ui/components/ui/card';
 import { cn } from '@acme/ui/lib/utils';
-import type { Subscription } from '@better-auth/stripe';
 import { Check, Loader2 } from 'lucide-react';
+
+/** Compatible with both EffectiveSubscription and @better-auth Subscription */
+export type PlansSubscription = {
+  cancelAtPeriodEnd?: boolean | null;
+  id: string;
+  plan: string | null;
+  periodEnd?: Date | string | null;
+  periodStart?: Date | string | null;
+  seats?: number | null;
+  status: string | null;
+  stripeSubscriptionId?: string | null;
+} | null;
 
 export type Plan = {
   name: string;
@@ -27,7 +38,7 @@ type PlanCardProps = {
   isYearly: boolean;
   isCurrent: boolean;
   isLoading: boolean;
-  subscription: Subscription | null;
+  subscription: PlansSubscription;
   onPlanClick: (plan: Plan) => void;
 };
 

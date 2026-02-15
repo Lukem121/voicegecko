@@ -8,7 +8,7 @@ type SocialSignInButtonProps = {
   provider: SocialProvider;
   isLoading: boolean;
   onClick: () => void;
-  disabled: boolean;
+  disabled?: boolean;
 };
 
 export function SocialSignInButton({

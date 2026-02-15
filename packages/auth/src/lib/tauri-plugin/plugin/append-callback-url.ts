@@ -1,9 +1,12 @@
 /** biome-ignore-all lint/style/noNonNullAssertion: non-null assertion is required */
 
 import { log } from '@acme/observability/log';
-import type { MiddlewareContext, MiddlewareOptions } from 'better-auth';
+import type {
+  AuthContext,
+  MiddlewareContext,
+  MiddlewareOptions,
+} from 'better-auth';
 import type { SocialProviders } from 'better-auth/social-providers';
-import type { AuthContext } from 'better-auth/types';
 
 export function appendCallbackURL({
   callbackURL,

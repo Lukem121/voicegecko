@@ -72,7 +72,7 @@ export type BeginCheckoutEvent = BasePostHogEvent & {
 
 export type PlanSelectedEvent = BasePostHogEvent & {
   event: 'plan_selected';
-  plan_type: 'free' | 'pro';
+  plan_type: 'free' | 'pro' | 'team';
   billing_period: 'monthly' | 'yearly';
 };
 

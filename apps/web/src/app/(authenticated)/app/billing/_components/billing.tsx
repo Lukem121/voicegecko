@@ -17,7 +17,6 @@ import {
   CardHeader,
   CardTitle,
 } from '@acme/ui/components/ui/card';
-import type { Subscription } from '@better-auth/stripe';
 import { useMutation } from '@tanstack/react-query';
 import { AlertTriangle, Loader2, RefreshCw, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
@@ -28,9 +27,21 @@ import { useCurrency } from '~/providers/currency';
 import { useTRPC } from '~/trpc/react';
 import { useCreateBillingPortalSession } from '../../_hooks/use-create-billing-portal-session';
 
+/** Compatible with both EffectiveSubscription and @better-auth Subscription */
+type BillingSubscription = {
+  cancelAtPeriodEnd?: boolean | null;
+  id: string;
+  plan: string | null;
+  periodEnd?: Date | string | null;
+  periodStart?: Date | string | null;
+  seats?: number | null;
+  status: string | null;
+  stripeSubscriptionId?: string | null;
+} | null;
+
 type BillingProps = {
   prices: Record<string, PriceWithMetadata>;
-  subscription: Subscription | null;
+  subscription: BillingSubscription;
   error: {
     code?: string | undefined;
     message?: string | undefined;
@@ -55,7 +66,7 @@ const useRestoreSubscription = () => {
 
 // Helper function to determine subscription status
 const getSubscriptionStatus = (
-  subscription: Subscription | null,
+  subscription: BillingSubscription,
   isCanceling: boolean
 ) => {
   if (!subscription) {
@@ -148,14 +159,14 @@ function CurrentPlanCard({
   getPlanDisplayName,
   formatDate,
 }: {
-  subscription: Subscription | null;
+  subscription: BillingSubscription;
   isLoading: boolean;
   isCanceling: boolean;
   onManageSubscription: () => void;
   onUpgradePlan: () => void;
   getCurrentSubscriptionPrice: () => string;
-  getPlanDisplayName: (planName: string) => string;
-  formatDate: (date: Date | string | undefined) => string;
+  getPlanDisplayName: (planName: string | null) => string;
+  formatDate: (date: Date | string | null | undefined) => string;
 }) {
   return (
     <Card className="">
@@ -301,7 +312,7 @@ export default function Billing({ prices, subscription, error }: BillingProps) {
     }
 
     const interval = getSubscriptionInterval();
-    const price = findPriceForPlan(subscription.plan, interval);
+    const price = findPriceForPlan(subscription.plan ?? '', interval);
 
     if (!price) {
       return 'Price unavailable';
@@ -377,7 +388,7 @@ export default function Billing({ prices, subscription, error }: BillingProps) {
     }
   };
 
-  const formatDate = (date: Date | string | undefined) => {
+  const formatDate = (date: Date | string | null | undefined) => {
     if (!date) {
       return 'N/A';
     }
@@ -389,12 +400,12 @@ export default function Billing({ prices, subscription, error }: BillingProps) {
     });
   };
 
-  const getPlanDisplayName = (planName: string) => {
+  const getPlanDisplayName = (planName: string | null) => {
     const displayNames: Record<string, string> = {
       'voice gecko pro': 'Voice Gecko Pro',
       'voice gecko team': 'Voice Gecko Team',
     };
-    return displayNames[planName] ?? planName;
+    return (planName && displayNames[planName]) ?? planName ?? '';
   };
 
   const isCanceling = subscription?.cancelAtPeriodEnd ?? false;
@@ -517,7 +528,7 @@ export default function Billing({ prices, subscription, error }: BillingProps) {
                   {formatDate(subscription.periodEnd)}
                 </span>
               </div>
-              {subscription.seats !== undefined && subscription.seats > 1 && (
+              {subscription.seats != null && subscription.seats > 1 && (
                 <div className="flex justify-between">
                   <span className="text-muted-foreground text-sm">Seats</span>
                   <span className="font-medium text-sm">
