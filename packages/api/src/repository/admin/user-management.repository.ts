@@ -22,6 +22,8 @@ export type UserWithActivity = {
   phoneNumberVerified: boolean | null;
   recentWords?: number;
   recentDictations?: number;
+  totalWords?: number;
+  totalDictations?: number;
   lastActiveAt?: Date | null;
 };
 
@@ -113,6 +115,17 @@ class UserManagementRepository {
       )
       .groupBy(DictationTable.userId);
 
+    // Fetch all-time activity aggregates
+    const totalActivityRows = await db
+      .select({
+        userId: DictationTable.userId,
+        words: sql<number>`COALESCE(SUM(${DictationTable.wordCount}), 0)`,
+        dictations: sql<number>`COUNT(*)`,
+      })
+      .from(DictationTable)
+      .where(inArray(DictationTable.userId, userIds))
+      .groupBy(DictationTable.userId);
+
     const usageRows = await db
       .select({
         userId: UsageTable.userId,
@@ -132,25 +145,37 @@ class UserManagementRepository {
       ])
     );
 
+    const totalActivityMap = new Map(
+      totalActivityRows.map((row) => [
+        row.userId,
+        {
+          words: Number(row.words),
+          dictations: Number(row.dictations),
+        },
+      ])
+    );
+
     const usageMap = new Map(
       usageRows.map((row) => [row.userId, row.lastResetAt])
     );
 
-    // Merge data and sort by activity
+    // Merge data and sort by total words (all-time)
     const usersWithActivity = users
       .map((user) => ({
         ...user,
         recentWords: activityMap.get(user.id)?.words ?? 0,
         recentDictations: activityMap.get(user.id)?.dictations ?? 0,
+        totalWords: totalActivityMap.get(user.id)?.words ?? 0,
+        totalDictations: totalActivityMap.get(user.id)?.dictations ?? 0,
         lastActiveAt: usageMap.get(user.id) ?? null,
       }))
       .sort((a, b) => {
-        // Sort by recent words (descending), then by recent dictations
-        const wordsDiff = (b.recentWords ?? 0) - (a.recentWords ?? 0);
+        // Sort by total words (descending), then by total dictations
+        const wordsDiff = (b.totalWords ?? 0) - (a.totalWords ?? 0);
         if (wordsDiff !== 0) {
           return wordsDiff;
         }
-        return (b.recentDictations ?? 0) - (a.recentDictations ?? 0);
+        return (b.totalDictations ?? 0) - (a.totalDictations ?? 0);
       });
 
     const nextCursor = users.length === limit ? users.at(-1)?.id : undefined;

@@ -4,17 +4,16 @@ import { buttonVariants } from '@acme/ui/components/ui/button';
 import { cn } from '@acme/ui/lib/utils';
 import { motion } from 'motion/react';
 import Image from 'next/image';
-import { FaWindows } from 'react-icons/fa';
+import { useRouter } from 'next/navigation';
 import { usePostHog } from '~/hooks/use-posthog';
-import { useStartDownload } from '~/hooks/use-start-download';
 import { POSTHOG_SOURCES } from '~/lib/posthog/constants';
 // import { APP_ROUTES } from '~/utils/app-routes';
 import SectionWrapper from './section-wrapper';
 import Logo from './svgs/logo';
 
 export default function FinalCtaSection() {
+  const router = useRouter();
   const { trackEvent } = usePostHog();
-  const { startDownload } = useStartDownload();
 
   const handleFinalCTAClick = () => {
     trackEvent({
@@ -24,6 +23,8 @@ export default function FinalCtaSection() {
       source: POSTHOG_SOURCES.FINAL_CTA,
       timestamp: new Date().toISOString(),
     });
+
+    router.push('/download');
   };
 
   return (
@@ -73,16 +74,11 @@ export default function FinalCtaSection() {
               <button
                 className={cn(
                   buttonVariants({ variant: 'default', size: 'lg' }),
-                  'gap-2 bg-primary px-6 py-3 text-white'
+                  'bg-primary px-6 py-3 text-white'
                 )}
-                onClick={() => {
-                  handleFinalCTAClick();
-                  startDownload({ source: 'final_cta' });
-                  // Success page no longer needs query params
-                }}
+                onClick={handleFinalCTAClick}
                 type="button"
               >
-                <FaWindows aria-hidden className="h-4 w-4" />
                 <span>Download for Windows</span>
               </button>
             </div>

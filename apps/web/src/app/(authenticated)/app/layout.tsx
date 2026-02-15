@@ -7,6 +7,7 @@ import {
   PopoverTrigger,
 } from '@acme/ui/components/ui/popover';
 import { SidebarProvider } from '@acme/ui/components/ui/sidebar';
+import { useQuery } from '@tanstack/react-query';
 import {
   ChartBar,
   CreditCard,
@@ -16,15 +17,42 @@ import {
   Users,
 } from 'lucide-react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { useState } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import SectionWrapper from '~/app/_landing/section-wrapper';
 import { UserMenu } from '../_components/user-menu';
 import AppSidebar from '../_components/web-sidebar';
+import { authClient } from '~/lib/auth/client';
+import { useTRPC } from '~/trpc/react';
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
+  const router = useRouter();
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { data: session } = authClient.useSession();
+  const trpc = useTRPC();
+  const effectiveSubOptions = trpc.stripe.getEffectiveSubscription.queryOptions();
+  const subscriptionQuery = useQuery({
+    ...effectiveSubOptions,
+    enabled: !!session?.user,
+  });
+
+  useEffect(() => {
+    if (!session?.user) {
+      return;
+    }
+
+    if (subscriptionQuery.isLoading) {
+      return;
+    }
+
+    const hasActiveSubscription = Boolean(subscriptionQuery.data);
+    const isPlansPage = pathname.startsWith('/app/plans');
+
+    if (!hasActiveSubscription && !isPlansPage) {
+      router.replace('/app/plans');
+    }
+  }, [pathname, router, session?.user, subscriptionQuery.data, subscriptionQuery.isLoading]);
 
   // Navigation links array for mobile popover menu
   const navigationLinks = [
