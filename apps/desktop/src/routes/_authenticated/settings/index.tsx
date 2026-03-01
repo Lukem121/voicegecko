@@ -40,6 +40,7 @@ function SettingsPage() {
     updateMuteSystemAudio,
     updateLaunchOnStartup,
     updateShowGeckoBar,
+    updateShowGeckoBarWhileRecording,
     updateHideGeckoOnFullscreen,
     updatePrivacySetting,
     updatePersonalizationSetting,
@@ -128,6 +129,22 @@ function SettingsPage() {
                   onCheckedChange={updateShowGeckoBar}
                 />
               </div>
+
+              {!settings.general.showGeckoBar && (
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label>Show while recording</Label>
+                    <p className="text-muted-foreground text-sm">
+                      Show the gecko bar only while recording or processing
+                      dictation
+                    </p>
+                  </div>
+                  <Switch
+                    checked={settings.general.showGeckoBarWhileRecording}
+                    onCheckedChange={updateShowGeckoBarWhileRecording}
+                  />
+                </div>
+              )}
 
               {settings.general.showGeckoBar && (
                 <div className="flex items-center justify-between">

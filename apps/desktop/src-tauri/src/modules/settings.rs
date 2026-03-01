@@ -11,6 +11,8 @@ pub struct GeckoBarConfig {
     pub enabled: bool,
     #[serde(default = "default_hide_on_fullscreen")]
     pub hide_on_fullscreen: bool,
+    #[serde(default, rename = "showOnlyWhileRecording")]
+    pub show_only_while_recording: bool,
 }
 
 fn default_hide_on_fullscreen() -> bool {
@@ -22,6 +24,7 @@ impl Default for GeckoBarConfig {
         Self {
             enabled: true, // Enabled by default
             hide_on_fullscreen: default_hide_on_fullscreen(),
+            show_only_while_recording: false,
         }
     }
 }
