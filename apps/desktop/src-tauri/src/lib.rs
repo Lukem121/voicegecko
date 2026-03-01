@@ -154,7 +154,7 @@ pub fn run() {
                 let app_handle = app.handle().clone();
                 if let Ok(show) = modules::gecko_bar::should_show_gecko_bar(app_handle.clone()) {
                     if show {
-                        let _ = modules::gecko_bar::show_gecko_bar(app_handle.clone());
+                        let _ = modules::gecko_bar::show_gecko_bar(app_handle.clone(), None);
                     } else {
                         let _ = modules::gecko_bar::hide_gecko_bar(app_handle.clone());
                     }

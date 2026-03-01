@@ -121,13 +121,22 @@ fn calculate_taskbar_offset(monitor_size: &PhysicalSize<u32>) -> (u32, u32) {
     (0, 48) // Default Windows taskbar height
 }
 
+#[derive(Deserialize, Default)]
+pub(crate) struct ShowGeckoBarOptions {
+    #[serde(default)]
+    #[serde(rename = "forRecording")]
+    for_recording: bool,
+}
+
 #[tauri::command]
-pub fn show_gecko_bar(app: AppHandle) -> Result<(), String> {
-    // Check if gecko bar is enabled in settings
+pub fn show_gecko_bar(app: AppHandle, options: Option<ShowGeckoBarOptions>) -> Result<(), String> {
     use crate::modules::settings::get_gecko_bar_config;
 
     let config = get_gecko_bar_config(app.clone())?;
-    if !config.enabled {
+    let for_recording = options.as_ref().map_or(false, |o| o.for_recording);
+    let should_show = config.enabled
+        || (config.show_only_while_recording && for_recording);
+    if !should_show {
         return Ok(());
     }
 
@@ -210,7 +219,7 @@ pub fn snooze_gecko_bar_for_ms(
                 }
             }
             if should_show {
-                let _ = show_gecko_bar(app_handle);
+                let _ = show_gecko_bar(app_handle, None);
             }
         }
     });
@@ -497,7 +506,7 @@ pub fn set_gecko_bar_fullscreen_mode(app: AppHandle, is_fullscreen: bool) -> Res
         hide_gecko_bar(app)
     } else {
         // Show gecko bar when not in fullscreen (will check if enabled)
-        show_gecko_bar(app)
+        show_gecko_bar(app, None)
     }
 }
 
@@ -519,7 +528,7 @@ pub fn send_gecko_bar_notification(
 
     if gecko_bar_visible {
         // Show gecko bar and emit notification
-        let _ = show_gecko_bar(app.clone());
+        let _ = show_gecko_bar(app.clone(), None);
         emit_gecko_bar_notification(&app, notification)
     } else {
         // Gecko bar is hidden - fall back to system notification so user still gets alerted
