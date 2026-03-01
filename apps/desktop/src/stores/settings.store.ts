@@ -54,6 +54,7 @@ type SettingsState = {
   updateMuteSystemAudio: (mute: boolean) => Promise<void>;
   updateLaunchOnStartup: (enabled: boolean) => Promise<void>;
   updateShowGeckoBar: (enabled: boolean) => Promise<void>;
+  updateShowGeckoBarWhileRecording: (enabled: boolean) => Promise<void>;
   updateHideGeckoOnFullscreen: (enabled: boolean) => Promise<void>;
   updatePrivacySetting: (
     key: keyof PrivacySettings,
@@ -97,6 +98,7 @@ const defaultSettings: AppSettings = {
   general: {
     launchOnStartup: true,
     showGeckoBar: true,
+    showGeckoBarWhileRecording: false,
     hideGeckoOnFullscreen: true,
   },
   // Update preferences are added lazily to preserve migration path
@@ -151,9 +153,11 @@ export const useSettingsStore = create<SettingsState>()(
             hardwareInfo,
           ] = await Promise.all([
             loadAudioSettings(),
-            invoke<{ enabled: boolean; hideOnFullscreen?: boolean }>(
-              'get_gecko_bar_config'
-            ),
+            invoke<{
+              enabled: boolean;
+              hideOnFullscreen?: boolean;
+              showOnlyWhileRecording?: boolean;
+            }>('get_gecko_bar_config'),
             invoke<{ enabled: boolean }>('get_autostart_config'),
             invoke<AudioDevice[]>('list_audio_devices'),
             loadPrivacySettings(),
@@ -183,6 +187,8 @@ export const useSettingsStore = create<SettingsState>()(
               general: {
                 launchOnStartup: autostartConfig.enabled,
                 showGeckoBar: geckoBarConfig.enabled,
+                showGeckoBarWhileRecording:
+                  geckoBarConfig.showOnlyWhileRecording ?? false,
                 hideGeckoOnFullscreen: geckoBarConfig.hideOnFullscreen ?? true,
               },
               privacy: privacySettings,
@@ -339,6 +345,7 @@ export const useSettingsStore = create<SettingsState>()(
         const config = {
           enabled,
           hideOnFullscreen: settings.general.hideGeckoOnFullscreen,
+          showOnlyWhileRecording: settings.general.showGeckoBarWhileRecording,
         };
         await invoke('set_gecko_bar_config', { config });
 
@@ -347,6 +354,22 @@ export const useSettingsStore = create<SettingsState>()(
         } else {
           await invoke('hide_gecko_bar');
         }
+      },
+
+      updateShowGeckoBarWhileRecording: async (enabled) => {
+        const { settings } = get();
+        const newSettings = {
+          ...settings,
+          general: { ...settings.general, showGeckoBarWhileRecording: enabled },
+        };
+        set({ settings: newSettings });
+
+        const config = {
+          enabled: settings.general.showGeckoBar,
+          hideOnFullscreen: settings.general.hideGeckoOnFullscreen,
+          showOnlyWhileRecording: enabled,
+        };
+        await invoke('set_gecko_bar_config', { config });
       },
 
       updateHideGeckoOnFullscreen: async (enabled) => {
@@ -360,6 +383,7 @@ export const useSettingsStore = create<SettingsState>()(
         const config = {
           enabled: settings.general.showGeckoBar,
           hideOnFullscreen: enabled,
+          showOnlyWhileRecording: settings.general.showGeckoBarWhileRecording,
         };
         await invoke('set_gecko_bar_config', { config });
       },

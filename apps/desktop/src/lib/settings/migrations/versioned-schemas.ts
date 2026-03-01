@@ -31,6 +31,7 @@ export type SettingsV1GeneralSettings = {
   launchOnStartup: boolean;
   showGeckoBar: boolean; // Added in V1
   hideGeckoOnFullscreen: boolean; // Added in V1
+  showGeckoBarWhileRecording: boolean;
 };
 
 export type SettingsV1PrivacySettings = {

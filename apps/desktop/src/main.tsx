@@ -13,6 +13,7 @@ import ReactDOM from 'react-dom/client';
 
 import { AppLauncher } from '~/components/app-launcher';
 import { FullscreenDetector } from '~/components/fullscreen-detector';
+import { GeckoBarRecordingVisibility } from '~/components/gecko-bar-recording-visibility';
 import { GeckoBarWindow } from '~/components/gecko-bar-window';
 import { useAuthWithConnectivity } from '~/hooks/use-auth-with-connectivity';
 import { appLifecycle } from '~/lib/app-lifecycle';
@@ -148,6 +149,7 @@ function InnerApp() {
         }
         geckoBarEnabled={settings.general.showGeckoBar}
       />
+      <GeckoBarRecordingVisibility />
       <RouterProvider context={{ auth }} router={router} />
     </>
   );

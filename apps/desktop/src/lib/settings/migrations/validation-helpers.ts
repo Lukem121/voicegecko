@@ -195,6 +195,12 @@ export function validateV1Settings(
     if (typeof general.showGeckoBar !== 'boolean') {
       return false;
     }
+    if (
+      'showGeckoBarWhileRecording' in general &&
+      typeof general.showGeckoBarWhileRecording !== 'boolean'
+    ) {
+      return false;
+    }
     if (typeof general.hideGeckoOnFullscreen !== 'boolean') {
       return false;
     }
