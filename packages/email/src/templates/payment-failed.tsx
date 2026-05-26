@@ -109,7 +109,7 @@ export const PaymentFailedTemplate = ({
             <Text className="text-sm leading-6">
               <Link
                 className="mr-4 mb-2 inline-block min-h-[44px] py-2 text-blue-600 underline hover:text-blue-800"
-                href="mailto:support@voicegecko.io?subject=Need Help"
+                href="mailto:support@voicegecko.dev?subject=Need Help"
                 style={{ minHeight: '44px', padding: '8px 4px' }}
               >
                 Contact Support

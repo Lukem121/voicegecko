@@ -7,7 +7,7 @@ export const EmailFooter = () => (
     <Section>
       <Row className="mb-8 w-full">
         <Column className="w-2/3">
-          <Link href="https://www.voicegecko.io">
+          <Link href="https://www.voicegecko.dev">
             <DarkModeAwareLogo alt="VoiceGecko Logo Text" height="36" />
           </Link>
         </Column>
@@ -20,7 +20,7 @@ export const EmailFooter = () => (
           <Text className="m-0 text-left text-[#b7b7b7] text-xs leading-6">
             <Link
               className="mr-3 mb-2 inline-block min-h-[44px] py-1 text-[#b7b7b7] underline hover:text-gray-600"
-              href="https://www.voicegecko.io/pricing"
+              href="https://www.voicegecko.dev/pricing"
               rel="noopener noreferrer"
               style={{ minHeight: '44px', padding: '8px 4px' }}
               target="_blank"
@@ -30,7 +30,7 @@ export const EmailFooter = () => (
             <span className="mx-1 hidden text-[#b7b7b7] sm:inline">|</span>
             <Link
               className="mr-3 mb-2 inline-block min-h-[44px] py-1 text-[#b7b7b7] underline hover:text-gray-600"
-              href="https://www.voicegecko.io/terms/privacy-policy"
+              href="https://www.voicegecko.dev/terms/privacy-policy"
               rel="noopener noreferrer"
               style={{ minHeight: '44px', padding: '8px 4px' }}
               target="_blank"
@@ -40,7 +40,7 @@ export const EmailFooter = () => (
             <span className="mx-1 hidden text-[#b7b7b7] sm:inline">|</span>
             <Link
               className="mr-3 mb-2 inline-block min-h-[44px] py-1 text-[#b7b7b7] underline hover:text-gray-600"
-              href="https://www.voicegecko.io/terms/terms-of-service"
+              href="https://www.voicegecko.dev/terms/terms-of-service"
               rel="noopener noreferrer"
               style={{ minHeight: '44px', padding: '8px 4px' }}
               target="_blank"

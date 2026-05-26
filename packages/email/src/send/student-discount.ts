@@ -21,7 +21,7 @@ export const sendStudentDiscountEmail = async ({
       email: user.email,
     },
     from: {
-      email: 'no-reply@voicegecko.io',
+      email: 'no-reply@voicegecko.dev',
       name: 'VoiceGecko',
     },
     categories: ['student_discount'],

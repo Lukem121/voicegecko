@@ -260,7 +260,7 @@ function UsagePage() {
 
                 const websiteUrl =
                   import.meta.env.VITE_PUBLIC_VOICEGECKO_URL ||
-                  'https://www.voicegecko.io';
+                  'https://www.voicegecko.dev';
 
                 // Create cross-platform URL that preserves desktop context
                 const upgradeUrl = createCrossPlatformUrl(

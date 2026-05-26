@@ -14,7 +14,7 @@ export const sendEmail = async (options: Options) => {
   const html = await render(options.react);
   sendgrid.send({
     html,
-    ipPoolName: 'dedicated-01',
+    // ipPoolName: 'dedicated-01',
     ...options,
   });
 };

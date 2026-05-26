@@ -76,7 +76,7 @@ function CompletionStep() {
   };
 
   const handleUpgradeToPro = () => {
-    openUrl('https://www.voicegecko.io/pricing');
+    openUrl('https://www.voicegecko.dev/pricing');
   };
 
   return (
