@@ -158,10 +158,10 @@ export default function TermsOfServicePage() {
           <section className="scroll-mt-28" id="contact-us">
             <h2>23) Contact us</h2>
             <ul>
-              <li>Support: support@voicegecko.com</li>
-              <li>Legal: legal@voicegecko.com</li>
-              <li>Privacy (data rights): privacy@voicegecko.com</li>
-              <li>Security: security@voicegecko.com</li>
+              <li>Support: support@voicegecko.dev</li>
+              <li>Legal: legal@voicegecko.dev</li>
+              <li>Privacy (data rights): privacy@voicegecko.dev</li>
+              <li>Security: security@voicegecko.dev</li>
             </ul>
           </section>
 
@@ -283,7 +283,7 @@ export default function TermsOfServicePage() {
               We use reputable providers and encrypt data in transit and at
               rest. See our Security Policy for technical controls. A full
               Privacy Policy will explain your rights (access, deletion,
-              portability) and how to exercise them via privacy@voicegecko.com.
+              portability) and how to exercise them via privacy@voicegecko.dev.
             </p>
           </section>
 
@@ -292,7 +292,7 @@ export default function TermsOfServicePage() {
             <p>
               Unless you tell us not to, you allow us to use your name and logo
               to identify you as a customer on our website and marketing
-              materials. You can opt out by emailing legal@voicegecko.com.
+              materials. You can opt out by emailing legal@voicegecko.dev.
             </p>
           </section>
 
@@ -308,7 +308,7 @@ export default function TermsOfServicePage() {
             <h2>10) Legal notices about content and IP</h2>
             <p>
               If you believe content on the Service infringes your rights, email
-              legal@voicegecko.com with:
+              legal@voicegecko.dev with:
             </p>
             <ul>
               <li>your name and contact details;</li>
@@ -528,7 +528,7 @@ export default function TermsOfServicePage() {
             <p>
               <strong>Your security.</strong> Keep your password safe. You’re
               responsible for activity on your account. Tell us quickly at
-              support@voicegecko.com if you suspect unauthorised access.
+              support@voicegecko.dev if you suspect unauthorised access.
             </p>
             <p>
               <strong>Human sign-up.</strong> No bots or automated sign-ups.

@@ -2,7 +2,7 @@ import { LinkTemplate } from '../templates/link';
 
 export default function LinkEmail() {
   const url =
-    'https://www.voicegecko.io/reset-password?token=12345678901234567890';
+    'https://www.voicegecko.dev/reset-password?token=12345678901234567890';
 
   return (
     <LinkTemplate

@@ -157,7 +157,7 @@ export const serverAuth = betterAuth({
     'http://localhost:1420', // Tauri desktop app
     'http://tauri.localhost', // Tauri desktop app
 
-    'https://www.voicegecko.io',
+    'https://www.voicegecko.dev',
   ],
 });
 

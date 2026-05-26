@@ -53,13 +53,13 @@
     "deep-link": {
       "mobile": [
         {
-          "host": "voicegecko.io",
+          "host": "voicegecko.dev",
           "pathPrefix": [
             "/login"
           ]
         },
         {
-          "host": "voicegecko.io"
+          "host": "voicegecko.dev"
         }
       ],
       "desktop": {
@@ -73,7 +73,7 @@
       "dangerousInsecureTransportProtocol": true,
       "endpoints": [
         "http://localhost:3000/api/updater/{{target}}/{{current_version}}",
-        "https://www.voicegecko.io/api/updater/{{target}}/{{current_version}}"
+        "https://www.voicegecko.dev/api/updater/{{target}}/{{current_version}}"
       ]
     }
   },

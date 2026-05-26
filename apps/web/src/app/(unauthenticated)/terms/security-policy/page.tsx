@@ -371,7 +371,7 @@ export default function SecurityPolicyPage() {
             <p>
               Customers can request export or deletion of dictations and account
               data (subject to legal retention requirements). Contact:
-              privacy@voicegecko.com.
+              privacy@voicegecko.dev.
             </p>
             <p>
               Upon verified request or account closure, we delete active copies
@@ -451,7 +451,7 @@ export default function SecurityPolicyPage() {
               </li>
               <li>
                 <strong>Responsible disclosure.</strong> Security researchers
-                are encouraged to report issues to security@voicegecko.com. We
+                are encouraged to report issues to security@voicegecko.dev. We
                 will acknowledge receipt, investigate, and remediate as
                 appropriate. (No active bug-bounty programme at this time.)
               </li>
@@ -548,19 +548,19 @@ export default function SecurityPolicyPage() {
             <h2>14) Contact</h2>
             <ul>
               <li>
-                <strong>Security:</strong> security@voicegecko.com
+                <strong>Security:</strong> security@voicegecko.dev
               </li>
               <li>
-                <strong>Privacy/Data Protection:</strong> privacy@voicegecko.com
+                <strong>Privacy/Data Protection:</strong> privacy@voicegecko.dev
               </li>
               <li>
-                <strong>Legal/Abuse:</strong> legal@voicegecko.com or
-                abuse@voicegecko.com
+                <strong>Legal/Abuse:</strong> legal@voicegecko.dev or
+                abuse@voicegecko.dev
               </li>
             </ul>
             <p>
               For access, deletion, or other data-subject requests under UK
-              GDPR, contact privacy@voicegecko.com. We will verify identity and
+              GDPR, contact privacy@voicegecko.dev. We will verify identity and
               respond within statutory timeframes.
             </p>
           </section>

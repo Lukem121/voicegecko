@@ -163,8 +163,8 @@ export function isValidRedirectUrl(url: string): boolean {
     // For absolute URLs, check if they're from allowed domains
     const parsedUrl = new URL(url);
     const allowedDomains = [
-      'voicegecko.io',
-      'www.voicegecko.io',
+      'voicegecko.dev',
+      'www.voicegecko.dev',
       'localhost',
       '127.0.0.1',
     ];

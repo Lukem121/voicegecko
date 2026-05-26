@@ -94,7 +94,7 @@ const handleLinkClick = async (
 ) => {
   if (url === '#plans') {
     const websiteUrl =
-      import.meta.env.VITE_PUBLIC_VOICEGECKO_URL || 'https://www.voicegecko.io';
+      import.meta.env.VITE_PUBLIC_VOICEGECKO_URL || 'https://www.voicegecko.dev';
     await open(`${websiteUrl}/app/plans`);
   } else if (url === '#support') {
     setShowSupportDialog?.(true);
@@ -445,7 +445,7 @@ export function AppSidebar() {
                           onClick={async () => {
                             const websiteUrl =
                               import.meta.env.VITE_PUBLIC_VOICEGECKO_URL ||
-                              'https://www.voicegecko.io';
+                              'https://www.voicegecko.dev';
                             await open(`${websiteUrl}/app/plans`);
                           }}
                           type="button"
@@ -541,7 +541,7 @@ export function AppSidebar() {
                   onClick={async () => {
                     const websiteUrl =
                       import.meta.env.VITE_PUBLIC_VOICEGECKO_URL ||
-                      'https://www.voicegecko.io';
+                      'https://www.voicegecko.dev';
                     await open(`${websiteUrl}/app/billing`);
                   }}
                 >
@@ -574,9 +574,9 @@ export function AppSidebar() {
               <div className="font-medium text-sm">Email Support</div>
               <div className="flex items-center space-x-2">
                 <div className="flex-1 rounded bg-muted p-2 font-mono text-sm">
-                  support@voicegecko.io
+                  support@voicegecko.dev
                 </div>
-                <CopyButton text="support@voicegecko.io" />
+                <CopyButton text="support@voicegecko.dev" />
               </div>
             </div>
             <div className="space-y-2">

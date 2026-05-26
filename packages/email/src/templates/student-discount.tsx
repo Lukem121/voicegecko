@@ -27,7 +27,7 @@ const studentGeckoUrl =
 export const StudentDiscountTemplate = ({
   couponCode,
   discountPercentage,
-  redemptionUrl = 'https://www.voicegecko.io/pricing',
+  redemptionUrl = 'https://www.voicegecko.dev/pricing',
 }: StudentDiscountEmailProps) => (
   <Tailwind>
     <Html>

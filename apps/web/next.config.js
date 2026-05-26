@@ -27,8 +27,8 @@ const config = {
       'http://localhost:3000', // Next.js app local dev
       'http://localhost:1420', // Tauri desktop app
       'http://tauri.localhost', // Tauri desktop app
-      'https://voicegecko.io', // Production web app
-      'https://www.voicegecko.io', // Production web app with www
+      'https://voicegecko.dev', // Production web app
+      'https://www.voicegecko.dev', // Production web app with www
     ];
 
     // Create header configurations for each allowed origin

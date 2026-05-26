@@ -7,7 +7,7 @@ export default function TermsAndPrivacyNotice() {
       <button
         className="cursor-pointer underline underline-offset-4 hover:text-primary"
         onClick={() =>
-          openUrl('https://www.voicegecko.io/terms/terms-of-service')
+          openUrl('https://www.voicegecko.dev/terms/terms-of-service')
         }
         type="button"
       >
@@ -17,7 +17,7 @@ export default function TermsAndPrivacyNotice() {
       <button
         className="cursor-pointer underline underline-offset-4 hover:text-primary"
         onClick={() =>
-          openUrl('https://www.voicegecko.io/terms/privacy-policy')
+          openUrl('https://www.voicegecko.dev/terms/privacy-policy')
         }
         type="button"
       >
