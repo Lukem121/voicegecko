@@ -23,7 +23,7 @@ export const sendSubscriptionCancelledEmail = async ({
       name: user.name || '',
     },
     from: {
-      email: 'no-reply@voicegecko.io',
+      email: 'no-reply@voicegecko.dev',
       name: 'VoiceGecko',
     },
     categories: ['subscription_cancelled'],

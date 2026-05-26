@@ -14,7 +14,7 @@ import { PostHogUserIdentifier } from '~/components/posthog';
 import AttributionTracker from '~/components/attribution-tracker';
 
 export const metadata: Metadata = {
-  metadataBase: new URL('https://www.voicegecko.io'),
+  metadataBase: new URL('https://www.voicegecko.dev'),
   title: 'VoiceGecko | Instant Voice-to-Text for Desktop',
   description:
     'Instant dictation for desktop. Press a shortcut, speak, and instantly get accurate text on your clipboard—perfect for emails, coding, AI prompts, or brain dumps.',
@@ -22,11 +22,11 @@ export const metadata: Metadata = {
     title: 'VoiceGecko | Instant Voice-to-Text for Desktop',
     description:
       'Instant voice-to-text dictation for desktop. Press a shortcut, speak, and instantly get accurate text on your clipboard—perfect for emails, coding, AI prompts, or brain dumps.',
-    url: 'https://www.voicegecko.io',
+    url: 'https://www.voicegecko.dev',
     siteName: 'VoiceGecko',
     images: [
       {
-        url: 'https://www.voicegecko.io/opengraph-image', // update with your OG image
+        url: 'https://www.voicegecko.dev/opengraph-image', // update with your OG image
         width: 1200,
         height: 630,
         alt: 'VoiceGecko App Preview',
@@ -42,7 +42,7 @@ export const metadata: Metadata = {
     title: 'VoiceGecko | Instant Voice-to-Text for Desktop',
     description:
       'Instant voice-to-text dictation for desktop. Press a shortcut, speak, and instantly get accurate text on your clipboard—perfect for emails, coding, AI prompts, or brain dumps.',
-    images: ['https://www.voicegecko.io/opengraph-image'], // update with your image
+    images: ['https://www.voicegecko.dev/opengraph-image'], // update with your image
   },
 };
 

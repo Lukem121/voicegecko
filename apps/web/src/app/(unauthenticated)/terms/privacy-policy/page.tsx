@@ -157,19 +157,19 @@ export default function PrivacyPage() {
             <ul>
               <li>
                 Email:{' '}
-                <a href="mailto:privacy@voicegecko.com">
-                  privacy@voicegecko.com
+                <a href="mailto:privacy@voicegecko.dev">
+                  privacy@voicegecko.dev
                 </a>
               </li>
               <li>
                 Support:{' '}
-                <a href="mailto:support@voicegecko.com">
-                  support@voicegecko.com
+                <a href="mailto:support@voicegecko.dev">
+                  support@voicegecko.dev
                 </a>
               </li>
               <li>
                 Legal:{' '}
-                <a href="mailto:legal@voicegecko.com">legal@voicegecko.com</a>
+                <a href="mailto:legal@voicegecko.dev">legal@voicegecko.dev</a>
               </li>
             </ul>
           </section>
@@ -213,9 +213,9 @@ export default function PrivacyPage() {
               We may send marketing emails (e.g., newsletters, promotions) if
               you opt in or where permitted by law. You can opt out anytime by
               clicking “unsubscribe” in the email or emailing
-              <a href="mailto:privacy@voicegecko.com">
+              <a href="mailto:privacy@voicegecko.dev">
                 {' '}
-                privacy@voicegecko.com
+                privacy@voicegecko.dev
               </a>
               .
             </p>
@@ -270,7 +270,7 @@ export default function PrivacyPage() {
             </ul>
             <p>
               You can exercise your rights by emailing{' '}
-              <a href="mailto:privacy@voicegecko.com">privacy@voicegecko.com</a>
+              <a href="mailto:privacy@voicegecko.dev">privacy@voicegecko.dev</a>
               . We may need to verify your identity before fulfilling a request.
             </p>
             <p>

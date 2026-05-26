@@ -241,7 +241,7 @@ export const stripeRouter = {
           },
           couponCode: 'RYGALTMSXJAA',
           discountPercentage: '50',
-          redemptionUrl: 'https://www.voicegecko.io/pricing?student=true',
+          redemptionUrl: 'https://www.voicegecko.dev/pricing?student=true',
         });
 
         return {

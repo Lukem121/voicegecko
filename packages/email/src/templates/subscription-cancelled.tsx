@@ -113,7 +113,7 @@ export const SubscriptionCancelledTemplate = ({
             </Text>
             <Link
               className="inline-flex min-h-[44px] items-center justify-center rounded-md bg-blue-600 px-4 py-2 text-center font-medium text-white no-underline hover:bg-blue-700 sm:px-6 sm:py-3"
-              href="mailto:feedback@voicegecko.io?subject=Subscription Cancellation Feedback"
+              href="mailto:feedback@voicegecko.dev?subject=Subscription Cancellation Feedback"
               style={{ minHeight: '44px' }}
             >
               Share Feedback

@@ -113,4 +113,4 @@ voicegecko/
 ---
 
 **Company**: Social Freak Limited (trading as Voice Gecko)  
-**Website**: [voicegecko.io](https://www.voicegecko.io)
+**Website**: [voicegecko.dev](https://www.voicegecko.dev)

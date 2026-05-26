@@ -6,7 +6,7 @@ export default function SubscriptionCancelledEmail() {
       accessUntilDate="March 15, 2025"
       name="Michael"
       planName="VoiceGecko Pro"
-      reactivateUrl="https://www.voicegecko.io/app/billing/reactivate"
+      reactivateUrl="https://www.voicegecko.dev/app/billing/reactivate"
     />
   );
 }

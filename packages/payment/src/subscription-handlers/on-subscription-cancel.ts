@@ -51,7 +51,7 @@ export const onSubscriptionCancel = async ({
       });
 
       // Create reactivate URL - user can manage subscription through billing portal
-      const reactivateUrl = `${paymentEnv().NEXT_PUBLIC_VOICEGECKO_URL || 'https://www.voicegecko.io'}/app/billing`;
+      const reactivateUrl = `${paymentEnv().NEXT_PUBLIC_VOICEGECKO_URL || 'https://www.voicegecko.dev'}/app/billing`;
 
       await sendSubscriptionCancelledEmail({
         user,
