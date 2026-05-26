@@ -5,155 +5,72 @@ on:
     branches:
       - release
 
+concurrency:
+  group: publish-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  CARGO_TARGET_DIR: ${{ github.workspace }}/apps/desktop/src-tauri/target
+  TAURI_TARGET_DIR: apps/desktop/src-tauri/target
+  TAURI_BUNDLE_DIR: apps/desktop/src-tauri/target/release/bundle
+
 jobs:
   publish-tauri:
     permissions:
       contents: write
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          # Platform and build variant combinations for parallel execution
-          - platform: "self-hosted"
-            args: ""
-            build_type: "full"
-            config_file: "src-tauri/tauri.conf.full.json"
-            tag_suffix: "-full"
-            release_name_suffix: " (Full)"
-            release_notes: "Full installation package."
-          - platform: "self-hosted"
-            args: ""
-            build_type: "update"
-            config_file: "src-tauri/tauri.conf.update.json"
-            tag_suffix: "-update"
-            release_name_suffix: " (Update)"
-            release_notes: "Lightweight update package."
-          # Uncomment and duplicate for other platforms when ready
-          # - platform: "macos-latest"
-          #   args: "--target aarch64-apple-darwin"
-          #   build_type: "full"
-          #   config_file: "src-tauri/tauri.conf.full.json"
-          #   tag_suffix: "-full"
-          #   release_name_suffix: " (Full)"
-          #   release_notes: "Full installation package with bundled AI model."
-          # - platform: "macos-latest"
-          #   args: "--target aarch64-apple-darwin"
-          #   build_type: "update"
-          #   config_file: "src-tauri/tauri.conf.update.json"
-          #   tag_suffix: "-update"
-          #   release_name_suffix: " (Update)"
-          #   release_notes: "Lightweight update package without bundled AI model."
-
-    runs-on: ${{ matrix.platform }}
+    runs-on: self-hosted
     defaults:
       run:
-        shell: ${{ matrix.platform == 'self-hosted' && 'powershell' || (contains(matrix.platform, 'windows') && 'powershell' || 'bash') }}
+        shell: powershell
     steps:
       - uses: actions/checkout@v4
         with:
           lfs: true
 
-      - name: Setup Git LFS (Self-hosted)
-        if: matrix.platform == 'self-hosted'
-        shell: powershell
-        run: |
-          git lfs install --force
-          git lfs pull
-
-      - name: setup node
-        uses: actions/setup-node@v4
+      - name: Setup Node and pnpm
+        uses: ./tooling/github/setup
         with:
-          node-version: lts/*
+          enable-cache: false
+          install-turbo: false
+          install-dependencies: false
 
-      - name: install pnpm
-        uses: pnpm/action-setup@v2
-        with:
-          version: latest
-
-      - name: setup Node.js cache
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.pnpm-store
-            ~/AppData/Local/pnpm/store
-          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-pnpm-store-
-
-      - name: install Rust stable
-        uses: dtolnay/rust-toolchain@stable
-        with:
-          targets: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
-        if: matrix.platform != 'self-hosted'
-
-      - name: Rust cache
-        uses: swatinem/rust-cache@v2
-        with:
-          workspaces: "./apps/desktop/src-tauri -> target"
-        if: matrix.platform != 'self-hosted'
+      - name: Install desktop dependencies
+        run: pnpm install --frozen-lockfile --filter @acme/desktop... --ignore-scripts
 
       - name: setup Rust on self-hosted Windows
-        if: matrix.platform == 'self-hosted'
         run: |
-          # Check if Rust is already installed
           $rustInstalled = Get-Command rustc -ErrorAction SilentlyContinue
           if ($rustInstalled) {
             Write-Host "Rust is already installed at: $($rustInstalled.Path)"
-            # Update Rust to ensure we have the latest stable
-            rustup update stable
             rustup default stable
           } else {
             Write-Host "Installing Rust..."
-            # Download and install rustup
             $rustupUrl = "https://win.rustup.rs/x86_64"
             $rustupInstaller = "$env:TEMP\rustup-init.exe"
             Invoke-WebRequest -Uri $rustupUrl -OutFile $rustupInstaller
             & $rustupInstaller -y --default-toolchain stable --default-host x86_64-pc-windows-msvc
           }
 
-          # Ensure Rust binaries are in GitHub Actions PATH for subsequent steps
           $cargoPath = "$env:USERPROFILE\.cargo\bin"
           if (Test-Path $cargoPath) {
             "$cargoPath" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
             Write-Host "Added $cargoPath to GITHUB_PATH"
           }
 
-          # Also set for current session
           $env:PATH = "$cargoPath;$env:PATH"
-
-          # Verify Rust installation
           rustc --version
           cargo --version
 
-      - name: install dependencies (ubuntu only)
-        if: matrix.platform == 'ubuntu-22.04' # This must match the platform value defined above.
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf libasound2-dev pkg-config
-
-      - name: install dependencies (macOS only)
-        if: matrix.platform == 'macos-latest'
-        run: |
-          # Set macOS deployment target to 10.15 for C++ filesystem support
-          echo "MACOSX_DEPLOYMENT_TARGET=10.15" >> $GITHUB_ENV
-
-          # macOS will use Metal acceleration (configured in Cargo.toml)
-          echo "macOS dependencies configured - using Metal acceleration with 10.15+ deployment target"
-
       - name: install dependencies (windows self-hosted)
-        if: matrix.platform == 'self-hosted'
         run: |
-          # Check if CMake is installed
           $cmakeInstalled = Get-Command cmake -ErrorAction SilentlyContinue
           if (-not $cmakeInstalled) {
             Write-Host "Installing CMake..."
-            # Download and install CMake
             $cmakeUrl = "https://github.com/Kitware/CMake/releases/download/v3.28.1/cmake-3.28.1-windows-x86_64.msi"
             $cmakeInstaller = "$env:TEMP\cmake-installer.msi"
             Invoke-WebRequest -Uri $cmakeUrl -OutFile $cmakeInstaller
             Start-Process msiexec.exe -ArgumentList "/i", $cmakeInstaller, "/quiet", "/norestart" -Wait
-            
-            # Verify installation and add to PATH
+
             if (Test-Path "C:\Program Files\CMake\bin\cmake.exe") {
               "C:\Program Files\CMake\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
             } else {
@@ -164,31 +81,23 @@ jobs:
             Write-Host "CMake is already installed"
           }
 
-          # Check if Vulkan SDK is installed and set environment variables
           if (-not (Test-Path "C:\VulkanSDK")) {
             Write-Host "Installing Vulkan SDK..."
-            # Download and install Vulkan SDK
             $vulkanUrl = "https://sdk.lunarg.com/sdk/download/1.4.321.1/windows/VulkanSDK-1.4.321.1-Installer.exe"
             $vulkanInstaller = "$env:TEMP\VulkanSDK-Installer.exe"
             Invoke-WebRequest -Uri $vulkanUrl -OutFile $vulkanInstaller
             Start-Process -FilePath $vulkanInstaller -ArgumentList "/S" -Wait
-            # Set VULKAN_SDK environment variable persistently for GitHub Actions
             "VULKAN_SDK=C:\VulkanSDK\1.4.321.1" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
             "C:\VulkanSDK\1.4.321.1\Bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
           } else {
             Write-Host "Vulkan SDK is already installed"
-            # Find the installed version and set environment variable persistently
             $vulkanVersion = Get-ChildItem "C:\VulkanSDK" | Select-Object -First 1 -ExpandProperty Name
             $vulkanPath = "C:\VulkanSDK\$vulkanVersion"
             "VULKAN_SDK=$vulkanPath" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
             "$vulkanPath\Bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
           }
 
-      - name: install frontend dependencies
-        run: pnpm install --frozen-lockfile
-
-      # Build version based on matrix configuration (runs in parallel)
-      - name: Build ${{ matrix.build_type }} Version
+      - name: Build full version
         uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -198,150 +107,69 @@ jobs:
           VITE_PUBLIC_POSTHOG_KEY: ${{ vars.VITE_PUBLIC_POSTHOG_KEY }}
           VITE_PUBLIC_POSTHOG_HOST: ${{ vars.VITE_PUBLIC_POSTHOG_HOST }}
         with:
-          tagName: app-v__VERSION__${{ matrix.tag_suffix }}
-          releaseName: "App v__VERSION__${{ matrix.release_name_suffix }}"
-          releaseBody: ${{ matrix.release_notes }}
+          tagName: app-v__VERSION__-full
+          releaseName: "App v__VERSION__ (Full)"
+          releaseBody: "Full installation package."
           releaseDraft: false
           prerelease: false
-          args: ${{ matrix.args }} --config ${{ matrix.config_file }}
+          args: --config src-tauri/tauri.conf.full.json
           projectPath: apps/desktop
 
-      # Upload native debug symbols (PDB/DWARF) to Sentry for symbolication
-      - name: Upload debug symbols to Sentry (Windows/Self-hosted)
-        if: matrix.platform == 'self-hosted' || contains(matrix.platform, 'windows')
+      - name: Upload debug symbols to Sentry (full)
         env:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
           SENTRY_ORG: ${{ vars.SENTRY_ORG }}
           SENTRY_PROJECT: ${{ vars.SENTRY_PROJECT }}
-        shell: powershell
+        run: ./scripts/ci/sentry-upload-windows.ps1 -TargetDir "${{ env.TAURI_TARGET_DIR }}/release"
+
+      - name: Create full release (public repo)
+        env:
+          GITHUB_TOKEN: ${{ secrets.RELEASES_REPO_TOKEN }}
         run: |
-          if (-not $env:SENTRY_AUTH_TOKEN -or -not $env:SENTRY_ORG -or -not $env:SENTRY_PROJECT) {
-            Write-Error "Sentry env vars missing: ensure SENTRY_AUTH_TOKEN (secret), SENTRY_ORG (var), and SENTRY_PROJECT (var) are set"
-            exit 1
-          }
-          $cli = "$env:TEMP\sentry-cli.exe"
-          Invoke-WebRequest -Uri "https://github.com/getsentry/sentry-cli/releases/latest/download/sentry-cli-Windows-x86_64.exe" -OutFile $cli
-          & $cli --version
+          ./scripts/ci/release-upload-windows.ps1 `
+            -TagSuffix "-full" `
+            -ReleaseNameSuffix " (Full)" `
+            -ReleaseNotes "Full installation package." `
+            -BundleDir "${{ env.TAURI_BUNDLE_DIR }}"
 
-          # Upload all debug info files found under target/release (PDBs, PE) recursively
-          & $cli upload-dif --include-sources --wait "target/release"
+      - name: Build update version
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+          VITE_PUBLIC_VOICEGECKO_URL: ${{ vars.VITE_PUBLIC_VOICEGECKO_URL }}
+          VITE_PUBLIC_POSTHOG_KEY: ${{ vars.VITE_PUBLIC_POSTHOG_KEY }}
+          VITE_PUBLIC_POSTHOG_HOST: ${{ vars.VITE_PUBLIC_POSTHOG_HOST }}
+        with:
+          tagName: app-v__VERSION__-update
+          releaseName: "App v__VERSION__ (Update)"
+          releaseBody: "Lightweight update package."
+          releaseDraft: false
+          prerelease: false
+          args: --config src-tauri/tauri.conf.update.json
+          projectPath: apps/desktop
 
-      - name: Upload debug symbols to Sentry (macOS/Linux)
-        if: matrix.platform == 'macos-latest' || matrix.platform == 'ubuntu-22.04'
+      - name: Upload debug symbols to Sentry (update)
         env:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
           SENTRY_ORG: ${{ vars.SENTRY_ORG }}
           SENTRY_PROJECT: ${{ vars.SENTRY_PROJECT }}
-        shell: bash
-        run: |
-          if [[ -z "$SENTRY_AUTH_TOKEN" || -z "$SENTRY_ORG" || -z "$SENTRY_PROJECT" ]]; then
-            echo "Sentry env vars missing: ensure SENTRY_AUTH_TOKEN (secret), SENTRY_ORG (var), and SENTRY_PROJECT (var) are set" >&2
-            exit 1
-          fi
-          curl -sL https://sentry.io/get-cli/ | bash
-          sentry-cli --version
-          sentry-cli upload-dif --include-sources --wait target/release
+        run: ./scripts/ci/sentry-upload-windows.ps1 -TargetDir "${{ env.TAURI_TARGET_DIR }}/release"
 
-      # Publish to separate public releases repository
-      - name: Create ${{ matrix.build_type }} Release (Windows/Self-hosted)
-        if: matrix.platform == 'self-hosted' || contains(matrix.platform, 'windows')
+      - name: Create update release (public repo)
         env:
           GITHUB_TOKEN: ${{ secrets.RELEASES_REPO_TOKEN }}
-        shell: powershell
         run: |
-          # Get the version from the package.json
-          $VERSION = (Get-Content "apps/desktop/package.json" | ConvertFrom-Json).version
+          ./scripts/ci/release-upload-windows.ps1 `
+            -TagSuffix "-update" `
+            -ReleaseNameSuffix " (Update)" `
+            -ReleaseNotes "Lightweight update package." `
+            -BundleDir "${{ env.TAURI_BUNDLE_DIR }}"
 
-          # Create release for this specific build type
-          $TAG_NAME = "app-v$VERSION${{ matrix.tag_suffix }}"
-          $RELEASE_TITLE = "App v$VERSION${{ matrix.release_name_suffix }}"
-          $RELEASE_NOTES = "${{ matrix.release_notes }}"
+  # When adding macOS/Linux hosted runners, use a separate matrix job with
+  # tooling/github/setup (enable-cache: true), rust-cache, and max-parallel per runner count.
 
-          try {
-            gh release create $TAG_NAME --repo "Lukem121/voicegecko-releases" --title $RELEASE_TITLE --notes $RELEASE_NOTES 2>$null
-            Write-Host "Created release: $TAG_NAME"
-          } catch {
-            Write-Host "Release $TAG_NAME already exists or creation failed - continuing with upload"
-          }
-
-          # Upload artifacts for this build
-          # Check for artifacts in the standard location first
-          $BUNDLE_DIR = "target/release/bundle"
-          if (-not (Test-Path $BUNDLE_DIR)) {
-            Write-Host "Standard bundle directory not found, checking for target-specific directories..."
-            # Look for any target-specific bundle directories
-            $TARGET_DIRS = Get-ChildItem -Path "target" -Directory | Where-Object { Test-Path "$($_.FullName)/release/bundle" }
-            if ($TARGET_DIRS) {
-              $BUNDLE_DIR = "$($TARGET_DIRS[0].FullName)/release/bundle"
-              Write-Host "Found target-specific bundle directory: $BUNDLE_DIR"
-            }
-          }
-
-          Write-Host "Looking for artifacts in: $BUNDLE_DIR"
-          if (Test-Path $BUNDLE_DIR) {
-            $ARTIFACTS = Get-ChildItem -Path $BUNDLE_DIR -Recurse -File | Where-Object { $_.Extension -in @('.msi', '.exe', '.sig') }
-            foreach ($artifact in $ARTIFACTS) {
-              $fileName = $artifact.Name
-              Write-Host "Uploading artifact: $fileName"
-              gh release upload $TAG_NAME $artifact.FullName --repo "Lukem121/voicegecko-releases" --clobber
-            }
-          } else {
-            Write-Host "ERROR: No bundle directory found in any target location"
-            exit 1
-          }
-
-      - name: Revalidate Website Cache (Windows)
-        if: matrix.platform == 'self-hosted' || contains(matrix.platform, 'windows')
-        shell: powershell
-        run: |
-          Write-Host "Triggering ISR revalidation for landing page..."
-          $body = @{
-            secret = "${{ secrets.REVALIDATE_SECRET }}"
-            paths = @("/")
-            tags = @("downloads", "landing-page")
-          } | ConvertTo-Json
-
-          try {
-            $response = Invoke-RestMethod -Uri "${{ vars.VITE_PUBLIC_VOICEGECKO_URL }}/api/revalidate" -Method POST -Body $body -ContentType "application/json" -TimeoutSec 30
-            Write-Host "Revalidation successful: $($response.message)"
-          } catch {
-            Write-Host "Revalidation failed - this is non-critical: $($_.Exception.Message)"
-          }
-
-      - name: Create ${{ matrix.build_type }} Release (macOS/Linux)
-        if: matrix.platform == 'macos-latest' || matrix.platform == 'ubuntu-22.04'
-        env:
-          GITHUB_TOKEN: ${{ secrets.RELEASES_REPO_TOKEN }}
-        shell: bash
-        run: |
-          # Get the version from the package.json
-          VERSION=$(node -p "require('./apps/desktop/package.json').version")
-
-          # Create release for this specific build type
-          TAG_NAME="app-v$VERSION${{ matrix.tag_suffix }}"
-          RELEASE_TITLE="App v$VERSION${{ matrix.release_name_suffix }}"
-          RELEASE_NOTES="${{ matrix.release_notes }}"
-
-          gh release create $TAG_NAME --repo "Lukem121/voicegecko-releases" --title "$RELEASE_TITLE" --notes "$RELEASE_NOTES" 2>/dev/null || echo "Release $TAG_NAME already exists"
-
-          # Upload artifacts for this build
-          # Check both target-specific and general bundle directories
-          if [[ "${{ matrix.args }}" == *"--target"* ]]; then
-            # Extract target from args (e.g., "--target aarch64-apple-darwin" -> "aarch64-apple-darwin")
-            TARGET=$(echo "${{ matrix.args }}" | sed 's/.*--target \([^ ]*\).*/\1/')
-            BUNDLE_DIR="target/$TARGET/release/bundle"
-          else
-            BUNDLE_DIR="target/release/bundle"
-          fi
-
-          echo "Looking for artifacts in: $BUNDLE_DIR"
-          find $BUNDLE_DIR -type f \( -name "*.dmg" -o -name "*.app.tar.gz" -o -name "*.deb" -o -name "*.AppImage" -o -name "*.sig" \) 2>/dev/null | while read artifact; do
-            filename=$(basename "$artifact")
-            echo "Uploading artifact: $filename"
-            gh release upload $TAG_NAME "$artifact" --repo "Lukem121/voicegecko-releases" --clobber
-          done
-
-  # Revalidate ISR cache after successful release
   revalidate-cache:
     needs: publish-tauri
     runs-on: ubuntu-latest
