@@ -18,6 +18,8 @@ export default function StickyCta() {
   const { trackEvent } = usePostHog();
   const router = useRouter();
 
+  // asd
+
   const handleStickyCTAClick = () => {
     trackEvent({
       event: 'hero_cta_clicked',
