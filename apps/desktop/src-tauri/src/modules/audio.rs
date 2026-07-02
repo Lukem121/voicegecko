@@ -53,14 +53,16 @@ pub struct AudioState {
     pub sink: Arc<Mutex<Option<Sink>>>,
     pub recording_thread: Arc<Mutex<Option<(thread::JoinHandle<()>, Sender<AudioCommand>)>>>,
     pub recorded_audio: Arc<Mutex<Option<Vec<f32>>>>,
+    pub streaming_hub: Arc<crate::audio_v2::StreamingAudioHub>,
 }
 
 impl AudioState {
-    pub fn new(sink: Option<Sink>) -> Self {
+    pub fn new(sink: Option<Sink>, streaming_hub: Arc<crate::audio_v2::StreamingAudioHub>) -> Self {
         Self {
             sink: Arc::new(Mutex::new(sink)),
             recording_thread: Arc::new(Mutex::new(None)),
             recorded_audio: Arc::new(Mutex::new(None)),
+            streaming_hub,
         }
     }
 }
@@ -108,6 +110,7 @@ pub fn start_recording(
     let (tx, rx) = unbounded();
     let app_handle = app.clone();
     let recorded_audio = state.recorded_audio.clone();
+    let streaming_hub = state.streaming_hub.clone();
 
     let thread_handle = thread::spawn(move || {
         let host = cpal::default_host();
@@ -206,6 +209,7 @@ pub fn start_recording(
                 let output_samples_i16 = output_samples_clone.clone();
                 let last_level_emit_i16 = last_level_emit_clone.clone();
                 let app_i16 = app_clone.clone();
+                let hub_i16 = streaming_hub.clone();
 
                 input_device.build_input_stream(
                     &config.into(),
@@ -231,6 +235,7 @@ pub fn start_recording(
                             &f32_samples,
                             input_channels,
                             chunk_size,
+                            Some(&hub_i16),
                         );
                     },
                     err_fn,
@@ -243,6 +248,7 @@ pub fn start_recording(
                 let output_samples_u16 = output_samples_clone.clone();
                 let last_level_emit_u16 = last_level_emit_clone.clone();
                 let app_u16 = app_clone.clone();
+                let hub_u16 = streaming_hub.clone();
 
                 input_device.build_input_stream(
                     &config.into(),
@@ -273,6 +279,7 @@ pub fn start_recording(
                             &f32_samples,
                             input_channels,
                             chunk_size,
+                            Some(&hub_u16),
                         );
                     },
                     err_fn,
@@ -285,6 +292,7 @@ pub fn start_recording(
                 let output_samples_f32 = output_samples_clone.clone();
                 let last_level_emit_f32 = last_level_emit_clone.clone();
                 let app_f32 = app_clone.clone();
+                let hub_f32 = streaming_hub.clone();
 
                 input_device.build_input_stream(
                     &config.into(),
@@ -307,6 +315,7 @@ pub fn start_recording(
                             data,
                             input_channels,
                             chunk_size,
+                            Some(&hub_f32),
                         );
                     },
                     err_fn,
@@ -401,6 +410,7 @@ pub fn start_recording(
                             collect_resampled_samples(
                                 &mut output_samples.lock().unwrap(),
                                 &resampled_waves,
+                                None,
                             );
                         }
                         Err(e) => {
@@ -442,6 +452,7 @@ fn process_samples_to_buffer(
     samples: &[f32],
     channels: u16,
     chunk_size: usize,
+    streaming_hub: Option<&Arc<crate::audio_v2::StreamingAudioHub>>,
 ) {
     // Apply automatic gain for quiet microphones to recorded audio too
     let gained_samples = apply_automatic_input_gain(samples);
@@ -480,7 +491,7 @@ fn process_samples_to_buffer(
 
         match resampler.process(&waves_in, None) {
             Ok(resampled_waves) => {
-                collect_resampled_samples(output_samples, &resampled_waves);
+                collect_resampled_samples(output_samples, &resampled_waves, streaming_hub);
             }
             Err(e) => {
                 sentry::capture_message(
@@ -498,7 +509,12 @@ fn process_samples_to_buffer(
     }
 }
 
-fn collect_resampled_samples(output_samples: &mut Vec<f32>, resampled_waves: &Vec<Vec<f32>>) {
+fn collect_resampled_samples(
+    output_samples: &mut Vec<f32>,
+    resampled_waves: &Vec<Vec<f32>>,
+    streaming_hub: Option<&Arc<crate::audio_v2::StreamingAudioHub>>,
+) {
+    let start_len = output_samples.len();
     // Always output mono samples
     if resampled_waves.len() > 1 {
         let left = &resampled_waves[0];
@@ -509,6 +525,10 @@ fn collect_resampled_samples(output_samples: &mut Vec<f32>, resampled_waves: &Ve
         }
     } else {
         output_samples.extend_from_slice(&resampled_waves[0]);
+    }
+
+    if let Some(hub) = streaming_hub {
+        hub.push_resampled_mono(&output_samples[start_len..]);
     }
 }
 
@@ -801,15 +821,29 @@ pub fn stop_recording(
         channels: 1,
     };
 
-    // Trigger immediate internal dictation (async, non-blocking)
+    // Trigger v2 dictation session pipeline
     let app_for_dictation = app.clone();
     let audio_for_dictation = audio_data.clone();
     tauri::async_runtime::spawn(async move {
-        let _ = crate::modules::dictation::start_internal_dictation(
-            app_for_dictation,
-            audio_for_dictation,
-        )
-        .await;
+        use std::sync::Arc;
+        use crate::dictation::types::InteractionMode;
+        use tauri::Manager;
+        let manager: Arc<crate::dictation::session::DictationSessionManager> =
+            app_for_dictation
+                .state::<Arc<crate::dictation::session::DictationSessionManager>>()
+                .inner()
+                .clone();
+
+        let is_hands_free = manager
+            .get_status()
+            .map(|s| s.mode == InteractionMode::HandsFree.as_str())
+            .unwrap_or(false);
+
+        if is_hands_free {
+            manager.stop_hands_free_session(app_for_dictation);
+        } else {
+            let _ = manager.stop_session_and_transcribe(app_for_dictation, audio_for_dictation);
+        }
     });
 
     Ok(audio_data)
@@ -1108,6 +1142,13 @@ pub fn cancel_recording(
 
     // Discard the recorded audio data without returning it
     state.recorded_audio.lock().unwrap().take();
+
+    // Cancel any active v2 dictation session
+    {
+        use std::sync::Arc;
+        let manager = app.state::<Arc<crate::dictation::session::DictationSessionManager>>();
+        let _ = manager.cancel_session(&app);
+    }
 
     Ok(())
 }

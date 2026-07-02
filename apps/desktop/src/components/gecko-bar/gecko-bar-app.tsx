@@ -25,6 +25,10 @@ import {
 import { isButtonEnabled, shouldShowActiveState } from './gecko-bar-app.utils';
 import { GeckoBarButton } from './gecko-bar-button';
 import { GeckoBarTooltip } from './gecko-bar-tooltip';
+import { CapsulePreview } from '../gecko-capsule/CapsulePreview';
+import { CapsuleTextbox } from '../gecko-capsule/CapsuleTextbox';
+import { LatencyBadge } from '../gecko-capsule/LatencyBadge';
+import { useDictationStore } from '~/stores/dictation.store';
 
 export function GeckoBarApp() {
   const { state, handlers } = useGeckoBarState();
@@ -40,6 +44,8 @@ export function GeckoBarApp() {
   const isTranscribing = useEventStore((eventState) =>
     eventState.isTranscribing()
   );
+  const confirmText = useDictationStore((s) => s.confirmText);
+  const clearConfirmText = useDictationStore((s) => s.clearConfirmText);
 
   // Close dropdown on window blur or page hide (clicking outside app)
   useEffect(() => {
@@ -195,51 +201,64 @@ export function GeckoBarApp() {
         }}
         open={isMenuOpen}
       >
-        <DropdownMenuTrigger asChild>
-          <button
-            className="-translate-x-1/2 fixed bottom-2.5 left-1/2 z-50"
-            onContextMenu={(e) => {
-              // Open fixed-position dropdown on right-click
-              e.preventDefault();
-              setIsMenuOpen(true);
-              getCurrentWebviewWindow()
-                .setIgnoreCursorEvents(false)
-                .catch((err) => {
-                  log.error(
-                    '[GeckoBar] Failed to disable cursor passthrough',
-                    err
-                  );
-                });
-            }}
-            onMouseEnter={() => {
-              handlers.onMouseEnter();
-              // Track hover interaction
-              analytics.track('gecko_bar_interaction', {
-                action: 'hover',
-                state: getBarState(),
-              });
-            }}
-            onMouseLeave={handlers.onMouseLeave}
-            ref={hitboxRef as unknown as React.RefObject<HTMLButtonElement>}
-            style={{
-              // width: DIMENSIONS.HITBOX.WIDTH,
-              // height: DIMENSIONS.HITBOX.HEIGHT,
-              display: 'flex',
-              alignItems: 'flex-end',
-              justifyContent: 'center',
-            }}
-            type="button"
-          >
-            {/* Tooltip */}
-            <GeckoBarTooltip
-              isPassthroughMode={state.isPassthroughMode}
-              isRecording={isRecording}
-              message={state.tooltipMessage}
-              show={state.showTooltip && !isMenuOpen}
-            />
+        <div className="-translate-x-1/2 fixed bottom-2.5 left-1/2 z-50 flex flex-col items-center">
+          <CapsulePreview />
 
-            {/* Main bar */}
-            <motion.div
+          {confirmText ? (
+            <div className="pointer-events-auto mb-3 w-[min(480px,calc(100vw-2rem))]">
+              <CapsuleTextbox
+                initialText={confirmText}
+                onCancel={clearConfirmText}
+                onConfirm={clearConfirmText}
+              />
+            </div>
+          ) : null}
+
+          <div className="relative mb-2">
+            <LatencyBadge />
+          </div>
+
+          <DropdownMenuTrigger asChild>
+            <button
+              className="relative"
+              onContextMenu={(e) => {
+                // Open fixed-position dropdown on right-click
+                e.preventDefault();
+                setIsMenuOpen(true);
+                getCurrentWebviewWindow()
+                  .setIgnoreCursorEvents(false)
+                  .catch((err) => {
+                    log.error(
+                      '[GeckoBar] Failed to disable cursor passthrough',
+                      err
+                    );
+                  });
+              }}
+              onMouseEnter={() => {
+                handlers.onMouseEnter();
+                // Track hover interaction
+                analytics.track('gecko_bar_interaction', {
+                  action: 'hover',
+                  state: getBarState(),
+                });
+              }}
+              onMouseLeave={handlers.onMouseLeave}
+              ref={hitboxRef as unknown as React.RefObject<HTMLButtonElement>}
+              style={{
+                display: 'flex',
+                alignItems: 'flex-end',
+                justifyContent: 'center',
+              }}
+              type="button"
+            >
+              <GeckoBarTooltip
+                isPassthroughMode={state.isPassthroughMode}
+                isRecording={isRecording}
+                message={state.tooltipMessage}
+                show={state.showTooltip && !isMenuOpen}
+              />
+
+              <motion.div
               animate={animationDimensions}
               className={cn(
                 '!border-primary/70 relative flex items-center justify-center overflow-hidden rounded-full border',
@@ -319,6 +338,7 @@ export function GeckoBarApp() {
             </motion.div>
           </button>
         </DropdownMenuTrigger>
+        </div>
         <DropdownMenuContent
           align="center"
           className="min-w-[200px]"

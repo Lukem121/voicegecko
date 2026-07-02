@@ -133,13 +133,56 @@ export type SettingsV2VersionedSettings = {
 } & SettingsV2AppSettings;
 
 // =============================================================================
+// SETTINGS VERSION 3 (v2 dictation rewrite)
+// =============================================================================
+
+export type SettingsV3FeatureFlags = {
+  moonshineFlow: boolean;
+  engineLab: boolean;
+  cloudGpt4o: boolean;
+  gpuWhisper: boolean;
+  localLlmPolish: boolean;
+  requireAuth: boolean;
+};
+
+export type SettingsV3DictationSettings = {
+  intentEnabled: boolean;
+  llmServerUrl: string;
+  modeEngineOverrides: Record<string, string>;
+  toggleBatchShowLivePreview: boolean;
+};
+
+export type SettingsV3AppSettings = SettingsV2AppSettings & {
+  dictation: SettingsV3DictationSettings;
+  features: SettingsV3FeatureFlags;
+};
+
+export type SettingsV3VersionedSettings = {
+  _meta: {
+    version: 3;
+    timestamp: number;
+    appVersion?: string;
+  };
+} & SettingsV3AppSettings;
+
+export type SettingsV4VersionedSettings = {
+  _meta: {
+    version: 4;
+    timestamp: number;
+    appVersion?: string;
+  };
+} & SettingsV3AppSettings;
+
+// =============================================================================
 // TYPE UNIONS AND HELPERS
 // =============================================================================
 
-// Union of all possible settings versions (now includes V2)
+// Union of all possible settings versions
 export type AnyVersionedSettings =
   | SettingsV1VersionedSettings
-  | SettingsV2VersionedSettings;
+  | SettingsV2VersionedSettings
+  | SettingsV3VersionedSettings
+  | SettingsV4VersionedSettings;
 
 // Extract version number from settings
 export type ExtractVersion<T extends AnyVersionedSettings> =
@@ -150,17 +193,20 @@ export type SettingsForVersion<V extends number> = V extends 1
   ? SettingsV1VersionedSettings
   : V extends 2
     ? SettingsV2VersionedSettings
-    : never;
+    : V extends 3
+      ? SettingsV3VersionedSettings
+      : V extends 4
+        ? SettingsV4VersionedSettings
+        : never;
 
-// Current latest version (now V2)
-export type CurrentSettings = SettingsV2VersionedSettings;
-export const CURRENT_VERSION = 2 as const;
+export type CurrentSettings = SettingsV4VersionedSettings;
+export const CURRENT_VERSION = 4 as const;
 
 // Version validation helper
 export function isValidVersion(
   version: number
 ): version is ExtractVersion<AnyVersionedSettings> {
-  return version === 1 || version === 2;
+  return version === 1 || version === 2 || version === 3 || version === 4;
 }
 
 // Runtime type guard to check if settings match a specific version

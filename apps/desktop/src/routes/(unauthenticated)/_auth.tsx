@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 
 import { AuthTitleBar } from '~/components/auth-title-bar';
 import { useAuth } from '~/hooks/use-auth';
+import { isLocalOnlyMode } from '~/lib/local-mode';
 
 export const Route = createFileRoute('/(unauthenticated)/_auth')({
   component: AuthLayout,
@@ -12,6 +13,14 @@ export const Route = createFileRoute('/(unauthenticated)/_auth')({
 function AuthLayout() {
   const router = useRouter();
   const auth = useAuth();
+
+  useEffect(() => {
+    void isLocalOnlyMode().then((localOnly) => {
+      if (localOnly) {
+        router.navigate({ to: '/' });
+      }
+    });
+  }, [router]);
 
   // If user is authenticated, redirect away from auth pages
   useEffect(() => {

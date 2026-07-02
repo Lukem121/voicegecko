@@ -1,6 +1,4 @@
 pub mod audio;
-pub mod dictation;
-pub mod dictation_sidecar;
 pub mod gecko_bar;
 pub mod hardware_info;
 pub mod model_manager;

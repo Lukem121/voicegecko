@@ -2,8 +2,20 @@ use tauri::Manager;
 use sentry;
 use tauri_plugin_sentry::{minidump};
 mod modules;
-use modules::dictation_sidecar::DictationState;
-use modules::model_manager;
+mod dictation;
+mod speech;
+mod intent;
+mod inject;
+mod context;
+mod db;
+mod audio_v2;
+
+use std::sync::Arc;
+use dictation::dictionary_cache::DictionaryPromptCache;
+use dictation::hands_free::HandsFreeController;
+use dictation::session::DictationSessionManager;
+use intent::llama_process::LlamaProcessManager;
+use audio_v2::StreamingAudioHub;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -25,7 +37,20 @@ pub fn run() {
 
     tauri::Builder::default()
         .plugin(tauri_plugin_sentry::init(&client))
-        .manage(DictationState::default())
+        .plugin(
+            tauri_plugin_log::Builder::new()
+                .level(log::LevelFilter::Debug)
+                .targets([
+                    tauri_plugin_log::Target::new(tauri_plugin_log::TargetKind::Stdout),
+                    tauri_plugin_log::Target::new(tauri_plugin_log::TargetKind::Webview),
+                ])
+                .build(),
+        )
+        .manage(Arc::new(DictationSessionManager::new()))
+        .manage(Arc::new(StreamingAudioHub::new()))
+        .manage(Arc::new(HandsFreeController::new()))
+        .manage(Arc::new(LlamaProcessManager::new()))
+        .manage(DictionaryPromptCache::default())
         .manage(modules::gecko_bar::SnoozeState::default())
         .plugin(tauri_plugin_positioner::init())
         .plugin(tauri_plugin_clipboard_manager::init())
@@ -109,7 +134,32 @@ pub fn run() {
             modules::model_manager::get_downloaded_models_for_tier,
             modules::model_manager::auto_download_recommended_model,
             modules::model_manager::check_and_fix_partial_downloads,
-            modules::dictation::transcribe_audio_buffer,
+            dictation::start_dictation_session,
+            dictation::stop_dictation_session,
+            dictation::get_dictation_session_status,
+            dictation::cancel_dictation_session,
+            dictation::list_dictation_engines,
+            dictation::undo_last_dictation,
+            dictation::set_dictionary_prompt_cache,
+            dictation::get_dictionary_prompt_cache,
+            dictation::get_local_dictionary_prompt,
+            dictation::sync_local_dictionary_words,
+            dictation::save_engine_feedback,
+            dictation::set_intent_enabled,
+            dictation::confirm_dictation_paste,
+            dictation::prewarm_engines,
+            dictation::bootstrap_optional_engines,
+            dictation::get_engine_status,
+            dictation::set_feature_flags,
+            dictation::get_feature_flags,
+            dictation::list_local_dictations,
+            speech::models::list_v2_models,
+            speech::models::get_v2_model_status,
+            speech::models::download_v2_model,
+            speech::models::delete_v2_model,
+            speech::models::is_v2_toggle_ready,
+            speech::models::retry_v2_bootstrap,
+            dictation::compare_engines_on_samples,
             modules::settings::get_cpu_count,
             modules::settings::get_gecko_bar_config,
             modules::settings::set_gecko_bar_config,
@@ -120,6 +170,11 @@ pub fn run() {
             modules::tray::update_tray_stats
         ])
         .setup(|app| {
+            crate::db::set_app_handle(app.handle().clone());
+            if let Ok(db) = crate::db::open_db(app.handle()) {
+                let _ = crate::db::hydrate_undo_stack(&db);
+            }
+
             // Ensure OS autostart state matches our stored/default config on startup
             {
                 use tauri_plugin_autostart::ManagerExt;
@@ -161,10 +216,11 @@ pub fn run() {
                 }
             }
             // Initialize optional audio sink gracefully (handle systems with no output device)
+            let streaming_hub = app.state::<Arc<StreamingAudioHub>>().inner().clone();
             let mut managed = false;
             if let Ok((_stream, stream_handle)) = rodio::OutputStream::try_default() {
                 if let Ok(sink) = rodio::Sink::try_new(&stream_handle) {
-                    app.manage(modules::audio::AudioState::new(Some(sink)));
+                    app.manage(modules::audio::AudioState::new(Some(sink), streaming_hub.clone()));
                     // Keep the stream alive for the duration of the app
                     std::mem::forget(_stream);
                     std::mem::forget(stream_handle);
@@ -173,21 +229,23 @@ pub fn run() {
             }
             if !managed {
                 // Fall back to no sink; sound playback and volume changes will be no-ops
-                app.manage(modules::audio::AudioState::new(None));
+                app.manage(modules::audio::AudioState::new(None, streaming_hub));
             }
 
-            modules::model_manager::synchronize_models(app.handle().clone())?;
+            speech::models::bootstrap_required_models(app.handle());
 
-            // Prewarm the warm sidecar with the active model to avoid first-use latency
+            // Prewarm v2 engines (Moonshine, etc.)
             let app_handle = app.handle().clone();
             tauri::async_runtime::spawn(async move {
-                if let Ok(model_id) = model_manager::get_active_model_id(app_handle.clone()) {
-                    let state = app_handle.state::<DictationState>();
-                    let _ = state.manager.prewarm(&app_handle, &model_id).await;
+                let manager = app_handle
+                    .state::<Arc<DictationSessionManager>>()
+                    .inner()
+                    .clone();
+                if let Err(error) = manager.bootstrap_optional_engines(&app_handle).await {
+                    eprintln!("[Rust] Optional engine bootstrap: {error}");
                 }
+                LlamaProcessManager::prewarm(app_handle).await;
             });
-
-            // Sidecar-based dictation does not need to preload models here.
 
             // Setup system tray - allow app to continue even if tray setup fails
             let tray_manager = modules::tray::TrayManager::new();
@@ -229,6 +287,13 @@ pub fn run() {
 
             Ok(())
         })
-        .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+        .build(tauri::generate_context!())
+        .expect("error while building tauri application")
+        .run(|app, event| {
+            if let tauri::RunEvent::Exit = event {
+                if let Some(manager) = app.try_state::<Arc<LlamaProcessManager>>() {
+                    manager.kill();
+                }
+            }
+        });
 }

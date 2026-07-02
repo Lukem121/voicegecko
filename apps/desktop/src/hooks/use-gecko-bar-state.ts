@@ -9,9 +9,9 @@ import type {
 } from '~/components/gecko-bar/gecko-bar-app.types';
 import { isSafeToCollapse } from '~/components/gecko-bar/gecko-bar-app.utils';
 import { initializeGeckoBarEvents } from '~/lib/gecko-bar-events';
+import { initializeGeckoBarDictationBridge } from '~/lib/dictation-event-bridge';
 import { useEventStore } from '~/stores/event.store';
 import type {
-  DictationProgressEvent,
   RecordingStateChangedEvent,
 } from '~/types/events';
 import { useAudioProcessor } from './use-audio-processor';
@@ -115,39 +115,14 @@ export function useGeckoBarState(): UseGeckoBarStateReturn {
         // Initialize gecko bar specific events (notifications, audio levels)
         await initializeGeckoBarEvents();
 
-        // Listen to recording state changes (UI updates only)
+        await initializeGeckoBarDictationBridge();
+
         const { listen } = await import('@tauri-apps/api/event');
 
         await listen('recording-state-changed', (event) => {
           const payload = event.payload as RecordingStateChangedEvent;
           log.info('[GeckoBar] 🎙️ Recording state changed (UI only):', payload);
           useEventStore.getState().setRecordingStatus(payload);
-        });
-
-        // Listen to dictation progress (UI updates only - NO completion handling)
-        await listen('dictation-progress', (event) => {
-          const payload = event.payload as DictationProgressEvent;
-          log.info(
-            '[GeckoBar] 📝 Dictation progress (UI only):',
-            payload.status
-          );
-
-          const store = useEventStore.getState();
-          const metadata = {
-            duration_seconds: payload.duration_seconds,
-            model_used: payload.model_used,
-            sample_rate: payload.sample_rate,
-          };
-
-          // Only update dictation progress state (NO completion business logic)
-          store.setDictationProgress(payload.status, payload.data, metadata);
-
-          // NO completion handling - main window handles that!
-          if (payload.status === 'Complete') {
-            log.info(
-              '[GeckoBar] ✅ Dictation complete (UI updated, business logic handled by main window)'
-            );
-          }
         });
 
         log.info('[GeckoBar] ✅ UI-only event listeners initialized');

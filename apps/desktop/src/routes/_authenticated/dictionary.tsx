@@ -43,6 +43,7 @@ import { useAddDictionary } from '~/features/dictionary/use-add-dictionary';
 import { useDeleteDictionary } from '~/features/dictionary/use-delete-dictionary';
 import { useGetDictionary } from '~/features/dictionary/use-get-dictionary';
 import { useUpdateDictionary } from '~/features/dictionary/use-update-dictionary';
+import { useAuthWithConnectivity } from '~/hooks/use-auth-with-connectivity';
 
 // Extract sort utilities
 const getSortIcon = (sortBy: string) => {
@@ -175,6 +176,9 @@ export const Route = createFileRoute('/_authenticated/dictionary')({
 });
 
 function DictionaryPage() {
+  const { connectivity } = useAuthWithConnectivity();
+  const isOffline = !connectivity.isOnline;
+
   const {
     entries,
     count,
@@ -305,6 +309,18 @@ function DictionaryPage() {
 
   return (
     <div className="flex flex-1 flex-col gap-4">
+      {isOffline ? (
+        <div className="rounded-md border border-border/60 bg-muted/40 px-3 py-2 text-muted-foreground text-sm">
+          <strong className="text-foreground">Local dictionary:</strong> while
+          offline, words are read from SQLite on this device. Changes sync to the
+          cloud when you reconnect.
+        </div>
+      ) : (
+        <p className="text-muted-foreground text-sm">
+          <strong className="text-foreground">Local dictionary:</strong> SQLite
+          on this device is the source for dictation prompts when offline.
+        </p>
+      )}
       <div className="flex h-10 items-center justify-between">
         <h1 className="font-bold text-2xl tracking-tight">Dictionary</h1>
         <div className="flex items-center gap-2">

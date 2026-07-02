@@ -8,10 +8,25 @@ import {
 } from '~/components/connectivity-error';
 import { TitleBar } from '~/components/custom-title-bar';
 import { useAuthWithConnectivity } from '~/hooks/use-auth-with-connectivity';
+import { isLocalOnlyMode } from '~/lib/local-mode';
 import { useSettingsStore } from '~/stores/settings.store';
 
 export const Route = createFileRoute('/_authenticated')({
   beforeLoad: async ({ context, location }) => {
+    const localOnly = await isLocalOnlyMode();
+
+    if (localOnly) {
+      try {
+        const settingsStore = useSettingsStore.getState();
+        if (!settingsStore.isInitialized) {
+          await settingsStore.initialize();
+        }
+      } catch {
+        // Continue into app without onboarding gate in local-only mode
+      }
+      return;
+    }
+
     const authIssueType = context.auth.getAuthIssueType?.() ?? 'loading';
 
     // If it's a connectivity issue, let the component handle it (don't redirect)

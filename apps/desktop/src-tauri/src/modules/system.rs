@@ -72,3 +72,16 @@ pub fn simulate_paste_with_options(prevent_auto_newline: bool) -> Result<(), Str
     println!("[DEBUG] simulate_paste completed successfully");
     Ok(())
 }
+
+/// Type text directly (terminal fallback when paste is stripped).
+pub fn simulate_type_text(text: &str) -> Result<(), String> {
+    let mut enigo = Enigo::new(&Settings::default())
+        .map_err(|e| format!("Failed to initialize keyboard controller: {}", e))?;
+
+    thread::sleep(Duration::from_millis(30));
+    enigo
+        .text(text)
+        .map_err(|e| format!("Failed to type text: {e}"))?;
+    thread::sleep(Duration::from_millis(10));
+    Ok(())
+}

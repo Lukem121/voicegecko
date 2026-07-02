@@ -1,6 +1,6 @@
 /** biome-ignore-all lint/style/useReadonlyClassProperties: it is? */
 import { log } from '@acme/observability/log';
-import { invoke } from '@tauri-apps/api/core';
+import { emit } from '@tauri-apps/api/event';
 import { relaunch } from '@tauri-apps/plugin-process';
 import { check } from '@tauri-apps/plugin-updater';
 
@@ -9,6 +9,8 @@ import { storeRegistry } from '~/stores/store-registry';
 import { useUpdateStore } from '~/stores/update.store';
 import { setInitializationFlag } from '~/trpc';
 import { analytics } from './analytics/posthog-analytics';
+import { isLocalOnlyMode } from './local-mode';
+import { initializeModelBootstrapListeners } from './model-bootstrap';
 import { initializeTauriEvents } from './tauri-events';
 
 export type UpdateStatus =
@@ -366,32 +368,22 @@ class AppLifecycleManager {
       // Set initialization flag to prevent 401 logout during startup
       setInitializationFlag(true);
 
-      // Synchronize models to detect bundled models
-      log.info('[AppLifecycle] 🔧 Synchronizing models...');
-      await invoke('synchronize_models');
-
-      // Check and clean up any partial downloads from previous sessions
-      try {
-        const partialFiles = await invoke<string[]>(
-          'check_and_fix_partial_downloads'
-        );
-        if (partialFiles.length > 0) {
-          log.info(
-            '[AppLifecycle] 🧹 Cleaned up partial downloads:',
-            partialFiles
-          );
-        }
-      } catch (error) {
-        log.warn(error, '[AppLifecycle] Failed to check partial downloads:');
-      }
-
       // Initialize stores
       log.info('[AppLifecycle] 🗄️ Initializing stores...');
       await storeRegistry.initializeAll();
 
+      if (await isLocalOnlyMode()) {
+        await emit('auth-state-changed', {
+          isAuthenticated: true,
+          hasUser: false,
+        });
+        log.info('[AppLifecycle] Local-only mode active — auth gate bypassed');
+      }
+
       // Initialize Tauri event listeners (only for main window)
       log.info('[AppLifecycle] 📡 Initializing event listeners...');
       await initializeTauriEvents({ isGeckoBar: false });
+      await initializeModelBootstrapListeners();
 
       this.isInitialized = true;
       log.info('[AppLifecycle] ✅ Core systems initialized successfully');
@@ -401,12 +393,11 @@ class AppLifecycleManager {
       analytics.track('app_startup', {
         startup_time_seconds: startupTime,
         initialization_steps: [
-          'model_sync',
-          'cleanup_check',
           'store_init',
           'event_listeners',
+          'model_bootstrap',
         ],
-        models_synchronized: true,
+        models_synchronized: false,
         auto_update_available: false,
       });
 
@@ -450,26 +441,6 @@ class AppLifecycleManager {
       log.warn(error, '[AppLifecycle] Failed to prefetch dictionary prompt:');
     }
 
-    // Trigger automatic download of recommended model (non-blocking)
-    setTimeout(() => {
-      const downloadId = `${Date.now()}-${Math.random()}`;
-      log.info(
-        `[AppLifecycle] Starting auto-download check (ID: ${downloadId})`
-      );
-
-      invoke('auto_download_recommended_model')
-        .then(() => {
-          log.info(
-            `[AppLifecycle] Auto-download check completed (ID: ${downloadId})`
-          );
-        })
-        .catch((error) => {
-          log.error(
-            `[AppLifecycle] Failed to auto-download recommended model (ID: ${downloadId}):`,
-            error
-          );
-        });
-    }, 1000);
   }
 }
 

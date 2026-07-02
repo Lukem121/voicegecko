@@ -1,6 +1,5 @@
 import { log } from '@acme/observability/log';
 import { invoke } from '@tauri-apps/api/core';
-import { listen } from '@tauri-apps/api/event';
 import { LazyStore } from '@tauri-apps/plugin-store';
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
@@ -15,10 +14,11 @@ import type {
   SettingsV1OnboardingSettings,
   SettingsV1PersonalizationSettings,
   SettingsV1PrivacySettings,
+  SettingsV3DictationSettings,
+  SettingsV3FeatureFlags,
 } from '~/lib/settings/migrations/versioned-schemas';
 import { dictationService } from '~/services/dictation.service';
 import { recordingService } from '~/services/recording.service';
-import type { HardwareInfo } from '~/types/models';
 import type {
   AudioDevice,
   NotificationSound,
@@ -35,13 +35,15 @@ type OnboardingSettings = SettingsV1OnboardingSettings;
 export type { OnboardingSettings };
 export type ModelStatus = SettingsV1ModelStatus;
 export type Model = SettingsV1Model;
-export type AppSettings = SettingsV1AppSettings;
+export type AppSettings = SettingsV1AppSettings & {
+  dictation: SettingsV3DictationSettings;
+  features: SettingsV3FeatureFlags;
+};
 
 type SettingsState = {
   // Settings data
   settings: AppSettings;
   audioDevices: AudioDevice[];
-  hardwareInfo: HardwareInfo | null;
   isInitialized: boolean;
   isLoading: boolean;
 
@@ -64,18 +66,15 @@ type SettingsState = {
     key: keyof PersonalizationSettings,
     value: boolean
   ) => Promise<void>;
+  updateDictationSetting: <K extends keyof SettingsV3DictationSettings>(
+    key: K,
+    value: SettingsV3DictationSettings[K]
+  ) => Promise<void>;
+  updateFeatureSetting: <K extends keyof SettingsV3FeatureFlags>(
+    key: K,
+    value: SettingsV3FeatureFlags[K]
+  ) => Promise<void>;
   refreshAudioDevices: () => Promise<void>;
-
-  // Model actions
-  updateSelectedTier: (tier: string) => Promise<void>;
-  updateSelectedModelOverride: (modelId: string | null) => Promise<void>;
-  refreshModels: () => Promise<void>;
-  updateModelStatus: (modelId: string, status: ModelStatus) => void;
-  getModelsForTier: (tier: string) => Model[];
-  getTierDownloadStatus: (
-    tier: string
-  ) => 'none' | 'partial' | 'complete' | 'downloading';
-  getSelectedModelOverride: () => string | null | undefined;
 
   // Test sound
   playTestSound: () => Promise<void>;
@@ -120,6 +119,20 @@ const defaultSettings: AppSettings = {
   onboarding: {
     completed: false,
   },
+  dictation: {
+    intentEnabled: true,
+    llmServerUrl: 'http://127.0.0.1:8080',
+    modeEngineOverrides: {},
+    toggleBatchShowLivePreview: true,
+  },
+  features: {
+    moonshineFlow: true,
+    engineLab: true,
+    cloudGpt4o: true,
+    gpuWhisper: true,
+    localLlmPolish: false,
+    requireAuth: false,
+  },
 };
 
 export const useSettingsStore = create<SettingsState>()(
@@ -127,7 +140,6 @@ export const useSettingsStore = create<SettingsState>()(
     (set, get) => ({
       settings: defaultSettings,
       audioDevices: [],
-      hardwareInfo: null,
       isInitialized: false,
       isLoading: false,
 
@@ -147,10 +159,8 @@ export const useSettingsStore = create<SettingsState>()(
             audioDevices,
             privacySettings,
             personalizationSettings,
-            models,
-            selectedTier,
-            selectedModelOverride,
-            hardwareInfo,
+            dictationSettings,
+            featureSettings,
           ] = await Promise.all([
             loadAudioSettings(),
             invoke<{
@@ -162,10 +172,8 @@ export const useSettingsStore = create<SettingsState>()(
             invoke<AudioDevice[]>('list_audio_devices'),
             loadPrivacySettings(),
             loadPersonalizationSettings(),
-            invoke<Record<string, Model>>('list_models'),
-            invoke<string | null>('get_selected_tier'),
-            invoke<string | null>('get_selected_model_override'),
-            invoke<HardwareInfo>('get_hardware_info'),
+            loadDictationSettings(),
+            loadFeatureSettings(),
           ]);
 
           // Find selected device from saved settings
@@ -177,6 +185,21 @@ export const useSettingsStore = create<SettingsState>()(
           // Load onboarding settings
           const onboardingCompleted =
             (await settingsStore.get<boolean>('onboarding.completed')) ?? false;
+
+          void invoke('set_intent_enabled', {
+            enabled: dictationSettings.intentEnabled,
+          }).catch(() => undefined);
+
+          void invoke('set_feature_flags', {
+            flags: {
+              moonshineFlow: featureSettings.moonshineFlow,
+              engineLab: featureSettings.engineLab,
+              cloudGpt4o: featureSettings.cloudGpt4o,
+              gpuWhisper: featureSettings.gpuWhisper,
+              localLlmPolish: featureSettings.localLlmPolish,
+              requireAuth: featureSettings.requireAuth,
+            },
+          }).catch(() => undefined);
 
           set({
             settings: {
@@ -193,17 +216,16 @@ export const useSettingsStore = create<SettingsState>()(
               },
               privacy: privacySettings,
               personalization: personalizationSettings,
+              dictation: dictationSettings,
+              features: featureSettings,
               models: {
-                selectedTier: selectedTier ?? 'cloud',
-                selectedModelOverride: selectedModelOverride ?? null,
-                availableModels: models,
+                ...defaultSettings.models,
               },
               onboarding: {
                 completed: onboardingCompleted,
               },
             },
             audioDevices,
-            hardwareInfo,
             isInitialized: true,
             isLoading: false,
           });
@@ -215,30 +237,6 @@ export const useSettingsStore = create<SettingsState>()(
             });
           }
 
-          // Refresh models again to ensure we have the latest status after synchronization
-          // This is important for detecting bundled models
-          const refreshedModels =
-            await invoke<Record<string, Model>>('list_models');
-          set((state) => ({
-            settings: {
-              ...state.settings,
-              models: {
-                ...state.settings.models,
-                availableModels: refreshedModels,
-              },
-            },
-          }));
-
-          // Set up listeners for model download events
-          // This ensures the store is updated even when downloads happen in the background
-          listen<[string, number]>('model-download-progress', (event) => {
-            const [modelId, progress] = event.payload;
-            get().updateModelStatus(modelId, { Downloading: progress });
-          });
-
-          listen<string>('model-download-complete', () => {
-            get().refreshModels();
-          });
         } catch (error) {
           log.error(error, '[Settings] Failed to initialize:');
           set({ isLoading: false });
@@ -428,6 +426,50 @@ export const useSettingsStore = create<SettingsState>()(
         await saveWithMeta(settingsStore, `personalization.${key}`, value);
       },
 
+      updateDictationSetting: async (key, value) => {
+        const { settings } = get();
+        const oldValue = settings.dictation[key];
+        const newSettings = {
+          ...settings,
+          dictation: { ...settings.dictation, [key]: value },
+        };
+
+        analytics.track('settings_changed', {
+          category: 'dictation',
+          setting_key: key,
+          old_value: oldValue,
+          new_value: value,
+        });
+
+        set({ settings: newSettings });
+        await saveWithMeta(settingsStore, `dictation.${key}`, value);
+
+        if (key === 'intentEnabled') {
+          await invoke('set_intent_enabled', { enabled: value as boolean });
+        }
+      },
+
+      updateFeatureSetting: async (key, value) => {
+        const { settings } = get();
+        const oldValue = settings.features[key];
+        const newSettings = {
+          ...settings,
+          features: { ...settings.features, [key]: value },
+        };
+
+        analytics.track('settings_changed', {
+          category: 'dictation',
+          setting_key: `features.${key}`,
+          old_value: oldValue,
+          new_value: value,
+        });
+
+        set({ settings: newSettings });
+        await saveWithMeta(settingsStore, `features.${key}`, value);
+
+        await invoke('set_feature_flags', { flags: newSettings.features });
+      },
+
       refreshAudioDevices: async () => {
         try {
           const audioDevices =
@@ -436,167 +478,6 @@ export const useSettingsStore = create<SettingsState>()(
         } catch (error) {
           log.error(error, 'Failed to refresh audio devices:');
         }
-      },
-
-      // Model actions
-      updateSelectedTier: async (tier) => {
-        const { settings } = get();
-        const oldTier = settings.models.selectedTier;
-        const newSettings = {
-          ...settings,
-          models: { ...settings.models, selectedTier: tier },
-        };
-
-        // Track model tier change
-        analytics.track('settings_changed', {
-          category: 'models',
-          setting_key: 'selectedTier',
-          old_value: oldTier,
-          new_value: tier,
-        });
-
-        analytics.track('model_tier_changed', {
-          old_tier: oldTier,
-          new_tier: tier,
-        });
-
-        set({ settings: newSettings });
-        await invoke('set_selected_tier', { tier });
-      },
-
-      updateSelectedModelOverride: async (modelId) => {
-        const { settings } = get();
-        const oldModelOverride = settings.models.selectedModelOverride;
-        const newSettings = {
-          ...settings,
-          models: { ...settings.models, selectedModelOverride: modelId },
-        };
-
-        // Track model override change
-        analytics.track('settings_changed', {
-          category: 'models',
-          setting_key: 'selectedModelOverride',
-          old_value: oldModelOverride || 'none',
-          new_value: modelId || 'none',
-        });
-
-        set({ settings: newSettings });
-
-        if (modelId) {
-          await invoke('set_selected_model_override', { modelId });
-        } else {
-          await invoke('clear_selected_model_override');
-        }
-      },
-
-      getSelectedModelOverride: () => {
-        const { settings } = get();
-        return settings.models.selectedModelOverride;
-      },
-
-      refreshModels: async () => {
-        try {
-          const [models, selectedTier, selectedModelOverride] =
-            await Promise.all([
-              invoke<Record<string, Model>>('list_models'),
-              invoke<string | null>('get_selected_tier'),
-              invoke<string | null>('get_selected_model_override'),
-            ]);
-
-          set((state) => ({
-            settings: {
-              ...state.settings,
-              models: {
-                ...state.settings.models,
-                availableModels: models,
-                selectedTier:
-                  selectedTier ?? state.settings.models.selectedTier,
-                selectedModelOverride:
-                  selectedModelOverride ??
-                  state.settings.models.selectedModelOverride,
-              },
-            },
-          }));
-        } catch (error) {
-          log.error(error, '[Store] Failed to refresh models:');
-        }
-      },
-
-      updateModelStatus: (modelId, status) => {
-        set((state) => {
-          const model = state.settings.models.availableModels[modelId];
-          if (!model) {
-            return state;
-          }
-
-          return {
-            settings: {
-              ...state.settings,
-              models: {
-                ...state.settings.models,
-                availableModels: {
-                  ...state.settings.models.availableModels,
-                  [modelId]: {
-                    ...model,
-                    status,
-                  },
-                },
-              },
-            },
-          };
-        });
-      },
-
-      getModelsForTier: (tier) => {
-        const { settings } = get();
-        return Object.values(settings.models.availableModels).filter(
-          (model) => {
-            // Convert tier enum to lowercase string for comparison
-            const modelTier =
-              typeof model.tier === 'string'
-                ? model.tier.toLowerCase()
-                : model.tier;
-            return modelTier === tier.toLowerCase();
-          }
-        );
-      },
-
-      getTierDownloadStatus: (tier) => {
-        const { settings } = get();
-        const models = Object.values(settings.models.availableModels);
-        const tierModels = models.filter((model) => {
-          // Handle case-insensitive comparison
-          const modelTier =
-            typeof model.tier === 'string'
-              ? model.tier.toLowerCase()
-              : model.tier;
-          return modelTier === tier.toLowerCase();
-        });
-
-        if (tierModels.length === 0) {
-          return 'none';
-        }
-
-        const downloading = tierModels.some(
-          (model) =>
-            typeof model.status === 'object' && 'Downloading' in model.status
-        );
-
-        // If any model in the tier is downloaded, the tier is complete
-        // Users only need one model per tier to use that quality level
-        const anyDownloaded = tierModels.some(
-          (model) => model.status === 'Downloaded'
-        );
-
-        if (downloading) {
-          return 'downloading';
-        }
-
-        if (anyDownloaded) {
-          return 'complete';
-        }
-
-        return 'none';
       },
 
       playTestSound: async () => {
@@ -639,10 +520,6 @@ export const useSettingsStore = create<SettingsState>()(
     }
   )
 );
-
-// Custom hooks for specific data
-export const useHardwareInfo = () =>
-  useSettingsStore((state) => state.hardwareInfo);
 
 // Helper functions for loading settings
 async function loadAudioSettings(): Promise<AudioSettings> {
@@ -691,6 +568,40 @@ async function loadPersonalizationSettings(): Promise<PersonalizationSettings> {
       (await settingsStore.get<boolean>(
         'personalization.preventPasteNewlines'
       )) ?? false,
+  };
+}
+
+async function loadDictationSettings(): Promise<SettingsV3DictationSettings> {
+  return {
+    intentEnabled:
+      (await settingsStore.get<boolean>('dictation.intentEnabled')) ?? true,
+    llmServerUrl:
+      (await settingsStore.get<string>('dictation.llmServerUrl')) ??
+      'http://127.0.0.1:8080',
+    modeEngineOverrides:
+      (await settingsStore.get<Record<string, string>>(
+        'dictation.modeEngineOverrides'
+      )) ?? {},
+    toggleBatchShowLivePreview:
+      (await settingsStore.get<boolean>(
+        'dictation.toggleBatchShowLivePreview'
+      )) ?? true,
+  };
+}
+
+async function loadFeatureSettings(): Promise<SettingsV3FeatureFlags> {
+  return {
+    moonshineFlow:
+      (await settingsStore.get<boolean>('features.moonshineFlow')) ?? true,
+    engineLab: (await settingsStore.get<boolean>('features.engineLab')) ?? true,
+    cloudGpt4o:
+      (await settingsStore.get<boolean>('features.cloudGpt4o')) ?? true,
+    gpuWhisper:
+      (await settingsStore.get<boolean>('features.gpuWhisper')) ?? true,
+    localLlmPolish:
+      (await settingsStore.get<boolean>('features.localLlmPolish')) ?? false,
+    requireAuth:
+      (await settingsStore.get<boolean>('features.requireAuth')) ?? false,
   };
 }
 
