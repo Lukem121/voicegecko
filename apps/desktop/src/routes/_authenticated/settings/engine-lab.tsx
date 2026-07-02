@@ -229,7 +229,7 @@ function EngineLabPage() {
     });
   };
 
-  const installedEngineList =
+  const installedEngineList: EngineStatusItem[] =
     engineStatus.length > 0
       ? engineStatus
       : engines.map(([id, name, available]) => ({
@@ -239,6 +239,7 @@ function EngineLabPage() {
           enabled: true,
           supportsStreaming:
             id.includes('moonshine') || id.includes('parakeet'),
+          unavailableReason: null,
         }));
 
   return (
