@@ -112,6 +112,7 @@ jobs:
           releaseBody: "Full installation package."
           releaseDraft: false
           prerelease: false
+          tauriScript: pnpm run tauri
           args: --config src-tauri/tauri.conf.full.json
           projectPath: apps/desktop
 
@@ -147,6 +148,7 @@ jobs:
           releaseBody: "Lightweight update package."
           releaseDraft: false
           prerelease: false
+          tauriScript: pnpm run tauri
           args: --config src-tauri/tauri.conf.update.json
           projectPath: apps/desktop
 
