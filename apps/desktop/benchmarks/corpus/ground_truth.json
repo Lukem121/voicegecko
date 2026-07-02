@@ -1,0 +1,16 @@
+{
+  "clips": [
+    {
+      "clipId": "general_01",
+      "file": "general_01.wav",
+      "text": "So basically what I want to do is refactor the authentication module.",
+      "tags": ["casual", "medium_length"]
+    },
+    {
+      "clipId": "technical_01",
+      "file": "technical_01.wav",
+      "text": "Use React useState hook in the UserService component.",
+      "tags": ["technical", "developer"]
+    }
+  ]
+}

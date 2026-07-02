@@ -18,9 +18,9 @@ import {
 import { Slider } from '@acme/ui/components/ui/slider';
 import { Switch } from '@acme/ui/components/ui/switch';
 import { ThemeToggle } from '@acme/ui/components/ui/theme';
-import { createFileRoute } from '@tanstack/react-router';
+import { createFileRoute, Link } from '@tanstack/react-router';
 import { getVersion } from '@tauri-apps/api/app';
-import { Mic, Palette, Settings, Shield, Volume2 } from 'lucide-react';
+import { ChevronRight, Mic, Palette, Settings, Shield, Sliders, Volume2 } from 'lucide-react';
 import { useEffect, useState } from 'react';
 import { useSettingsStore } from '~/stores/settings.store';
 import { useUpdateStore } from '~/stores/update.store';
@@ -44,6 +44,8 @@ function SettingsPage() {
     updateHideGeckoOnFullscreen,
     updatePrivacySetting,
     updatePersonalizationSetting,
+    updateDictationSetting,
+    updateFeatureSetting,
     playTestSound,
   } = useSettingsStore();
 
@@ -336,6 +338,129 @@ function SettingsPage() {
                 checked={settings.privacy.crashReports}
                 onCheckedChange={(checked) =>
                   updatePrivacySetting('crashReports', checked)
+                }
+              />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Engine Lab */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Sliders className="h-5 w-5" />
+              Engine Lab
+            </CardTitle>
+            <CardDescription>
+              Download v2 models, compare engines, and tune per-mode overrides
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button asChild className="w-full justify-between" type="button" variant="outline">
+              <Link to="/settings/engine-lab">
+                <span>Manage models &amp; engines</span>
+                <ChevronRight className="h-4 w-4" />
+              </Link>
+            </Button>
+          </CardContent>
+        </Card>
+
+        {/* Dictation */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Mic className="h-5 w-5" />
+              Dictation
+            </CardTitle>
+            <CardDescription>
+              Configure v2 dictation behavior and live preview
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label>Live preview while dictating</Label>
+                <p className="text-muted-foreground text-sm">
+                  Show streaming transcript above the Gecko Bar (on by default)
+                </p>
+              </div>
+              <Switch
+                checked={settings.dictation.toggleBatchShowLivePreview}
+                onCheckedChange={(checked) =>
+                  updateDictationSetting('toggleBatchShowLivePreview', checked)
+                }
+              />
+            </div>
+
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label>Intent polish (local LLM)</Label>
+                <p className="text-muted-foreground text-sm">
+                  Post-process text via llama-server when enabled
+                </p>
+              </div>
+              <Switch
+                checked={settings.dictation.intentEnabled}
+                onCheckedChange={(checked) =>
+                  updateDictationSetting('intentEnabled', checked)
+                }
+              />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Feature flags */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Settings className="h-5 w-5" />
+              Engine features
+            </CardTitle>
+            <CardDescription>
+              Toggle engines and local-only mode. Auth is off by default for
+              personal offline use.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label>Require sign-in</Label>
+                <p className="text-muted-foreground text-sm">
+                  When off, dictation works without an account
+                </p>
+              </div>
+              <Switch
+                checked={settings.features.requireAuth}
+                onCheckedChange={(checked) =>
+                  updateFeatureSetting('requireAuth', checked)
+                }
+              />
+            </div>
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label>Cloud GPT-4o engines</Label>
+                <p className="text-muted-foreground text-sm">
+                  Enable GPT-4o cloud transcription engines
+                </p>
+              </div>
+              <Switch
+                checked={settings.features.cloudGpt4o}
+                onCheckedChange={(checked) =>
+                  updateFeatureSetting('cloudGpt4o', checked)
+                }
+              />
+            </div>
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label>Moonshine Flow</Label>
+                <p className="text-muted-foreground text-sm">
+                  Enable Moonshine streaming engine when DLL is installed
+                </p>
+              </div>
+              <Switch
+                checked={settings.features.moonshineFlow}
+                onCheckedChange={(checked) =>
+                  updateFeatureSetting('moonshineFlow', checked)
                 }
               />
             </div>

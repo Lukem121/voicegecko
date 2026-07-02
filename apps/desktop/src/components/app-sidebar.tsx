@@ -166,10 +166,9 @@ const data: NavigationData = {
 const isDev = import.meta.env.DEV;
 
 if (isDev) {
-  // Add Quality as a top-level menu item for development
   data.navSecondary.splice(4, 0, {
-    title: 'Quality',
-    url: '/settings/models',
+    title: 'Engine Lab',
+    url: '/settings/engine-lab',
     icon: Sliders,
   });
 }

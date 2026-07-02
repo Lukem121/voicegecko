@@ -1,4 +1,5 @@
 import { log } from '@acme/observability/log';
+import { invoke } from '@tauri-apps/api/core';
 import { queryClient, trpc } from '~/trpc';
 
 export class DictionaryService {
@@ -14,38 +15,48 @@ export class DictionaryService {
   }
 
   /**
-   * Get the dictionary prompt for dictation
-   * Uses React Query cache if available, otherwise fetches from server
+   * Local-first dictionary prompt: SQLite → in-memory cache → optional tRPC sync.
    */
   async getDictionaryPrompt(): Promise<string | null> {
     try {
-      // Always fetch the latest data - this ensures we get updates after dictionary changes
-      log.info('[DictionaryService] Fetching dictionary prompt');
+      const local = await invoke<string | null>('get_local_dictionary_prompt');
+      if (local?.trim()) {
+        await invoke('set_dictionary_prompt_cache', { prompt: local }).catch(
+          () => undefined
+        );
+        return local;
+      }
+    } catch (error) {
+      log.warn(error, '[DictionaryService] Local dictionary read failed');
+    }
+
+    try {
+      log.info('[DictionaryService] Fetching dictionary prompt from API');
       const prompt = await queryClient.fetchQuery(
         trpc.dictionary.getPrompt.queryOptions()
       );
 
-      return prompt || null;
+      const value = prompt?.trim() || null;
+      if (value) {
+        await invoke('set_dictionary_prompt_cache', { prompt: value }).catch(
+          () => undefined
+        );
+        const words = value.split(/[,;\n]+/).map((w) => w.trim()).filter(Boolean);
+        if (words.length > 0) {
+          await invoke('sync_local_dictionary_words', { words }).catch(
+            () => undefined
+          );
+        }
+      }
+      return value;
     } catch (error) {
-      log.error(error, '[DictionaryService] Failed to get dictionary prompt:');
-      // Don't fail dictation if dictionary fetch fails
+      log.warn(error, '[DictionaryService] API dictionary fetch failed');
       return null;
     }
   }
 
-  /**
-   * Prefetch the dictionary prompt to ensure it's in cache
-   */
   async prefetchDictionaryPrompt(): Promise<void> {
-    try {
-      await queryClient.prefetchQuery(trpc.dictionary.getPrompt.queryOptions());
-      log.info('[DictionaryService] Dictionary prompt prefetched');
-    } catch (error) {
-      log.error(
-        error,
-        '[DictionaryService] Failed to prefetch dictionary prompt:'
-      );
-    }
+    await this.getDictionaryPrompt();
   }
 }
 

@@ -264,13 +264,21 @@ export class DictationService {
   }
 
   /**
-   * Open last dictation (placeholder for future functionality)
+   * Open last dictation — navigates to dictations; local SQLite is source of truth offline.
    */
-  openLastDictation(): void {
-    // Navigate the app to the dictations page via app-wide event.
-    // The TrayProvider listens for this event and performs router navigation.
+  async openLastDictation(): Promise<void> {
+    try {
+      const rows = await invoke<
+        Array<{ id: string; content: string; engineId?: string }>
+      >('list_local_dictations', { limit: 1 });
+      if (rows[0]?.content) {
+        this.setLastDictation(rows[0].content, rows[0].id);
+      }
+    } catch {
+      // Non-fatal — still navigate
+    }
+
     emit('navigate', '/dictations').catch(() => {
-      // As a non-fatal fallback, show a toast so the user gets feedback
       toast.success('Opened dictations');
     });
   }

@@ -61,9 +61,10 @@ export type TypeSafeMigration<
 
 // Migration from V1 to V2 (test migration)
 export type MigrationV1ToV2 = TypeSafeMigration<1, 2>;
+export type MigrationV2ToV3 = TypeSafeMigration<2, 3>;
+export type MigrationV3ToV4 = TypeSafeMigration<3, 4>;
 
-// Union of all possible migrations
-export type AnyMigration = MigrationV1ToV2;
+export type AnyMigration = MigrationV1ToV2 | MigrationV2ToV3 | MigrationV3ToV4;
 
 // =============================================================================
 // MIGRATION RESULTS AND UTILITIES

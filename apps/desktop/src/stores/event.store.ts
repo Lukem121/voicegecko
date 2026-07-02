@@ -6,7 +6,6 @@ import { devtools } from 'zustand/middleware';
 import { isNetworkError } from '~/hooks/auth';
 import analytics from '~/lib/analytics/posthog-analytics';
 import { createDictation } from '~/lib/dictation-mutations';
-import { showNoInternetNotification } from '~/lib/gecko-bar-notifications';
 import { dictationService } from '~/services/dictation.service';
 import { useConnectivityStore } from '~/stores/connectivity.store';
 
@@ -157,25 +156,6 @@ export const useEventStore = create<EventState>()(
           }
         );
 
-        // 1. Check API connectivity first - block dictation if API is down
-        const connectivityState = useConnectivityStore.getState();
-
-        if (!connectivityState.canSaveDictations) {
-          // Show gecko bar notification
-          await showNoInternetNotification();
-
-          // Show toast notification
-          toast.error('No internet connection', {
-            description:
-              'Unable to save dictation. Please check your connection and try again.',
-          });
-
-          // Exit early - no save, no clipboard copy
-          return;
-        }
-
-        // 2. Prepare dictation data
-
         const status: 'silent' | 'normal' =
           !transcript.trim() ||
           (metadata?.duration_seconds && metadata.duration_seconds < 1)
@@ -203,48 +183,39 @@ export const useEventStore = create<EventState>()(
           appVersion,
         };
 
-        // 3. Immediate user feedback (fast local operations)
+        // Immediate user feedback — always paste locally (offline-first)
         try {
-          // Copy to clipboard and play sound immediately (local operations)
           await dictationService.handleCompletedDictation(transcript);
           await dictationService.playEndSoundIfEnabled();
         } catch (error) {
           log.error(error, '[EventStore] Failed user feedback operations:');
-          // Even if clipboard/sound fails, still proceed with background save
         }
 
-        // 4. Background database save (don't block user)
-        createDictation(dictationData)
-          .then(() => {
-            // Database save successful - silent success
-          })
-          .catch((error) => {
-            // Handle different types of errors in background
-            if (
-              error instanceof Error &&
-              error.message.includes('limit exceeded')
-            ) {
-              // Track usage limit exceeded
-              analytics.track('usage_limit_exceeded', {
-                limit_type: 'dictation',
-                attempted_action: 'save_dictation',
-              });
-
-              // Usage limit error - show notification but don't disrupt user
-              toast.error('Weekly usage limit reached', {
-                description:
-                  'Future dictations may be limited. Upgrade to Pro for unlimited access.',
-              });
-            } else if (isNetworkError(error)) {
-              // Network connectivity error - refresh connectivity state for next dictation
-              connectivityState.checkConnectivity();
-            } else {
-              // Other unexpected errors - log but don't disrupt user
-              log.error(error, 'Background save error:');
-            }
-          });
-
-        // Recording status is now set to idle in setDictationProgress when Complete status is received
+        // Background cloud save when online (non-blocking)
+        const connectivityState = useConnectivityStore.getState();
+        if (connectivityState.canSaveDictations) {
+          createDictation(dictationData)
+            .then(() => {})
+            .catch((error) => {
+              if (
+                error instanceof Error &&
+                error.message.includes('limit exceeded')
+              ) {
+                analytics.track('usage_limit_exceeded', {
+                  limit_type: 'dictation',
+                  attempted_action: 'save_dictation',
+                });
+                toast.error('Weekly usage limit reached', {
+                  description:
+                    'Future dictations may be limited. Upgrade to Pro for unlimited access.',
+                });
+              } else if (isNetworkError(error)) {
+                connectivityState.checkConnectivity();
+              } else {
+                log.error(error, 'Background save error:');
+              }
+            });
+        }
       },
 
       // Reset functions
