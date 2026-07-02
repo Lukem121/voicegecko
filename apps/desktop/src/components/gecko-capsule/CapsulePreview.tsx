@@ -22,6 +22,8 @@ export function CapsulePreview({ className }: CapsulePreviewProps) {
   const displayText = partialText || finalText;
   const isLive = phase === 'transcribing' && Boolean(partialText);
   const isCloud = lastEngineId ? CLOUD_ENGINES.has(lastEngineId) : false;
+  const isPreviewPhase =
+    phase === 'recording' || phase === 'transcribing' || phase === 'formatting';
 
   useEffect(() => {
     const node = scrollRef.current;
@@ -31,7 +33,7 @@ export function CapsulePreview({ className }: CapsulePreviewProps) {
     node.scrollTop = node.scrollHeight;
   }, [displayText]);
 
-  if (!displayText) {
+  if (!displayText || !isPreviewPhase) {
     return null;
   }
 
