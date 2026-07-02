@@ -1,5 +1,6 @@
 import type { Session } from '@acme/auth';
 import { createRootRouteWithContext, Outlet } from '@tanstack/react-router';
+import { Toaster } from 'sonner';
 
 import { PageTracker } from '~/components/analytics/page-tracker';
 import { TrayProvider } from '~/components/tray-provider';
@@ -45,6 +46,7 @@ function RouteLayout() {
       <PageTracker />
       <Outlet />
       <VersionDisplay />
+      <Toaster closeButton position="top-right" richColors />
     </TrayProvider>
   );
 }

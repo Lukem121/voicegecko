@@ -29,8 +29,8 @@
       {
         "label": "gecko-bar",
         "title": "Voice Gecko Bar",
-        "width": 200,
-        "height": 250,
+        "width": 520,
+        "height": 360,
         "closable": false,
         "minimizable": false,
         "maximizable": false,

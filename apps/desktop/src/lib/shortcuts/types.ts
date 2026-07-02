@@ -5,12 +5,18 @@
 export type ShortcutAction =
   | 'toggle-recording'
   | 'paste-last-dictation'
-  | 'open-last-dictation';
+  | 'open-last-dictation'
+  | 'hands-free'
+  | 'accuracy-cloud'
+  | 'capsule-compose'
+  | 'undo-dictation'
+  | 'open-engine-lab'
+  | 'cancel-recording';
 
 /**
  * Special shortcuts that need custom handling beyond simple key press
  */
-export type SpecialShortcut = 'push-to-talk';
+export type SpecialShortcut = 'push-to-talk' | 'flow-stream';
 
 /**
  * All possible shortcut identifiers

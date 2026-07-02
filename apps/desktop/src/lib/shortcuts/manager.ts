@@ -32,6 +32,8 @@ class ShortcutManager {
   private pttPressStartTimeMs: number | null = null;
   private pttQuickTapStreak = 0;
 
+  private isFlowStreamActive = false;
+
   private constructor() {
     this.store = new LazyStore(SHORTCUTS_SETTINGS_FILE);
   }
@@ -82,6 +84,16 @@ class ShortcutManager {
         }
       });
       log.info(`Successfully registered push-to-talk: ${accelerator}`);
+    } else if (shortcut.id === 'flow-stream') {
+      await register(accelerator, (event: ShortcutEvent) => {
+        log.info(`[Shortcuts] Event for flow-stream: state=${event.state}`);
+        if (event.state === 'Pressed') {
+          this.handleFlowStreamDown();
+        } else if (event.state === 'Released') {
+          this.handleFlowStreamUp();
+        }
+      });
+      log.info(`Successfully registered flow-stream: ${accelerator}`);
     } else if (shortcut.id in shortcutActions) {
       // Standard shortcuts: separate handlers to keep complexity low
       if (shortcut.id === 'paste-last-dictation') {
@@ -189,7 +201,10 @@ class ShortcutManager {
         '[PTT] Key down - start time recorded:',
         this.pttPressStartTimeMs
       );
-      await recordingService.startPushToTalk({ isKeyboardShortcut: true });
+      await recordingService.startPushToTalk({
+        isKeyboardShortcut: true,
+        mode: 'ptt_batch',
+      });
     } catch (error) {
       log.error(error, 'Failed to start push-to-talk recording:');
     }
@@ -231,6 +246,36 @@ class ShortcutManager {
       }
     } catch (error) {
       log.error(error, 'Failed to stop push-to-talk recording:');
+    }
+  }
+
+  private async handleFlowStreamDown() {
+    try {
+      if (this.isFlowStreamActive) {
+        return;
+      }
+      this.isFlowStreamActive = true;
+      await recordingService.startPushToTalk({
+        isKeyboardShortcut: true,
+        mode: 'flow_stream',
+      });
+    } catch (error) {
+      log.error(error, 'Failed to start flow stream recording:');
+    }
+  }
+
+  private async handleFlowStreamUp() {
+    try {
+      if (!this.isFlowStreamActive) {
+        return;
+      }
+      this.isFlowStreamActive = false;
+      await recordingService.stopPushToTalk({
+        isKeyboardShortcut: true,
+        mode: 'flow_stream',
+      });
+    } catch (error) {
+      log.error(error, 'Failed to stop flow stream recording:');
     }
   }
 }

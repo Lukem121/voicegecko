@@ -1,19 +1,19 @@
 import { log } from '@acme/observability/log';
-import { emit, listen } from '@tauri-apps/api/event';
+import { listen } from '@tauri-apps/api/event';
 import { toast } from 'sonner';
 import { showMicrophoneNotFoundNotification } from '~/lib/gecko-bar-notifications';
+import { syncDictationEventToStores } from '~/lib/sync-dictation-event';
 import { dictationService } from '~/services/dictation.service';
+import { useDictationStore } from '~/stores/dictation.store';
 import { useEventStore } from '~/stores/event.store';
-import { queryClient, trpcClient } from '~/trpc';
+import type { DictationEvent } from '~/types/dictation-events';
+import { DICTATION_EVENT_CHANNEL } from '~/types/dictation-events';
 import type {
-  AudioData,
   AudioLevelEvent,
-  DictationProgressEvent,
   RecordingErrorEvent,
   RecordingStateChangedEvent,
 } from '~/types/events';
 
-import { DictationTracker } from './analytics/posthog-analytics';
 import { performanceTracker } from './performance-tracker';
 
 let initialized = false;
@@ -26,132 +26,35 @@ type InitializeOptions = {
   isGeckoBar?: boolean;
 };
 
-// Helper function to process cloud dictation
-async function processCloudDictation(
-  audioData: AudioData,
-  options: InitializeOptions
+async function handleV2BackgroundSave(
+  transcript: string,
+  metadata?: { model_used?: string }
 ): Promise<void> {
-  // Initialize dictation tracker for cloud dictation
-  const audioDuration = audioData.samples.length / audioData.sample_rate;
-  const dictationTracker = new DictationTracker(
-    'cloud',
-    audioDuration,
-    'whisper-1'
-  );
-  log.info('[TauriEvents] ☁️ Cloud dictation requested', {
-    samplesLength: audioData.samples.length,
-    sampleRate: audioData.sample_rate,
-  });
+  const { useConnectivityStore } = await import('~/stores/connectivity.store');
+  const connectivityState = useConnectivityStore.getState();
 
-  try {
-    // Update UI to show transcribing state
-    const store = useEventStore.getState();
-    store.setDictationProgress('Transcribing');
-
-    // Broadcast progress to all windows (e.g., Gecko Bar)
-    await emit('dictation-progress', {
-      status: 'Transcribing',
-      // Mark source so main-window listener can skip duplicate completion handling
-      // for cloud flows.
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-expect-error allow extra field for cross-window event consumers
-      source: 'cloud',
-      duration_seconds: audioData.samples.length / audioData.sample_rate,
-      model_used: 'whisper-1',
-      sample_rate: audioData.sample_rate,
-    } satisfies DictationProgressEvent);
-
-    // Call the cloud dictation API
-    const result = await trpcClient.dictation.cloudTranscribe.mutate({
-      audioData: Array.from(audioData.samples),
-      sampleRate: audioData.sample_rate,
-    });
-
-    // Directly update the store instead of emitting an event that we'll catch ourselves
-    const metadata = {
-      duration_seconds: audioData.samples.length / audioData.sample_rate,
-      model_used: result.modelUsed,
-      sample_rate: audioData.sample_rate,
-    };
-
-    // Update dictation progress to complete
-    store.setDictationProgress('Complete', result.transcript, metadata);
-
-    // Broadcast completion to all windows (e.g., Gecko Bar)
-    await emit('dictation-progress', {
-      status: 'Complete',
-      data: result.transcript,
-      duration_seconds: metadata.duration_seconds,
-      model_used: metadata.model_used,
-      sample_rate: metadata.sample_rate,
-      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-      // @ts-expect-error allow extra field for cross-window event consumers
-      source: 'cloud',
-    } satisfies DictationProgressEvent);
-
-    // Handle completion business logic only if not in gecko bar
-    if (!options.isGeckoBar && result.transcript) {
-      await handleDictationCompletion(result.transcript);
-    }
-  } catch (error) {
-    handleDictationError(error, dictationTracker);
+  if (!connectivityState.canSaveDictations) {
+    return;
   }
-}
 
-// Helper function to handle dictation completion
-async function handleDictationCompletion(transcript: string): Promise<void> {
-  // For cloud dictations, the backend already saved the dictation
-  // So we only need to handle clipboard and play notification sound
-  await dictationService.handleCompletedDictation(transcript);
-  await dictationService.playEndSoundIfEnabled();
+  const { createDictation } = await import('~/lib/dictation-mutations');
+  const { getVersion } = await import('@tauri-apps/api/app');
 
-  // Invalidate queries to update UI
-  log.info('[TauriEvents] 🔄 Invalidating queries after cloud dictation...');
+  let appVersion: string | undefined;
+  try {
+    appVersion = await getVersion();
+  } catch {
+    appVersion = undefined;
+  }
 
-  await queryClient.invalidateQueries({
-    queryKey: ['dictation'],
-  });
-
-  await queryClient.invalidateQueries({
-    queryKey: ['usage'],
-  });
-
-  log.info('[TauriEvents] ✅ Cache invalidation completed');
-}
-
-// Helper function to handle dictation errors
-function handleDictationError(
-  error: unknown,
-  dictationTracker: DictationTracker
-): void {
-  log.error(error, '[TauriEvents] Cloud dictation error:');
-
-  // Track dictation failure
-  dictationTracker.trackFailed(
-    'cloud_api_error',
-    error instanceof Error ? error.message : 'Unknown error'
-  );
-
-  // Update error state directly
-  const store = useEventStore.getState();
-  store.setDictationProgress(
-    'Error',
-    error instanceof Error ? error.message : 'Cloud dictation failed'
-  );
-
-  // Broadcast error to all windows (e.g., Gecko Bar)
-  emit('dictation-progress', {
-    status: 'Error',
-    data: error instanceof Error ? error.message : 'Cloud dictation failed',
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-expect-error allow extra field for cross-window event consumers
-    source: 'cloud',
-  } satisfies DictationProgressEvent).catch(() => {
-    // Non-fatal if emit fails
-  });
-
-  toast.error('Cloud dictation failed', {
-    description: error instanceof Error ? error.message : 'Unknown error',
+  const content = transcript.trim() || 'Audio is silent.';
+  await createDictation({
+    content,
+    status: content === 'Audio is silent.' ? 'silent' : 'normal',
+    modelUsed: metadata?.model_used,
+    appVersion,
+  }).catch((error) => {
+    log.warn(error, '[TauriEvents] v2 background save failed');
   });
 }
 
@@ -167,7 +70,7 @@ export async function initializeTauriEvents(
 
   if (initialized) {
     log.info(
-      `[TauriEvents] ⚠️ Already initialized by ${initializationId}, skipping (attempted by ${callerId})...`
+      `[TauriEvents] Already initialized by ${initializationId}, skipping (attempted by ${callerId})...`
     );
     return;
   }
@@ -175,79 +78,45 @@ export async function initializeTauriEvents(
   initialized = true;
   initializationId = callerId;
   log.info(
-    `[TauriEvents] 🚀 Initializing Tauri event listeners (ID: ${callerId})...`
+    `[TauriEvents] Initializing Tauri event listeners (ID: ${callerId})...`
   );
 
   try {
-    // Listen for dictation progress events (always needed for UI state)
-    await listen('dictation-progress', (event) => {
-      const payload = event.payload as DictationProgressEvent;
-      log.info('[TauriEvents] 📝 Dictation progress:', payload);
+    await listen<DictationEvent>(DICTATION_EVENT_CHANNEL, (event) => {
+      const payload = event.payload;
+      log.info('[TauriEvents] v2 dictation event:', payload);
 
-      const store = useEventStore.getState();
-      const metadata = {
-        duration_seconds: payload.duration_seconds,
-        model_used: payload.model_used,
-        sample_rate: payload.sample_rate,
-      };
+      syncDictationEventToStores(payload, { isGeckoBar: options.isGeckoBar });
 
-      store.setDictationProgress(payload.status, payload.data, metadata);
-
-      // Mark dictation completion for performance tracking
-      if (payload.status === 'Complete') {
-        performanceTracker.markPhase('dictationCompleteTime');
+      if (payload.type === 'phaseChanged' && payload.phase === 'transcribing') {
+        if (performanceTracker.isSessionActive()) {
+          performanceTracker.markPhase('dictationStartTime');
+        }
       }
 
-      // Only handle completion business logic in main window
-      if (!options.isGeckoBar && payload.status === 'Complete') {
-        const source = (payload as unknown as { source?: string }).source;
-        if (source === 'cloud') {
-          // For cloud flows, completion handling (clipboard, sounds, cache) is
-          // already executed in processCloudDictation. Skip here to avoid
-          // duplicate operations and duplicate DB saves.
-          log.info(
-            '[TauriEvents] Skipping main-window completion handling for cloud source'
-          );
-          return;
+      if (payload.type === 'sessionComplete') {
+        performanceTracker.markPhase('dictationCompleteTime');
+
+        if (!options.isGeckoBar) {
+          dictationService.setLastDictation(payload.text);
+          void dictationService.playEndSoundIfEnabled();
+          void handleV2BackgroundSave(payload.text, {
+            model_used: useDictationStore.getState().lastEngineId ?? undefined,
+          });
         }
-        log.info('[TauriEvents] Handling dictation completion in main window', {
-          isGeckoBar: options.isGeckoBar,
-          callerId: initializationId,
-        });
-        store.handleDictationComplete(payload.data ?? '', metadata);
-      } else if (payload.status === 'Complete') {
-        log.info(
-          '[TauriEvents] Skipping dictation completion (gecko bar window)',
-          { isGeckoBar: options.isGeckoBar, callerId: initializationId }
-        );
       }
     });
 
-    // Listen for recording state changes
     await listen('recording-state-changed', (event) => {
       const payload = event.payload as RecordingStateChangedEvent;
-      log.info('[TauriEvents] 🎙️ Recording state changed:', payload);
+      log.info('[TauriEvents] Recording state changed:', payload);
 
       useEventStore.getState().setRecordingStatus(payload);
     });
 
-    // Listen for cloud dictation requests
-    await listen('cloud-dictation-requested', (event) => {
-      const handleCloudDictation = async () => {
-        const audioData = event.payload as AudioData;
-        await processCloudDictation(audioData, options);
-      };
-
-      // Execute without awaiting to avoid blocking the event listener
-      handleCloudDictation().catch((error) => {
-        log.error(error, '[TauriEvents] Unhandled cloud dictation error:');
-      });
-    });
-
-    // Listen for recording errors
     await listen('recording-error', (event) => {
       const payload = event.payload as RecordingErrorEvent;
-      log.info(payload, '[TauriEvents] ❌ Recording error:');
+      log.info(payload, '[TauriEvents] Recording error:');
 
       useEventStore.getState().setRecordingError(payload);
 
@@ -261,26 +130,21 @@ export async function initializeTauriEvents(
       }
     });
 
-    // Listen for microphone test errors (device unplugged during test, etc.)
     await listen('microphone-test-error', (event) => {
       const payload = event.payload as string;
-      log.info(payload, '[TauriEvents] ❌ Microphone test error:');
+      log.info(payload, '[TauriEvents] Microphone test error:');
 
-      const isDeviceUnavailable = DEVICE_UNAVAILABLE_PATTERN.test(payload);
-
-      if (isDeviceUnavailable) {
+      if (DEVICE_UNAVAILABLE_PATTERN.test(payload)) {
         showMicrophoneNotFoundNotification();
       }
     });
 
-    // Listen for gecko bar recording requests (only in main window)
     if (!options.isGeckoBar) {
       await listen('gecko-bar-navigation', (event) => {
         const payload = event.payload as { to: string };
         import('~/lib/router')
           .then(async ({ navigate }) => {
             try {
-              // Ensure main window is visible and focused
               const { getCurrentWebviewWindow } = await import(
                 '@tauri-apps/api/webviewWindow'
               );
@@ -305,14 +169,12 @@ export async function initializeTauriEvents(
           action: 'toggle' | 'cancel' | 'finish';
         };
         log.info(
-          '[TauriEvents] 🎛️ Gecko bar recording request:',
+          '[TauriEvents] Gecko bar recording request:',
           payload.action
         );
 
-        // Import recording service dynamically to handle the request
         import('~/services/recording.service')
           .then(({ recordingService }) => {
-            // Handle the request using the recording service (business logic in main window only)
             switch (payload.action) {
               case 'toggle':
                 recordingService
@@ -356,16 +218,12 @@ export async function initializeTauriEvents(
       });
     }
 
-    // Listen for audio level events
     await listen('audio-level', (event) => {
       const payload = event.payload as AudioLevelEvent;
-      // Emit to any components that need real-time audio levels
       window.dispatchEvent(new CustomEvent('audio-level', { detail: payload }));
     });
 
-    // Listen for performance tracking events
     await listen('end-to-end-performance-start', (event) => {
-      // This is the true start - when audio processing begins in Rust
       const audioMetadata = event.payload as {
         samplesLength: number;
         durationSeconds: number;
@@ -373,30 +231,22 @@ export async function initializeTauriEvents(
       };
 
       log.info(
-        '[PERF] Starting TRUE end-to-end performance tracking from audio processing start'
+        '[PERF] Starting end-to-end performance tracking from audio processing start'
       );
       performanceTracker.startSession(audioMetadata);
     });
 
     await listen('audio-processing-complete', () => {
-      // Only mark if we have an active session
       if (performanceTracker.isSessionActive()) {
         performanceTracker.markPhase('audioProcessingTime');
       }
     });
 
-    await listen('dictation-start', () => {
-      // Only mark if we have an active session
-      if (performanceTracker.isSessionActive()) {
-        performanceTracker.markPhase('dictationStartTime');
-      }
-    });
-
-    log.info('[TauriEvents] ✅ Tauri event listeners initialized successfully');
+    log.info('[TauriEvents] Tauri event listeners initialized successfully');
   } catch (error) {
     log.error(
       error,
-      '[TauriEvents] ❌ Failed to initialize Tauri event listeners:'
+      '[TauriEvents] Failed to initialize Tauri event listeners:'
     );
     initialized = false;
     throw error;

@@ -184,7 +184,8 @@ type SettingsEvents = {
       | 'privacy'
       | 'personalization'
       | 'models'
-      | 'shortcuts';
+      | 'shortcuts'
+      | 'dictation';
     setting_key: string;
     old_value: unknown;
     new_value: unknown;

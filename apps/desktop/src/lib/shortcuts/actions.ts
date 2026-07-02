@@ -1,16 +1,50 @@
+import { invoke } from '@tauri-apps/api/core';
+import { emit } from '@tauri-apps/api/event';
+import { toast } from 'sonner';
 import type { ShortcutAction } from '~/lib/shortcuts/types';
+import { modeForShortcutId } from '~/stores/dictation.store';
 import { dictationService } from '~/services/dictation.service';
 import { recordingService } from '~/services/recording.service';
 
-// Simple action handlers for keyboard shortcuts
+function recordingForShortcut(shortcutId: string) {
+  return recordingService.toggleRecording({
+    isKeyboardShortcut: true,
+    mode: modeForShortcutId(shortcutId),
+  });
+}
+
 export const shortcutActions: Record<
   ShortcutAction,
   () => void | Promise<void>
 > = {
-  'toggle-recording': () =>
-    recordingService.toggleRecording({ isKeyboardShortcut: true }),
+  'toggle-recording': () => recordingForShortcut('toggle-recording'),
+
+  'hands-free': () => recordingForShortcut('hands-free'),
+
+  'accuracy-cloud': () => recordingForShortcut('accuracy-cloud'),
+
+  'capsule-compose': () => recordingForShortcut('capsule-compose'),
 
   'paste-last-dictation': () => dictationService.pasteLastDictation(),
 
   'open-last-dictation': () => dictationService.openLastDictation(),
+
+  'undo-dictation': async () => {
+    try {
+      await invoke('undo_last_dictation');
+      toast.success('Undid last dictation');
+    } catch {
+      toast.info('Nothing to undo');
+    }
+  },
+
+  'open-engine-lab': () => {
+    emit('navigate', '/settings/engine-lab').catch(() => {
+      toast.info('Open Settings → Engine Lab');
+    });
+  },
+
+  'cancel-recording': () => {
+    void recordingService.cancelRecording();
+  },
 };

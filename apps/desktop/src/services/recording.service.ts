@@ -1,14 +1,15 @@
 import { log } from '@acme/observability/log';
 import { invoke } from '@tauri-apps/api/core';
+import { toast } from 'sonner';
 
 import {
+  isSpeechModelsReady,
+} from '~/lib/model-bootstrap';
+import {
   showMicrophoneNotFoundNotification,
-  showNoInternetNotification,
-  showUsageLimitNotification,
 } from '~/lib/gecko-bar-notifications';
 import { performanceTracker } from '~/lib/performance-tracker';
-import { useAuthStore } from '~/stores/auth.store';
-import { useConnectivityStore } from '~/stores/connectivity.store';
+import { dictionaryService } from '~/services/dictionary.service';
 import { useEventStore } from '~/stores/event.store';
 import { useSettingsStore } from '~/stores/settings.store';
 import { queryClient, trpc, trpcClient } from '~/trpc';
@@ -21,6 +22,7 @@ export type RecordingOptions = {
   playStartSound?: boolean;
   playEndSound?: boolean;
   isKeyboardShortcut?: boolean;
+  mode?: string;
 };
 
 export class RecordingService {
@@ -80,7 +82,10 @@ export class RecordingService {
     const { recordingStatus } = useEventStore.getState();
 
     if (recordingStatus === 'idle') {
-      await this.startRecording(options);
+      await this.startRecording({
+        ...options,
+        mode: options.mode ?? 'ptt_batch',
+      });
     }
   }
 
@@ -130,58 +135,44 @@ export class RecordingService {
    * Start recording with proper error handling and notifications
    */
   private async startRecording(options: RecordingOptions): Promise<void> {
+    const mode = options.mode ?? 'toggle_batch';
+
+    const modelsReady = await isSpeechModelsReady();
+    if (!modelsReady && mode !== 'accuracy_cloud') {
+      toast.info('Speech models are still setting up', {
+        description:
+          'First launch downloads models in the background. Keep VoiceGecko open and try again shortly.',
+        duration: 8000,
+      });
+      return;
+    }
+
     try {
-      // Check authentication first - block recording if user is not authenticated
-      const authState = useAuthStore.getState();
-
-      if (!authState.isAuthenticated) {
-        log.info(
-          '[RecordingService] User not authenticated - blocking recording'
-        );
-
-        // Show notification for keyboard shortcuts
-        if (options.isKeyboardShortcut) {
-          log.info('Sign in required');
-        }
-
-        return; // Don't start recording
+      // v2: dictation works offline — usage checks are advisory only
+      if (options.isKeyboardShortcut) {
+        this.performAsyncUsageCheck();
       }
 
-      // Check connectivity second - block recording if API is unavailable
-      const connectivityState = useConnectivityStore.getState();
+      // v2: start dictation session before audio capture
+      void dictionaryService.getDictionaryPrompt().catch(() => undefined);
 
-      if (!connectivityState.canSaveDictations) {
-        // Show gecko bar notification for all blocked attempts
-        // (both keyboard shortcuts and manual clicks should get feedback)
-        await showNoInternetNotification();
+      try {
+        const { settings } = useSettingsStore.getState();
+        const engineOverride = settings.dictation.modeEngineOverrides[mode];
 
-        return; // Don't start recording
+        await invoke('start_dictation_session', {
+          request: {
+            mode,
+            engineId: engineOverride,
+            showLivePreview:
+              mode === 'toggle_batch' || mode === 'ptt_batch'
+                ? settings.dictation.toggleBatchShowLivePreview
+                : undefined,
+          },
+        });
+      } catch (error) {
+        log.warn('Failed to start dictation session:', error);
       }
-
-      // Quick check of cached usage status - only block if we have definitive cached evidence user is over limit
-      const usageQueryKey = trpc.usage.getStatus.queryKey();
-      const cachedUsageStatus = queryClient.getQueryData(usageQueryKey);
-
-      // Only block recording if we have cached data showing user is definitively over limit
-      if (
-        cachedUsageStatus &&
-        !cachedUsageStatus.isUnlimited &&
-        !cachedUsageStatus.canTranscribe
-      ) {
-        log.info(
-          '[RecordingService] User has exceeded usage limit (cached) - blocking recording'
-        );
-
-        // Show notification immediately if this is from a keyboard shortcut
-        if (options.isKeyboardShortcut) {
-          await showUsageLimitNotification();
-        }
-
-        return; // Don't start recording
-      }
-
-      // Start async usage check in background (don't await - let it run in parallel)
-      this.performAsyncUsageCheck();
 
       const { settings } = useSettingsStore.getState();
       const deviceName = options.device ?? settings.audio.selectedDevice?.name;
@@ -283,8 +274,8 @@ export class RecordingService {
     try {
       log.info('[RecordingService] Canceling recording...');
 
-      // Stop recording and discard audio data
       await invoke('cancel_recording');
+      await invoke('cancel_dictation_session').catch(() => undefined);
 
       // Unmute system audio if it was muted
       const { settings } = useSettingsStore.getState();

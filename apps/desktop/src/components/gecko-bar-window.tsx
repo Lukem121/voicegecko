@@ -1,5 +1,8 @@
+import { log } from '@acme/observability/log';
 import { listen } from '@tauri-apps/api/event';
 import { useEffect, useRef, useState } from 'react';
+import { initializeGeckoBarDictationBridge } from '~/lib/dictation-event-bridge';
+import { isLocalOnlyMode } from '~/lib/local-mode';
 import { useGeckoBarClickthrough } from '~/hooks/use-gecko-bar-clickthrough';
 import { GeckoBarApp } from './gecko-bar/gecko-bar-app';
 
@@ -20,18 +23,29 @@ export function GeckoBarWindow() {
   useEffect(() => {
     async function initializeGeckoBarWindow() {
       try {
+        const localOnly = await isLocalOnlyMode();
+        if (localOnly) {
+          setIsAuthenticated(true);
+        }
+
+        await initializeGeckoBarDictationBridge();
+
         // Listen for auth state changes from main window
         await listen('auth-state-changed', (event) => {
           const payload = event.payload as {
             isAuthenticated: boolean;
             hasUser: boolean;
           };
+          if (localOnly) {
+            setIsAuthenticated(true);
+            return;
+          }
           setIsAuthenticated(payload.isAuthenticated);
         });
 
         setIsInitialized(true);
-      } catch {
-        // Still allow rendering on error
+      } catch (error) {
+        log.warn(error, '[GeckoBar] Init failed, rendering anyway');
         setIsInitialized(true);
       }
     }

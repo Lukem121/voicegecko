@@ -23,6 +23,7 @@ import { Route as unauthenticatedAuthRouteImport } from './routes/(unauthenticat
 import { Route as AuthenticatedSettingsIndexRouteImport } from './routes/_authenticated/settings/index'
 import { Route as AuthenticatedSettingsShortcutsRouteImport } from './routes/_authenticated/settings/shortcuts'
 import { Route as AuthenticatedSettingsModelsRouteImport } from './routes/_authenticated/settings/models'
+import { Route as AuthenticatedSettingsEngineLabRouteImport } from './routes/_authenticated/settings/engine-lab'
 import { Route as unauthenticatedAuthVerifySuccessRouteImport } from './routes/(unauthenticated)/_auth.verify-success'
 import { Route as unauthenticatedAuthVerifyEmailRouteImport } from './routes/(unauthenticated)/_auth.verify-email'
 import { Route as unauthenticatedAuthSignUpRouteImport } from './routes/(unauthenticated)/_auth.sign-up'
@@ -102,6 +103,12 @@ const AuthenticatedSettingsModelsRoute =
     path: '/settings/models',
     getParentRoute: () => AuthenticatedRoute,
   } as any)
+const AuthenticatedSettingsEngineLabRoute =
+  AuthenticatedSettingsEngineLabRouteImport.update({
+    id: '/settings/engine-lab',
+    path: '/settings/engine-lab',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const unauthenticatedAuthVerifySuccessRoute =
   unauthenticatedAuthVerifySuccessRouteImport.update({
     id: '/verify-success',
@@ -148,6 +155,7 @@ export interface FileRoutesByFullPath {
   '/sign-up': typeof unauthenticatedAuthSignUpRoute
   '/verify-email': typeof unauthenticatedAuthVerifyEmailRoute
   '/verify-success': typeof unauthenticatedAuthVerifySuccessRoute
+  '/settings/engine-lab': typeof AuthenticatedSettingsEngineLabRoute
   '/settings/models': typeof AuthenticatedSettingsModelsRoute
   '/settings/shortcuts': typeof AuthenticatedSettingsShortcutsRoute
   '/settings/': typeof AuthenticatedSettingsIndexRoute
@@ -167,6 +175,7 @@ export interface FileRoutesByTo {
   '/sign-up': typeof unauthenticatedAuthSignUpRoute
   '/verify-email': typeof unauthenticatedAuthVerifyEmailRoute
   '/verify-success': typeof unauthenticatedAuthVerifySuccessRoute
+  '/settings/engine-lab': typeof AuthenticatedSettingsEngineLabRoute
   '/settings/models': typeof AuthenticatedSettingsModelsRoute
   '/settings/shortcuts': typeof AuthenticatedSettingsShortcutsRoute
   '/settings': typeof AuthenticatedSettingsIndexRoute
@@ -189,6 +198,7 @@ export interface FileRoutesById {
   '/(unauthenticated)/_auth/sign-up': typeof unauthenticatedAuthSignUpRoute
   '/(unauthenticated)/_auth/verify-email': typeof unauthenticatedAuthVerifyEmailRoute
   '/(unauthenticated)/_auth/verify-success': typeof unauthenticatedAuthVerifySuccessRoute
+  '/_authenticated/settings/engine-lab': typeof AuthenticatedSettingsEngineLabRoute
   '/_authenticated/settings/models': typeof AuthenticatedSettingsModelsRoute
   '/_authenticated/settings/shortcuts': typeof AuthenticatedSettingsShortcutsRoute
   '/_authenticated/settings/': typeof AuthenticatedSettingsIndexRoute
@@ -210,6 +220,7 @@ export interface FileRouteTypes {
     | '/sign-up'
     | '/verify-email'
     | '/verify-success'
+    | '/settings/engine-lab'
     | '/settings/models'
     | '/settings/shortcuts'
     | '/settings/'
@@ -229,6 +240,7 @@ export interface FileRouteTypes {
     | '/sign-up'
     | '/verify-email'
     | '/verify-success'
+    | '/settings/engine-lab'
     | '/settings/models'
     | '/settings/shortcuts'
     | '/settings'
@@ -250,6 +262,7 @@ export interface FileRouteTypes {
     | '/(unauthenticated)/_auth/sign-up'
     | '/(unauthenticated)/_auth/verify-email'
     | '/(unauthenticated)/_auth/verify-success'
+    | '/_authenticated/settings/engine-lab'
     | '/_authenticated/settings/models'
     | '/_authenticated/settings/shortcuts'
     | '/_authenticated/settings/'
@@ -362,6 +375,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedSettingsModelsRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
+    '/_authenticated/settings/engine-lab': {
+      id: '/_authenticated/settings/engine-lab'
+      path: '/settings/engine-lab'
+      fullPath: '/settings/engine-lab'
+      preLoaderRoute: typeof AuthenticatedSettingsEngineLabRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
     '/(unauthenticated)/_auth/verify-success': {
       id: '/(unauthenticated)/_auth/verify-success'
       path: '/verify-success'
@@ -405,6 +425,7 @@ interface AuthenticatedRouteChildren {
   AuthenticatedDictionaryRoute: typeof AuthenticatedDictionaryRoute
   AuthenticatedUsageRoute: typeof AuthenticatedUsageRoute
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
+  AuthenticatedSettingsEngineLabRoute: typeof AuthenticatedSettingsEngineLabRoute
   AuthenticatedSettingsModelsRoute: typeof AuthenticatedSettingsModelsRoute
   AuthenticatedSettingsShortcutsRoute: typeof AuthenticatedSettingsShortcutsRoute
   AuthenticatedSettingsIndexRoute: typeof AuthenticatedSettingsIndexRoute
@@ -415,6 +436,7 @@ const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedDictionaryRoute: AuthenticatedDictionaryRoute,
   AuthenticatedUsageRoute: AuthenticatedUsageRoute,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
+  AuthenticatedSettingsEngineLabRoute: AuthenticatedSettingsEngineLabRoute,
   AuthenticatedSettingsModelsRoute: AuthenticatedSettingsModelsRoute,
   AuthenticatedSettingsShortcutsRoute: AuthenticatedSettingsShortcutsRoute,
   AuthenticatedSettingsIndexRoute: AuthenticatedSettingsIndexRoute,

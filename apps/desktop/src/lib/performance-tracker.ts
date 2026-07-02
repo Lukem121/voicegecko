@@ -122,7 +122,7 @@ class EndToEndPerformanceTracker {
       const dictationDuration =
         phases.dictationCompleteTime - phases.dictationStartTime;
       log.info(
-        `[PERF] 🤖 Whisper Inference Total: ${dictationDuration.toFixed(2)}ms`
+        `[PERF] Transcription inference total: ${dictationDuration.toFixed(2)}ms`
       );
     }
 

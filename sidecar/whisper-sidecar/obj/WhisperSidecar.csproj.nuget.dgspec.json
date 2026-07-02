@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "D:\\Projects\\voicegecko\\sidecar\\whisper-sidecar\\WhisperSidecar.csproj": {}
+    "d:\\Projects\\voicegecko\\sidecar\\whisper-sidecar\\WhisperSidecar.csproj": {}
   },
   "projects": {
-    "D:\\Projects\\voicegecko\\sidecar\\whisper-sidecar\\WhisperSidecar.csproj": {
+    "d:\\Projects\\voicegecko\\sidecar\\whisper-sidecar\\WhisperSidecar.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\Projects\\voicegecko\\sidecar\\whisper-sidecar\\WhisperSidecar.csproj",
+        "projectUniqueName": "d:\\Projects\\voicegecko\\sidecar\\whisper-sidecar\\WhisperSidecar.csproj",
         "projectName": "WhisperSidecar",
-        "projectPath": "D:\\Projects\\voicegecko\\sidecar\\whisper-sidecar\\WhisperSidecar.csproj",
+        "projectPath": "d:\\Projects\\voicegecko\\sidecar\\whisper-sidecar\\WhisperSidecar.csproj",
         "packagesPath": "C:\\Users\\Luke\\.nuget\\packages\\",
-        "outputPath": "D:\\Projects\\voicegecko\\sidecar\\whisper-sidecar\\obj\\",
+        "outputPath": "d:\\Projects\\voicegecko\\sidecar\\whisper-sidecar\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "C:\\Program Files (x86)\\Microsoft Visual Studio\\Shared\\NuGetPackages"
@@ -50,6 +50,12 @@
         "net8.0": {
           "targetAlias": "net8.0",
           "dependencies": {
+            "Microsoft.NET.ILLink.Tasks": {
+              "suppressParent": "All",
+              "target": "Package",
+              "version": "[8.0.17, )",
+              "autoReferenced": true
+            },
             "System.Text.Json": {
               "target": "Package",
               "version": "[8.0.5, )"

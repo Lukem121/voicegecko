@@ -15,7 +15,7 @@ catalog:
   pino-pretty: ^13.0.0
   tailwindcss: 4.1.11
   typescript: ^5.8.3
-  zod: 4.0.14
+  zod: 4.4.3
 
 catalogs:
   react19:

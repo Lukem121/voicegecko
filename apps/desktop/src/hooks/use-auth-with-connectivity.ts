@@ -1,6 +1,7 @@
 import { log } from '@acme/observability/log';
 import { useEffect, useRef } from 'react';
 
+import { useSettingsStore } from '~/stores/settings.store';
 import { useSession } from './auth';
 import { useAuth } from './use-auth';
 import { useAuthConnectivityHandler } from './use-connectivity';
@@ -40,6 +41,13 @@ export function useAuthWithConnectivity() {
   }, [connectivity.diagnosis, query]);
 
   const getAuthIssueType = () => {
+    const requireAuth =
+      useSettingsStore.getState().settings.features?.requireAuth ?? false;
+
+    if (!requireAuth) {
+      return 'authenticated' as const;
+    }
+
     if (auth.isLoading) {
       return 'loading';
     }
