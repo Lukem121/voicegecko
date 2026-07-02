@@ -74,6 +74,9 @@ export const useDictationStore = create<DictationStoreState>()(
               lastEngineId: event.engineId,
               outputTarget: event.outputTarget,
               confirmText: null,
+              partialText: '',
+              finalText: '',
+              formattedText: '',
             });
             break;
           case 'partialTranscript':
@@ -93,8 +96,9 @@ export const useDictationStore = create<DictationStoreState>()(
           case 'sessionComplete': {
             const needsConfirm = get().outputTarget === 'box_confirm_paste';
             set({
-              finalText: event.text,
-              formattedText: event.text,
+              partialText: '',
+              finalText: '',
+              formattedText: '',
               phase: needsConfirm ? 'confirm' : 'done',
               confirmText: needsConfirm ? event.text : null,
               session: needsConfirm ? get().session : null,
@@ -105,7 +109,14 @@ export const useDictationStore = create<DictationStoreState>()(
             break;
           }
           case 'sessionError':
-            set({ error: event.message, phase: 'error', session: null });
+            set({
+              error: event.message,
+              phase: 'error',
+              session: null,
+              partialText: '',
+              finalText: '',
+              formattedText: '',
+            });
             break;
           case 'phaseChanged':
             set({ phase: event.phase });
