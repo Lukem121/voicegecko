@@ -36,6 +36,15 @@ class UsageRepository {
     return result;
   }
 
+  async getUserRole(userId: string) {
+    const [result] = await db
+      .select({ role: UserTable.role })
+      .from(UserTable)
+      .where(eq(UserTable.id, userId));
+
+    return result?.role ?? null;
+  }
+
   async upsert(data: UsageData) {
     const [result] = await db
       .insert(UsageTable)

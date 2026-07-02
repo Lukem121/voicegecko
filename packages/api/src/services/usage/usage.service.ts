@@ -26,20 +26,8 @@ export class UsageService {
    * Get the current usage status for a user
    */
   async getUserUsageStatus(userId: string): Promise<UserUsageStatus> {
-    // Check if user has a subscription
-    const hasSubscription = await this.userHasActiveSubscription(userId);
-
-    if (hasSubscription) {
-      // Pro users have unlimited usage
-      const result = {
-        wordsUsed: 0,
-        wordsLimit: 0,
-        dictationCount: 0,
-        isUnlimited: true,
-        canTranscribe: true,
-        weekStartDate: new Date(),
-      };
-      return result;
+    if (await this.userHasUnlimitedEntitlement(userId)) {
+      return this.getUnlimitedUsageStatus();
     }
 
     // Get or create usage record
@@ -85,9 +73,7 @@ export class UsageService {
     userId: string,
     wordCount: number
   ): Promise<void> {
-    // Skip tracking for pro users
-    const hasSubscription = await this.userHasActiveSubscription(userId);
-    if (hasSubscription) {
+    if (await this.userHasUnlimitedEntitlement(userId)) {
       return;
     }
 
@@ -138,6 +124,26 @@ export class UsageService {
       },
       wordsPerMinute,
     };
+  }
+
+  private getUnlimitedUsageStatus(): UserUsageStatus {
+    return {
+      wordsUsed: 0,
+      wordsLimit: 0,
+      dictationCount: 0,
+      isUnlimited: true,
+      canTranscribe: true,
+      weekStartDate: new Date(),
+    };
+  }
+
+  private async userHasUnlimitedEntitlement(userId: string): Promise<boolean> {
+    const [hasSubscription, role] = await Promise.all([
+      this.userHasActiveSubscription(userId),
+      usageRepository.getUserRole(userId),
+    ]);
+
+    return hasSubscription || role === 'admin';
   }
 
   /**
