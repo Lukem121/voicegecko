@@ -38,6 +38,7 @@ function SettingsPage() {
     updateNotificationTiming,
     updateNotificationVolume,
     updateMuteSystemAudio,
+    updateAudioPipeline,
     updateLaunchOnStartup,
     updateShowGeckoBar,
     updateShowGeckoBarWhileRecording,
@@ -296,6 +297,40 @@ function SettingsPage() {
                 checked={settings.audio.muteSystemAudio}
                 onCheckedChange={updateMuteSystemAudio}
               />
+            </div>
+
+            <div className="border-t pt-4">
+              <p className="mb-3 font-medium text-sm">Audio processing</p>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label>High-pass filter</Label>
+                    <p className="text-muted-foreground text-sm">
+                      Remove low-frequency rumble (80 Hz cutoff)
+                    </p>
+                  </div>
+                  <Switch
+                    checked={settings.audio.pipeline.enableHighPass}
+                    onCheckedChange={(enabled) =>
+                      updateAudioPipeline({ enableHighPass: enabled })
+                    }
+                  />
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label>Noise reduction</Label>
+                    <p className="text-muted-foreground text-sm">
+                      Light denoise for quiet environments (off by default)
+                    </p>
+                  </div>
+                  <Switch
+                    checked={settings.audio.pipeline.enableDenoise}
+                    onCheckedChange={(enabled) =>
+                      updateAudioPipeline({ enableDenoise: enabled })
+                    }
+                  />
+                </div>
+              </div>
             </div>
           </CardContent>
         </Card>

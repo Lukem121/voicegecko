@@ -1,8 +1,7 @@
 use crate::dictation::dictionary_cache::DictionaryPromptCache;
 use crate::dictation::features::FeatureFlags;
 use crate::dictation::session::{DictationSessionManager, EngineStatusItem};
-use crate::dictation::types::{EngineCompareResponse, SessionStatus, StartSessionRequest};
-use crate::modules::audio::AudioData;
+use crate::dictation::types::{EngineCompareResponse, SessionStatus, StartSessionRequest, WhisperModelCompareResponse};
 use std::sync::Arc;
 use tauri::{AppHandle, State};
 
@@ -13,15 +12,6 @@ pub async fn start_dictation_session(
     manager: State<'_, Arc<DictationSessionManager>>,
 ) -> Result<SessionStatus, String> {
     manager.start_session(app, request)
-}
-
-#[tauri::command]
-pub async fn stop_dictation_session(
-    app: AppHandle,
-    audio_data: AudioData,
-    manager: State<'_, Arc<DictationSessionManager>>,
-) -> Result<(), String> {
-    manager.stop_session_and_transcribe(app, audio_data)
 }
 
 #[tauri::command]
@@ -168,6 +158,15 @@ pub async fn compare_engines_on_samples(
     manager
         .compare_engines_on_samples(&app, samples, sample_rate)
         .await
+}
+
+#[tauri::command]
+pub async fn compare_ready_whisper_models_on_samples(
+    app: AppHandle,
+    manager: State<'_, Arc<DictationSessionManager>>,
+) -> Result<WhisperModelCompareResponse, String> {
+    let (samples, sample_rate) = manager.last_compare_samples()?;
+    crate::speech::whisper_sidecar::compare_ready_models_on_samples(&app, &samples, sample_rate)
 }
 
 #[tauri::command]

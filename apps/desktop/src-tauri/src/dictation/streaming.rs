@@ -1,4 +1,4 @@
-use crate::audio_v2::StreamingAudioHub;
+use crate::audio::StreamingAudioHub;
 use crate::dictation::registry::EngineRegistry;
 use crate::dictation::types::{DictationEvent, EngineId, InteractionMode};
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -34,6 +34,7 @@ impl StreamingPipeline {
         session_id: String,
         mode: InteractionMode,
         engine_id: EngineId,
+        registry: Arc<EngineRegistry>,
     ) {
         if self.running.swap(true, Ordering::SeqCst) {
             return;
@@ -41,9 +42,16 @@ impl StreamingPipeline {
 
         hub.enable();
 
+        let Some(resolved) = resolve_stream_engine(&registry, engine_id) else {
+            tracing::warn!(
+                "Live preview unavailable: no streaming-capable engine (need Parakeet or Moonshine)"
+            );
+            hub.disable();
+            self.running.store(false, Ordering::SeqCst);
+            return;
+        };
+
         tauri::async_runtime::spawn(async move {
-            let registry = EngineRegistry::new();
-            let resolved = resolve_stream_engine(&registry, engine_id);
             let engine = match registry.get(resolved) {
                 Some(e) => e,
                 None => {
@@ -57,13 +65,13 @@ impl StreamingPipeline {
             while hub.is_enabled() {
                 tokio::time::sleep(Duration::from_millis(POLL_INTERVAL_MS)).await;
 
-                let samples = hub.snapshot();
-                if samples.len() < MIN_PARTIAL_SAMPLES {
+                let snapshot = hub.snapshot();
+                if snapshot.len() < MIN_PARTIAL_SAMPLES {
                     continue;
                 }
 
                 match engine
-                    .transcribe_stream_chunk(&app, &samples, 16_000)
+                    .transcribe_stream_chunk(&app, &snapshot, 16_000)
                     .await
                 {
                     Ok(Some(result)) if !result.text.is_empty() && result.text != last_text => {
@@ -78,10 +86,12 @@ impl StreamingPipeline {
                         );
                     }
                     Ok(_) => {}
-                    Err(_) if mode == InteractionMode::FlowStream => {
-                        // Flow mode expects streaming — ignore transient errors
+                    Err(e) if mode == InteractionMode::FlowStream => {
+                        tracing::debug!("stream chunk error (flow): {e}");
                     }
-                    Err(_) => {}
+                    Err(e) => {
+                        tracing::debug!("stream chunk error: {e}");
+                    }
                 }
             }
         });
@@ -99,7 +109,7 @@ impl Default for StreamingPipeline {
     }
 }
 
-fn resolve_stream_engine(registry: &EngineRegistry, preferred: EngineId) -> EngineId {
+fn resolve_stream_engine(registry: &EngineRegistry, preferred: EngineId) -> Option<EngineId> {
     let try_engine = |id: EngineId| -> Option<EngineId> {
         if !crate::dictation::features::is_engine_enabled(id.as_str()) {
             return None;
@@ -114,14 +124,14 @@ fn resolve_stream_engine(registry: &EngineRegistry, preferred: EngineId) -> Engi
     };
 
     if let Some(id) = try_engine(preferred) {
-        return id;
+        return Some(id);
     }
 
-    for id in [EngineId::MoonshineMedium, EngineId::ParakeetTdtV2] {
+    for id in [EngineId::ParakeetTdtV2, EngineId::MoonshineMedium] {
         if let Some(resolved) = try_engine(id) {
-            return resolved;
+            return Some(resolved);
         }
     }
 
-    preferred
+    None
 }

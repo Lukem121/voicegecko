@@ -7,6 +7,7 @@ use std::collections::HashMap;
 use std::fs;
 use std::io::Write;
 use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::{Arc, Mutex, OnceLock};
 use tauri::{AppHandle, Emitter, Manager, Wry};
 use tauri_plugin_store::{Store, StoreExt};
 use thiserror::Error;
@@ -41,6 +42,131 @@ const STORE_PATH: &str = "models.json";
 const SELECTED_TIER_KEY: &str = "selected_tier";
 const MODEL_STATUSES_KEY: &str = "model_statuses";
 const SELECTED_MODEL_KEY: &str = "selected_model_override";
+const GPU_WHISPER_MODEL_KEY: &str = "gpu_whisper_model_id";
+
+pub const DEFAULT_GPU_WHISPER_MODEL_ID: &str = "base.en";
+
+const WHISPER_TIER_ORDER: [ModelTier; 4] = [
+    ModelTier::Minimal,
+    ModelTier::Balanced,
+    ModelTier::Quality,
+    ModelTier::Maximum,
+];
+
+fn whisper_tier_rank(tier: &ModelTier) -> usize {
+    WHISPER_TIER_ORDER
+        .iter()
+        .position(|candidate| candidate == tier)
+        .unwrap_or(WHISPER_TIER_ORDER.len())
+}
+
+fn effective_whisper_model_status(
+    app: &AppHandle,
+    model_id: &str,
+    stored: &ModelStatus,
+) -> ModelStatus {
+    if matches!(stored, ModelStatus::Downloading(_)) {
+        return stored.clone();
+    }
+    if model_file_path(app, model_id).is_some() {
+        return ModelStatus::Downloaded;
+    }
+    stored.clone()
+}
+
+fn download_cancel_flags() -> &'static Mutex<HashMap<String, Arc<AtomicBool>>> {
+    static FLAGS: OnceLock<Mutex<HashMap<String, Arc<AtomicBool>>>> = OnceLock::new();
+    FLAGS.get_or_init(|| Mutex::new(HashMap::new()))
+}
+
+fn parse_expected_bytes(size_label: &str) -> Option<u64> {
+    let trimmed = size_label.trim();
+    let (value_str, unit) = trimmed.split_once(' ')?;
+    let value: f64 = value_str.parse().ok()?;
+    let multiplier = match unit.to_ascii_lowercase().as_str() {
+        "gib" | "gb" => 1024.0 * 1024.0 * 1024.0,
+        "mib" | "mb" => 1024.0 * 1024.0,
+        "kib" | "kb" => 1024.0,
+        _ => return None,
+    };
+    Some((value * multiplier) as u64)
+}
+
+fn compute_download_progress(downloaded: u64, total_size: u64, expected_bytes: Option<u64>) -> u8 {
+    let effective_total = if total_size > 0 {
+        total_size
+    } else {
+        expected_bytes.unwrap_or(0)
+    };
+
+    if effective_total > 0 {
+        (((downloaded as f64 / effective_total as f64) * 100.0).min(99.0)) as u8
+    } else {
+        std::cmp::min(99, (downloaded / 5_000_000) as u8)
+    }
+}
+
+fn emit_download_failure(app: &AppHandle, model_id: &str, message: &str) {
+    let _ = set_model_status(app, model_id, ModelStatus::NotDownloaded);
+    let _ = app.emit("model-download-error", (model_id.to_string(), message.to_string()));
+}
+
+fn cleanup_partial_download(models_dir: &std::path::Path, model_id: &str) {
+    let temp_file_path = models_dir.join(format!("ggml-{}.bin.partial", model_id));
+    if temp_file_path.exists() {
+        let _ = std::fs::remove_file(temp_file_path);
+    }
+}
+
+fn model_file_is_valid(path: &std::path::Path) -> bool {
+    path.is_file()
+        && path
+            .metadata()
+            .map(|meta| meta.len() > 1_000_000)
+            .unwrap_or(false)
+}
+
+pub fn models_dir_for_app(app: &AppHandle) -> Result<std::path::PathBuf, ModelManagerError> {
+    let app_data_dir = app
+        .path()
+        .app_data_dir()
+        .map_err(|e| ModelManagerError::PathError(e.to_string()))?;
+    Ok(app_data_dir.join("models"))
+}
+
+pub fn model_file_path(app: &AppHandle, model_id: &str) -> Option<std::path::PathBuf> {
+    if let Ok(models_dir) = models_dir_for_app(app) {
+        let path = models_dir.join(format!("ggml-{}.bin", model_id));
+        if model_file_is_valid(&path) {
+            return Some(path);
+        }
+    }
+
+    if model_id == DEFAULT_GPU_WHISPER_MODEL_ID {
+        legacy_whisper_model_path()
+    } else {
+        None
+    }
+}
+
+pub fn legacy_whisper_model_path() -> Option<std::path::PathBuf> {
+    let local = dirs::data_local_dir()?;
+    let roaming = dirs::data_dir()?;
+
+    for base in [local, roaming] {
+        for relative in [
+            "com.voicegecko.desktop/models/ggml-base.en.bin",
+            "voicegecko/models/ggml-base.en.bin",
+        ] {
+            let path = base.join(relative);
+            if model_file_is_valid(&path) {
+                return Some(path);
+            }
+        }
+    }
+
+    None
+}
 
 impl From<std::io::Error> for ModelManagerError {
     fn from(err: std::io::Error) -> Self {
@@ -550,6 +676,80 @@ pub fn clear_selected_model_override(app: AppHandle) -> Result<(), ModelManagerE
 }
 
 #[tauri::command]
+pub fn get_gpu_whisper_model_id(app: AppHandle) -> Result<String, ModelManagerError> {
+    let store = app.store(STORE_PATH)?;
+    let selected = store
+        .get(GPU_WHISPER_MODEL_KEY)
+        .and_then(|v| v.as_str().map(|s| s.to_string()))
+        .unwrap_or_else(|| DEFAULT_GPU_WHISPER_MODEL_ID.to_string());
+    Ok(selected)
+}
+
+#[tauri::command]
+pub fn set_gpu_whisper_model_id(
+    app: AppHandle,
+    model_id: String,
+) -> Result<(), ModelManagerError> {
+    let models = list_models(app.clone())?;
+    if !models.contains_key(&model_id) {
+        return Err(ModelManagerError::ModelNotFound(model_id));
+    }
+
+    let store = app.store(STORE_PATH)?;
+    store.set(GPU_WHISPER_MODEL_KEY, json!(model_id));
+    store.save()?;
+    Ok(())
+}
+
+#[derive(Serialize, Clone)]
+pub struct GpuWhisperModelLabEntry {
+    pub id: String,
+    pub name: String,
+    pub description: String,
+    pub size: String,
+    pub ram: String,
+    pub tier: String,
+    pub recommended: bool,
+    pub status: ModelStatus,
+    pub selected: bool,
+}
+
+#[tauri::command]
+pub fn list_gpu_whisper_models(app: AppHandle) -> Result<Vec<GpuWhisperModelLabEntry>, ModelManagerError> {
+    let models = list_models(app.clone())?;
+    let selected_id = get_gpu_whisper_model_id(app.clone())?;
+
+    let mut entries: Vec<GpuWhisperModelLabEntry> = models
+        .into_iter()
+        .map(|(id, model)| {
+            let tier = model.tier.to_string().to_string();
+            GpuWhisperModelLabEntry {
+                id: id.clone(),
+                name: model.name,
+                description: model.description,
+                size: model.size,
+                ram: model.ram,
+                tier,
+                recommended: model.recommended,
+                status: effective_whisper_model_status(&app, &id, &model.status),
+                selected: id == selected_id,
+            }
+        })
+        .collect();
+
+    entries.sort_by(|left, right| {
+        let left_tier = ModelTier::from_string(&left.tier).unwrap_or(ModelTier::Minimal);
+        let right_tier = ModelTier::from_string(&right.tier).unwrap_or(ModelTier::Minimal);
+        whisper_tier_rank(&left_tier)
+            .cmp(&whisper_tier_rank(&right_tier))
+            .then_with(|| left.recommended.cmp(&right.recommended).reverse())
+            .then_with(|| left.name.cmp(&right.name))
+    });
+
+    Ok(entries)
+}
+
+#[tauri::command]
 pub fn get_best_model_for_tier(
     app: AppHandle,
     tier: ModelTier,
@@ -687,8 +887,11 @@ pub fn force_sync_models(app: AppHandle) -> Result<(), ModelManagerError> {
     synchronize_models(app)
 }
 
-#[tauri::command]
-pub async fn download_model(app: AppHandle, model_id: String) -> Result<(), ModelManagerError> {
+async fn perform_model_download(
+    app: AppHandle,
+    model_id: String,
+    cancel_flag: Arc<AtomicBool>,
+) -> Result<(), ModelManagerError> {
     let download_id = format!(
         "{:x}",
         std::time::SystemTime::now()
@@ -697,68 +900,27 @@ pub async fn download_model(app: AppHandle, model_id: String) -> Result<(), Mode
             .as_millis()
     );
 
-    // Check current status to prevent double downloads
-    let current_models = list_models(app.clone())?;
-    if let Some(model) = current_models.get(&model_id) {
-        if let ModelStatus::Downloading(_) = model.status {
-            return Ok(()); // Already downloading, don't start again
-        }
-    }
-
     let app_data_dir = app
         .path()
         .app_data_dir()
         .map_err(|e| ModelManagerError::PathError(e.to_string()))?;
     let models_dir = app_data_dir.join("models");
-
-    // Ensure models directory exists
-    std::fs::create_dir_all(&models_dir).map_err(|e| ModelManagerError::IoError(e.to_string()))?;
-
     let file_path = models_dir.join(format!("ggml-{}.bin", model_id));
     let temp_file_path = models_dir.join(format!("ggml-{}.bin.partial", model_id));
-
-    // Check if final file already exists and is valid
-    if file_path.exists() {
-        if let Ok(metadata) = std::fs::metadata(&file_path) {
-            if metadata.len() > 1_000_000 {
-                // File is > 1MB, likely valid
-                // Update status and emit completion
-                set_model_status(&app, &model_id, ModelStatus::Downloaded).map_err(|e| {
-                    ModelManagerError::StoreError(format!("Failed to set model status: {}", e))
-                })?;
-
-                app.emit("model-download-progress", (model_id.clone(), 100))
-                    .map_err(|e| ModelManagerError::TauriError(e.to_string()))?;
-
-                app.emit("model-download-complete", model_id.clone())
-                    .map_err(|e| ModelManagerError::TauriError(e.to_string()))?;
-
-                return Ok(());
-            } else {
-                std::fs::remove_file(&file_path)
-                    .map_err(|e| ModelManagerError::IoError(e.to_string()))?;
-            }
-        }
-    }
-
-    // Emit initial progress
-    app.emit("model-download-progress", (model_id.clone(), 0))
-        .map_err(|e| ModelManagerError::TauriError(e.to_string()))?;
 
     let models = list_models(app.clone())?;
     let model = models
         .get(&model_id)
         .ok_or_else(|| ModelManagerError::ModelNotFound(model_id.clone()))?;
+    let expected_bytes = parse_expected_bytes(&model.size);
 
-    // Create HTTP client with resume support
     let client = reqwest::Client::builder()
-        .timeout(std::time::Duration::from_secs(300)) // 5 minute timeout
+        .connect_timeout(std::time::Duration::from_secs(30))
+        .timeout(std::time::Duration::from_secs(7200))
         .build()
         .map_err(|e| ModelManagerError::DownloadError(e.to_string()))?;
 
     let mut request_builder = client.get(&model.url);
-
-    // Add range header for resume
     let mut start_byte = 0u64;
     if temp_file_path.exists() {
         if let Ok(metadata) = std::fs::metadata(&temp_file_path) {
@@ -771,18 +933,11 @@ pub async fn download_model(app: AppHandle, model_id: String) -> Result<(), Mode
         }
     }
 
-    let response = request_builder.send().await.map_err(|e| {
-        let error_msg = format!("Failed to start download: {}", e);
-        // Emit error event
-        let _ = app.emit(
-            "model-download-error",
-            (model_id.clone(), error_msg.clone()),
-        );
-        ModelManagerError::DownloadError(error_msg)
+    let mut response = request_builder.send().await.map_err(|e| {
+        ModelManagerError::DownloadError(format!("Failed to start download: {e}"))
     })?;
 
-    // Check if server supports range requests for resume
-    let supports_resume =
+    let mut supports_resume =
         start_byte > 0 && response.status() == reqwest::StatusCode::PARTIAL_CONTENT;
     let expected_status = if start_byte > 0 {
         reqwest::StatusCode::PARTIAL_CONTENT
@@ -791,16 +946,11 @@ pub async fn download_model(app: AppHandle, model_id: String) -> Result<(), Mode
     };
 
     if response.status() != expected_status && response.status() != reqwest::StatusCode::OK {
-        // If resume failed, start over
         if start_byte > 0 {
             start_byte = 0;
-            if temp_file_path.exists() {
-                std::fs::remove_file(&temp_file_path)
-                    .map_err(|e| ModelManagerError::IoError(e.to_string()))?;
-            }
-
-            // Retry with fresh request
-            let response = client
+            supports_resume = false;
+            cleanup_partial_download(&models_dir, &model_id);
+            response = client
                 .get(&model.url)
                 .send()
                 .await
@@ -821,7 +971,6 @@ pub async fn download_model(app: AppHandle, model_id: String) -> Result<(), Mode
     }
 
     let total_size = if supports_resume {
-        // For resumed downloads, get total size from Content-Range header
         response
             .headers()
             .get("content-range")
@@ -833,7 +982,6 @@ pub async fn download_model(app: AppHandle, model_id: String) -> Result<(), Mode
         response.content_length().unwrap_or(0)
     };
 
-    // Open file for writing (append if resuming)
     let mut file = if start_byte > 0 && temp_file_path.exists() {
         std::fs::OpenOptions::new()
             .append(true)
@@ -847,69 +995,51 @@ pub async fn download_model(app: AppHandle, model_id: String) -> Result<(), Mode
     let mut downloaded = start_byte;
     let mut stream = response.bytes_stream();
     let mut last_emitted_progress = 0u8;
-    let mut last_emitted_bytes = 0u64;
+    let mut last_emitted_bytes = start_byte;
 
     while let Some(chunk) = stream.next().await {
-        let chunk = chunk.map_err(|e| ModelManagerError::DownloadError(e.to_string()))?;
+        if cancel_flag.load(Ordering::SeqCst) {
+            drop(file);
+            cleanup_partial_download(&models_dir, &model_id);
+            return Err(ModelManagerError::DownloadError(
+                "Download cancelled".into(),
+            ));
+        }
 
-        use std::io::Write;
+        let chunk = chunk.map_err(|e| ModelManagerError::DownloadError(e.to_string()))?;
         file.write_all(&chunk)
             .map_err(|e| ModelManagerError::IoError(e.to_string()))?;
-
         downloaded += chunk.len() as u64;
 
-        // Calculate progress
-        let progress = if total_size > 0 {
-            ((downloaded as f64 / total_size as f64) * 100.0) as u8
-        } else {
-            0
-        };
-
-        // Only emit progress if it changed by at least 5% OR every 5MB
-        let progress_changed = progress > last_emitted_progress + 4; // At least 5% change
-        let bytes_changed = downloaded > last_emitted_bytes + 5_000_000; // At least 5MB change
-        let should_emit = progress_changed || bytes_changed || progress == 0 || progress == 100;
+        let progress = compute_download_progress(downloaded, total_size, expected_bytes);
+        let progress_changed = progress > last_emitted_progress;
+        let bytes_changed = downloaded.saturating_sub(last_emitted_bytes) >= 1_000_000;
+        let should_emit = progress_changed || bytes_changed || progress >= 99;
 
         if should_emit {
-            // Ensure progress never goes backwards
             let final_progress = std::cmp::max(progress, last_emitted_progress);
-            app.emit(
-                "model-download-progress",
-                (model_id.clone(), final_progress),
-            )
-            .map_err(|e| ModelManagerError::TauriError(e.to_string()))?;
+            let _ = set_model_status(&app, &model_id, ModelStatus::Downloading(final_progress));
+            app.emit("model-download-progress", (model_id.clone(), final_progress))
+                .map_err(|e| ModelManagerError::TauriError(e.to_string()))?;
             last_emitted_progress = final_progress;
             last_emitted_bytes = downloaded;
         }
     }
 
-    // Ensure file is flushed and closed
     file.flush()
         .map_err(|e| ModelManagerError::IoError(e.to_string()))?;
-    drop(file); // Explicitly close the file
-
-    // Small delay to ensure file handle is released (Windows issue)
+    drop(file);
     tokio::time::sleep(std::time::Duration::from_millis(100)).await;
 
-    // Verify temp file exists before renaming
     if !temp_file_path.exists() {
-        // Check if the final file already exists (maybe from a previous successful download)
         if file_path.exists() {
             if let Ok(metadata) = std::fs::metadata(&file_path) {
                 if metadata.len() > 1_000_000 {
-                    // File is > 1MB, likely valid
-                    // Set model status to Downloaded
-                    set_model_status(&app, &model_id, ModelStatus::Downloaded).map_err(|e| {
-                        ModelManagerError::StoreError(format!("Failed to set model status: {}", e))
-                    })?;
-
-                    // Emit completion events
+                    set_model_status(&app, &model_id, ModelStatus::Downloaded)?;
                     app.emit("model-download-progress", (model_id.clone(), 100))
                         .map_err(|e| ModelManagerError::TauriError(e.to_string()))?;
-
                     app.emit("model-download-complete", model_id.clone())
                         .map_err(|e| ModelManagerError::TauriError(e.to_string()))?;
-
                     return Ok(());
                 }
             }
@@ -921,58 +1051,121 @@ pub async fn download_model(app: AppHandle, model_id: String) -> Result<(), Mode
         )));
     }
 
-    // Remove destination file if it exists (Windows sometimes has issues with this)
     if file_path.exists() {
         std::fs::remove_file(&file_path).map_err(|e| {
-            ModelManagerError::IoError(format!("Failed to remove existing destination: {}", e))
+            ModelManagerError::IoError(format!("Failed to remove existing destination: {e}"))
         })?;
     }
 
-    // Move temp file to final location
-    // On Windows, we need to be extra careful with file operations
     match std::fs::rename(&temp_file_path, &file_path) {
         Ok(_) => {}
-        Err(_e) => {
-            // If rename fails, try a copy + delete approach
-            // First remove destination if it exists
+        Err(_) => {
             if file_path.exists() {
                 std::fs::remove_file(&file_path).map_err(|e| {
                     ModelManagerError::IoError(format!(
-                        "Failed to remove existing destination: {}",
-                        e
+                        "Failed to remove existing destination: {e}"
                     ))
                 })?;
             }
-
-            // Copy the file
             std::fs::copy(&temp_file_path, &file_path).map_err(|e| {
                 ModelManagerError::IoError(format!(
-                    "Failed to copy {} to {}: {}",
+                    "Failed to copy {} to {}: {e}",
                     temp_file_path.display(),
-                    file_path.display(),
-                    e
+                    file_path.display()
                 ))
             })?;
-
-            // Delete the temp file
             std::fs::remove_file(&temp_file_path).map_err(|e| {
-                ModelManagerError::IoError(format!("Failed to remove temp file after copy: {}", e))
+                ModelManagerError::IoError(format!("Failed to remove temp file after copy: {e}"))
             })?;
         }
     }
 
-    // Set model status to Downloaded
-    set_model_status(&app, &model_id, ModelStatus::Downloaded)
-        .map_err(|e| ModelManagerError::StoreError(format!("Failed to set model status: {}", e)))?;
-
-    // Emit final 100% progress before completion
+    set_model_status(&app, &model_id, ModelStatus::Downloaded)?;
     app.emit("model-download-progress", (model_id.clone(), 100))
         .map_err(|e| ModelManagerError::TauriError(e.to_string()))?;
-
-    // Emit completion event
     app.emit("model-download-complete", model_id.clone())
         .map_err(|e| ModelManagerError::TauriError(e.to_string()))?;
+    Ok(())
+}
 
+#[tauri::command]
+pub async fn download_model(app: AppHandle, model_id: String) -> Result<(), ModelManagerError> {
+    let current_models = list_models(app.clone())?;
+    if let Some(model) = current_models.get(&model_id) {
+        if let ModelStatus::Downloading(_) = model.status {
+            return Ok(());
+        }
+    }
+
+    let app_data_dir = app
+        .path()
+        .app_data_dir()
+        .map_err(|e| ModelManagerError::PathError(e.to_string()))?;
+    let models_dir = app_data_dir.join("models");
+    std::fs::create_dir_all(&models_dir).map_err(|e| ModelManagerError::IoError(e.to_string()))?;
+
+    let file_path = models_dir.join(format!("ggml-{}.bin", model_id));
+    if file_path.exists() {
+        if let Ok(metadata) = std::fs::metadata(&file_path) {
+            if metadata.len() > 1_000_000 {
+                set_model_status(&app, &model_id, ModelStatus::Downloaded)?;
+                app.emit("model-download-progress", (model_id.clone(), 100))
+                    .map_err(|e| ModelManagerError::TauriError(e.to_string()))?;
+                app.emit("model-download-complete", model_id.clone())
+                    .map_err(|e| ModelManagerError::TauriError(e.to_string()))?;
+                return Ok(());
+            }
+            std::fs::remove_file(&file_path)
+                .map_err(|e| ModelManagerError::IoError(e.to_string()))?;
+        }
+    }
+
+    set_model_status(&app, &model_id, ModelStatus::Downloading(0))?;
+    app.emit("model-download-progress", (model_id.clone(), 0))
+        .map_err(|e| ModelManagerError::TauriError(e.to_string()))?;
+
+    let cancel_flag = Arc::new(AtomicBool::new(false));
+    if let Ok(mut flags) = download_cancel_flags().lock() {
+        flags.insert(model_id.clone(), cancel_flag.clone());
+    }
+
+    let app_bg = app.clone();
+    let model_id_bg = model_id.clone();
+    tauri::async_runtime::spawn(async move {
+        let result = perform_model_download(app_bg.clone(), model_id_bg.clone(), cancel_flag).await;
+        if let Ok(mut flags) = download_cancel_flags().lock() {
+            flags.remove(&model_id_bg);
+        }
+
+        if let Err(err) = result {
+            let message = err.to_string();
+            if message.contains("cancelled") {
+                let _ = app_bg.emit("model-download-cancelled", model_id_bg.clone());
+            } else {
+                emit_download_failure(&app_bg, &model_id_bg, &message);
+            }
+        }
+    });
+
+    Ok(())
+}
+
+#[tauri::command]
+pub fn cancel_model_download(app: AppHandle, model_id: String) -> Result<(), ModelManagerError> {
+    if let Ok(flags) = download_cancel_flags().lock() {
+        if let Some(cancel_flag) = flags.get(&model_id) {
+            cancel_flag.store(true, Ordering::SeqCst);
+        }
+    }
+
+    let app_data_dir = app
+        .path()
+        .app_data_dir()
+        .map_err(|e| ModelManagerError::PathError(e.to_string()))?;
+    cleanup_partial_download(&app_data_dir.join("models"), &model_id);
+    set_model_status(&app, &model_id, ModelStatus::NotDownloaded)?;
+    app.emit("model-download-cancelled", model_id.clone())
+        .map_err(|e| ModelManagerError::TauriError(e.to_string()))?;
     Ok(())
 }
 

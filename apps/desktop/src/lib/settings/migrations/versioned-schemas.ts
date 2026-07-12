@@ -10,6 +10,7 @@
 
 import type {
   AudioDevice,
+  AudioPipelineSettings,
   NotificationSound,
   NotificationTiming,
 } from '~/types/settings';
@@ -25,6 +26,7 @@ export type SettingsV1AudioSettings = {
   notificationTiming: NotificationTiming; // Added in V1
   notificationVolume: number;
   muteSystemAudio: boolean; // Added in V1
+  pipeline: AudioPipelineSettings;
 };
 
 export type SettingsV1GeneralSettings = {

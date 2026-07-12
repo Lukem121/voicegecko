@@ -1,4 +1,4 @@
-use crate::audio_v2::StreamingAudioHub;
+use crate::audio::StreamingAudioHub;
 use crate::dictation::session::DictationSessionManager;
 use crate::speech::vad::SileroVad;
 use parking_lot::Mutex;
@@ -9,7 +9,8 @@ use tauri::AppHandle;
 
 const POLL_MS: u64 = 200;
 const ANALYSIS_WINDOW: usize = 4_800; // 300ms @ 16kHz
-const MIN_SEGMENT_SAMPLES: usize = 8_000; // 0.5s
+const MIN_SEGMENT_SAMPLES: usize = 8_000; // 0.5s mid-session
+const MIN_FINAL_SEGMENT_SAMPLES: usize = 1_600; // 0.1s on stop
 
 pub struct HandsFreeController {
     loop_running: Mutex<Option<Arc<AtomicBool>>>,
@@ -17,10 +18,15 @@ pub struct HandsFreeController {
     hub: Mutex<Option<Arc<StreamingAudioHub>>>,
 }
 
-fn extract_segment(vad: &SileroVad, snapshot: &[f32], start: usize) -> Vec<f32> {
+fn extract_segment(vad: &SileroVad, snapshot: &[f32], start: usize, end: usize) -> Vec<f32> {
     let pre = vad.pre_roll_samples(16_000);
+    let post = vad.post_roll_samples(16_000);
     let padded_start = start.saturating_sub(pre);
-    snapshot[padded_start..].to_vec()
+    let padded_end = (end + post).min(snapshot.len());
+    if padded_start >= padded_end {
+        return Vec::new();
+    }
+    snapshot[padded_start..padded_end].to_vec()
 }
 
 impl HandsFreeController {
@@ -53,9 +59,13 @@ impl HandsFreeController {
             let vad = SileroVad::shared();
             let in_speech = AtomicBool::new(false);
             let silence_started: Mutex<Option<Instant>> = Mutex::new(None);
+            let mut hub_cursor = hub.write_cursor();
 
             while hub.is_enabled() && loop_flag.load(Ordering::SeqCst) {
                 tokio::time::sleep(Duration::from_millis(POLL_MS)).await;
+
+                let (delta, new_cursor) = hub.read_since(hub_cursor);
+                hub_cursor = new_cursor;
 
                 let snapshot = hub.snapshot();
                 if snapshot.len() < ANALYSIS_WINDOW {
@@ -68,6 +78,7 @@ impl HandsFreeController {
                 if speech {
                     in_speech.store(true, Ordering::SeqCst);
                     *silence_started.lock() = None;
+                    let _ = delta;
                     continue;
                 }
 
@@ -90,12 +101,13 @@ impl HandsFreeController {
                 in_speech.store(false, Ordering::SeqCst);
 
                 let start = segment_start.load(Ordering::SeqCst);
-                if snapshot.len() <= start {
+                let end = snapshot.len().saturating_sub(vad.post_roll_samples(16_000));
+                if end <= start {
                     segment_start.store(snapshot.len(), Ordering::SeqCst);
                     continue;
                 }
 
-                let segment = extract_segment(&vad, &snapshot, start);
+                let segment = extract_segment(&vad, &snapshot, start, end);
                 if segment.len() < MIN_SEGMENT_SAMPLES {
                     segment_start.store(snapshot.len(), Ordering::SeqCst);
                     continue;
@@ -120,9 +132,15 @@ impl HandsFreeController {
         let hub = self.hub.lock().take()?;
         let start = self.segment_start.load(Ordering::SeqCst);
         let snapshot = hub.snapshot();
+        let end = snapshot.len();
 
-        if snapshot.len() > start && snapshot.len() - start >= MIN_SEGMENT_SAMPLES {
-            Some(extract_segment(SileroVad::shared(), &snapshot, start))
+        if end > start && end - start >= MIN_FINAL_SEGMENT_SAMPLES {
+            let segment = extract_segment(SileroVad::shared(), &snapshot, start, end);
+            if segment.len() >= MIN_FINAL_SEGMENT_SAMPLES {
+                Some(segment)
+            } else {
+                None
+            }
         } else {
             None
         }

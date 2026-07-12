@@ -49,7 +49,7 @@ impl DictationEngine for GpuWhisperEngine {
                 "GPU Whisper unavailable — sidecar or ggml model missing",
             );
             return Err(
-                "GPU Whisper unavailable — install WhisperSidecar and ggml-base.en model".into(),
+                "GPU Whisper unavailable — install WhisperSidecar and download a Whisper model from Engine Lab".into(),
             );
         }
 

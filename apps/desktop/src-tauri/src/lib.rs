@@ -1,6 +1,7 @@
 use tauri::Manager;
 use sentry;
 use tauri_plugin_sentry::{minidump};
+mod audio;
 mod modules;
 mod dictation;
 mod speech;
@@ -8,14 +9,13 @@ mod intent;
 mod inject;
 mod context;
 mod db;
-mod audio_v2;
 
 use std::sync::Arc;
 use dictation::dictionary_cache::DictionaryPromptCache;
 use dictation::hands_free::HandsFreeController;
 use dictation::session::DictationSessionManager;
 use intent::llama_process::LlamaProcessManager;
-use audio_v2::StreamingAudioHub;
+use audio::StreamingAudioHub;
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
@@ -96,16 +96,18 @@ pub fn run() {
         }))
         .plugin(tauri_plugin_updater::Builder::new().build())
         .invoke_handler(tauri::generate_handler![
-            modules::audio::list_audio_devices,
-            modules::audio::start_recording,
-            modules::audio::stop_recording,
-            modules::audio::cancel_recording,
-            modules::audio::start_microphone_test,
-            modules::audio::stop_microphone_test,
-            modules::audio::play_notification_sound,
-            modules::audio::set_volume,
-            modules::audio::mute_system_audio,
-            modules::audio::unmute_system_audio,
+            audio::set_audio_pipeline_config,
+            audio::get_audio_pipeline_config,
+            audio::list_audio_devices,
+            audio::start_recording,
+            audio::stop_recording,
+            audio::cancel_recording,
+            audio::start_microphone_test,
+            audio::stop_microphone_test,
+            audio::play_notification_sound,
+            audio::set_volume,
+            audio::mute_system_audio,
+            audio::unmute_system_audio,
             modules::gecko_bar::show_gecko_bar,
             modules::gecko_bar::hide_gecko_bar,
             modules::gecko_bar::is_gecko_bar_visible,
@@ -121,6 +123,7 @@ pub fn run() {
             modules::hardware_info::get_recommended_tier,
             modules::model_manager::list_models,
             modules::model_manager::download_model,
+            modules::model_manager::cancel_model_download,
             modules::model_manager::delete_model,
             modules::model_manager::get_active_model_id,
             modules::model_manager::synchronize_models,
@@ -134,8 +137,10 @@ pub fn run() {
             modules::model_manager::get_downloaded_models_for_tier,
             modules::model_manager::auto_download_recommended_model,
             modules::model_manager::check_and_fix_partial_downloads,
+            modules::model_manager::get_gpu_whisper_model_id,
+            modules::model_manager::set_gpu_whisper_model_id,
+            modules::model_manager::list_gpu_whisper_models,
             dictation::start_dictation_session,
-            dictation::stop_dictation_session,
             dictation::get_dictation_session_status,
             dictation::cancel_dictation_session,
             dictation::list_dictation_engines,
@@ -160,6 +165,7 @@ pub fn run() {
             speech::models::is_v2_toggle_ready,
             speech::models::retry_v2_bootstrap,
             dictation::compare_engines_on_samples,
+            dictation::compare_ready_whisper_models_on_samples,
             modules::settings::get_cpu_count,
             modules::settings::get_gecko_bar_config,
             modules::settings::set_gecko_bar_config,
@@ -220,7 +226,7 @@ pub fn run() {
             let mut managed = false;
             if let Ok((_stream, stream_handle)) = rodio::OutputStream::try_default() {
                 if let Ok(sink) = rodio::Sink::try_new(&stream_handle) {
-                    app.manage(modules::audio::AudioState::new(Some(sink), streaming_hub.clone()));
+                    app.manage(audio::AudioState::new(Some(sink), streaming_hub.clone()));
                     // Keep the stream alive for the duration of the app
                     std::mem::forget(_stream);
                     std::mem::forget(stream_handle);
@@ -229,7 +235,7 @@ pub fn run() {
             }
             if !managed {
                 // Fall back to no sink; sound playback and volume changes will be no-ops
-                app.manage(modules::audio::AudioState::new(None, streaming_hub));
+                app.manage(audio::AudioState::new(None, streaming_hub));
             }
 
             speech::models::bootstrap_required_models(app.handle());

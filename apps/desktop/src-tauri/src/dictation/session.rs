@@ -6,11 +6,11 @@ use crate::dictation::types::{
     DictationEvent, EngineCompareResult, EngineCompareResponse, EngineId, InteractionMode,
     OutputTarget, SessionPhase, SessionStatus, StartSessionRequest,
 };
-use crate::audio_v2::StreamingAudioHub;
+use crate::audio::StreamingAudioHub;
 use crate::inject::{clipboard, undo};
 use crate::intent::profiles;
 use crate::speech::spoken_commands;
-use crate::modules::audio::AudioData;
+use crate::audio::AudioData;
 use parking_lot::Mutex;
 use serde::Serialize;
 use std::sync::Arc;
@@ -32,7 +32,7 @@ pub struct EngineStatusItem {
 }
 
 pub struct DictationSessionManager {
-    registry: EngineRegistry,
+    registry: Arc<EngineRegistry>,
     active: Mutex<Option<ActiveSession>>,
     streaming: StreamingPipeline,
 }
@@ -50,7 +50,7 @@ struct ActiveSession {
 impl DictationSessionManager {
     pub fn new() -> Self {
         Self {
-            registry: EngineRegistry::new(),
+            registry: Arc::new(EngineRegistry::new()),
             active: Mutex::new(None),
             streaming: StreamingPipeline::new(),
         }
@@ -108,6 +108,11 @@ impl DictationSessionManager {
 
         let show_live_preview = request.show_live_preview.unwrap_or(config.show_live_preview);
 
+        if let Some(pipeline) = request.audio_pipeline.clone() {
+            let audio_state = app.state::<crate::audio::AudioState>();
+            audio_state.set_pipeline_config(pipeline);
+        }
+
         let session_id = uuid::Uuid::new_v4().to_string();
 
         {
@@ -159,6 +164,7 @@ impl DictationSessionManager {
                     session_id.clone(),
                     mode,
                     engine_id,
+                    Arc::clone(&self.registry),
                 );
             }
         }

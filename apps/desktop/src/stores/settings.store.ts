@@ -54,6 +54,9 @@ type SettingsState = {
   updateNotificationTiming: (timing: NotificationTiming) => Promise<void>;
   updateNotificationVolume: (volume: number) => Promise<void>;
   updateMuteSystemAudio: (mute: boolean) => Promise<void>;
+  updateAudioPipeline: (
+    pipeline: Partial<AudioSettings['pipeline']>
+  ) => Promise<void>;
   updateLaunchOnStartup: (enabled: boolean) => Promise<void>;
   updateShowGeckoBar: (enabled: boolean) => Promise<void>;
   updateShowGeckoBarWhileRecording: (enabled: boolean) => Promise<void>;
@@ -93,6 +96,12 @@ const defaultSettings: AppSettings = {
     notificationTiming: 'start_completion',
     notificationVolume: 1.0,
     muteSystemAudio: true,
+    pipeline: {
+      enableDenoise: false,
+      enableHighPass: true,
+      highPassHz: 80,
+      targetRms: 0.16,
+    },
   },
   general: {
     launchOnStartup: true,
@@ -201,11 +210,32 @@ export const useSettingsStore = create<SettingsState>()(
             },
           }).catch(() => undefined);
 
+          void invoke('set_audio_pipeline_config', {
+            config: {
+              enableDenoise:
+                audioSettings.pipeline?.enableDenoise ??
+                defaultSettings.audio.pipeline.enableDenoise,
+              enableHighPass:
+                audioSettings.pipeline?.enableHighPass ??
+                defaultSettings.audio.pipeline.enableHighPass,
+              highPassHz:
+                audioSettings.pipeline?.highPassHz ??
+                defaultSettings.audio.pipeline.highPassHz,
+              targetRms:
+                audioSettings.pipeline?.targetRms ??
+                defaultSettings.audio.pipeline.targetRms,
+            },
+          }).catch(() => undefined);
+
           set({
             settings: {
               audio: {
                 ...audioSettings,
                 selectedDevice,
+                pipeline: {
+                  ...defaultSettings.audio.pipeline,
+                  ...audioSettings.pipeline,
+                },
               },
               general: {
                 launchOnStartup: autostartConfig.enabled,
@@ -320,6 +350,25 @@ export const useSettingsStore = create<SettingsState>()(
         };
         set({ settings: newSettings });
         await saveWithMeta(settingsStore, 'muteSystemAudio', mute);
+      },
+
+      updateAudioPipeline: async (pipeline) => {
+        const { settings } = get();
+        const merged = { ...settings.audio.pipeline, ...pipeline };
+        const newSettings = {
+          ...settings,
+          audio: { ...settings.audio, pipeline: merged },
+        };
+        set({ settings: newSettings });
+        await saveWithMeta(settingsStore, 'audio.pipeline', merged);
+        await invoke('set_audio_pipeline_config', {
+          config: {
+            enableDenoise: merged.enableDenoise,
+            enableHighPass: merged.enableHighPass,
+            highPassHz: merged.highPassHz ?? 80,
+            targetRms: merged.targetRms ?? 0.16,
+          },
+        });
       },
 
       updateLaunchOnStartup: async (enabled) => {
@@ -536,6 +585,14 @@ async function loadAudioSettings(): Promise<AudioSettings> {
       (await settingsStore.get<number>('notificationVolume')) ?? 1.0,
     muteSystemAudio:
       (await settingsStore.get<boolean>('muteSystemAudio')) ?? true,
+    pipeline: (await settingsStore.get<AudioSettings['pipeline']>(
+      'audio.pipeline'
+    )) ?? {
+      enableDenoise: false,
+      enableHighPass: true,
+      highPassHz: 80,
+      targetRms: 0.16,
+    },
   };
 }
 

@@ -8,6 +8,7 @@ import {
 
 import { LazyStore } from '@tauri-apps/plugin-store';
 import { recordingService } from '~/services/recording.service';
+import { useEventStore } from '~/stores/event.store';
 import { useShortcutStore } from '../stores/shortcut-store';
 import { shortcutActions } from './actions';
 import {
@@ -33,6 +34,7 @@ class ShortcutManager {
   private pttQuickTapStreak = 0;
 
   private isFlowStreamActive = false;
+  private cancelShortcutRegistered = false;
 
   private constructor() {
     this.store = new LazyStore(SHORTCUTS_SETTINGS_FILE);
@@ -56,7 +58,86 @@ class ShortcutManager {
     this.initialized = true;
     log.info('Initializing ShortcutManager...');
     await this.loadAndRegisterShortcuts();
-    // Here we could listen for changes in the store from other windows/instances
+
+    useEventStore.subscribe((state) => {
+      void this.syncCancelShortcut(state.recordingStatus);
+    });
+  }
+
+  private findCancelShortcut(): Shortcut | undefined {
+    for (const category of useShortcutStore.getState().categories) {
+      for (const shortcut of category.shortcuts) {
+        if (shortcut.id === 'cancel-recording') {
+          return shortcut;
+        }
+      }
+    }
+    return undefined;
+  }
+
+  private shouldCancelShortcutBeActive(
+    recordingStatus: ReturnType<typeof useEventStore.getState>['recordingStatus']
+  ): boolean {
+    return recordingStatus === 'recording' || recordingStatus === 'processing';
+  }
+
+  async syncCancelShortcut(
+    recordingStatus?: ReturnType<
+      typeof useEventStore.getState
+    >['recordingStatus']
+  ): Promise<void> {
+    const status = recordingStatus ?? useEventStore.getState().recordingStatus;
+    const shouldBeActive = this.shouldCancelShortcutBeActive(status);
+
+    if (shouldBeActive) {
+      await this.registerCancelShortcut();
+    } else {
+      await this.unregisterCancelShortcut();
+    }
+  }
+
+  private async registerCancelShortcut(): Promise<void> {
+    if (this.cancelShortcutRegistered) {
+      return;
+    }
+
+    const shortcut = this.findCancelShortcut();
+    if (!shortcut?.enabled || shortcut.keys.length === 0) {
+      return;
+    }
+
+    const accelerator = acceleratorFromKeys(normalizeKeys(shortcut.keys));
+
+    try {
+      await this.registerSingleShortcut(shortcut, accelerator);
+      this.cancelShortcutRegistered = true;
+      log.info(`Registered cancel shortcut while session active: ${accelerator}`);
+    } catch (error) {
+      log.error(error, '[Shortcuts] Failed to register cancel shortcut:');
+      const message =
+        error instanceof Error ? error.message : 'Registration failed';
+      useShortcutStore
+        .getState()
+        .setRegistrationError('cancel-recording', message);
+    }
+  }
+
+  private async unregisterCancelShortcut(): Promise<void> {
+    if (!this.cancelShortcutRegistered) {
+      return;
+    }
+
+    const shortcut = this.findCancelShortcut();
+    if (shortcut && shortcut.keys.length > 0) {
+      const accelerator = acceleratorFromKeys(normalizeKeys(shortcut.keys));
+      try {
+        await unregister(accelerator);
+      } catch (error) {
+        log.warn(error, '[Shortcuts] Failed to unregister cancel shortcut:');
+      }
+    }
+
+    this.cancelShortcutRegistered = false;
   }
 
   async loadAndRegisterShortcuts() {
@@ -137,7 +218,7 @@ class ShortcutManager {
 
   async registerAllShortcuts(categories: ShortcutCategory[]) {
     try {
-      await unregisterAll();
+      await this.unregisterAll();
     } catch (error) {
       log.warn(error, 'Failed to unregister all shortcuts:');
     }
@@ -150,6 +231,9 @@ class ShortcutManager {
 
     for (const category of categories) {
       for (const shortcut of category.shortcuts) {
+        if (shortcut.id === 'cancel-recording') {
+          continue;
+        }
         if (!shortcut.enabled || shortcut.keys.length === 0) {
           continue;
         }
@@ -176,6 +260,8 @@ class ShortcutManager {
         useShortcutStore.getState().setRegistrationError(shortcut.id, message);
       }
     }
+
+    await this.syncCancelShortcut();
     log.info('[Shortcuts] Finished registering shortcuts.');
   }
 
@@ -187,6 +273,7 @@ class ShortcutManager {
 
   async unregisterAll() {
     await unregisterAll();
+    this.cancelShortcutRegistered = false;
   }
 
   async unregister(accelerator: string) {

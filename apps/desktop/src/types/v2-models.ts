@@ -36,6 +36,7 @@ export type EngineCompareResult = {
   engineId: string;
   engineName: string;
   latencyMs: number;
+  text: string;
   textSnippet: string;
   rating: number | null;
 };

@@ -262,9 +262,7 @@ fn parse_transcript(stdout: &str) -> Result<String, String> {
 
     if let Ok(value) = serde_json::from_str::<serde_json::Value>(trimmed) {
         if let Some(text) = value.get("text").and_then(|v| v.as_str()) {
-            if !text.is_empty() {
-                return Ok(text.to_string());
-            }
+            return Ok(text.trim().to_string());
         }
     }
 
