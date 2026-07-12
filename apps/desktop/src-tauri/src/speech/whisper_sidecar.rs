@@ -32,32 +32,18 @@ fn sidecar_version_matches() -> bool {
 }
 
 pub fn whisper_model_path() -> Option<PathBuf> {
-    let local = dirs::data_local_dir()?;
-    let roaming = dirs::data_dir()?;
+    crate::modules::model_manager::legacy_whisper_model_path()
+}
 
-    for base in [local, roaming] {
-        for relative in [
-            "com.voicegecko.desktop/models/ggml-base.en.bin",
-            "voicegecko/models/ggml-base.en.bin",
-        ] {
-            let path = base.join(relative);
-            if path.is_file() {
-                return Some(path);
-            }
-        }
-    }
-
-    None
+pub fn selected_model_id(app: &AppHandle) -> String {
+    crate::modules::model_manager::get_gpu_whisper_model_id(app.clone()).unwrap_or_else(|_| {
+        crate::modules::model_manager::DEFAULT_GPU_WHISPER_MODEL_ID.to_string()
+    })
 }
 
 pub fn whisper_model_path_for_app(app: &AppHandle) -> Option<PathBuf> {
-    if let Ok(app_data) = app.path().app_data_dir() {
-        let path = app_data.join("models").join("ggml-base.en.bin");
-        if path.is_file() {
-            return Some(path);
-        }
-    }
-    whisper_model_path()
+    let model_id = selected_model_id(app);
+    crate::modules::model_manager::model_file_path(app, &model_id)
 }
 
 fn sidecar_layout_valid(dir: &Path) -> bool {
@@ -303,4 +289,122 @@ pub fn transcribe_samples(app: &AppHandle, samples: &[f32], sample_rate: u32) ->
     let result = transcribe_wav_file(&model_path, &wav);
     let _ = fs::remove_file(&wav);
     result
+}
+
+fn summarize_text(text: &str, max_chars: usize) -> String {
+    let trimmed = text.trim();
+    if trimmed.chars().count() <= max_chars {
+        return trimmed.to_string();
+    }
+    trimmed.chars().take(max_chars).collect::<String>() + "…"
+}
+
+pub fn compare_ready_models_on_samples(
+    app: &AppHandle,
+    samples: &[f32],
+    sample_rate: u32,
+) -> Result<crate::dictation::types::WhisperModelCompareResponse, String> {
+    use crate::dictation::types::WhisperModelCompareResult;
+    use crate::modules::model_manager::{self, ModelStatus};
+    use std::time::Instant;
+
+    if samples.is_empty() {
+        return Err("Audio samples are empty".into());
+    }
+    if !is_sidecar_installed() {
+        return Err("WhisperSidecar not installed — restart the app or run optional bootstrap".into());
+    }
+
+    let catalog =
+        model_manager::list_gpu_whisper_models(app.clone()).map_err(|e| e.to_string())?;
+    let selected_id =
+        model_manager::get_gpu_whisper_model_id(app.clone()).map_err(|e| e.to_string())?;
+
+    let ready: Vec<_> = catalog
+        .into_iter()
+        .filter(|entry| {
+            entry.status == ModelStatus::Downloaded
+                && model_manager::model_file_path(app, &entry.id).is_some()
+        })
+        .collect();
+
+    if ready.is_empty() {
+        return Err(
+            "No Whisper models ready — download at least one model above, then try again".into(),
+        );
+    }
+
+    stt_log::info_fmt(
+        ENGINE,
+        format!(
+            "Comparing {} ready Whisper model(s) on {:.1}s clip",
+            ready.len(),
+            samples.len() as f64 / sample_rate as f64
+        ),
+    );
+
+    let wav = write_temp_wav(samples, sample_rate)?;
+    let mut results = Vec::with_capacity(ready.len());
+
+    for entry in ready {
+        let Some(model_path) = model_manager::model_file_path(app, &entry.id) else {
+            results.push(WhisperModelCompareResult {
+                model_id: entry.id.clone(),
+                model_name: entry.name.clone(),
+                text: String::new(),
+                text_snippet: "Model file missing".into(),
+                latency_ms: 0,
+                available: false,
+                selected: entry.id == selected_id,
+            });
+            continue;
+        };
+
+        let start = Instant::now();
+        match transcribe_wav_file(&model_path, &wav) {
+            Ok(text) => {
+                let snippet = summarize_text(&text, 160);
+                results.push(WhisperModelCompareResult {
+                    model_id: entry.id.clone(),
+                    model_name: entry.name.clone(),
+                    text_snippet: snippet,
+                    text: text.clone(),
+                    latency_ms: start.elapsed().as_millis() as u64,
+                    available: true,
+                    selected: entry.id == selected_id,
+                });
+            }
+            Err(err) => {
+                stt_log::error_fmt(ENGINE, &err);
+                results.push(WhisperModelCompareResult {
+                    model_id: entry.id.clone(),
+                    model_name: entry.name.clone(),
+                    text: String::new(),
+                    text_snippet: summarize_text(&err, 160),
+                    latency_ms: start.elapsed().as_millis() as u64,
+                    available: false,
+                    selected: entry.id == selected_id,
+                });
+            }
+        }
+    }
+
+    let _ = fs::remove_file(&wav);
+
+    results.sort_by(|left, right| {
+        right
+            .selected
+            .cmp(&left.selected)
+            .then_with(|| left.model_name.cmp(&right.model_name))
+    });
+
+    Ok(crate::dictation::types::WhisperModelCompareResponse {
+        sample_id: "last_dictation".into(),
+        sample_label: format!(
+            "Last dictation ({:.1}s @ {} Hz)",
+            samples.len() as f64 / sample_rate as f64,
+            sample_rate
+        ),
+        results,
+    })
 }

@@ -177,6 +177,7 @@ pub struct StartSessionRequest {
     pub engine_id: Option<String>,
     pub output_target: Option<String>,
     pub show_live_preview: Option<bool>,
+    pub audio_pipeline: Option<crate::audio::pipeline::AudioPipelineConfig>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -207,4 +208,24 @@ pub struct EngineCompareResponse {
     pub sample_id: String,
     pub sample_label: String,
     pub results: Vec<EngineCompareResult>,
+}
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WhisperModelCompareResult {
+    pub model_id: String,
+    pub model_name: String,
+    pub text: String,
+    pub text_snippet: String,
+    pub latency_ms: u64,
+    pub available: bool,
+    pub selected: bool,
+}
+
+#[derive(Debug, Clone, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct WhisperModelCompareResponse {
+    pub sample_id: String,
+    pub sample_label: String,
+    pub results: Vec<WhisperModelCompareResult>,
 }

@@ -168,6 +168,12 @@ export class RecordingService {
               mode === 'toggle_batch' || mode === 'ptt_batch'
                 ? settings.dictation.toggleBatchShowLivePreview
                 : undefined,
+            audioPipeline: {
+              enableDenoise: settings.audio.pipeline.enableDenoise,
+              enableHighPass: settings.audio.pipeline.enableHighPass,
+              highPassHz: settings.audio.pipeline.highPassHz ?? 80,
+              targetRms: settings.audio.pipeline.targetRms ?? 0.16,
+            },
           },
         });
       } catch (error) {
@@ -177,22 +183,21 @@ export class RecordingService {
       const { settings } = useSettingsStore.getState();
       const deviceName = options.device ?? settings.audio.selectedDevice?.name;
 
-      // Play start sound first if enabled
-      if (options.playStartSound ?? this.shouldPlayStartSound()) {
-        await this.playNotificationSound('Start');
-      }
-
-      // Mute system audio if enabled
+      // Mute system audio if enabled (before capture)
       if (settings.audio.muteSystemAudio) {
         try {
           await invoke('mute_system_audio');
         } catch (error) {
           log.warn('Failed to mute system audio:', error);
-          // Don't fail recording if muting fails
         }
       }
 
       await invoke('start_recording', { device: deviceName });
+
+      // Play start sound after mic is open so the first word is not clipped
+      if (options.playStartSound ?? this.shouldPlayStartSound()) {
+        await this.playNotificationSound('Start');
+      }
     } catch (error) {
       log.error(error, 'Failed to start recording:');
 
@@ -223,18 +228,16 @@ export class RecordingService {
       // OPTIMIZATION: Audio processing now starts internal dictation directly in Rust
       // This eliminates the 267ms data transfer overhead by keeping audio processing and
       // dictation entirely in Rust without round-trip through frontend
-      const audioData = await invoke<{
-        samples: number[];
-        sample_rate: number;
-        channels: number;
+      const stopMeta = await invoke<{
+        durationSecs: number;
+        sampleRate: number;
+        sampleCount: number;
       }>('stop_recording');
 
-      log.info(
-        '[PERF] ⚡ OPTIMIZED: Audio processing completed with internal dictation started in Rust'
-      );
-      log.info('[PERF] Received audio metadata (no heavy data transfer):', {
-        samplesLength: audioData.samples.length,
-        durationSeconds: audioData.samples.length / audioData.sample_rate,
+      log.info('[PERF] Capture stopped; dictation started in Rust', {
+        durationSecs: stopMeta.durationSecs,
+        sampleCount: stopMeta.sampleCount,
+        sampleRate: stopMeta.sampleRate,
       });
 
       // Mark when recording is complete - dictation already started internally

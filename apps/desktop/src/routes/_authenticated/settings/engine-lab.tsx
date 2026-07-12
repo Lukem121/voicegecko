@@ -30,6 +30,8 @@ import { createFileRoute } from '@tanstack/react-router';
 import { Loader2, Mic, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
+import { CompareTranscriptCell } from '~/components/compare-transcript-cell';
+import { GpuWhisperModelsCard } from '~/routes/_authenticated/settings/gpu-whisper-models-card';
 import {
   compareEnginesOnSamples,
   deleteV2Model,
@@ -345,6 +347,8 @@ function EngineLabPage() {
         </CardContent>
       </Card>
 
+      <GpuWhisperModelsCard onRefreshStatus={() => void refetchStatus()} />
+
       <Card>
         <CardHeader>
           <CardTitle>Compare engines</CardTitle>
@@ -374,36 +378,41 @@ function EngineLabPage() {
                 {compareResult.sampleLabel}
                 {compareResult.usedFallback ? ' (fallback — dictate again for live compare)' : null}
               </p>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Engine</TableHead>
-                    <TableHead>Latency</TableHead>
-                    <TableHead>Snippet</TableHead>
-                    <TableHead>Rating</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {compareResult.results.map((row) => (
-                    <TableRow key={row.engineId}>
-                      <TableCell className="font-medium">
-                        {row.engineName}
-                      </TableCell>
-                      <TableCell>
-                        {row.latencyMs > 0
-                          ? `${row.latencyMs} ms`
-                          : '—'}
-                      </TableCell>
-                      <TableCell className="max-w-xs truncate">
-                        {row.textSnippet || '—'}
-                      </TableCell>
-                      <TableCell>
-                        {row.rating === null ? '—' : row.rating}
-                      </TableCell>
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Engine</TableHead>
+                      <TableHead>Latency</TableHead>
+                      <TableHead>Transcript</TableHead>
+                      <TableHead>Rating</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {compareResult.results.map((row) => (
+                      <TableRow key={row.engineId}>
+                        <TableCell className="align-top font-medium">
+                          {row.engineName}
+                        </TableCell>
+                        <TableCell className="align-top whitespace-nowrap">
+                          {row.latencyMs > 0
+                            ? `${row.latencyMs} ms`
+                            : '—'}
+                        </TableCell>
+                        <TableCell className="align-top">
+                          <CompareTranscriptCell
+                            text={row.text}
+                            textSnippet={row.textSnippet}
+                          />
+                        </TableCell>
+                        <TableCell className="align-top">
+                          {row.rating === null ? '—' : row.rating}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
             </div>
           ) : null}
         </CardContent>
@@ -569,8 +578,8 @@ function EngineLabPage() {
           </p>
           <p>
             <strong>GPU Whisper:</strong> bundled{' '}
-            <code>WhisperSidecar.exe</code> installs on startup; requires{' '}
-            <code>ggml-base.en.bin</code> (synced from bundled resources).
+            <code>WhisperSidecar.exe</code> installs on startup. Pick any ggml
+            model from the full catalog above (default <code>base.en</code>).
           </p>
           <p>
             <strong>Cloud GPT-4o:</strong> set <code>OPENAI_API_KEY</code> in

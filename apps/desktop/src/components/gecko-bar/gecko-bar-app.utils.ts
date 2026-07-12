@@ -47,6 +47,29 @@ export const shouldShowActiveState = ({
   );
 };
 
+type SessionButtonState = {
+  isRecording: boolean;
+  isTranscribing: boolean;
+  isTransitioning: boolean;
+  isLoading: boolean;
+};
+
+/**
+ * Whether the active session can be canceled (matches Escape key behavior).
+ */
+export const canCancelSession = ({
+  isRecording,
+  isTranscribing,
+  isTransitioning,
+  isLoading,
+}: SessionButtonState) => {
+  if (isLoading) {
+    return false;
+  }
+
+  return isRecording || isTranscribing || isTransitioning;
+};
+
 /**
  * Determines if a button should be enabled based on current state.
  */
@@ -57,19 +80,19 @@ export const isButtonEnabled = (
     isTranscribing,
     isTransitioning,
     isLoading,
-  }: {
-    isRecording: boolean;
-    isTranscribing: boolean;
-    isTransitioning: boolean;
-    isLoading: boolean;
-  }
+  }: SessionButtonState
 ) => {
   if (isLoading) {
     return false;
   }
 
   if (buttonType === 'cancel') {
-    return isRecording && !isTranscribing && !isTransitioning;
+    return canCancelSession({
+      isRecording,
+      isTranscribing,
+      isTransitioning,
+      isLoading,
+    });
   }
 
   if (buttonType === 'finish') {

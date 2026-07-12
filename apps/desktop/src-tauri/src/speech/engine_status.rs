@@ -82,14 +82,19 @@ fn evaluate_gpu_whisper(app: &AppHandle) -> EngineAvailability {
     }
 
     let sidecar = crate::speech::whisper_sidecar::is_sidecar_installed();
+    let model_id = crate::speech::whisper_sidecar::selected_model_id(app);
     let model = crate::speech::whisper_sidecar::whisper_model_path_for_app(app).is_some();
 
     let reason = if !sidecar && !model {
-        "WhisperSidecar and ggml-base.en.bin model missing".to_string()
+        format!(
+            "WhisperSidecar and ggml-{model_id}.bin model missing"
+        )
     } else if !sidecar {
         "WhisperSidecar not installed — restart app or run optional bootstrap".to_string()
     } else {
-        "ggml-base.en.bin model missing — run model sync from Settings".to_string()
+        format!(
+            "ggml-{model_id}.bin not downloaded — download from Engine Lab → GPU Whisper model"
+        )
     };
 
     EngineAvailability {

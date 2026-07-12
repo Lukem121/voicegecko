@@ -7,6 +7,13 @@ export type NotificationTiming =
   | 'completion_only'
   | 'disabled';
 
+export type AudioPipelineSettings = {
+  enableDenoise: boolean;
+  enableHighPass: boolean;
+  highPassHz?: number;
+  targetRms?: number;
+};
+
 export type AudioDevice = {
   name: string;
   id?: string;

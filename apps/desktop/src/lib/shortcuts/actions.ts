@@ -5,6 +5,7 @@ import type { ShortcutAction } from '~/lib/shortcuts/types';
 import { modeForShortcutId } from '~/stores/dictation.store';
 import { dictationService } from '~/services/dictation.service';
 import { recordingService } from '~/services/recording.service';
+import { useEventStore } from '~/stores/event.store';
 
 function recordingForShortcut(shortcutId: string) {
   return recordingService.toggleRecording({
@@ -45,6 +46,10 @@ export const shortcutActions: Record<
   },
 
   'cancel-recording': () => {
+    const { recordingStatus } = useEventStore.getState();
+    if (recordingStatus !== 'recording' && recordingStatus !== 'processing') {
+      return;
+    }
     void recordingService.cancelRecording();
   },
 };

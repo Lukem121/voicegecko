@@ -316,6 +316,28 @@ fn moonshine_error(api: &MoonshineApi, code: i32) -> String {
     }
 }
 
+/// Moonshine's `transcript_to_string` returns a JSON object with metadata fields
+/// (`lang`, `emotion`, `timestamps`, etc.) and a `text` field. Extract only the text.
+fn parse_moonshine_transcript(raw: &str) -> String {
+    let trimmed = raw.trim();
+    if trimmed.is_empty() {
+        return String::new();
+    }
+
+    if let Ok(value) = serde_json::from_str::<serde_json::Value>(trimmed) {
+        if value.get("text").is_some() {
+            return value
+                .get("text")
+                .and_then(|v| v.as_str())
+                .unwrap_or("")
+                .trim()
+                .to_string();
+        }
+    }
+
+    trimmed.to_string()
+}
+
 fn transcript_text(api: &MoonshineApi, transcript: *mut std::ffi::c_void) -> String {
     if transcript.is_null() {
         return String::new();
@@ -325,7 +347,7 @@ fn transcript_text(api: &MoonshineApi, transcript: *mut std::ffi::c_void) -> Str
         if ptr.is_null() {
             String::new()
         } else {
-            CStr::from_ptr(ptr).to_string_lossy().into_owned()
+            parse_moonshine_transcript(&CStr::from_ptr(ptr).to_string_lossy())
         }
     }
 }
@@ -445,4 +467,26 @@ pub fn transcribe_batch(samples: &[f32], sample_rate: u32) -> Result<String, Str
     }
 
     Ok(transcript_text(session.api, transcript))
+}
+
+#[cfg(test)]
+mod tests {
+    use super::parse_moonshine_transcript;
+
+    #[test]
+    fn parse_empty_moonshine_json_returns_empty_text() {
+        let raw = r#"{"lang": "", "emotion": "", "event": "", "text": "", "timestamps": [], "durations": [], "tokens": [], "ys_log_probs": [], "words": []}"#;
+        assert_eq!(parse_moonshine_transcript(raw), "");
+    }
+
+    #[test]
+    fn parse_moonshine_json_extracts_text() {
+        let raw = r#"{"lang": "", "emotion": "", "event": "", "text": "Hello world", "timestamps": [], "tokens": [], "words": []}"#;
+        assert_eq!(parse_moonshine_transcript(raw), "Hello world");
+    }
+
+    #[test]
+    fn parse_plain_text_passthrough() {
+        assert_eq!(parse_moonshine_transcript("plain text"), "plain text");
+    }
 }

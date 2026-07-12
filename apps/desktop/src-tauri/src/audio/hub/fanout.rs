@@ -32,7 +32,7 @@ impl StreamingAudioHub {
     }
 
     pub fn push_resampled_mono(&self, samples: &[f32]) {
-        if !self.is_enabled() {
+        if !self.is_enabled() || samples.is_empty() {
             return;
         }
         self.buffer.lock().push_chunk(samples);
@@ -40,6 +40,14 @@ impl StreamingAudioHub {
 
     pub fn snapshot(&self) -> Vec<f32> {
         self.buffer.lock().snapshot()
+    }
+
+    pub fn read_since(&self, cursor: u64) -> (Vec<f32>, u64) {
+        self.buffer.lock().read_since(cursor)
+    }
+
+    pub fn write_cursor(&self) -> u64 {
+        self.buffer.lock().write_cursor()
     }
 
     pub fn sample_count(&self) -> usize {

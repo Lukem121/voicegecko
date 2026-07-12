@@ -7,7 +7,10 @@ import type {
   GeckoBarEventHandlers,
   UseGeckoBarStateReturn,
 } from '~/components/gecko-bar/gecko-bar-app.types';
-import { isSafeToCollapse } from '~/components/gecko-bar/gecko-bar-app.utils';
+import {
+  canCancelSession,
+  isSafeToCollapse,
+} from '~/components/gecko-bar/gecko-bar-app.utils';
 import { initializeGeckoBarEvents } from '~/lib/gecko-bar-events';
 import { initializeGeckoBarDictationBridge } from '~/lib/dictation-event-bridge';
 import { useEventStore } from '~/stores/event.store';
@@ -167,7 +170,13 @@ export function useGeckoBarState(): UseGeckoBarStateReturn {
   const handleCancel = useCallback(
     async (e: React.MouseEvent<HTMLButtonElement>) => {
       e.stopPropagation();
-      if (isLoading || !isRecording) {
+      const cancelAllowed = canCancelSession({
+        isRecording,
+        isTranscribing,
+        isTransitioning,
+        isLoading,
+      });
+      if (!cancelAllowed) {
         return;
       }
 
@@ -184,7 +193,7 @@ export function useGeckoBarState(): UseGeckoBarStateReturn {
         setIsLoading(false);
       }
     },
-    [isLoading, isRecording]
+    [isLoading, isRecording, isTranscribing, isTransitioning]
   );
 
   // Finish button handler - send event to main window

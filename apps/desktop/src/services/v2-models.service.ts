@@ -226,6 +226,7 @@ const fallbackCompareFromLastDictation =
       engineId: last.engineId ?? 'unknown',
       engineName: last.engineId ?? 'Last session engine',
       latencyMs: 0,
+      text: last.content,
       textSnippet: snippet(last.content),
       rating: null,
     };

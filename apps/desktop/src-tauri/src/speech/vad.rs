@@ -120,6 +120,8 @@ impl OnnxVad {
     }
 }
 
+pub const POST_ROLL_MS: u64 = 250;
+
 pub struct SileroVad {
     threshold: f32,
     energy_threshold: f32,
@@ -140,7 +142,7 @@ impl SileroVad {
             min_speech_duration_ms: 250,
             min_silence_ms: 400,
             pre_roll_ms: 200,
-            post_roll_ms: 200,
+            post_roll_ms: POST_ROLL_MS as u32,
             onnx: None,
         }
     }
@@ -154,7 +156,7 @@ impl SileroVad {
                     min_speech_duration_ms: 250,
                     min_silence_ms: 400,
                     pre_roll_ms: 200,
-                    post_roll_ms: 200,
+                    post_roll_ms: POST_ROLL_MS as u32,
                     onnx: Some(onnx),
                 };
             }
@@ -195,6 +197,11 @@ impl SileroVad {
         (sample_rate as u64 * self.post_roll_ms as u64 / 1000) as usize
     }
 
+    #[cfg(test)]
+    pub fn post_roll_ms_value(&self) -> u32 {
+        self.post_roll_ms
+    }
+
     #[allow(dead_code)]
     pub fn min_speech_samples(&self, sample_rate: u32) -> usize {
         (sample_rate as u64 * self.min_speech_duration_ms as u64 / 1000) as usize
@@ -204,5 +211,16 @@ impl SileroVad {
 impl Default for SileroVad {
     fn default() -> Self {
         Self::new(0.015)
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn post_roll_samples_at_16k() {
+        let vad = SileroVad::new(0.015);
+        assert_eq!(vad.post_roll_samples(16_000), 4_000); // 250ms @ 16kHz
     }
 }
