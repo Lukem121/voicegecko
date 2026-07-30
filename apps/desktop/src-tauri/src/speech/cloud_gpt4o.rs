@@ -89,7 +89,14 @@ impl DictationEngine for Gpt4oEngine {
             ),
         );
 
-        let text = transcribe_openai(samples, sample_rate, self.model_name(), &api_key, label)
+        let text = transcribe_openai(
+            samples,
+            sample_rate,
+            self.model_name(),
+            &api_key,
+            label,
+            super::transcription_hint::get_session_hint(_app).as_deref(),
+        )
             .await
             .map_err(|e| {
                 stt_log::error_fmt(ENGINE, format!("[{label}] {e}"));
@@ -116,6 +123,7 @@ async fn transcribe_openai(
     model: &str,
     api_key: &str,
     label: &str,
+    prompt: Option<&str>,
 ) -> Result<String, String> {
     let wav_bytes = samples_to_wav_bytes(samples, sample_rate)?;
     stt_log::debug(
@@ -124,7 +132,7 @@ async fn transcribe_openai(
     );
 
     let client = reqwest::Client::new();
-    let form = reqwest::multipart::Form::new()
+    let mut form = reqwest::multipart::Form::new()
         .text("model", model.to_string())
         .part(
             "file",
@@ -133,6 +141,14 @@ async fn transcribe_openai(
                 .mime_str("audio/wav")
                 .map_err(|e| e.to_string())?,
         );
+
+    if let Some(hint) = prompt.filter(|p| !p.trim().is_empty()) {
+        form = form.text("prompt", hint.to_string());
+        stt_log::debug(
+            ENGINE,
+            &format!("[{label}] STT prompt: {} chars", hint.len()),
+        );
+    }
 
     let response = client
         .post("https://api.openai.com/v1/audio/transcriptions")

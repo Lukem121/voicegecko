@@ -251,6 +251,11 @@ else
             .WithProbabilities() // Better accuracy
             .WithNoSpeechThreshold(0.6f) // Skip silent parts - major speedup
             .WithTemperature(0.0f); // Greedy decoding for speed and consistency
+        if (!string.IsNullOrWhiteSpace(prompt))
+        {
+            builder = builder.WithPrompt(prompt);
+            Console.Error.WriteLine($"[Sidecar] Using initial prompt ({prompt!.Length} chars)");
+        }
         using var processor = builder.Build();
         tBuild.Stop();
         Console.Error.WriteLine($"[Sidecar] Processor build: {tBuild.Elapsed}");

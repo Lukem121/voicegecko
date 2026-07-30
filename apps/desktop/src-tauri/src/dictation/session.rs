@@ -113,6 +113,18 @@ impl DictationSessionManager {
             audio_state.set_pipeline_config(pipeline);
         }
 
+        let dictionary = crate::dictation::dictionary_cache::get_cached_prompt(&app).or_else(|| {
+            crate::db::open_db(&app)
+                .ok()
+                .and_then(|conn| crate::db::get_dictionary_prompt(&conn).ok().flatten())
+        });
+        crate::speech::transcription_hint::prepare_session(
+            &app,
+            request.dev_context.as_deref(),
+            request.force_developer_profile.unwrap_or(false),
+            dictionary.as_deref(),
+        );
+
         let session_id = uuid::Uuid::new_v4().to_string();
 
         {
@@ -455,6 +467,7 @@ impl DictationSessionManager {
             self.emit_phase(&app, &session_id, SessionPhase::Done);
             if output_target != OutputTarget::BoxConfirmPaste {
                 *self.active.lock() = None;
+                crate::speech::transcription_hint::clear_session(&app);
             } else if let Some(session) = self.active.lock().as_mut() {
                 session.is_recording = false;
             }
@@ -579,7 +592,14 @@ impl DictationSessionManager {
                 .and_then(|conn| crate::db::get_dictionary_prompt(&conn).ok().flatten())
         });
 
-        profiles::format_with_intent(text, dictionary.as_deref(), Some(app))
+        let dev_context = crate::speech::transcription_hint::get_dev_context(app);
+
+        profiles::format_with_intent(
+            text,
+            dictionary.as_deref(),
+            dev_context.as_deref(),
+            Some(app),
+        )
             .await
             .unwrap_or_else(|_| text.to_string())
     }
@@ -670,6 +690,7 @@ impl DictationSessionManager {
             hf.stop();
         }
         self.stop_streaming(app);
+        crate::speech::transcription_hint::clear_session(app);
         let mut guard = self.active.lock();
         if guard.is_some() {
             *guard = None;

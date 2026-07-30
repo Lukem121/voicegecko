@@ -10,5 +10,6 @@ pub mod parakeet;
 pub mod parakeet_sidecar;
 pub mod spoken_commands;
 pub mod stt_log;
+pub mod transcription_hint;
 pub mod vad;
 pub mod whisper_sidecar;

@@ -51,6 +51,7 @@ pub fn run() {
         .manage(Arc::new(HandsFreeController::new()))
         .manage(Arc::new(LlamaProcessManager::new()))
         .manage(DictionaryPromptCache::default())
+        .manage(speech::transcription_hint::TranscriptionHintState::default())
         .manage(modules::gecko_bar::SnoozeState::default())
         .plugin(tauri_plugin_positioner::init())
         .plugin(tauri_plugin_clipboard_manager::init())

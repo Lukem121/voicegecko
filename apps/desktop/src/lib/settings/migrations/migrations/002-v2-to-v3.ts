@@ -21,6 +21,9 @@ export const migrationV2ToV3: MigrationV2ToV3 = {
         llmServerUrl: 'http://127.0.0.1:8080',
         modeEngineOverrides: {},
         toggleBatchShowLivePreview: false,
+        devContext:
+          'TypeScript, React, Rust, Tauri, VoiceGecko, Cursor, coding agents, software engineering',
+        forceDeveloperProfile: false,
       },
       features: {
         moonshineFlow: true,

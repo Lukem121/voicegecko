@@ -152,6 +152,8 @@ export type SettingsV3DictationSettings = {
   llmServerUrl: string;
   modeEngineOverrides: Record<string, string>;
   toggleBatchShowLivePreview: boolean;
+  devContext: string;
+  forceDeveloperProfile: boolean;
 };
 
 export type SettingsV3AppSettings = SettingsV2AppSettings & {

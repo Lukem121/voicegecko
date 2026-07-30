@@ -63,7 +63,14 @@ impl DictationEngine for GpuWhisperEngine {
             ),
         );
 
-        let text = super::whisper_sidecar::transcribe_samples(app, samples, sample_rate).map_err(|e| {
+        let hint = super::transcription_hint::get_session_hint(app);
+        let text = super::whisper_sidecar::transcribe_samples(
+            app,
+            samples,
+            sample_rate,
+            hint.as_deref(),
+        )
+        .map_err(|e| {
             stt_log::error_fmt(ENGINE, &e);
             e
         })?;

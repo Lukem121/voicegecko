@@ -120,7 +120,7 @@ impl OnnxVad {
     }
 }
 
-pub const POST_ROLL_MS: u64 = 250;
+pub const POST_ROLL_MS: u64 = 400;
 
 pub struct SileroVad {
     threshold: f32,
@@ -221,6 +221,6 @@ mod tests {
     #[test]
     fn post_roll_samples_at_16k() {
         let vad = SileroVad::new(0.015);
-        assert_eq!(vad.post_roll_samples(16_000), 4_000); // 250ms @ 16kHz
+        assert_eq!(vad.post_roll_samples(16_000), 6_400); // 400ms @ 16kHz
     }
 }

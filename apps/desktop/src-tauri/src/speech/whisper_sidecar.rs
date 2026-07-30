@@ -242,7 +242,11 @@ fn parse_sidecar_json(stdout: &str) -> Result<String, String> {
         .ok_or_else(|| "Whisper sidecar returned empty transcript".into())
 }
 
-pub fn transcribe_wav_file(model_path: &Path, wav_path: &Path) -> Result<String, String> {
+pub fn transcribe_wav_file(
+    model_path: &Path,
+    wav_path: &Path,
+    prompt: Option<&str>,
+) -> Result<String, String> {
     if !is_sidecar_installed() {
         return Err("WhisperSidecar not installed".into());
     }
@@ -257,13 +261,21 @@ pub fn transcribe_wav_file(model_path: &Path, wav_path: &Path) -> Result<String,
         ),
     );
 
-    let output = configure_hidden_command(&exe, &sidecar_dir())
+    let mut command = configure_hidden_command(&exe, &sidecar_dir());
+    command
         .arg("--model")
         .arg(model_path)
         .arg("--input")
         .arg(wav_path)
         .arg("--language")
-        .arg("en")
+        .arg("en");
+
+    if let Some(hint) = prompt.filter(|p| !p.trim().is_empty()) {
+        command.arg("--prompt").arg(hint);
+        stt_log::debug(ENGINE, &format!("Whisper prompt: {}", summarize_text(hint, 120)));
+    }
+
+    let output = command
         .output()
         .map_err(|e| format!("Failed to launch WhisperSidecar: {e}"))?;
 
@@ -283,10 +295,15 @@ pub fn transcribe_wav_file(model_path: &Path, wav_path: &Path) -> Result<String,
     parse_sidecar_json(&String::from_utf8_lossy(&output.stdout))
 }
 
-pub fn transcribe_samples(app: &AppHandle, samples: &[f32], sample_rate: u32) -> Result<String, String> {
+pub fn transcribe_samples(
+    app: &AppHandle,
+    samples: &[f32],
+    sample_rate: u32,
+    prompt: Option<&str>,
+) -> Result<String, String> {
     let model_path = whisper_model_path_for_app(app).ok_or("Whisper ggml model not found")?;
     let wav = write_temp_wav(samples, sample_rate)?;
-    let result = transcribe_wav_file(&model_path, &wav);
+    let result = transcribe_wav_file(&model_path, &wav, prompt);
     let _ = fs::remove_file(&wav);
     result
 }
@@ -361,7 +378,7 @@ pub fn compare_ready_models_on_samples(
         };
 
         let start = Instant::now();
-        match transcribe_wav_file(&model_path, &wav) {
+        match transcribe_wav_file(&model_path, &wav, super::transcription_hint::get_session_hint(app).as_deref()) {
             Ok(text) => {
                 let snippet = summarize_text(&text, 160);
                 results.push(WhisperModelCompareResult {

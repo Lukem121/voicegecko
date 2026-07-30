@@ -178,6 +178,9 @@ pub struct StartSessionRequest {
     pub output_target: Option<String>,
     pub show_live_preview: Option<bool>,
     pub audio_pipeline: Option<crate::audio::pipeline::AudioPipelineConfig>,
+    pub dev_context: Option<String>,
+    #[serde(default)]
+    pub force_developer_profile: Option<bool>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

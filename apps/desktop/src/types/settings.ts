@@ -10,6 +10,7 @@ export type NotificationTiming =
 export type AudioPipelineSettings = {
   enableDenoise: boolean;
   enableHighPass: boolean;
+  enableTrimSilence?: boolean;
   highPassHz?: number;
   targetRms?: number;
 };

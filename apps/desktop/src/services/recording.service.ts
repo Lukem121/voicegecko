@@ -171,9 +171,13 @@ export class RecordingService {
             audioPipeline: {
               enableDenoise: settings.audio.pipeline.enableDenoise,
               enableHighPass: settings.audio.pipeline.enableHighPass,
+              enableTrimSilence:
+                settings.audio.pipeline.enableTrimSilence ?? true,
               highPassHz: settings.audio.pipeline.highPassHz ?? 80,
-              targetRms: settings.audio.pipeline.targetRms ?? 0.16,
+              targetRms: settings.audio.pipeline.targetRms ?? 0.22,
             },
+            devContext: settings.dictation.devContext,
+            forceDeveloperProfile: settings.dictation.forceDeveloperProfile,
           },
         });
       } catch (error) {

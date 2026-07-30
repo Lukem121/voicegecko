@@ -318,6 +318,21 @@ function SettingsPage() {
                 </div>
                 <div className="flex items-center justify-between">
                   <div className="space-y-0.5">
+                    <Label>Trim silence</Label>
+                    <p className="text-muted-foreground text-sm">
+                      Remove dead air before and after speech for clearer
+                      transcription
+                    </p>
+                  </div>
+                  <Switch
+                    checked={settings.audio.pipeline.enableTrimSilence ?? true}
+                    onCheckedChange={(enabled) =>
+                      updateAudioPipeline({ enableTrimSilence: enabled })
+                    }
+                  />
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
                     <Label>Noise reduction</Label>
                     <p className="text-muted-foreground text-sm">
                       Light denoise for quiet environments (off by default)
@@ -438,6 +453,39 @@ function SettingsPage() {
                 checked={settings.dictation.intentEnabled}
                 onCheckedChange={(checked) =>
                   updateDictationSetting('intentEnabled', checked)
+                }
+              />
+            </div>
+
+            <div className="space-y-2 border-t pt-4">
+              <Label htmlFor="dev-context">Developer context</Label>
+              <p className="text-muted-foreground text-sm">
+                Stack, tools, and project terms sent to speech recognition and
+                polish (e.g. TypeScript, VoiceGecko, Cursor agents)
+              </p>
+              <textarea
+                className="border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring flex min-h-[80px] w-full rounded-md border px-3 py-2 text-sm focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
+                id="dev-context"
+                onChange={(event) =>
+                  updateDictationSetting('devContext', event.target.value)
+                }
+                placeholder="TypeScript, React, Rust, Tauri, VoiceGecko, Cursor..."
+                value={settings.dictation.devContext}
+              />
+            </div>
+
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label>Always use developer profile</Label>
+                <p className="text-muted-foreground text-sm">
+                  Apply coding vocabulary even outside editors (auto-detect is
+                  usually enough)
+                </p>
+              </div>
+              <Switch
+                checked={settings.dictation.forceDeveloperProfile}
+                onCheckedChange={(checked) =>
+                  updateDictationSetting('forceDeveloperProfile', checked)
                 }
               />
             </div>
