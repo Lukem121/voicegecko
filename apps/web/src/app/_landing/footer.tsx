@@ -51,6 +51,7 @@ const footerSections: FooterSection[] = [
     links: [
       { name: 'Download', href: APP_ROUTES.MARKETING.DOWNLOAD },
       { name: 'Pricing', href: APP_ROUTES.MARKETING.PRICING },
+      { name: 'Blog', href: APP_ROUTES.MARKETING.BLOG },
     ],
   },
   {

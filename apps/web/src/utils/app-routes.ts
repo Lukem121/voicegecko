@@ -14,6 +14,7 @@ export const APP_ROUTES = {
     DOWNLOAD_SUCCESS: '/download/success',
     CONTACT: '/contact',
     CONTACT_SUCCESS: '/contact/success',
+    BLOG: '/blog',
   },
 
   AUTH: {

@@ -99,8 +99,9 @@ const defaultSettings: AppSettings = {
     pipeline: {
       enableDenoise: false,
       enableHighPass: true,
+      enableTrimSilence: true,
       highPassHz: 80,
-      targetRms: 0.16,
+      targetRms: 0.22,
     },
   },
   general: {
@@ -133,6 +134,9 @@ const defaultSettings: AppSettings = {
     llmServerUrl: 'http://127.0.0.1:8080',
     modeEngineOverrides: {},
     toggleBatchShowLivePreview: true,
+    devContext:
+      'TypeScript, React, Rust, Tauri, VoiceGecko, Cursor, coding agents, software engineering',
+    forceDeveloperProfile: false,
   },
   features: {
     moonshineFlow: true,
@@ -218,12 +222,18 @@ export const useSettingsStore = create<SettingsState>()(
               enableHighPass:
                 audioSettings.pipeline?.enableHighPass ??
                 defaultSettings.audio.pipeline.enableHighPass,
+              enableTrimSilence:
+                audioSettings.pipeline?.enableTrimSilence ??
+                defaultSettings.audio.pipeline.enableTrimSilence,
               highPassHz:
                 audioSettings.pipeline?.highPassHz ??
                 defaultSettings.audio.pipeline.highPassHz,
               targetRms:
-                audioSettings.pipeline?.targetRms ??
-                defaultSettings.audio.pipeline.targetRms,
+                audioSettings.pipeline?.targetRms === 0.16 ||
+                audioSettings.pipeline?.targetRms === 0.2
+                  ? 0.22
+                  : (audioSettings.pipeline?.targetRms ??
+                    defaultSettings.audio.pipeline.targetRms),
             },
           }).catch(() => undefined);
 
@@ -235,6 +245,15 @@ export const useSettingsStore = create<SettingsState>()(
                 pipeline: {
                   ...defaultSettings.audio.pipeline,
                   ...audioSettings.pipeline,
+                  enableTrimSilence:
+                    audioSettings.pipeline?.enableTrimSilence ??
+                    defaultSettings.audio.pipeline.enableTrimSilence,
+                  targetRms:
+                    audioSettings.pipeline?.targetRms === 0.16 ||
+                    audioSettings.pipeline?.targetRms === 0.2
+                      ? 0.22
+                      : (audioSettings.pipeline?.targetRms ??
+                        defaultSettings.audio.pipeline.targetRms),
                 },
               },
               general: {
@@ -246,7 +265,10 @@ export const useSettingsStore = create<SettingsState>()(
               },
               privacy: privacySettings,
               personalization: personalizationSettings,
-              dictation: dictationSettings,
+              dictation: {
+                ...defaultSettings.dictation,
+                ...dictationSettings,
+              },
               features: featureSettings,
               models: {
                 ...defaultSettings.models,
@@ -365,8 +387,11 @@ export const useSettingsStore = create<SettingsState>()(
           config: {
             enableDenoise: merged.enableDenoise,
             enableHighPass: merged.enableHighPass,
+            enableTrimSilence:
+              merged.enableTrimSilence ??
+              defaultSettings.audio.pipeline.enableTrimSilence,
             highPassHz: merged.highPassHz ?? 80,
-            targetRms: merged.targetRms ?? 0.16,
+            targetRms: merged.targetRms ?? 0.22,
           },
         });
       },
@@ -590,8 +615,9 @@ async function loadAudioSettings(): Promise<AudioSettings> {
     )) ?? {
       enableDenoise: false,
       enableHighPass: true,
+      enableTrimSilence: true,
       highPassHz: 80,
-      targetRms: 0.16,
+      targetRms: 0.22,
     },
   };
 }
@@ -643,6 +669,12 @@ async function loadDictationSettings(): Promise<SettingsV3DictationSettings> {
       (await settingsStore.get<boolean>(
         'dictation.toggleBatchShowLivePreview'
       )) ?? true,
+    devContext:
+      (await settingsStore.get<string>('dictation.devContext')) ??
+      'TypeScript, React, Rust, Tauri, VoiceGecko, Cursor, coding agents, software engineering',
+    forceDeveloperProfile:
+      (await settingsStore.get<boolean>('dictation.forceDeveloperProfile')) ??
+      false,
   };
 }
 

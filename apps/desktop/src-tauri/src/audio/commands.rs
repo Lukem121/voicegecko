@@ -65,19 +65,33 @@ pub fn stop_recording(
     });
     let _ = app.emit("end-to-end-performance-start", metadata);
 
-    let processed = process(raw_samples, &state.pipeline_config());
+    let pipeline_config = state.pipeline_config();
+    let debug_ts = debug_saves_enabled().then(|| {
+        SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .map(|d| d.as_secs())
+            .unwrap_or(0)
+    });
 
-    if debug_saves_enabled() {
+    if let Some(ts) = debug_ts {
         if let Ok(dir) = app.path().app_data_dir() {
             let debug_dir = dir.join("audio_debug");
             let _ = std::fs::create_dir_all(&debug_dir);
-            let ts = SystemTime::now()
-                .duration_since(UNIX_EPOCH)
-                .map(|d| d.as_secs())
-                .unwrap_or(0);
+            let path = debug_dir.join(format!("raw_audio_{ts}.wav"));
+            if let Err(e) = save_debug_wav(&raw_samples, &path) {
+                tracing::warn!(error = %e, "failed to save raw debug wav");
+            }
+        }
+    }
+
+    let processed = process(raw_samples, &pipeline_config);
+
+    if let Some(ts) = debug_ts {
+        if let Ok(dir) = app.path().app_data_dir() {
+            let debug_dir = dir.join("audio_debug");
             let path = debug_dir.join(format!("processed_audio_{ts}.wav"));
             if let Err(e) = save_debug_wav(&processed, &path) {
-                tracing::warn!(error = %e, "failed to save debug wav");
+                tracing::warn!(error = %e, "failed to save processed debug wav");
             }
         }
     }

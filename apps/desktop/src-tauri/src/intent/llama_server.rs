@@ -2,13 +2,14 @@ use crate::intent::profiles::IntentProfile;
 use tauri::Manager;
 
 pub async fn polish_text(text: &str) -> Result<String, String> {
-    polish_text_with_profile(text, IntentProfile::General, None, None).await
+    polish_text_with_profile(text, IntentProfile::General, None, None, None).await
 }
 
 pub async fn polish_text_with_profile(
     text: &str,
     profile: IntentProfile,
     dictionary: Option<&str>,
+    dev_context: Option<&str>,
     app: Option<&tauri::AppHandle>,
 ) -> Result<String, String> {
     if profile == IntentProfile::Raw {
@@ -33,7 +34,11 @@ pub async fn polish_text_with_profile(
 
     let instruction = match profile {
         IntentProfile::Developer => {
-            "You are a dictation cleanup assistant for developer mode. Output ONLY cleaned text. Preserve camelCase, PascalCase, snake_case, file paths, and technical terms. Format spoken code symbols (console dot log → console.log). Do not wrap prose in code blocks."
+            "You are a dictation cleanup assistant for developer mode. Output ONLY cleaned text. \
+Preserve camelCase, PascalCase, snake_case, file paths, package names, and technical terms. \
+Fix misheard programming words (useState, async, TypeScript, etc.). \
+The user often dictates prompts for AI coding agents — keep imperative, precise technical language. \
+Do not wrap prose in code blocks."
         }
         IntentProfile::Formal => {
             "You are a dictation cleanup assistant. Output ONLY formal, polished prose. Fix grammar and punctuation. Expand contractions where appropriate."
@@ -48,6 +53,10 @@ pub async fn polish_text_with_profile(
     };
 
     let mut system = instruction.to_string();
+    if let Some(ctx) = dev_context.filter(|d| !d.trim().is_empty()) {
+        system.push_str("\n\nAuthor context (preserve technical terms): ");
+        system.push_str(ctx);
+    }
     if let Some(words) = dictionary.filter(|d| !d.trim().is_empty()) {
         system.push_str("\n\nDictionary terms (preserve exactly): ");
         system.push_str(words);
