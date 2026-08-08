@@ -104,6 +104,8 @@ If you prefer manual updates:
 
 The release process uses a self-hosted GitHub Actions runner.
 
+**Security (especially once the repo is public):** only let this runner pick up trusted workflows (e.g. pushes to `release` by maintainers). Do **not** enable it for `pull_request` from forks — untrusted code on a self-hosted runner can steal secrets and compromise the machine. Prefer GitHub-hosted runners for PR CI (`ci.yml`); keep the self-hosted runner scoped to `publish.yaml` on `release`.
+
 1. **Navigate to runner directory**:
 
    ```bash

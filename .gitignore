@@ -53,3 +53,10 @@ target/
 
 # PK inside tauri
 .tauri
+
+# .NET sidecar build output (do not commit)
+sidecar/**/bin/
+sidecar/**/obj/
+
+# Local Cursor plans (keep rules; do not publish scratch plans)
+.cursor/plans/

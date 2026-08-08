@@ -22,6 +22,7 @@ Community conduct is covered by our [Code of Conduct](CODE_OF_CONDUCT.md).
 
 - Never commit `.env` files or private keys. Example env files must use placeholders only.
 - Official release signing keys, Stripe live keys, and similar secrets belong in GitHub Actions secrets / your local environment — not in the repository.
-- Before making this repository public we ran `gitleaks detect` across full git history. Known hits were intentional placeholders (`sk_test_placeholder`, `sk-your-key-here`) allowlisted in [`.gitleaks.toml`](.gitleaks.toml).
+- Before making this repository public, scan full history with `gitleaks detect`. Known intentional placeholders (`sk_test_placeholder`, `sk-your-key-here`) are allowlisted in [`.gitleaks.toml`](.gitleaks.toml).
+- Treat any secret that ever appeared in git history as compromised — rotate it even if it was later removed from the tree.
 
 If you believe a real credential was exposed, contact security@voicegecko.dev immediately and rotate the credential.
