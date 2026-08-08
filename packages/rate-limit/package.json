@@ -2,6 +2,11 @@
   "name": "@acme/rate-limit",
   "version": "1.1.0",
   "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./index.ts",
+    "./env": "./env.ts"
+  },
   "scripts": {
     "clean": "git clean -xdf .cache .turbo dist node_modules",
     "typecheck": "tsc --noEmit --emitDeclarationOnly false"

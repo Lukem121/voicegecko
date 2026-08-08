@@ -125,12 +125,12 @@ type DictationEvents = {
     method: 'button' | 'auto_paste';
   };
   dictation_deleted: {
-    dictation_id: number;
+    dictation_id: string;
     method: 'user_action' | 'bulk_action';
   };
   dictation_searched: {
     search_term_length: number;
-    search_type: 'server_search' | 'fuzzy_search';
+    search_type: 'server_search' | 'fuzzy_search' | 'local_search';
   };
 };
 

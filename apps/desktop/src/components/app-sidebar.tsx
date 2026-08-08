@@ -449,7 +449,7 @@ export function AppSidebar() {
                   <span>Support Voice Gecko</span>
                 </SidebarMenuButton>
                 <SidebarMenuButton asChild size="sm">
-                  <Link to="/sign-in">
+                  <Link search={{ redirect: null }} to="/sign-in">
                     <LogOut />
                     <span>Sign in</span>
                   </Link>
