@@ -58,8 +58,9 @@ const footerSections: FooterSection[] = [
     title: 'Support',
     links: [
       { name: 'Contact', href: APP_ROUTES.MARKETING.CONTACT },
-      { name: 'Sales', href: 'mailto:hello@ipflare.io' },
-      { name: 'Careers', href: 'mailto:hello@ipflare.io' },
+      { name: 'Sales', href: 'mailto:support@voicegecko.dev' },
+      { name: 'Careers', href: 'mailto:support@voicegecko.dev' },
+
     ],
   },
   {

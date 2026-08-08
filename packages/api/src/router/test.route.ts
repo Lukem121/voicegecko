@@ -6,14 +6,18 @@ import { sendWelcomeEmail } from '@acme/email/send/welcome';
 import { sendWelcomeProEmail } from '@acme/email/send/welcome-pro';
 
 import type { TRPCRouterRecord } from '@trpc/server';
-import { protectedProcedure } from '../trpc';
+import { adminProcedure } from '../trpc';
 
+/**
+ * Maintainer-only email template smoke test.
+ * Sends to the calling admin's email — never a hardcoded address.
+ */
 export const testRouter = {
-  sendAllEmailTemplates: protectedProcedure.mutation(async () => {
-    const testEmail = 'lukeask@hotmail.co.uk';
+  sendAllEmailTemplates: adminProcedure.mutation(async ({ ctx }) => {
+    const testEmail = ctx.session.user.email;
     const testUser = {
       email: testEmail,
-      name: 'Test User',
+      name: ctx.session.user.name ?? 'Test User',
     };
 
     try {

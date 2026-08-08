@@ -67,3 +67,6 @@ apps/desktop/src-tauri/resources/*.bin
 
 # Local Cursor plans (keep rules; do not publish scratch plans)
 .cursor/plans/
+
+# TanStack Router generator temp output
+apps/desktop/.tanstack/

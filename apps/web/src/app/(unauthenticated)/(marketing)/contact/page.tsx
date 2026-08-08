@@ -186,10 +186,11 @@ function ContactForm({
         Prefer email?{' '}
         <a
           className="underline-offset-4 hover:underline focus:outline-none focus:ring-2 focus:ring-ring"
-          href="mailto:hello@ipflare.io"
+          href="mailto:support@voicegecko.dev"
         >
-          hello@ipflare.io
+          support@voicegecko.dev
         </a>
+
       </div>
     </div>
   );

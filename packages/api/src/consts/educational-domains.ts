@@ -45,7 +45,5 @@ export const EDUCATIONAL_DOMAINS = [
   '.college',
   '.university',
   '.academy',
-
-  // Luke's email
-  'lukeask@hotmail.co.uk',
 ];
+
