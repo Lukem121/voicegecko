@@ -58,5 +58,12 @@ target/
 sidecar/**/bin/
 sidecar/**/obj/
 
+# Desktop bundled binaries / models — build or download locally / in CI
+# See docs/sidecar.md. Keep sounds/ and other small resources tracked.
+apps/desktop/src-tauri/resources/binaries/**
+!apps/desktop/src-tauri/resources/binaries/README.md
+apps/desktop/src-tauri/resources/*.bin
+*.pdb
+
 # Local Cursor plans (keep rules; do not publish scratch plans)
 .cursor/plans/

@@ -97,6 +97,34 @@ jobs:
             "$vulkanPath\Bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
           }
 
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Build Whisper sidecar
+        run: |
+          $out = "apps/desktop/src-tauri/resources/binaries/whisper-sidecar/win-x64"
+          dotnet publish sidecar/whisper-sidecar/WhisperSidecar.csproj `
+            -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true `
+            -o $out
+          Remove-Item -Force "$out/*.pdb" -ErrorAction SilentlyContinue
+          if (-not (Test-Path "$out/WhisperSidecar.exe")) {
+            Write-Error "WhisperSidecar.exe missing after publish"
+            exit 1
+          }
+
+      - name: Download default Whisper model for bundle
+        run: |
+          $out = "apps/desktop/src-tauri/resources/ggml-base.en.bin"
+          if (-not (Test-Path $out)) {
+            $url = "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-base.en.bin"
+            New-Item -ItemType Directory -Force -Path (Split-Path $out) | Out-Null
+            Write-Host "Downloading $url"
+            Invoke-WebRequest -Uri $url -OutFile $out
+          }
+          Write-Host "Model size: $((Get-Item $out).Length) bytes"
+
       - name: Build full version
         uses: tauri-apps/tauri-action@v0
         env:

@@ -2,6 +2,8 @@
 
 This app uses a .NET sidecar to run Whisper via Whisper.net as a separate process.
 
+**Built outputs are gitignored** (`apps/desktop/src-tauri/resources/binaries/`, `*.pdb`). Ship source only; build before packaging or let the `publish` workflow do it.
+
 Build steps (from repo root):
 
 1. Install .NET 8 SDK.

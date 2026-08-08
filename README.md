@@ -47,6 +47,8 @@ Desktop (Rust required):
 cd apps/desktop && pnpm dev
 ```
 
+Whisper GPU sidecar binaries are **not** in git — build them when packaging ([docs/sidecar.md](docs/sidecar.md)). Day-to-day `pnpm dev` can download speech models on first use.
+
 See [CONTRIBUTING.md](CONTRIBUTING.md). Prerequisites: Node 22.14+, PNPM 9.6+, Rust for desktop.
 
 | Command | Description |
