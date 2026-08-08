@@ -50,8 +50,7 @@ function PriceCardHeader({
     <div
       className={cn(
         'flex flex-col gap-1.5 border-b p-4 md:p-5',
-        // Align headers across cards based on billing period
-        isAnnual ? 'md:h-[216px]' : 'md:h-[184px]',
+        'md:h-[168px]',
         highlight ? 'border-primary/20 bg-primary/5' : 'border-border'
       )}
     >
@@ -59,7 +58,7 @@ function PriceCardHeader({
         <h3 className="font-semibold text-lg tracking-tight">{name}</h3>
         {popular && (
           <span className="inline-flex items-center rounded-full bg-primary px-2.5 py-0.5 font-semibold text-[11px] text-white shadow-sm">
-            Most Popular
+            Optional
           </span>
         )}
       </div>

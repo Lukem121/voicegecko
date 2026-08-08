@@ -2,7 +2,6 @@ import type { PriceWithMetadata } from '@acme/api/src/services/stripe/stripe.ser
 import { stripeService } from '@acme/api/src/services/stripe/stripe.service';
 import { log } from '@acme/observability/log';
 import { Card } from '@acme/ui/components/ui/card';
-import { Separator } from '@acme/ui/components/ui/separator';
 import type { Metadata } from 'next';
 import { unstable_cache } from 'next/cache';
 import Link from 'next/link';
@@ -18,11 +17,11 @@ import { caller } from '~/trpc/server';
 export const metadata: Metadata = {
   title: 'Pricing — Voice Gecko',
   description:
-    'Start free with 2,000 words per week. Upgrade to Pro or Team for unlimited dictation and advanced features.',
+    'Voice Gecko is free and open source. Optional $5.99/mo Support helps fund development — same product either way.',
   openGraph: {
     title: 'Pricing — Voice Gecko',
     description:
-      'Start free with 2,000 words per week. Upgrade to Pro or Team for unlimited dictation and advanced features.',
+      'Voice Gecko is free and open source. Optional $5.99/mo Support helps fund development — same product either way.',
   },
 };
 
@@ -36,7 +35,7 @@ const getCachedPricingData = unstable_cache(
 
 export default async function PricingPage() {
   const planIntent = await readPlanIntentCookie();
-  const validPlanIds = new Set(['voice gecko pro', 'voice gecko team']);
+  const validPlanIds = new Set(['voice gecko pro']);
 
   const session = await caller.auth.getSession();
 
@@ -54,7 +53,7 @@ export default async function PricingPage() {
     }
   }
 
-  let autoCheckoutPlan: 'voice gecko pro' | 'voice gecko team' | undefined;
+  let autoCheckoutPlan: 'voice gecko pro' | undefined;
   let autoCheckoutBilling: 'annual' | 'monthly' | undefined;
   let shouldAutoCheckout = false;
 
@@ -66,9 +65,7 @@ export default async function PricingPage() {
     }
 
     if (!hasActiveSubscription) {
-      autoCheckoutPlan = planIntent.planId as
-        | 'voice gecko pro'
-        | 'voice gecko team';
+      autoCheckoutPlan = 'voice gecko pro';
       autoCheckoutBilling = planIntent.billing;
       shouldAutoCheckout = true;
     }
@@ -86,7 +83,6 @@ export default async function PricingPage() {
 
   return (
     <>
-      {/* Primary pricing cards reused from landing, with live prices when available */}
       <PricingSection
         autoCheckoutBilling={autoCheckoutBilling}
         autoCheckoutPlan={autoCheckoutPlan}
@@ -94,65 +90,25 @@ export default async function PricingPage() {
         shouldAutoCheckout={shouldAutoCheckout}
       />
       <Section className="py-6 md:py-12">
-        {/* Plan comparison */}
-        <section className="">
-          <h2 className="font-semibold text-2xl">Compare plans</h2>
-          <p className="mt-2 text-muted-foreground">
-            Everything you need to move from voice to results.
-          </p>
-          <div className="mt-6 overflow-hidden rounded-lg border">
-            <div className="grid grid-cols-3 bg-muted/40 p-4 font-medium text-sm">
-              <div>Feature</div>
-              <div>Pro</div>
-              <div>Team</div>
-            </div>
-            <Separator />
-            <div className="grid grid-cols-3 p-4 text-sm">
-              <div className="font-medium">Dictation limit</div>
-              <div>Unlimited</div>
-              <div>Unlimited (per seat)</div>
-            </div>
-            <Separator />
-            <div className="grid grid-cols-3 p-4 text-sm">
-              <div className="font-medium">Priority processing</div>
-              <div>Included</div>
-              <div>Included</div>
-            </div>
-            <Separator />
-            <div className="grid grid-cols-3 p-4 text-sm">
-              <div className="font-medium">Advanced dictionary</div>
-              <div>Included</div>
-              <div>Included</div>
-            </div>
-            <Separator />
-            <div className="grid grid-cols-3 p-4 text-sm">
-              <div className="font-medium">Team management</div>
-              <div>Single user</div>
-              <div>Invite teammates, manage seats</div>
-            </div>
-          </div>
-        </section>
-
-        {/* FAQs specific to pricing */}
-        <section className="mt-20">
+        <section>
           <h2 className="font-semibold text-2xl">Pricing FAQs</h2>
           <div className="mt-6 grid gap-4 md:grid-cols-2">
             {[
               {
-                q: 'Which plan gives me unlimited dictation?',
-                a: 'Both Pro and Team unlock unlimited dictations immediately. Pick Pro if you are a solo user or Team if you collaborate with others.',
+                q: 'Is Voice Gecko really free?',
+                a: 'Yes. The full product is free and open source under the MIT license. There are no word limits or locked features.',
+              },
+              {
+                q: 'What do I get if I pay $5.99/mo?',
+                a: 'Exactly the same product as Free. Support is an optional way to fund ongoing development — thank you if you do.',
+              },
+              {
+                q: 'Can I cancel Support anytime?',
+                a: 'Yes. Cancel anytime from your account billing settings. You keep full access either way.',
               },
               {
                 q: 'Do you offer refunds?',
-                a: 'We have a 30-day money back guarantee on Pro. Cancel anytime from your account settings.',
-              },
-              {
-                q: 'Do you have student pricing?',
-                a: 'Yes, students get 50% off Pro. Verify your student email during checkout to apply the discount.',
-              },
-              {
-                q: 'Can I switch between monthly and yearly?',
-                a: 'Absolutely. You can switch at any time. Yearly plans come with a discount equivalent to two free months.',
+                a: 'Support is a voluntary contribution. If something went wrong with billing, contact us and we will make it right.',
               },
             ].map((item) => (
               <Card className="p-5" key={item.q}>
@@ -163,19 +119,17 @@ export default async function PricingPage() {
           </div>
         </section>
 
-        {/* Social proof / CTA */}
         <section className="mt-20 rounded-xl border bg-muted/40 p-8 text-center">
           <p className="mx-auto max-w-2xl text-balance text-muted-foreground">
-            “With Voice Gecko, our status updates and meeting recaps take
-            minutes instead of hours. It’s the fastest way to move from ideas to
-            action.”
+            Voice Gecko is built in the open. Use it free, fork it, contribute —
+            or chip in $5.99/mo if you want to support the project.
           </p>
           <div className="mt-4">
             <Link
               className="inline-flex items-center rounded-md bg-primary px-4 py-2 font-medium text-primary-foreground hover:bg-primary/90"
-              href="/pricing#pricing"
+              href="/download"
             >
-              View plans
+              Download free
             </Link>
           </div>
         </section>

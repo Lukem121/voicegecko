@@ -55,7 +55,7 @@ export const onSubscriptionCancel = async ({
 
       await sendSubscriptionCancelledEmail({
         user,
-        planName: 'VoiceGecko Pro',
+        planName: 'Voice Gecko Support',
         accessUntilDate,
         reactivateUrl,
       });
@@ -85,7 +85,7 @@ export const onSubscriptionCancel = async ({
       subscriptionId: subscription.id,
       eventType: 'cancelled',
       userId: subscription.referenceId,
-      planName: 'VoiceGecko Pro',
+      planName: 'Voice Gecko Support',
       status: subscription.status,
       email: user?.email,
       username: user?.name,

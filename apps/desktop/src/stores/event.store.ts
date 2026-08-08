@@ -197,19 +197,7 @@ export const useEventStore = create<EventState>()(
           createDictation(dictationData)
             .then(() => {})
             .catch((error) => {
-              if (
-                error instanceof Error &&
-                error.message.includes('limit exceeded')
-              ) {
-                analytics.track('usage_limit_exceeded', {
-                  limit_type: 'dictation',
-                  attempted_action: 'save_dictation',
-                });
-                toast.error('Weekly usage limit reached', {
-                  description:
-                    'Future dictations may be limited. Upgrade to Pro for unlimited access.',
-                });
-              } else if (isNetworkError(error)) {
+              if (isNetworkError(error)) {
                 connectivityState.checkConnectivity();
               } else {
                 log.error(error, 'Background save error:');

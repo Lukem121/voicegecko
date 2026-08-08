@@ -5,7 +5,6 @@ import {
   CardHeader,
   CardTitle,
 } from '@acme/ui/components/ui/card';
-import { Progress } from '@acme/ui/components/ui/progress';
 import { Skeleton } from '@acme/ui/components/ui/skeleton';
 import { createCrossPlatformUrl } from '@acme/utils/redirection';
 import { useQuery } from '@tanstack/react-query';
@@ -36,20 +35,6 @@ function UsagePage() {
   React.useEffect(() => {
     if (stats && !isLoading) {
       analytics.trackFeatureFirstUse('usage_page');
-
-      // Track usage patterns for business intelligence
-      const usagePercentage = stats.current.isUnlimited
-        ? 0
-        : (stats.current.wordsUsed / stats.current.wordsLimit) * 100;
-
-      if (!stats.current.isUnlimited && usagePercentage >= 80) {
-        analytics.track('usage_limit_approached', {
-          limit_type: 'dictation',
-          current_usage: stats.current.wordsUsed,
-          limit_value: stats.current.wordsLimit,
-          percentage_used: usagePercentage,
-        });
-      }
     }
   }, [stats, isLoading]);
 
@@ -96,11 +81,6 @@ function UsagePage() {
     },
   ];
 
-  // Calculate usage percentage for free users
-  const usagePercentage = stats.current.isUnlimited
-    ? 0
-    : (stats.current.wordsUsed / stats.current.wordsLimit) * 100;
-
   return (
     <div className="flex flex-1 flex-col gap-6">
       <div className="flex items-center justify-between">
@@ -111,34 +91,6 @@ function UsagePage() {
           </p>
         </div>
       </div>
-
-      {/* Usage Limit Progress for Free Users */}
-      {!stats.current.isUnlimited && (
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="font-medium text-base">
-              Weekly Usage Limit
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="flex items-center justify-between text-sm">
-              <span>Words Used</span>
-              <span className="font-medium">
-                {stats.current.wordsUsed.toLocaleString()} /{' '}
-                {stats.current.wordsLimit.toLocaleString()}
-              </span>
-            </div>
-            <Progress className="mt-2 h-2" value={usagePercentage} />
-            {usagePercentage >= 90 && (
-              <p className="mt-2 text-amber-600 text-sm">
-                {usagePercentage >= 100
-                  ? 'Usage limit reached. Upgrade to Pro for unlimited words.'
-                  : 'Approaching usage limit'}
-              </p>
-            )}
-          </CardContent>
-        </Card>
-      )}
 
       {/* Current Period Overview */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -280,7 +232,7 @@ function UsagePage() {
               variant="outline"
             >
               <CreditCard className="mr-2 h-4 w-4" />
-              Upgrade to Pro
+              Support Voice Gecko
               <ExternalLink className="ml-auto h-4 w-4 opacity-50" />
             </Button>
           </CardContent>

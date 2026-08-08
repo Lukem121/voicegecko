@@ -20,7 +20,6 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@acme/ui/components/ui/dropdown-menu';
-import { Progress } from '@acme/ui/components/ui/progress';
 import {
   Sidebar,
   SidebarContent,
@@ -34,9 +33,7 @@ import {
   SidebarMenuSub,
   SidebarMenuSubButton,
   SidebarMenuSubItem,
-  useSidebar,
 } from '@acme/ui/components/ui/sidebar';
-import { useQuery } from '@tanstack/react-query';
 import { Link, useLocation } from '@tanstack/react-router';
 import { open } from '@tauri-apps/plugin-shell';
 import type { LucideIcon } from 'lucide-react';
@@ -59,7 +56,6 @@ import { useState } from 'react';
 import { useSignOut } from '~/hooks/auth';
 import { useAuthWithConnectivity } from '~/hooks/use-auth-with-connectivity';
 import { useUpdateStore } from '~/stores/update.store';
-import { trpc } from '~/trpc';
 
 type NavigationSubItem = {
   title: string;
@@ -134,7 +130,7 @@ const data: NavigationData = {
   ],
   navSecondary: [
     {
-      title: 'Plans',
+      title: 'Support',
       url: '#plans',
       icon: CreditCard,
     },
@@ -176,89 +172,17 @@ if (isDev) {
 // Discord URL for feedback
 const DISCORD_URL = 'https://discord.gg/BFxNQCzZjB';
 
-// Circular Progress Component
-type CircularProgressProps = {
-  percentage: number;
-  size?: number;
-  strokeWidth?: number;
-};
-
-function CircularProgress({
-  percentage,
-  size = 32,
-  strokeWidth = 4,
-}: CircularProgressProps) {
-  const radius = (size - strokeWidth) / 2;
-  const circumference = radius * 2 * Math.PI;
-  const strokeDashoffset = circumference - (percentage / 100) * circumference;
-
-  return (
-    <div className="relative flex items-center justify-center">
-      <svg className="-rotate-90 transform" height={size} width={size}>
-        <title>Progress indicator showing {percentage}% completion</title>
-        {/* Background circle */}
-        <circle
-          className="text-muted-foreground/20"
-          cx={size / 2}
-          cy={size / 2}
-          fill="none"
-          r={radius}
-          stroke="currentColor"
-          strokeWidth={strokeWidth}
-        />
-        {/* Progress circle */}
-        <circle
-          className="text-primary transition-all duration-300 ease-in-out"
-          cx={size / 2}
-          cy={size / 2}
-          fill="none"
-          r={radius}
-          stroke="currentColor"
-          strokeDasharray={circumference}
-          strokeDashoffset={strokeDashoffset}
-          strokeLinecap="round"
-          strokeWidth={strokeWidth}
-        />
-      </svg>
-      {/* Percentage text in center */}
-      <div className="absolute inset-0 flex items-center justify-center">
-        <span className="font-medium text-[10px]">
-          {Math.round(percentage)}%
-        </span>
-      </div>
-    </div>
-  );
-}
-
 export function AppSidebar() {
   const auth = useAuthWithConnectivity();
   const user = auth.user;
   const signOut = useSignOut();
   const location = useLocation();
   const [showSupportDialog, setShowSupportDialog] = useState(false);
-  const { state: sidebarState } = useSidebar();
-
-  // Fetch usage status
-  const { data: usageStatus } = useQuery({
-    ...trpc.usage.getStatus.queryOptions(),
-    refetchInterval: 60_000, // Refetch every minute
-    enabled: !!user,
-  });
 
   // Update availability indicator for Settings menu
   const updateAvailable = !!useUpdateStore((s) => s.availableUpdate);
 
-  // Check if user is on free plan (no subscription)
-  const isFreePlan = usageStatus && !usageStatus.isUnlimited;
-  const usagePercentage = isFreePlan
-    ? (usageStatus.wordsUsed / usageStatus.wordsLimit) * 100
-    : 0;
-
-  // Hide Plans link for paid plans (isUnlimited implies paid)
-  const hasPaidPlan = Boolean(usageStatus?.isUnlimited);
-  const navSecondaryItems = hasPaidPlan
-    ? data.navSecondary.filter((item) => item.title !== 'Plans')
-    : data.navSecondary;
+  const navSecondaryItems = data.navSecondary;
 
   return (
     <Sidebar
@@ -421,51 +345,6 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
       <SidebarFooter>
-        {/* Usage Progress for Free Users */}
-        {isFreePlan && (
-          <div className="mb-4 px-2">
-            {sidebarState === 'expanded' ? (
-              <div className="space-y-2">
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-muted-foreground">Weekly Usage</span>
-                  <span className="font-medium">
-                    {usageStatus.wordsUsed.toLocaleString()} /{' '}
-                    {usageStatus.wordsLimit.toLocaleString()}
-                  </span>
-                </div>
-                <Progress className="h-2" value={usagePercentage} />
-                {usagePercentage >= 90 && (
-                  <p className="text-amber-600 text-xs">
-                    {usagePercentage >= 100 ? (
-                      <>
-                        Limit reached.{' '}
-                        <button
-                          className="cursor-pointer underline"
-                          onClick={async () => {
-                            const websiteUrl =
-                              import.meta.env.VITE_PUBLIC_VOICEGECKO_URL ||
-                              'https://www.voicegecko.dev';
-                            await open(`${websiteUrl}/app/plans`);
-                          }}
-                          type="button"
-                        >
-                          Upgrade to Pro.
-                        </button>
-                      </>
-                    ) : (
-                      'Approaching usage limit.'
-                    )}
-                  </p>
-                )}
-              </div>
-            ) : (
-              <div className="flex justify-center">
-                <CircularProgress percentage={usagePercentage} />
-              </div>
-            )}
-          </div>
-        )}
-
         {/* User Menu */}
         <SidebarMenu>
           <SidebarMenuItem>

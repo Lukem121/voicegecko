@@ -73,10 +73,12 @@ export const PlanCard = ({
           )}
         </div>
         <div className="mt-2 flex items-baseline gap-1">
-              <span className="font-bold text-2xl">
-                {isYearly ? plan.yearlyMonthlyPrice : plan.monthlyPrice}
-              </span>
-              <span className="text-muted-foreground text-sm">/mo</span>
+          <span className="font-bold text-2xl">
+            {isYearly ? plan.yearlyMonthlyPrice : plan.monthlyPrice}
+          </span>
+          {plan.stripeId ? (
+            <span className="text-muted-foreground text-sm">/mo</span>
+          ) : null}
         </div>
         <p className="mt-1 text-muted-foreground text-xs">{plan.subtitle}</p>
       </CardHeader>

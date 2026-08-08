@@ -53,7 +53,7 @@ export const onSubscriptionUpdate = async ({
 
         await sendPaymentFailedEmail({
           user,
-          planName: subscription.plan || 'VoiceGecko Pro',
+          planName: subscription.plan || 'Voice Gecko Support',
           retryPaymentUrl,
           accountUrl,
         });
@@ -77,7 +77,7 @@ export const onSubscriptionUpdate = async ({
       subscriptionId: subscription.id,
       eventType: 'updated',
       userId: subscription.referenceId,
-      planName: subscription.plan || 'VoiceGecko Pro',
+      planName: subscription.plan || 'Voice Gecko Support',
       status: subscription.status,
       email: user?.email,
       username: user?.name,

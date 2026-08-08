@@ -6,10 +6,7 @@ import {
   setPlanIntentCookie,
 } from '~/lib/pricing/plan-intent.server';
 
-const ALLOWED_PLAN_IDS = new Set<PlanIntent['planId']>([
-  'voice gecko pro',
-  'voice gecko team',
-]);
+const ALLOWED_PLAN_IDS = new Set<PlanIntent['planId']>(['voice gecko pro']);
 
 export async function POST(request: Request) {
   let payload: Partial<PlanIntent> = {};

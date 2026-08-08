@@ -5,7 +5,7 @@ export default function SubscriptionCancelledEmail() {
     <SubscriptionCancelledTemplate
       accessUntilDate="March 15, 2025"
       name="Michael"
-      planName="VoiceGecko Pro"
+      planName="Voice Gecko Support"
       reactivateUrl="https://www.voicegecko.dev/app/billing/reactivate"
     />
   );

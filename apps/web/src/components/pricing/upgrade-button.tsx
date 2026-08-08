@@ -160,7 +160,7 @@ function InteractiveUpgradeButton({
   if (isUpgrading) {
     displayText = 'Processing...';
   } else if (planType === 'pro' && isLoggedIn && hasActivePro) {
-    displayText = "You're on Pro";
+    displayText = "You're supporting";
   }
 
   return (

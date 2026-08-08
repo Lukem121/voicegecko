@@ -22,56 +22,28 @@ import {
   User2,
 } from 'lucide-react';
 
-import { PlanComparison } from '../plans/_components/plan-comparison';
+const SHARED_FEATURES = [
+  'Unlimited dictations',
+  'Lightning fast dictation',
+  'Global shortcut access',
+  'Custom dictionary',
+  'Privacy mode',
+  'Open source',
+] as const;
 
-const PRO_PLAN = {
-  name: 'Pro',
-  subtitle: 'All of our features',
-  features: [
-    'Unlimited dictations',
-    'Advanced AI processing',
-    'Export formats',
-    'Priority support',
-    'Cloud sync',
-    'Advanced features',
-  ],
-  cta: 'Upgrade',
+const FREE_PLAN = {
+  name: 'Free',
+  subtitle: 'Full product. No limits.',
+  features: SHARED_FEATURES,
+  cta: 'Download App',
 } as const;
 
-const TEAM_PLAN = {
-  name: 'Team',
-  subtitle: 'Per seat pricing (min 3 seats)',
-  features: [
-    'Unlimited dictations (per seat)',
-    'Invite team members',
-    'Manage seats in billing portal',
-  ],
-  cta: 'Start Team Plan',
+const SUPPORT_PLAN = {
+  name: 'Support',
+  subtitle: 'Optional — same product, helps fund development',
+  features: SHARED_FEATURES,
+  cta: 'Support Voice Gecko',
 } as const;
-
-function BillingToggleStatic() {
-  return (
-    <div className="flex justify-center">
-      <div className="flex rounded-full border p-1">
-        <div className="relative z-0 px-4 py-2">
-          <div className="absolute inset-0 rounded-full bg-neutral-900" />
-          <span className="relative block font-medium text-white text-xs">
-            Yearly
-            <span className="ml-2 font-semibold text-[10px] text-green-500">
-              <span className="hidden lg:inline">Save </span>
-              <span className="lg:hidden">-</span>20%
-            </span>
-          </span>
-        </div>
-        <div className="relative z-0 px-4 py-2">
-          <span className="relative block font-medium text-muted-foreground text-xs">
-            Monthly
-          </span>
-        </div>
-      </div>
-    </div>
-  );
-}
 
 function PlanCardLoading({
   cta,
@@ -115,49 +87,22 @@ function PlanCardLoading({
   );
 }
 
-function StudentDiscountCardStatic() {
-  return (
-    <Card className="mb-12 p-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <p className="font-medium">Student Discount</p>
-          <p className="text-muted-foreground text-sm">
-            Students get 50% off the Pro plan
-          </p>
-        </div>
-        <Button disabled variant="outline">
-          Get started
-        </Button>
-      </div>
-    </Card>
-  );
-}
-
 export function PlansPageSkeleton() {
   return (
     <div>
-      <div className="mb-4 flex items-end justify-between gap-4 sm:mb-8">
-        <h1 className="font-semibold text-2xl tracking-tight sm:hidden">
-          Plans
+      <div className="mb-4 sm:mb-8">
+        <h1 className="font-semibold text-2xl tracking-tight sm:mb-2">
+          Support
         </h1>
-        <div className="hidden sm:block">
-          <h1 className="font-semibold text-2xl tracking-tight sm:mb-2">
-            Plans
-          </h1>
-          <p className="text-muted-foreground">
-            Choose the plan that works for you
-          </p>
-        </div>
-        <BillingToggleStatic />
+        <p className="text-muted-foreground">
+          Voice Gecko is free and open source. Support is optional.
+        </p>
       </div>
 
       <div className="mb-8 grid gap-6 md:grid-cols-2">
-        <PlanCardLoading {...PRO_PLAN} />
-        <PlanCardLoading {...TEAM_PLAN} />
+        <PlanCardLoading {...FREE_PLAN} />
+        <PlanCardLoading {...SUPPORT_PLAN} />
       </div>
-
-      <StudentDiscountCardStatic />
-      <PlanComparison />
     </div>
   );
 }

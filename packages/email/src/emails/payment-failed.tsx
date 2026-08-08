@@ -5,7 +5,7 @@ export default function PaymentFailedEmail() {
     <PaymentFailedTemplate
       accountUrl="https://www.voicegecko.dev/app/account"
       name="Sarah"
-      planName="VoiceGecko Pro"
+      planName="Voice Gecko Support"
       retryPaymentUrl="https://www.voicegecko.dev/app/billing/update-payment"
     />
   );

@@ -1,0 +1,17 @@
+# Gitleaks config for Voice Gecko
+# Run: gitleaks detect --source . --verbose
+
+title = "Voice Gecko"
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Known non-secret placeholders and examples"
+regexes = [
+  '''sk_test_placeholder''',
+  '''sk-your-key-here''',
+]
+paths = [
+  '''apps/desktop/\.env\.development\.example''',
+]

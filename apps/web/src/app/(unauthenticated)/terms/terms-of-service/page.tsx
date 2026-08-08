@@ -24,7 +24,7 @@ export default function TermsOfServicePage() {
               </li>
               <li>
                 <a href="#subscriptions-billing-and-taxes">
-                  3) Subscriptions, billing and taxes
+                  3) Free use, optional Support, billing and taxes
                 </a>
               </li>
               <li>
@@ -117,7 +117,7 @@ export default function TermsOfServicePage() {
             <h1>Voice Gecko — Terms of Service</h1>
             <p>
               <strong>Effective date:</strong>{' '}
-              <time dateTime="2025-08-17">17 August 2025</time>
+              <time dateTime="2026-08-08">8 August 2026</time>
             </p>
             <p>
               <strong>Who we are:</strong> Social Freak Limited, trading as
@@ -399,8 +399,10 @@ export default function TermsOfServicePage() {
               without written permission.
             </p>
             <p>
-              If we provide downloadable tools or SDKs, that licence lasts only
-              while you have a valid subscription and comply with these Terms.
+              If we provide downloadable tools or SDKs for the Service, you may
+              use them while you comply with these Terms. Separately, open-source
+              components of Voice Gecko are licensed under MIT (see the project
+              LICENSE).
             </p>
           </section>
 
@@ -476,43 +478,56 @@ export default function TermsOfServicePage() {
             className="scroll-mt-28"
             id="subscriptions-billing-and-taxes"
           >
-            <h2>3) Subscriptions, billing and taxes</h2>
+            <h2>3) Free use, optional Support, billing and taxes</h2>
             <p>
-              <strong>Plans.</strong> We offer monthly and annual subscriptions.
+              <strong>Free &amp; open source.</strong> Voice Gecko is free to
+              use with the full product and no usage caps. The software is
+              offered under the MIT license. Paying is never required to use the
+              hosted Service’s core features.
             </p>
             <p>
-              <strong>Auto-renewal.</strong> Subscriptions renew automatically
-              at the end of each billing period unless you cancel before
-              renewal. You authorise us (or our payment processor) to take
-              payment using your chosen method.
+              <strong>Optional Support.</strong> You may choose an optional
+              Support contribution (currently billed monthly via our payment
+              processor). Support is a voluntary way to fund development. Free
+              and Support provide the same product features.
             </p>
             <p>
-              <strong>No refunds.</strong> All fees are non-refundable except
-              where the law requires otherwise. We don’t issue credits or
-              refunds for partial periods, downgrades, or unused time.
+              <strong>Auto-renewal.</strong> If you start Support, it renews
+              automatically at the end of each billing period unless you cancel
+              before renewal. You authorise us (or our payment processor) to take
+              payment using your chosen method. You can cancel Support anytime
+              from your account billing settings; canceling does not remove access
+              to the free product.
             </p>
             <p>
-              <strong>Price changes.</strong> We may change prices. We’ll give
-              you at least 30 days’ notice before your next renewal. If you keep
-              using the Service after the change takes effect, you accept the
-              new price.
+              <strong>Billing issues &amp; refunds.</strong> Support is a
+              voluntary contribution. Fees are generally non-refundable except
+              where the law requires otherwise. If something went wrong with
+              billing, contact support@voicegecko.dev and we will make it right
+              where appropriate.
+            </p>
+            <p>
+              <strong>Price changes.</strong> We may change Support pricing.
+              We’ll give you at least 30 days’ notice before your next renewal.
+              If you keep Support after the change takes effect, you accept the
+              new price. You may cancel before renewal if you do not agree.
             </p>
             <p>
               <strong>Taxes.</strong> Fees are exclusive of VAT and other taxes.
               We’ll add and collect taxes where required.
             </p>
             <p>
-              <strong>Your details.</strong> You must keep your billing details
-              accurate and current. Failure to pay may lead to suspension or
-              termination.
+              <strong>Your details.</strong> If you pay for Support, you must
+              keep your billing details accurate and current. Failure to pay may
+              end Support; you retain access to the free product.
             </p>
             <p>
               <strong>UK/EU consumers:</strong> you may have a 14-day right to
-              cancel certain online purchases. Because our Service is digital
-              and starts immediately, we ask for your express consent to start
-              now. By doing so you lose the right to change your mind for the
-              current period. You can still cancel future renewals at any time
-              before renewal.
+              cancel certain online purchases. Because Support is a digital
+              contribution processed immediately, we ask for your express consent
+              to start now. By doing so you may lose the right to change your mind
+              for the current period under those rules. You can still cancel
+              future renewals at any time before renewal.
             </p>
           </section>
 

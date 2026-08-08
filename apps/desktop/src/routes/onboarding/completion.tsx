@@ -141,27 +141,28 @@ function CompletionStep() {
               </CardFooter>
             </Card>
 
-            {/* Pro Features */}
+            {/* Optional support */}
             <Card>
               <CardHeader>
-                <CardTitle>Unlock More Features</CardTitle>
+                <CardTitle>Support the project</CardTitle>
                 <p className="text-muted-foreground text-sm">
-                  Upgrade to Pro for unlimited dictations and advanced features
+                  Voice Gecko is free and open source. Optional Support helps
+                  fund ongoing development — same product either way.
                 </p>
               </CardHeader>
               <CardContent className="space-y-3">
                 <ul className="space-y-2 text-sm">
                   <li className="flex items-center gap-2">
                     <Check className="h-3 w-3 text-green-600" />
-                    Unlimited dictations
+                    Full product on Free
                   </li>
                   <li className="flex items-center gap-2">
                     <Check className="h-3 w-3 text-green-600" />
-                    Priority dictation queue
+                    No usage limits
                   </li>
                   <li className="flex items-center gap-2">
                     <Check className="h-3 w-3 text-green-600" />
-                    Priority support
+                    MIT open source
                   </li>
                 </ul>
               </CardContent>
@@ -171,7 +172,7 @@ function CompletionStep() {
                   onClick={handleUpgradeToPro}
                   variant="outline"
                 >
-                  Learn About Pro
+                  Support Voice Gecko
                 </Button>
               </CardFooter>
             </Card>

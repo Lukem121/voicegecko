@@ -2,8 +2,6 @@ import { TRPCError } from '@trpc/server';
 
 import { usageRepository } from '../../repository/usage.repository';
 
-const FREE_TIER_WEEKLY_WORD_LIMIT = 2000;
-
 export type UserUsageStatus = {
   wordsUsed: number;
   wordsLimit: number;
@@ -15,95 +13,53 @@ export type UserUsageStatus = {
 
 export class UsageService {
   /**
-   * Check if a user can perform a dictation based on their current usage
+   * Check if a user can perform a dictation based on their current usage.
+   * Voice Gecko is free and open source — all users are unlimited.
    */
-  async canUserTranscribe(userId: string): Promise<boolean> {
-    const status = await this.getUserUsageStatus(userId);
-    return status.canTranscribe;
+  async canUserTranscribe(_userId: string): Promise<boolean> {
+    void _userId;
+    return true;
   }
 
   /**
-   * Get the current usage status for a user
+   * Get the current usage status for a user.
+   * All users are unlimited; weekly limit fields are kept for API shape compatibility.
    */
-  async getUserUsageStatus(userId: string): Promise<UserUsageStatus> {
-    if (await this.userHasUnlimitedEntitlement(userId)) {
-      return this.getUnlimitedUsageStatus();
-    }
-
-    // Get or create usage record
-    const usage = await this.getOrCreateUsageRecord(userId);
-
-    // Check if we need to reset (new week)
-    const currentWeekStart = this.getWeekStartDate();
-    const needsReset = usage.weekStartDate < currentWeekStart;
-
-    if (needsReset) {
-      // Reset usage for new week
-      await usageRepository.upsert({
-        userId,
-        weekStartDate: currentWeekStart,
-        wordsUsed: 0,
-        dictationCount: 0,
-      });
-
-      return {
-        wordsUsed: 0,
-        wordsLimit: FREE_TIER_WEEKLY_WORD_LIMIT,
-        dictationCount: 0,
-        isUnlimited: false,
-        canTranscribe: true,
-        weekStartDate: currentWeekStart,
-      };
-    }
-
-    return {
-      wordsUsed: usage.wordsUsed,
-      wordsLimit: FREE_TIER_WEEKLY_WORD_LIMIT,
-      dictationCount: usage.dictationCount,
-      isUnlimited: false,
-      canTranscribe: usage.wordsUsed < FREE_TIER_WEEKLY_WORD_LIMIT,
-      weekStartDate: usage.weekStartDate,
-    };
+  async getUserUsageStatus(_userId: string): Promise<UserUsageStatus> {
+    void _userId;
+    return this.getUnlimitedUsageStatus();
   }
 
   /**
-   * Update usage after a successful dictation
+   * Update usage after a successful dictation (stats only; never blocks).
    */
   async updateUsageAfterDictation(
     userId: string,
     wordCount: number
   ): Promise<void> {
-    if (await this.userHasUnlimitedEntitlement(userId)) {
-      return;
-    }
-
-    // Check if we need to reset before updating
     const usage = await this.getOrCreateUsageRecord(userId);
     const currentWeekStart = this.getWeekStartDate();
     const needsReset = usage.weekStartDate < currentWeekStart;
 
     if (needsReset) {
-      // Reset and then add new usage
       await usageRepository.upsert({
         userId,
         weekStartDate: currentWeekStart,
         wordsUsed: wordCount,
         dictationCount: 1,
       });
-    } else {
-      // Increment existing usage
-      await usageRepository.incrementUsage(userId, wordCount);
+      return;
     }
+
+    await usageRepository.incrementUsage(userId, wordCount);
   }
 
   /**
    * Get aggregated usage statistics for a user
    */
   async getUserUsageStats(userId: string) {
-    // Get current usage status
     const currentStatus = await this.getUserUsageStatus(userId);
 
-    // Get usage stats from repository
     const [totalStats, monthlyStats, wordsPerMinute] = await Promise.all([
       usageRepository.getTotalUsageStats(userId),
       usageRepository.getMonthlyUsageStats(userId),
@@ -137,34 +93,6 @@ export class UsageService {
     };
   }
 
-  private async userHasUnlimitedEntitlement(userId: string): Promise<boolean> {
-    const [hasSubscription, role] = await Promise.all([
-      this.userHasActiveSubscription(userId),
-      usageRepository.getUserRole(userId),
-    ]);
-
-    return hasSubscription || role === 'admin';
-  }
-
-  /**
-   * Check if user has an active subscription
-   */
-  private async userHasActiveSubscription(userId: string): Promise<boolean> {
-    const subscriptionInfo =
-      await usageRepository.getUserSubscriptionInfo(userId);
-
-    if (!subscriptionInfo.subscription) {
-      return false;
-    }
-
-    // Treat active (and trialing, if Stripe reports it) as entitled.
-    // If cancelAtPeriodEnd is true, Stripe keeps status active until period end,
-    // so users retain access for the remainder of the billing period.
-    const status = subscriptionInfo.subscription.status;
-    const entitled = status === 'active' || status === 'trialing';
-    return entitled;
-  }
-
   /**
    * Get or create usage record for a user
    */
@@ -172,7 +100,6 @@ export class UsageService {
     let usage = await usageRepository.findByUserId(userId);
 
     if (!usage) {
-      // Create initial usage record
       const weekStart = this.getWeekStartDate();
       usage = await usageRepository.upsert({
         userId,

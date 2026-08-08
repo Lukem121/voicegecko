@@ -22,10 +22,10 @@ const iconMap = {
 
 const benefits = [
   { text: 'Type less, say more.', icon: 'logo' as const },
-  { text: '24/7 support', icon: 'calendar' as const },
+  { text: 'Free & open source', icon: 'calendar' as const },
   { text: 'Fast updates', icon: 'bolt' as const },
-  { text: 'Secure and compliant', icon: 'lock' as const },
-  { text: '99.9% uptime', icon: 'speedometer' as const },
+  { text: 'Secure by design', icon: 'lock' as const },
+  { text: 'Optional support', icon: 'speedometer' as const },
 ];
 
 const mobileBenefits = [

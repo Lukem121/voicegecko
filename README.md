@@ -1,52 +1,46 @@
-# VoiceGecko
+# Voice Gecko
 
-> Instant voice-to-text dictation for desktop and web
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-VoiceGecko transforms how you interact with technology through voice. Press a shortcut, speak, and instantly get accurate text on your clipboard—perfect for emails, coding, AI prompts, or brain dumps.
+> Instant voice-to-text dictation for desktop and web — **free and open source**
 
-## What We Do
+Press a shortcut, speak, and get accurate text on your clipboard. Built for emails, coding, AI prompts, and brain dumps.
 
-VoiceGecko provides instant, accurate voice-to-text dictation that works everywhere. Whether you're writing emails, taking notes, or coding, just speak and watch your words appear exactly where you need them.
+**Website:** [voicegecko.dev](https://www.voicegecko.dev)
 
-**Key Features:**
+## Free & open source
 
-- 🎯 **Instant Dictation** - Press a shortcut and speak
-- 📋 **Clipboard Integration** - Text appears directly on your clipboard
-- ⌨️ **Custom Shortcuts** - Personalized hotkeys for quick access
-- 📖 **Smart Dictionary** - Custom words and technical terms
-- 🖥️ **GeckoBar** - Floating desktop overlay for quick access
-- 🌐 **Cross-Platform** - Desktop app and web interface
+Voice Gecko is MIT-licensed and free to use with the **full product** — no word limits, no paywalled features.
+
+Optional **Support** ($5.99/mo) is a voluntary contribution to fund development. Free and Support are the same product. [Pricing](https://www.voicegecko.dev/pricing)
+
+## Key features
+
+- **Instant dictation** — press a shortcut and speak
+- **Clipboard integration** — text lands where you need it
+- **Custom shortcuts** — personalize hotkeys
+- **Smart dictionary** — custom words and technical terms
+- **GeckoBar** — floating desktop overlay
+- **Cross-platform** — desktop app and web
 
 ## Architecture
 
-This is a monorepo built with modern tools for speed and reliability:
+Monorepo with Turbo + PNPM:
 
-### Applications
+| App / package | Role |
+|---------------|------|
+| `apps/desktop` | Tauri desktop app (React + Rust) |
+| `apps/web` | Next.js site, auth, billing, API host |
+| `@acme/api` | tRPC routes and business logic |
+| `@acme/auth` | Better Auth |
+| `@acme/db` | PostgreSQL + Drizzle |
+| `@acme/ui` | Shared UI |
+| `@acme/email` | Email templates |
+| `@acme/payment` | Stripe / webhooks |
+| `@acme/observability` | Logging |
+| `@acme/notifications` | Discord notifications |
 
-- **Desktop App** - Tauri-based native app with React frontend
-- **Web App** - Next.js application with full authentication and usage tracking
-
-### Tech Stack
-
-- **Frontend**: React 19, TanStack Router, Tailwind CSS
-- **Backend**: tRPC, Drizzle ORM, Better Auth
-- **Desktop**: Tauri (Rust + TypeScript)
-- **Web**: Next.js 15
-- **Database**: PostgreSQL with Drizzle
-- **Payments**: Stripe integration
-- **Analytics**: PostHog
-- **Monorepo**: Turbo + PNPM
-
-### Packages
-
-- `@acme/api` - tRPC API routes and business logic
-- `@acme/auth` - Authentication with Better Auth
-- `@acme/db` - Database schema and client
-- `@acme/ui` - Shared React components and design system
-- `@acme/email` - Email templates and sending
-- `@acme/payment` - Stripe integration and webhooks
-- `@acme/observability` - Logging and monitoring
-- `@acme/notifications` - Discord and other notifications
+**Stack:** React 19, Next.js 15, TanStack Router, Tailwind, tRPC, Better Auth, Stripe, PostHog.
 
 ## Development
 
@@ -54,46 +48,42 @@ This is a monorepo built with modern tools for speed and reliability:
 
 - Node.js 22.14.0+
 - PNPM 9.6.0+
-- Rust (for desktop app)
+- Rust (desktop)
 
-### Getting Started
+### Getting started
 
 ```bash
-# Install dependencies
 pnpm install
+pnpm dev          # start workspace apps
+pnpm dev:web      # web only
+```
 
-# Start development servers
+Desktop:
+
+```bash
+cd apps/desktop
 pnpm dev
-
-# Web app only
-pnpm dev:web
-
-# Database operations
-pnpm db:push
-pnpm db:studio
 ```
 
 ### Scripts
 
-- `pnpm build` - Build all applications
-- `pnpm lint` - Run linting with Ultracite
-- `pnpm format` - Format code with Ultracite
-- `pnpm typecheck` - Type checking across workspace
-- `pnpm clean` - Clean node_modules and build artifacts
+| Command | Description |
+|---------|-------------|
+| `pnpm build` | Build all applications |
+| `pnpm lint` | Lint (Ultracite) |
+| `pnpm format` | Format (Ultracite) |
+| `pnpm typecheck` | Typecheck workspace |
+| `pnpm clean` | Clean `node_modules` and build artifacts |
 
-### Desktop Development
+### Environment & secrets
 
-```bash
-cd apps/desktop
+- Real secrets live in local `.env` files (gitignored) or CI secrets — **never commit them**.
+- Desktop example: [`apps/desktop/.env.development.example`](apps/desktop/.env.development.example)
+- Maintainer-only: Stripe live keys, Tauri signing keys, release `GITHUB_TOKEN`, production database URLs
 
-# Development mode
-pnpm dev
+See [CONTRIBUTING.md](CONTRIBUTING.md) and [SECURITY.md](SECURITY.md).
 
-# Build for production
-pnpm build
-```
-
-## Project Structure
+## Project structure
 
 ```
 voicegecko/
@@ -101,16 +91,19 @@ voicegecko/
 │   ├── desktop/          # Tauri desktop application
 │   └── web/              # Next.js web application
 ├── packages/
-│   ├── api/              # tRPC API and business logic
-│   ├── auth/             # Authentication system
-│   ├── db/               # Database schema and client
-│   ├── ui/               # Shared components
-│   ├── email/            # Email system
-│   └── [+6 more]/        # Additional shared packages
-└── tooling/              # Development and build tools
+│   ├── api/
+│   ├── auth/
+│   ├── db/
+│   ├── ui/
+│   ├── email/
+│   └── …                 # payment, observability, notifications, …
+└── tooling/
 ```
 
----
+## Contributing
 
-**Company**: Social Freak Limited (trading as Voice Gecko)  
-**Website**: [voicegecko.dev](https://www.voicegecko.dev)
+We welcome issues and pull requests. Start with [CONTRIBUTING.md](CONTRIBUTING.md).
+
+## License
+
+[MIT](LICENSE) © Social Freak Limited (trading as Voice Gecko)

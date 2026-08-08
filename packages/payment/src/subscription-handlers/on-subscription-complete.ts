@@ -56,9 +56,15 @@ export const onSubscriptionComplete = async ({
     }
 
     if (user) {
+      const displayPlanName =
+        plan.name === 'voice gecko pro'
+          ? 'Voice Gecko Support'
+          : plan.name === 'voice gecko team'
+            ? 'Voice Gecko Team'
+            : plan.name;
       await sendWelcomeProEmail({
         user,
-        planName: plan.name,
+        planName: displayPlanName,
       });
       log.info(
         `[Subscription] Welcome email sent to user ${subscription.referenceId} for plan ${plan.name}`

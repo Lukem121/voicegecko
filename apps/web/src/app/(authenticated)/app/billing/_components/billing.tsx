@@ -195,7 +195,7 @@ function CurrentPlanCard({
                 onClick={onUpgradePlan}
                 variant="outline"
               >
-                Upgrade Plan
+                Support Voice Gecko
               </Button>
             )}
           </CardAction>
@@ -226,7 +226,7 @@ function CurrentPlanCard({
           </p>
         ) : (
           <p className="text-muted-foreground text-sm">
-            You're on the free plan with limited features
+            You're on Free — full product, no limits. Support is optional.
           </p>
         )}
       </CardContent>
@@ -402,7 +402,7 @@ export default function Billing({ prices, subscription, error }: BillingProps) {
 
   const getPlanDisplayName = (planName: string | null) => {
     const displayNames: Record<string, string> = {
-      'voice gecko pro': 'Voice Gecko Pro',
+      'voice gecko pro': 'Voice Gecko Support',
       'voice gecko team': 'Voice Gecko Team',
     };
     return (planName && displayNames[planName]) ?? planName ?? '';

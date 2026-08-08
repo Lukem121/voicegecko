@@ -5,7 +5,6 @@ import {
   CardHeader,
   CardTitle,
 } from '@acme/ui/components/ui/card';
-import { Progress } from '@acme/ui/components/ui/progress';
 import { Clock, FileText, TrendingUp } from 'lucide-react';
 import Link from 'next/link';
 
@@ -74,11 +73,6 @@ export default async function UsagePage() {
     },
   ];
 
-  // Calculate usage percentage for free users
-  const usagePercentage = stats.current.isUnlimited
-    ? 0
-    : (stats.current.wordsUsed / stats.current.wordsLimit) * 100;
-
   return (
     <div className="space-y-8">
       <div className="mb-8">
@@ -88,42 +82,24 @@ export default async function UsagePage() {
         </p>
       </div>
 
-      {/* Usage Limit Progress for Free Users */}
-      {!stats.current.isUnlimited && (
-        <section>
-          <Card>
-            <CardHeader className="">
-              <CardTitle className="font-medium text-base">
-                Weekly Usage Limit
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center justify-between text-sm">
-                <span>Words Used</span>
-                <span className="font-medium">
-                  {stats.current.wordsUsed.toLocaleString()} /{' '}
-                  {stats.current.wordsLimit.toLocaleString()}
-                </span>
-              </div>
-              <Progress className="mt-2 h-2" value={usagePercentage} />
-              {usagePercentage >= 90 && (
-                <div className="mt-2 space-y-2">
-                  <p className="text-amber-600 text-sm">
-                    {usagePercentage >= 100
-                      ? 'Usage limit reached. Upgrade to Pro for unlimited words.'
-                      : 'Approaching usage limit.'}
-                  </p>
-                  {usagePercentage >= 90 && (
-                    <Button asChild size="sm" variant="outline">
-                      <Link href="/app/plans">Upgrade to Pro</Link>
-                    </Button>
-                  )}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </section>
-      )}
+      <section>
+        <Card>
+          <CardHeader>
+            <CardTitle className="font-medium text-base">
+              Free & open source
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <p className="text-muted-foreground text-sm">
+              Voice Gecko is free with no limits. Optional Support helps fund
+              development.
+            </p>
+            <Button asChild size="sm" variant="outline">
+              <Link href="/app/plans">Support the project</Link>
+            </Button>
+          </CardContent>
+        </Card>
+      </section>
 
       {/* Current Usage Overview */}
       <section>

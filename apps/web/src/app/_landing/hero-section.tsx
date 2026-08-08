@@ -64,8 +64,9 @@ export default function HeroSection() {
           Instant voice dictation at your fingertips — type less, say more.
         </HeroHeading>
         <HeroSubheading className="z-30 mx-auto max-w-[60%]">
-          Accurate voice-to-text dictation straight to your clipboard, saving
-          time and replacing slow typing with fast, natural speech.
+          Accurate voice-to-text dictation straight to your clipboard. Free and
+          open source — no limits, optional support if you want to fund the
+          project.
         </HeroSubheading>
         <div className="z-30 mt-8 flex items-center justify-center">
           <button

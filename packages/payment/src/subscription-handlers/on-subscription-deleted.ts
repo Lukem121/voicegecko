@@ -41,7 +41,7 @@ export const onSubscriptionDeleted = async ({
       subscriptionId: subscription.id,
       eventType: 'deleted',
       userId: subscription.referenceId,
-      planName: subscription.plan || 'VoiceGecko Pro',
+      planName: subscription.plan || 'Voice Gecko Support',
       status: subscription.status,
       email: user?.email,
       username: user?.name,
@@ -61,5 +61,5 @@ export const onSubscriptionDeleted = async ({
 
   // No special handling needed - when the subscription is deleted,
   // our usage service will no longer find an active subscription
-  // and will automatically enforce the free tier limits (2,000 words/week)
+  // Free users retain full unlimited access (open source / free product)
 };

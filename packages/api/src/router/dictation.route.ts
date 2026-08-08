@@ -36,22 +36,12 @@ export const dictationRouter = {
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.session.user.id;
 
-      // Check if user can transcribe (under usage limit)
-      const canTranscribe = await usageService.canUserTranscribe(userId);
-      if (!canTranscribe) {
-        // TODO: Implement proper error handling and user-friendly messaging
-        throw new TRPCError({
-          code: 'FORBIDDEN',
-          message: 'Weekly dictation limit exceeded',
-        });
-      }
-
       const result = await dictationService.createDictation({
         ...input,
         userId,
       });
 
-      // Update usage tracking after successful dictation
+      // Track usage stats after successful dictation (never blocks)
       if (result) {
         const wordCount = countWords(input.content);
         await usageService.updateUsageAfterDictation(userId, wordCount);
@@ -97,20 +87,8 @@ export const dictationRouter = {
     .mutation(async ({ ctx, input }) => {
       const userId = ctx.session.user.id;
 
-      // Execute independent operations in parallel for better performance
-      const [canTranscribe, dictionaryPrompt] = await Promise.all([
-        usageService.canUserTranscribe(userId),
-        dictionaryService.getUserDictionaryPrompt(userId),
-      ]);
-
-      // Check if user can transcribe (under usage limit)
-      if (!canTranscribe) {
-        // TODO: Implement proper error handling and user-friendly messaging
-        throw new TRPCError({
-          code: 'FORBIDDEN',
-          message: 'Weekly dictation limit exceeded',
-        });
-      }
+      const dictionaryPrompt =
+        await dictionaryService.getUserDictionaryPrompt(userId);
 
       // Convert Float32Array to WAV buffer
       const audioBuffer = convertFloat32ToWav(
