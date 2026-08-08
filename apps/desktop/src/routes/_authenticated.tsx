@@ -21,8 +21,21 @@ export const Route = createFileRoute('/_authenticated')({
         if (!settingsStore.isInitialized) {
           await settingsStore.initialize();
         }
-      } catch {
-        // Continue into app without onboarding gate in local-only mode
+        const currentState = useSettingsStore.getState();
+        if (!currentState.settings.onboarding.completed) {
+          throw redirect({
+            to: '/onboarding',
+          });
+        }
+      } catch (error) {
+        if (
+          error &&
+          typeof error === 'object' &&
+          'to' in error
+        ) {
+          throw error;
+        }
+        // Continue into app without onboarding gate if settings fail
       }
       return;
     }

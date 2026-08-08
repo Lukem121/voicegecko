@@ -1,24 +1,25 @@
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { invoke } from '@tauri-apps/api/core';
 
 import { analytics } from '~/lib/analytics/posthog-analytics';
-import { queryClient, trpc } from '~/trpc';
 
 export const useDeleteDictation = () => {
-  const mutation = useMutation(
-    trpc.dictation.delete.mutationOptions({
-      onSuccess: (_data, variables) => {
-        // Track dictation deletion
-        analytics.track('dictation_deleted', {
-          dictation_id: variables.id,
-          method: 'user_action',
-        });
+  const queryClient = useQueryClient();
 
-        queryClient.invalidateQueries({
-          queryKey: trpc.dictation.getAll.queryKey(),
-        });
-      },
-    })
-  );
+  const mutation = useMutation({
+    mutationFn: async (input: { id: string }) => {
+      await invoke('delete_local_dictation', { id: input.id });
+      return input;
+    },
+    onSuccess: (_data, variables) => {
+      analytics.track('dictation_deleted', {
+        dictation_id: variables.id,
+        method: 'user_action',
+      });
+
+      void queryClient.invalidateQueries({ queryKey: ['local-dictations'] });
+    },
+  });
 
   return {
     deleteDictation: mutation.mutateAsync,

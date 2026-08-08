@@ -66,9 +66,10 @@ export default function DictationFeaturesSection() {
                 Never Lose Work
               </h3>
               <p className="mt-2 text-sm text-white/90 leading-relaxed">
-                Every dictation you make is saved in a searchable history for
-                easy review, copying, or reuse anytime. Your raw audio is never
-                stored — only the finished text stays in your account.
+                Every dictation you make is saved in a searchable history on
+                this device for easy review, copying, or reuse anytime. Your raw
+                audio is never uploaded — finished text stays in local storage
+                on your computer.
               </p>
             </div>
           </motion.div>

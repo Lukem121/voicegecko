@@ -1,32 +1,46 @@
 import { useQuery } from '@tanstack/react-query';
+import { invoke } from '@tauri-apps/api/core';
 import React from 'react';
 
-import { trpc } from '~/trpc';
-
 export type UseGetDictationsParams = {
-  cursor?: number;
+  cursor?: string;
   limit?: number;
   search?: string;
+};
+
+type LocalDictationRow = {
+  id: string;
+  content: string;
+  engineId?: string | null;
+  mode?: string | null;
+  createdAt: string;
 };
 
 export const useGetDictations = (params: UseGetDictationsParams = {}) => {
   const { cursor, limit = 20, search } = params;
 
-  const query = useQuery(
-    trpc.dictation.getAll.queryOptions({
-      cursor,
-      limit,
-      search,
-    })
-  );
+  const query = useQuery({
+    queryKey: ['local-dictations', 'get', cursor, limit, search],
+    queryFn: async () => {
+      const rows = await invoke<LocalDictationRow[]>('list_local_dictations', {
+        limit,
+        search: search || null,
+        cursor: cursor || null,
+      });
+      const totalResults = await invoke<number>('count_local_dictations', {
+        search: search || null,
+      });
+      return { rows, totalResults, hasNextPage: rows.length === limit };
+    },
+  });
 
   const dictations = React.useMemo(() => {
-    const groups = query.data?.groups;
-    if (!groups) {
+    const rows = query.data?.rows;
+    if (!rows) {
       return [] as Array<{
         date: string;
         items: Array<{
-          id: number;
+          id: string;
           timestamp: string;
           content: string;
           status: 'normal' | 'silent';
@@ -73,7 +87,7 @@ export const useGetDictations = (params: UseGetDictationsParams = {}) => {
       {
         date: string;
         items: Array<{
-          id: number;
+          id: string;
           timestamp: string;
           content: string;
           status: 'normal' | 'silent';
@@ -82,31 +96,35 @@ export const useGetDictations = (params: UseGetDictationsParams = {}) => {
       }
     >();
 
-    for (const group of groups) {
-      for (const item of group.items) {
-        const date = item.createdAt ? new Date(item.createdAt) : undefined;
-        const dateLabel = date ? getLocalDateLabel(date) : group.date;
-        const localTime = date ? getLocalTime(date) : item.timestamp;
+    for (const item of rows) {
+      const date = item.createdAt ? new Date(item.createdAt) : new Date();
+      const dateLabel = getLocalDateLabel(date);
+      const localTime = getLocalTime(date);
+      const status: 'normal' | 'silent' =
+        item.content === 'Audio is silent.' ? 'silent' : 'normal';
 
-        let existing = groupedMap.get(dateLabel);
-        if (!existing) {
-          existing = { date: dateLabel, items: [] };
-          groupedMap.set(dateLabel, existing);
-        }
-
-        existing.items.push({
-          id: item.id,
-          timestamp: localTime,
-          content: item.content,
-          status: item.status,
-          createdAt: item.createdAt,
-        });
+      let existing = groupedMap.get(dateLabel);
+      if (!existing) {
+        existing = { date: dateLabel, items: [] };
+        groupedMap.set(dateLabel, existing);
       }
+
+      existing.items.push({
+        id: item.id,
+        timestamp: localTime,
+        content: item.content,
+        status,
+        createdAt: item.createdAt,
+      });
     }
 
     const result = Array.from(groupedMap.values()).map((g) => ({
       ...g,
-      items: g.items.sort((a, b) => b.id - a.id),
+      items: g.items.sort((a, b) => {
+        const aTime = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+        const bTime = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+        return bTime - aTime;
+      }),
     }));
 
     result.sort((a, b) => {
@@ -131,7 +149,6 @@ export const useGetDictations = (params: UseGetDictationsParams = {}) => {
   return {
     dictations,
     hasNextPage: query.data?.hasNextPage ?? false,
-    nextCursor: query.data?.nextCursor,
     totalResults: query.data?.totalResults,
     isLoading: query.isLoading,
     error: query.error,

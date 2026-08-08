@@ -1,43 +1,40 @@
-import { IPFlare, type IPGeolocationResponse } from 'ipflare';
-import { apiEnv } from '../../../env';
+type SupportedCurrency = 'usd' | 'eur' | 'gbp';
+
+type GeoLocation = {
+  countryCode: string | null;
+  continentCode: string | null;
+};
 
 export class GeolocationService {
-  async getCurrency(ip: string) {
-    const geolocator = new IPFlare({
-      apiKey: apiEnv().IPFLARE_API_KEY,
-    });
+  async getCurrency(headers: Headers): Promise<SupportedCurrency | null> {
+    const location = this.getLocationFromHeaders(headers);
 
-    const result = await geolocator.lookup(ip);
-
-    if (!result.ok) {
+    if (!(location.countryCode || location.continentCode)) {
       return null;
     }
 
-    return this.resolveSupportedCurrency(result.data);
+    return this.resolveSupportedCurrency(location);
   }
 
-  private resolveSupportedCurrency(location: IPGeolocationResponse) {
-    const currency = location.currency;
+  private getLocationFromHeaders(headers: Headers): GeoLocation {
+    return {
+      countryCode: headers.get('x-vercel-ip-country'),
+      continentCode: headers.get('x-vercel-ip-continent'),
+    };
+  }
 
-    if (currency === 'usd' || currency === 'eur' || currency === 'gbp') {
-      return currency;
-    }
-
-    if (location === undefined) {
-      return null;
-    }
-
-    if (location.country_code === 'GB') {
+  private resolveSupportedCurrency(
+    location: GeoLocation
+  ): SupportedCurrency | null {
+    if (location.countryCode === 'GB') {
       return 'gbp';
     }
 
-    if (location.continent_code === 'EU') {
-      // Lets check if they are in the EU
+    if (location.continentCode === 'EU') {
       return 'eur';
     }
 
-    if (location.continent_code === 'NA') {
-      // North America
+    if (location.continentCode === 'NA') {
       return 'usd';
     }
 

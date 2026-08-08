@@ -39,6 +39,7 @@ export type SettingsV1GeneralSettings = {
 export type SettingsV1PrivacySettings = {
   usageAnalytics: boolean;
   crashReports: boolean; // Added in V1
+  airGap: boolean; // Privacy / air-gap mode — skip updater & connectivity probes
 };
 
 export type SettingsV1PersonalizationSettings = {
@@ -141,7 +142,6 @@ export type SettingsV2VersionedSettings = {
 export type SettingsV3FeatureFlags = {
   moonshineFlow: boolean;
   engineLab: boolean;
-  cloudGpt4o: boolean;
   gpuWhisper: boolean;
   localLlmPolish: boolean;
   requireAuth: boolean;

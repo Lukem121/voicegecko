@@ -50,7 +50,7 @@ type UsageStatus = {
 };
 
 type DictationItem = {
-  id: number;
+  id: string;
   content: string;
   timestamp: string;
   status: string;
@@ -183,8 +183,8 @@ function DictationItem({
   index: number;
   totalItems: number;
   onCopy: (content: string) => void;
-  onSendFeedback: (id: number) => void;
-  onDelete: (id: number) => Promise<void>;
+  onSendFeedback: (id: string) => void;
+  onDelete: (id: string) => Promise<void>;
 }) {
   const isLastItem = index === totalItems - 1;
 
@@ -370,7 +370,7 @@ function RecordingPage() {
 
   // Map dictation id to section date for grouping in recents/search
   const itemIdToDate = useMemo(() => {
-    const map = new Map<number, string>();
+    const map = new Map<string, string>();
     for (const section of dictations) {
       for (const item of section.items) {
         map.set(item.id, section.date);
@@ -454,11 +454,11 @@ function RecordingPage() {
     navigator.clipboard.writeText(content);
   };
 
-  const handleSendFeedback = (id: number) => {
+  const handleSendFeedback = (id: string) => {
     log.info(id, 'Send feedback for:');
   };
 
-  const handleDeleteTranscript = async (id: number) => {
+  const handleDeleteTranscript = async (id: string) => {
     try {
       await deleteDictation({ id });
     } catch (error) {

@@ -1,6 +1,16 @@
 {
   "name": "voicegecko",
   "private": true,
+  "description": "Free and open-source instant voice-to-text dictation for desktop and web",
+  "license": "MIT",
+  "homepage": "https://www.voicegecko.dev",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Lukem121/voicegecko.git"
+  },
+  "bugs": {
+    "url": "https://github.com/Lukem121/voicegecko/issues"
+  },
   "engines": {
     "node": ">=22.14.0",
     "pnpm": ">=9.6.0"

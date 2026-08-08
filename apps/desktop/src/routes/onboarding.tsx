@@ -5,6 +5,7 @@ import type { OnboardingStepConfig } from '~/components/onboarding/onboarding-pr
 import { OnboardingProvider } from '~/components/onboarding/onboarding-provider';
 import { OnboardingStepper } from '~/components/onboarding/onboarding-stepper';
 import { OnboardingTitleBar } from '~/components/onboarding/onboarding-title-bar';
+import { isLocalOnlyMode } from '~/lib/local-mode';
 
 // Define the onboarding steps configuration
 const ONBOARDING_STEPS: OnboardingStepConfig[] = [
@@ -33,9 +34,11 @@ const ONBOARDING_STEPS: OnboardingStepConfig[] = [
 ];
 
 export const Route = createFileRoute('/onboarding')({
-  beforeLoad: ({ context, location }) => {
-    // Ensure user is authenticated before accessing onboarding
-    if (!context.auth.isAuthenticated) {
+  beforeLoad: async ({ context, location }) => {
+    const localOnly = await isLocalOnlyMode();
+
+    // Local-only mode does not require authentication for onboarding
+    if (!(localOnly || context.auth.isAuthenticated)) {
       throw redirect({
         to: '/sign-in',
         search: {

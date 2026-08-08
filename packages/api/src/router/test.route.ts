@@ -1,6 +1,5 @@
 import { sendPaymentFailedEmail } from '@acme/email/send/payment-failed';
 import { sendResetPasswordEmail } from '@acme/email/send/reset-password';
-import { sendStudentDiscountEmail } from '@acme/email/send/student-discount';
 import { sendSubscriptionCancelledEmail } from '@acme/email/send/subscription-cancelled';
 import { sendVerificationEmail } from '@acme/email/send/verification';
 import { sendWelcomeEmail } from '@acme/email/send/welcome';
@@ -18,7 +17,6 @@ export const testRouter = {
     };
 
     try {
-      // Send all email templates for testing
       await Promise.all([
         sendPaymentFailedEmail({
           user: testUser,
@@ -29,12 +27,6 @@ export const testRouter = {
         sendResetPasswordEmail({
           user: testUser,
           url: 'https://www.voicegecko.dev/reset-password?token=test-token',
-        }),
-        sendStudentDiscountEmail({
-          user: testUser,
-          couponCode: 'STUDENT50',
-          discountPercentage: '50',
-          redemptionUrl: 'https://www.voicegecko.dev/pricing?coupon=STUDENT50',
         }),
         sendSubscriptionCancelledEmail({
           user: testUser,

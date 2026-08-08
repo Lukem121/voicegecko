@@ -3,6 +3,7 @@ import { stripeClient } from '@acme/payment/stripe';
 import { TRPCError } from '@trpc/server';
 import { apiEnv } from '../../../env';
 import { teamRepository } from '../../repository/team.repository';
+import { isTeamPriceId } from '../../utils/stripe-plan';
 
 export class TeamService {
   async getOrCreateTeam(
@@ -72,9 +73,7 @@ export class TeamService {
         const activeStripe = list.data.find((s) => s.items?.data?.length);
         const item = activeStripe?.items?.data?.[0];
         const priceId = item?.price?.id;
-        const isTeam =
-          priceId === apiEnv().STRIPE_PRICE_ID_TEAM_MONTHLY ||
-          priceId === apiEnv().STRIPE_PRICE_ID_TEAM_YEARLY;
+        const isTeam = isTeamPriceId(priceId);
         const quantity = isTeam ? item?.quantity : undefined;
         if (typeof quantity === 'number' && quantity > 0) {
           if (activeStripe?.id) {
@@ -154,9 +153,7 @@ export class TeamService {
         const activeStripe = list.data.find((s) => s.items?.data?.length);
         const item = activeStripe?.items?.data?.[0];
         const priceId = item?.price?.id;
-        const isTeam =
-          priceId === apiEnv().STRIPE_PRICE_ID_TEAM_MONTHLY ||
-          priceId === apiEnv().STRIPE_PRICE_ID_TEAM_YEARLY;
+        const isTeam = isTeamPriceId(priceId);
         const quantity = isTeam ? item?.quantity : undefined;
         if (typeof quantity === 'number' && quantity > 0) {
           totalSeats = quantity;

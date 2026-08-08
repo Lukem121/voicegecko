@@ -4,7 +4,6 @@ import { toast } from 'sonner';
 import { showMicrophoneNotFoundNotification } from '~/lib/gecko-bar-notifications';
 import { syncDictationEventToStores } from '~/lib/sync-dictation-event';
 import { dictationService } from '~/services/dictation.service';
-import { useDictationStore } from '~/stores/dictation.store';
 import { useEventStore } from '~/stores/event.store';
 import type { DictationEvent } from '~/types/dictation-events';
 import { DICTATION_EVENT_CHANNEL } from '~/types/dictation-events';
@@ -25,38 +24,6 @@ const DEVICE_UNAVAILABLE_PATTERN =
 type InitializeOptions = {
   isGeckoBar?: boolean;
 };
-
-async function handleV2BackgroundSave(
-  transcript: string,
-  metadata?: { model_used?: string }
-): Promise<void> {
-  const { useConnectivityStore } = await import('~/stores/connectivity.store');
-  const connectivityState = useConnectivityStore.getState();
-
-  if (!connectivityState.canSaveDictations) {
-    return;
-  }
-
-  const { createDictation } = await import('~/lib/dictation-mutations');
-  const { getVersion } = await import('@tauri-apps/api/app');
-
-  let appVersion: string | undefined;
-  try {
-    appVersion = await getVersion();
-  } catch {
-    appVersion = undefined;
-  }
-
-  const content = transcript.trim() || 'Audio is silent.';
-  await createDictation({
-    content,
-    status: content === 'Audio is silent.' ? 'silent' : 'normal',
-    modelUsed: metadata?.model_used,
-    appVersion,
-  }).catch((error) => {
-    log.warn(error, '[TauriEvents] v2 background save failed');
-  });
-}
 
 /**
  * Initialize Tauri event listeners that update the Zustand store
@@ -100,8 +67,10 @@ export async function initializeTauriEvents(
         if (!options.isGeckoBar) {
           dictationService.setLastDictation(payload.text);
           void dictationService.playEndSoundIfEnabled();
-          void handleV2BackgroundSave(payload.text, {
-            model_used: useDictationStore.getState().lastEngineId ?? undefined,
+          void import('~/trpc').then(({ queryClient }) => {
+            void queryClient.invalidateQueries({
+              queryKey: ['local-dictations'],
+            });
           });
         }
       }

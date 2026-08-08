@@ -1,13 +1,9 @@
 import { log } from '@acme/observability/log';
-import { getVersion } from '@tauri-apps/api/app';
 import { toast } from 'sonner';
 import { create } from 'zustand';
 import { devtools } from 'zustand/middleware';
-import { isNetworkError } from '~/hooks/auth';
 import analytics from '~/lib/analytics/posthog-analytics';
-import { createDictation } from '~/lib/dictation-mutations';
 import { dictationService } from '~/services/dictation.service';
-import { useConnectivityStore } from '~/stores/connectivity.store';
 
 export type EventState = {
   // Recording state
@@ -156,53 +152,12 @@ export const useEventStore = create<EventState>()(
           }
         );
 
-        const status: 'silent' | 'normal' =
-          !transcript.trim() ||
-          (metadata?.duration_seconds && metadata.duration_seconds < 1)
-            ? 'silent'
-            : 'normal';
-        const content = status === 'silent' ? 'Audio is silent.' : transcript;
-
-        let appVersion: string | undefined;
-        try {
-          appVersion = await getVersion();
-        } catch (error) {
-          log.warn('Failed to get app version', { error });
-        }
-
-        const dictationData = {
-          content,
-          status,
-          durationSeconds:
-            Number.isFinite(metadata?.duration_seconds) &&
-            metadata?.duration_seconds !== undefined
-              ? Math.trunc(metadata.duration_seconds)
-              : undefined,
-          modelUsed: metadata?.model_used,
-          sampleRate: metadata?.sample_rate,
-          appVersion,
-        };
-
-        // Immediate user feedback — always paste locally (offline-first)
+        // Immediate user feedback — paste locally only (no cloud sync)
         try {
           await dictationService.handleCompletedDictation(transcript);
           await dictationService.playEndSoundIfEnabled();
         } catch (error) {
           log.error(error, '[EventStore] Failed user feedback operations:');
-        }
-
-        // Background cloud save when online (non-blocking)
-        const connectivityState = useConnectivityStore.getState();
-        if (connectivityState.canSaveDictations) {
-          createDictation(dictationData)
-            .then(() => {})
-            .catch((error) => {
-              if (isNetworkError(error)) {
-                connectivityState.checkConnectivity();
-              } else {
-                log.error(error, 'Background save error:');
-              }
-            });
         }
       },
 

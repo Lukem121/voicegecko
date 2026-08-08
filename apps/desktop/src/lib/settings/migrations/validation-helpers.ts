@@ -216,6 +216,13 @@ export function validateV1Settings(
     if (typeof privacy.crashReports !== 'boolean') {
       return false;
     }
+    // airGap is optional for older settings blobs
+    if (
+      'airGap' in privacy &&
+      typeof (privacy as { airGap?: unknown }).airGap !== 'boolean'
+    ) {
+      return false;
+    }
 
     // Validate personalization settings
     const personalization = settings.personalization;

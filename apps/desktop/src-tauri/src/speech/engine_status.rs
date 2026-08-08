@@ -12,7 +12,6 @@ pub fn evaluate(app: &AppHandle, id: EngineId) -> EngineAvailability {
     match id {
         EngineId::ParakeetTdtV2 => evaluate_parakeet(),
         EngineId::MoonshineMedium => evaluate_moonshine(),
-        EngineId::Gpt4oTranscribe | EngineId::Gpt4oMiniTranscribe => evaluate_cloud(),
         EngineId::InsanelyFastWhisper => evaluate_gpu_whisper(app),
     }
 }
@@ -53,23 +52,6 @@ fn evaluate_moonshine() -> EngineAvailability {
     EngineAvailability {
         available: false,
         reason: Some(crate::speech::moonshine_ffi::availability_status()),
-    }
-}
-
-fn evaluate_cloud() -> EngineAvailability {
-    match std::env::var("OPENAI_API_KEY") {
-        Ok(key) if !key.trim().is_empty() => EngineAvailability {
-            available: true,
-            reason: None,
-        },
-        Ok(_) => EngineAvailability {
-            available: false,
-            reason: Some("Cloud API key is empty".into()),
-        },
-        Err(_) => EngineAvailability {
-            available: false,
-            reason: Some("Cloud transcription is not configured".into()),
-        },
     }
 }
 

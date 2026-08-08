@@ -1,34 +1,26 @@
-import { useMutation } from '@tanstack/react-query';
-
-import { queryClient, trpc } from '~/trpc';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { invoke } from '@tauri-apps/api/core';
+import { dictionaryService } from '~/services/dictionary.service';
 
 export const useAddDictionary = () => {
-  const mutation = useMutation(
-    trpc.dictionary.add.mutationOptions({
-      onSuccess: async (result) => {
-        if (result.success) {
-          await Promise.all([
-            queryClient.invalidateQueries({
-              queryKey: trpc.dictionary.getAll.queryKey(),
-            }),
-            queryClient.invalidateQueries({
-              queryKey: trpc.dictionary.getPrompt.queryKey(),
-            }),
-          ]);
-        }
-      },
-    })
-  );
+  const queryClient = useQueryClient();
+
+  const mutation = useMutation({
+    mutationFn: async (input: { word: string }) => {
+      return await invoke<{ id: string; word: string; createdAt: number }>(
+        'add_local_dictionary_word',
+        { word: input.word }
+      );
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['local-dictionary'] });
+      await dictionaryService.refreshPromptCache();
+    },
+  });
 
   return {
     addWord: async (input: { word: string }) => {
-      const result = await mutation.mutateAsync(input);
-
-      if (!result.success) {
-        throw new Error(result.error.message);
-      }
-
-      return result.data;
+      return await mutation.mutateAsync(input);
     },
     isAdding: mutation.isPending,
     error: mutation.error,

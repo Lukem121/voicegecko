@@ -84,9 +84,7 @@ impl DictationSessionManager {
         let mode = InteractionMode::from_str_id(&request.mode)
             .ok_or_else(|| format!("Unknown mode: {}", request.mode))?;
 
-        if !crate::speech::models::is_toggle_ready()
-            && mode != InteractionMode::AccuracyCloud
-        {
+        if !crate::speech::models::is_toggle_ready() {
             return Err(
                 "Speech models are still downloading. Keep VoiceGecko open and try again shortly."
                     .into(),
@@ -658,11 +656,9 @@ impl DictationSessionManager {
             return id;
         }
 
-        const FALLBACK_ORDER: [EngineId; 5] = [
+        const FALLBACK_ORDER: [EngineId; 3] = [
             EngineId::ParakeetTdtV2,
             EngineId::MoonshineMedium,
-            EngineId::Gpt4oMiniTranscribe,
-            EngineId::Gpt4oTranscribe,
             EngineId::InsanelyFastWhisper,
         ];
 
@@ -738,8 +734,6 @@ impl DictationSessionManager {
         let engine_ids = [
             EngineId::ParakeetTdtV2,
             EngineId::MoonshineMedium,
-            EngineId::Gpt4oTranscribe,
-            EngineId::Gpt4oMiniTranscribe,
             EngineId::InsanelyFastWhisper,
         ];
 

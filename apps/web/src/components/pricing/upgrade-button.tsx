@@ -109,8 +109,8 @@ function InteractiveUpgradeButton({
       return;
     }
 
-    // Pro/Team: set plan intent and handle auth
-    const planId = planType === 'team' ? 'voice gecko team' : 'voice gecko pro';
+    // Pro: set plan intent and handle auth
+    const planId = 'voice gecko pro';
     const billing = isAnnual ? 'annual' : 'monthly';
 
     try {
@@ -145,14 +145,17 @@ function InteractiveUpgradeButton({
       return;
     }
 
-    // Logged in - initiate upgrade for selected plan
-    if (planType === 'pro') {
-      await upgrade('voice gecko pro', isAnnual);
+    // Team plan is retired — Support (pro) only
+    if (planType === 'team') {
+      toast.error('Team plan is no longer available', {
+        description: 'Please choose Support to contribute.',
+      });
       return;
     }
-    if (planType === 'team') {
-      await upgrade('voice gecko team', isAnnual);
-      return;
+
+    // Logged in - initiate upgrade for Support plan
+    if (planType === 'pro') {
+      await upgrade('voice gecko pro', isAnnual);
     }
   };
 

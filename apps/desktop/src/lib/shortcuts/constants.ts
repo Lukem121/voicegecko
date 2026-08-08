@@ -36,13 +36,6 @@ export const DEFAULT_SHORTCUTS: ShortcutCategory[] = [
         enabled: true,
       },
       {
-        id: 'accuracy-cloud',
-        name: 'Accuracy mode (cloud STT)',
-        keys: ['CommandOrControl', 'Shift', 'A'],
-        global: true,
-        enabled: true,
-      },
-      {
         id: 'capsule-compose',
         name: 'Capsule compose mode',
         keys: ['CommandOrControl', 'Shift', 'G'],

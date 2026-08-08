@@ -5,14 +5,11 @@ export type InteractionModeId =
   | 'ptt_batch'
   | 'flow_stream'
   | 'hands_free'
-  | 'accuracy_cloud'
   | 'capsule_compose';
 
 export type EngineId =
   | 'moonshine_medium'
   | 'parakeet_tdt_v2'
-  | 'gpt4o_transcribe'
-  | 'gpt4o_mini_transcribe'
   | 'insanely_fast_whisper';
 
 export type OutputTargetId =

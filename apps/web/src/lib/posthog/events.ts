@@ -129,10 +129,6 @@ export type SystemRequirementsViewedEvent = BasePostHogEvent & {
   platform: string;
 };
 
-export type StudentDiscountInitiatedEvent = BasePostHogEvent & {
-  event: 'student_discount_initiated';
-};
-
 // Error events
 export type ErrorOccurredEvent = BasePostHogEvent & {
   event: 'error_occurred';
@@ -173,7 +169,6 @@ export type PostHogEvent =
   | ModalClosedEvent
   | BillingToggleEvent
   | SystemRequirementsViewedEvent
-  | StudentDiscountInitiatedEvent
   | ErrorOccurredEvent
   | SocialProofViewedEvent
   | GenerateLeadEvent

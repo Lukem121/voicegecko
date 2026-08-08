@@ -9,6 +9,7 @@ import {
 import { stripeClient } from '@acme/payment/stripe';
 import type { Stripe } from 'stripe';
 import { apiEnv } from '../../env';
+import { isTeamPriceId } from '../utils/stripe-plan';
 
 export type EffectiveSubscription = {
   id: string;
@@ -158,10 +159,7 @@ export const subscriptionRepository = {
         const activeItem = activeStripeSub.items.data.at(0) ?? null;
         const priceId = activeItem?.price?.id;
         let planName: string | null = null;
-        if (
-          priceId === apiEnv().STRIPE_PRICE_ID_TEAM_MONTHLY ||
-          priceId === apiEnv().STRIPE_PRICE_ID_TEAM_YEARLY
-        ) {
+        if (isTeamPriceId(priceId)) {
           planName = 'voice gecko team';
         } else if (
           priceId === apiEnv().STRIPE_PRICE_ID_PRO_MONTHLY ||
@@ -279,10 +277,7 @@ export const subscriptionRepository = {
     const ownerItem = ownerActive.items.data.at(0) ?? null;
     const oPriceId = ownerItem?.price?.id;
     let oPlanName: string | null = null;
-    if (
-      oPriceId === apiEnv().STRIPE_PRICE_ID_TEAM_MONTHLY ||
-      oPriceId === apiEnv().STRIPE_PRICE_ID_TEAM_YEARLY
-    ) {
+    if (isTeamPriceId(oPriceId)) {
       oPlanName = 'voice gecko team';
     } else if (
       oPriceId === apiEnv().STRIPE_PRICE_ID_PRO_MONTHLY ||

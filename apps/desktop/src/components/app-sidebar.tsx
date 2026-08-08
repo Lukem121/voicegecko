@@ -182,7 +182,12 @@ export function AppSidebar() {
   // Update availability indicator for Settings menu
   const updateAvailable = !!useUpdateStore((s) => s.availableUpdate);
 
-  const navSecondaryItems = data.navSecondary;
+  const navSecondaryItems = data.navSecondary.filter((item) => {
+    if (!user && (item.url === '/usage' || item.title === 'Usage')) {
+      return false;
+    }
+    return true;
+  });
 
   return (
     <Sidebar
@@ -345,52 +350,22 @@ export function AppSidebar() {
         </SidebarGroup>
       </SidebarContent>
       <SidebarFooter>
-        {/* User Menu */}
         <SidebarMenu>
           <SidebarMenuItem>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <SidebarMenuButton
-                  className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
-                  size="lg"
-                >
-                  <Avatar className="h-8 w-8 rounded-lg">
-                    <AvatarImage
-                      alt={user?.name ?? ''}
-                      src={user?.image ?? ''}
-                    />
-                    <AvatarFallback className="rounded-lg">
-                      {user?.name
-                        ? user.name
-                            .split(' ')
-                            .map((n) => n[0])
-                            .join('')
-                            .toUpperCase()
-                        : 'U'}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="grid flex-1 text-left text-sm leading-tight">
-                    <span className="truncate font-semibold">{user?.name}</span>
-                    <span className="truncate text-xs">{user?.email}</span>
-                  </div>
-                  <ChevronUp className="ml-auto size-4" />
-                </SidebarMenuButton>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent
-                align="end"
-                className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg"
-                side="bottom"
-                sideOffset={4}
-              >
-                <DropdownMenuLabel className="p-0 font-normal">
-                  <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
+            {user ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <SidebarMenuButton
+                    className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+                    size="lg"
+                  >
                     <Avatar className="h-8 w-8 rounded-lg">
                       <AvatarImage
-                        alt={user?.name ?? ''}
-                        src={user?.image ?? ''}
+                        alt={user.name ?? ''}
+                        src={user.image ?? ''}
                       />
                       <AvatarFallback className="rounded-lg">
-                        {user?.name
+                        {user.name
                           ? user.name
                               .split(' ')
                               .map((n) => n[0])
@@ -400,39 +375,87 @@ export function AppSidebar() {
                       </AvatarFallback>
                     </Avatar>
                     <div className="grid flex-1 text-left text-sm leading-tight">
-                      <span className="truncate font-semibold">
-                        {user?.name}
-                      </span>
-                      <span className="truncate text-xs">{user?.email}</span>
+                      <span className="truncate font-semibold">{user.name}</span>
+                      <span className="truncate text-xs">{user.email}</span>
                     </div>
-                  </div>
-                </DropdownMenuLabel>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem asChild>
-                  <Link to="/settings">
-                    <Settings2 className="mr-2 size-4" />
-                    Settings
-                  </Link>
-                </DropdownMenuItem>
-                <DropdownMenuItem
-                  className="cursor-pointer"
-                  onClick={async () => {
-                    const websiteUrl =
-                      import.meta.env.VITE_PUBLIC_VOICEGECKO_URL ||
-                      'https://www.voicegecko.dev';
-                    await open(`${websiteUrl}/app/billing`);
-                  }}
+                    <ChevronUp className="ml-auto size-4" />
+                  </SidebarMenuButton>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent
+                  align="end"
+                  className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg"
+                  side="bottom"
+                  sideOffset={4}
                 >
-                  <CreditCard className="mr-2 size-4" />
-                  Billing
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={signOut}>
-                  <LogOut className="mr-2 size-4" />
-                  Sign Out
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+                  <DropdownMenuLabel className="p-0 font-normal">
+                    <div className="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
+                      <Avatar className="h-8 w-8 rounded-lg">
+                        <AvatarImage
+                          alt={user.name ?? ''}
+                          src={user.image ?? ''}
+                        />
+                        <AvatarFallback className="rounded-lg">
+                          {user.name
+                            ? user.name
+                                .split(' ')
+                                .map((n) => n[0])
+                                .join('')
+                                .toUpperCase()
+                            : 'U'}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="grid flex-1 text-left text-sm leading-tight">
+                        <span className="truncate font-semibold">
+                          {user.name}
+                        </span>
+                        <span className="truncate text-xs">{user.email}</span>
+                      </div>
+                    </div>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link to="/settings">
+                      <Settings2 className="mr-2 size-4" />
+                      Settings
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    className="cursor-pointer"
+                    onClick={async () => {
+                      const websiteUrl =
+                        import.meta.env.VITE_PUBLIC_VOICEGECKO_URL ||
+                        'https://www.voicegecko.dev';
+                      await open(`${websiteUrl}/app/billing`);
+                    }}
+                  >
+                    <CreditCard className="mr-2 size-4" />
+                    Billing
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={signOut}>
+                    <LogOut className="mr-2 size-4" />
+                    Sign Out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <div className="flex flex-col gap-2 p-1 group-data-[collapsible=icon]:items-center">
+                <SidebarMenuButton
+                  className="cursor-pointer"
+                  onClick={() => handleLinkClick('#plans')}
+                  size="lg"
+                >
+                  <CreditCard />
+                  <span>Support Voice Gecko</span>
+                </SidebarMenuButton>
+                <SidebarMenuButton asChild size="sm">
+                  <Link to="/sign-in">
+                    <LogOut />
+                    <span>Sign in</span>
+                  </Link>
+                </SidebarMenuButton>
+              </div>
+            )}
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarFooter>

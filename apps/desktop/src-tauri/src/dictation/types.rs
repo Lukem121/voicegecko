@@ -7,7 +7,6 @@ pub enum InteractionMode {
     PttBatch,
     FlowStream,
     HandsFree,
-    AccuracyCloud,
     CapsuleCompose,
 }
 
@@ -18,7 +17,8 @@ impl InteractionMode {
             "ptt_batch" => Some(Self::PttBatch),
             "flow_stream" => Some(Self::FlowStream),
             "hands_free" => Some(Self::HandsFree),
-            "accuracy_cloud" => Some(Self::AccuracyCloud),
+            // Legacy cloud mode id maps to local Parakeet toggle
+            "accuracy_cloud" => Some(Self::ToggleBatch),
             "capsule_compose" => Some(Self::CapsuleCompose),
             _ => None,
         }
@@ -30,7 +30,6 @@ impl InteractionMode {
             Self::PttBatch => "ptt_batch",
             Self::FlowStream => "flow_stream",
             Self::HandsFree => "hands_free",
-            Self::AccuracyCloud => "accuracy_cloud",
             Self::CapsuleCompose => "capsule_compose",
         }
     }
@@ -41,8 +40,6 @@ impl InteractionMode {
 pub enum EngineId {
     MoonshineMedium,
     ParakeetTdtV2,
-    Gpt4oTranscribe,
-    Gpt4oMiniTranscribe,
     InsanelyFastWhisper,
 }
 
@@ -51,8 +48,8 @@ impl EngineId {
         match s {
             "moonshine_medium" => Some(Self::MoonshineMedium),
             "parakeet_tdt_v2" => Some(Self::ParakeetTdtV2),
-            "gpt4o_transcribe" => Some(Self::Gpt4oTranscribe),
-            "gpt4o_mini_transcribe" => Some(Self::Gpt4oMiniTranscribe),
+            // Legacy cloud engine ids map to local Parakeet
+            "gpt4o_transcribe" | "gpt4o_mini_transcribe" => Some(Self::ParakeetTdtV2),
             "insanely_fast_whisper" => Some(Self::InsanelyFastWhisper),
             _ => None,
         }
@@ -62,8 +59,6 @@ impl EngineId {
         match self {
             Self::MoonshineMedium => "moonshine_medium",
             Self::ParakeetTdtV2 => "parakeet_tdt_v2",
-            Self::Gpt4oTranscribe => "gpt4o_transcribe",
-            Self::Gpt4oMiniTranscribe => "gpt4o_mini_transcribe",
             Self::InsanelyFastWhisper => "insanely_fast_whisper",
         }
     }

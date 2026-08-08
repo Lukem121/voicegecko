@@ -114,6 +114,7 @@ const defaultSettings: AppSettings = {
   privacy: {
     usageAnalytics: true,
     crashReports: true,
+    airGap: false,
   },
   personalization: {
     interactionSounds: true,
@@ -141,7 +142,6 @@ const defaultSettings: AppSettings = {
   features: {
     moonshineFlow: true,
     engineLab: true,
-    cloudGpt4o: true,
     gpuWhisper: true,
     localLlmPolish: false,
     requireAuth: false,
@@ -207,7 +207,6 @@ export const useSettingsStore = create<SettingsState>()(
             flags: {
               moonshineFlow: featureSettings.moonshineFlow,
               engineLab: featureSettings.engineLab,
-              cloudGpt4o: featureSettings.cloudGpt4o,
               gpuWhisper: featureSettings.gpuWhisper,
               localLlmPolish: featureSettings.localLlmPolish,
               requireAuth: featureSettings.requireAuth,
@@ -628,6 +627,7 @@ async function loadPrivacySettings(): Promise<PrivacySettings> {
       (await settingsStore.get<boolean>('privacy.usageAnalytics')) ?? true,
     crashReports:
       (await settingsStore.get<boolean>('privacy.crashReports')) ?? true,
+    airGap: (await settingsStore.get<boolean>('privacy.airGap')) ?? false,
   };
 }
 
@@ -683,8 +683,6 @@ async function loadFeatureSettings(): Promise<SettingsV3FeatureFlags> {
     moonshineFlow:
       (await settingsStore.get<boolean>('features.moonshineFlow')) ?? true,
     engineLab: (await settingsStore.get<boolean>('features.engineLab')) ?? true,
-    cloudGpt4o:
-      (await settingsStore.get<boolean>('features.cloudGpt4o')) ?? true,
     gpuWhisper:
       (await settingsStore.get<boolean>('features.gpuWhisper')) ?? true,
     localLlmPolish:

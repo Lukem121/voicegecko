@@ -1,5 +1,6 @@
 import { sendEmail } from '../lib/send-email';
 import { renderResetPasswordTemplate } from '../lib/template-renderer';
+import { assertEmailRateLimit } from '../lib/email-rate-limit';
 
 type UserWithEmail = {
   name: string;
@@ -13,6 +14,8 @@ export const sendResetPasswordEmail = async ({
   user: UserWithEmail;
   url: string;
 }) => {
+  await assertEmailRateLimit('reset-password', user.email);
+
   await sendEmail({
     to: {
       email: user.email,

@@ -67,11 +67,6 @@ export const serverAuth = betterAuth({
             priceId: authEnv().STRIPE_PRICE_ID_PRO_MONTHLY,
             annualDiscountPriceId: authEnv().STRIPE_PRICE_ID_PRO_YEARLY,
           },
-          {
-            name: 'voice gecko team',
-            priceId: authEnv().STRIPE_PRICE_ID_TEAM_MONTHLY,
-            annualDiscountPriceId: authEnv().STRIPE_PRICE_ID_TEAM_YEARLY,
-          },
         ],
         onSubscriptionComplete,
         onSubscriptionUpdate,

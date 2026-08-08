@@ -138,6 +138,62 @@ pub fn sync_local_dictionary_words(
 }
 
 #[tauri::command]
+pub fn list_local_dictionary(
+    app: tauri::AppHandle,
+    sort_by: Option<String>,
+) -> Result<Vec<crate::db::LocalDictionaryRow>, String> {
+    let db = crate::db::open_db(&app)?;
+    crate::db::list_dictionary_words(&db, sort_by.as_deref().unwrap_or("alphabetical"))
+}
+
+#[tauri::command]
+pub fn add_local_dictionary_word(
+    app: tauri::AppHandle,
+    word: String,
+    cache: tauri::State<'_, DictionaryPromptCache>,
+) -> Result<crate::db::LocalDictionaryRow, String> {
+    let db = crate::db::open_db(&app)?;
+    let row = crate::db::add_dictionary_word(&db, &word)?;
+    if let Ok(Some(prompt)) = crate::db::get_dictionary_prompt(&db) {
+        cache.set(Some(prompt));
+    }
+    Ok(row)
+}
+
+#[tauri::command]
+pub fn update_local_dictionary_word(
+    app: tauri::AppHandle,
+    id: String,
+    word: String,
+    cache: tauri::State<'_, DictionaryPromptCache>,
+) -> Result<crate::db::LocalDictionaryRow, String> {
+    let db = crate::db::open_db(&app)?;
+    let row = crate::db::update_dictionary_word(&db, &id, &word)?;
+    if let Ok(Some(prompt)) = crate::db::get_dictionary_prompt(&db) {
+        cache.set(Some(prompt));
+    } else {
+        cache.set(None);
+    }
+    Ok(row)
+}
+
+#[tauri::command]
+pub fn delete_local_dictionary_word(
+    app: tauri::AppHandle,
+    id: String,
+    cache: tauri::State<'_, DictionaryPromptCache>,
+) -> Result<(), String> {
+    let db = crate::db::open_db(&app)?;
+    crate::db::delete_dictionary_word(&db, &id)?;
+    if let Ok(Some(prompt)) = crate::db::get_dictionary_prompt(&db) {
+        cache.set(Some(prompt));
+    } else {
+        cache.set(None);
+    }
+    Ok(())
+}
+
+#[tauri::command]
 pub fn set_intent_enabled(enabled: bool) {
     crate::intent::profiles::set_intent_enabled(enabled);
 }
@@ -173,9 +229,31 @@ pub async fn compare_ready_whisper_models_on_samples(
 pub fn list_local_dictations(
     app: tauri::AppHandle,
     limit: Option<usize>,
+    search: Option<String>,
+    cursor: Option<String>,
 ) -> Result<Vec<crate::db::LocalDictationRow>, String> {
     let db = crate::db::open_db(&app)?;
-    crate::db::list_local_dictations(&db, limit.unwrap_or(50))
+    crate::db::list_local_dictations_filtered(
+        &db,
+        limit.unwrap_or(50),
+        search.as_deref(),
+        cursor.as_deref(),
+    )
+}
+
+#[tauri::command]
+pub fn delete_local_dictation(app: tauri::AppHandle, id: String) -> Result<(), String> {
+    let db = crate::db::open_db(&app)?;
+    crate::db::delete_local_dictation(&db, &id)
+}
+
+#[tauri::command]
+pub fn count_local_dictations(
+    app: tauri::AppHandle,
+    search: Option<String>,
+) -> Result<usize, String> {
+    let db = crate::db::open_db(&app)?;
+    crate::db::count_local_dictations(&db, search.as_deref())
 }
 
 #[tauri::command]

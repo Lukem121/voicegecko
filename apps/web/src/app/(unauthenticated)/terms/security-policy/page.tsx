@@ -124,18 +124,18 @@ export default function SecurityPolicyPage() {
               prospective customers).
             </p>
             <p>
-              <strong>What we process.</strong> Voice Gecko converts
-              user-provided audio into text. By design, we store text dictations
-              and related metadata (for example: timestamps, language, and
-              account identifiers). We do not store raw audio unless explicitly
-              agreed for a support case or a customer-requested feature.
+              <strong>What we process.</strong> Voice Gecko desktop converts
+              audio to text on your device using local speech models. Dictation
+              text and dictionary words are stored on your device (local
+              SQLite), not on Voice Gecko servers. Account data (email, billing
+              for optional Support) may be stored if you create an account.
             </p>
             <p>
               <strong>GDPR.</strong> As a UK company, we comply with the UK GDPR
-              and the Data Protection Act 2018. For most features, Voice Gecko
-              acts as a processor of customer dictation content and as a
-              controller for account administration data (billing, login,
-              support).
+              and the Data Protection Act 2018. Desktop dictation text and
+              dictionary words stay on your device; we are not a processor of
+              that content. We act as a controller for account administration
+              data (billing, login, support) when you create an optional account.
             </p>
           </section>
 
@@ -369,8 +369,10 @@ export default function SecurityPolicyPage() {
             </ul>
             <h3>7.3 Customer Controls</h3>
             <p>
-              Customers can request export or deletion of dictations and account
-              data (subject to legal retention requirements). Contact:
+              Customers can request export or deletion of account and billing
+              data (subject to legal retention requirements). Desktop dictations
+              and dictionary words are stored only on the customer’s device —
+              delete them in the app or by removing local app data. Contact:
               privacy@voicegecko.dev.
             </p>
             <p>
@@ -381,8 +383,9 @@ export default function SecurityPolicyPage() {
             <h3>7.4 Retention</h3>
             <ul>
               <li>
-                Dictations are retained for as long as the customer account
-                remains active or until the customer deletes them.
+                Desktop dictations and dictionary words are retained on the
+                customer’s device until the customer deletes them or uninstalls
+                the app. We do not retain copies of that content on our servers.
               </li>
               <li>
                 Log data is retained for security and operational purposes

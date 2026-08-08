@@ -138,7 +138,7 @@ export class RecordingService {
     const mode = options.mode ?? 'toggle_batch';
 
     const modelsReady = await isSpeechModelsReady();
-    if (!modelsReady && mode !== 'accuracy_cloud') {
+    if (!modelsReady) {
       toast.info('Speech models are still setting up', {
         description:
           'First launch downloads models in the background. Keep VoiceGecko open and try again shortly.',

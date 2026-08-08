@@ -378,8 +378,8 @@ export default function PrivacyPage() {
             <h2>4. How we use the information</h2>
             <ul>
               <li>
-                Provide and operate the Service (including processing your audio
-                into dictations).
+                Provide and operate the Service (including local speech-to-text
+                on the desktop app, and account/Support features on the web).
               </li>
               <li>Process payments and subscriptions.</li>
               <li>
@@ -404,7 +404,8 @@ export default function PrivacyPage() {
             <ul>
               <li>
                 <strong>Contract</strong> – to provide the Service you requested
-                (account setup, dictations, billing, support).
+                (account setup, billing, support, and optional website
+                features).
               </li>
               <li>
                 <strong>Legitimate interests</strong> – to secure and improve
@@ -476,12 +477,14 @@ export default function PrivacyPage() {
               </li>
             </ul>
 
-            <h3 id="data-you-upload">2.3 Data you upload</h3>
+            <h3 id="data-you-upload">2.3 Desktop dictation content</h3>
             <p>
-              When you use the Service, you may upload audio files and generate
-              dictations (“User Content”). Audio is not stored unless required
-              for support or a feature you enable; dictation text is stored so
-              you can access and manage it.
+              The Voice Gecko desktop app converts speech to text on your device
+              using local speech models. Dictation transcripts and dictionary
+              words are stored in a local SQLite database on your computer and
+              are not uploaded to Voice Gecko servers. Audio is processed locally
+              and is not stored on our servers. Optional Support accounts store
+              billing and account identifiers only — not your dictation content.
             </p>
 
             <h3 id="information-from-others">2.4 Information from others</h3>

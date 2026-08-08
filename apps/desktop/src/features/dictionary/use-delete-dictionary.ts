@@ -1,34 +1,24 @@
-import { useMutation } from '@tanstack/react-query';
-
-import { queryClient, trpc } from '~/trpc';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { invoke } from '@tauri-apps/api/core';
+import { dictionaryService } from '~/services/dictionary.service';
 
 export const useDeleteDictionary = () => {
-  const mutation = useMutation(
-    trpc.dictionary.delete.mutationOptions({
-      onSuccess: async (result) => {
-        if (result.success) {
-          await Promise.all([
-            queryClient.invalidateQueries({
-              queryKey: trpc.dictionary.getAll.queryKey(),
-            }),
-            queryClient.invalidateQueries({
-              queryKey: trpc.dictionary.getPrompt.queryKey(),
-            }),
-          ]);
-        }
-      },
-    })
-  );
+  const queryClient = useQueryClient();
+
+  const mutation = useMutation({
+    mutationFn: async (input: { id: string }) => {
+      await invoke('delete_local_dictionary_word', { id: input.id });
+      return { id: input.id };
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['local-dictionary'] });
+      await dictionaryService.refreshPromptCache();
+    },
+  });
 
   return {
-    deleteWord: async (input: { id: number }) => {
-      const result = await mutation.mutateAsync(input);
-
-      if (!result.success) {
-        throw new Error(result.error.message);
-      }
-
-      return result.data;
+    deleteWord: async (input: { id: string }) => {
+      return await mutation.mutateAsync(input);
     },
     isDeleting: mutation.isPending,
     error: mutation.error,

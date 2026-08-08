@@ -34,10 +34,13 @@ export default function FaqSection() {
           </AccordionItem>
           <AccordionItem value="languages">
             <AccordionTrigger className="font-semibold text-foreground text-sm">
-              Do you support multiple languages or offline mode?
+              Does Voice Gecko run offline?
             </AccordionTrigger>
             <AccordionContent className="text-muted-foreground text-sm">
-              Not yet. Today we focus on fast, reliable English dictation.
+              Yes. Desktop dictation uses on-device speech models. Transcripts
+              and your custom dictionary stay in local SQLite on your computer —
+              they are not uploaded to our servers. English is the primary focus
+              today.
             </AccordionContent>
           </AccordionItem>
 
@@ -46,9 +49,9 @@ export default function FaqSection() {
               What happens with my audio?
             </AccordionTrigger>
             <AccordionContent className="text-muted-foreground text-sm">
-              We focus on fast clipboard delivery. We don’t retain audio beyond
-              processing, and transcripts stay on your device. See our Privacy
-              Policy for details.
+              Audio is processed on your device for local engines. We do not
+              upload audio or transcripts to Voice Gecko cloud services. See our
+              Privacy Policy for details.
             </AccordionContent>
           </AccordionItem>
           <AccordionItem value="macos">

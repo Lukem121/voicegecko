@@ -18,11 +18,6 @@
 - p50 latency: —
 - PASS (<400ms): —
 
-## GPT-4o Transcribe
-
-- Status: PENDING
-- Requires: `OPENAI_API_KEY`
-
 ## Decision
 
 - Toggle default engine: `parakeet_tdt_v2`

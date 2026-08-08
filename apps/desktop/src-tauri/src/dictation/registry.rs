@@ -1,6 +1,6 @@
 use crate::dictation::types::EngineId;
 use crate::speech::engine::DictationEngine;
-use crate::speech::{cloud_gpt4o, gpu_whisper, moonshine, parakeet};
+use crate::speech::{gpu_whisper, moonshine, parakeet};
 use std::sync::Arc;
 
 pub struct EngineRegistry {
@@ -12,8 +12,6 @@ impl EngineRegistry {
         let engines: Vec<Arc<dyn DictationEngine>> = vec![
             Arc::new(parakeet::ParakeetEngine::new()),
             Arc::new(moonshine::MoonshineEngine::new()),
-            Arc::new(cloud_gpt4o::Gpt4oEngine::new(false)),
-            Arc::new(cloud_gpt4o::Gpt4oEngine::new(true)),
             Arc::new(gpu_whisper::GpuWhisperEngine::new()),
         ];
         Self { engines }

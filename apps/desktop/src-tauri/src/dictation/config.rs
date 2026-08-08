@@ -37,12 +37,6 @@ impl ModeConfig {
                 output_target: OutputTarget::BoxThenPaste,
                 show_live_preview: false,
             },
-            InteractionMode::AccuracyCloud => Self {
-                mode,
-                default_engine: EngineId::Gpt4oTranscribe,
-                output_target: OutputTarget::PasteOnly,
-                show_live_preview: false,
-            },
             InteractionMode::CapsuleCompose => Self {
                 mode,
                 default_engine: EngineId::ParakeetTdtV2,
@@ -72,7 +66,6 @@ impl Default for DictationSettingsV3 {
                 ModeConfig::for_mode(InteractionMode::PttBatch),
                 ModeConfig::for_mode(InteractionMode::FlowStream),
                 ModeConfig::for_mode(InteractionMode::HandsFree),
-                ModeConfig::for_mode(InteractionMode::AccuracyCloud),
                 ModeConfig::for_mode(InteractionMode::CapsuleCompose),
             ],
             default_dictionary: vec![],

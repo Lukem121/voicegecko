@@ -33,7 +33,7 @@ import { useInfiniteScroll } from '~/hooks/use-infinite-scroll';
 import { analytics } from '~/lib/analytics/posthog-analytics';
 
 type DictationItemData = {
-  id: number;
+  id: string;
   timestamp: string;
   content: string;
   status: 'normal' | 'silent';
@@ -104,11 +104,11 @@ function DictationItem({
   item: DictationItemData;
   index: number;
   sectionLength: number;
-  deletingId: number | null;
-  openDropdownId: number | null;
-  handleSendFeedback: (id: number, content: string) => void;
-  handleDeleteTranscript: (id: number) => void;
-  setOpenDropdownId: (id: number | null) => void;
+  deletingId: string | null;
+  openDropdownId: string | null;
+  handleSendFeedback: (id: string, content: string) => void;
+  handleDeleteTranscript: (id: string) => void;
+  setOpenDropdownId: (id: string | null) => void;
   isDeleting: boolean;
 }) {
   const isBeingDeleted = deletingId === item.id;
@@ -246,15 +246,15 @@ function DictationsPage() {
 
   const { deleteDictation, isDeleting } = useDeleteDictation();
   const [isSearchExpanded, setIsSearchExpanded] = useState(false);
-  const [deletingId, setDeletingId] = useState<number | null>(null);
-  const [openDropdownId, setOpenDropdownId] = useState<number | null>(null);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [openDropdownId, setOpenDropdownId] = useState<string | null>(null);
   const [feedbackModal, setFeedbackModal] = useState<{
     isOpen: boolean;
-    dictationId: number;
+    dictationId: string;
     content: string;
   }>({
     isOpen: false,
-    dictationId: 0,
+    dictationId: '',
     content: '',
   });
 
@@ -265,7 +265,7 @@ function DictationsPage() {
     threshold: 800,
   });
 
-  const handleSendFeedback = (id: number, content: string) => {
+  const handleSendFeedback = (id: string, content: string) => {
     setFeedbackModal({
       isOpen: true,
       dictationId: id,
@@ -279,7 +279,7 @@ function DictationsPage() {
     });
   };
 
-  const handleDeleteTranscript = async (id: number) => {
+  const handleDeleteTranscript = async (id: string) => {
     try {
       log.info(id, 'Deleting dictation:');
       setDeletingId(id);
@@ -485,7 +485,7 @@ function DictationsPage() {
         dictationId={feedbackModal.dictationId}
         isOpen={feedbackModal.isOpen}
         onClose={() =>
-          setFeedbackModal({ isOpen: false, dictationId: 0, content: '' })
+          setFeedbackModal({ isOpen: false, dictationId: '', content: '' })
         }
       />
     </div>

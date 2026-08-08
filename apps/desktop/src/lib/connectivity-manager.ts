@@ -112,6 +112,21 @@ class ConnectivityManager {
       return;
     }
 
+    const { isAirGapMode } = await import('./air-gap');
+    if (await isAirGapMode()) {
+      log.info('[ConnectivityManager] Privacy mode on — skipping probes');
+      this.updateState({
+        isOnline: false,
+        isApiReachable: false,
+        isChecking: false,
+        error: null,
+        diagnosis: 'no_internet',
+        lastChecked: new Date(),
+      });
+      this.deactivate();
+      return;
+    }
+
     log.info('🔍 [ConnectivityManager] Starting connectivity check');
 
     this.updateState({ isChecking: true, error: null });

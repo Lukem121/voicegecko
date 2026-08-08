@@ -66,6 +66,14 @@ export const useUpdateStore = create<UpdateState>((set, get) => ({
     }
     set({ isChecking: true, error: null });
     try {
+      const { isAirGapMode } = await import('~/lib/air-gap');
+      if (await isAirGapMode()) {
+        toast.info('Privacy mode is on — update checks are disabled.');
+        get().setAvailable(null);
+        get().setLastCheckedNow();
+        return;
+      }
+
       const update = await check();
       if (update) {
         log.info('[UpdateStore] Update available', { version: update.version });

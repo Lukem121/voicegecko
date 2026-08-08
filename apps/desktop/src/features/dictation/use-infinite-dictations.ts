@@ -1,26 +1,123 @@
 import { useInfiniteQuery } from '@tanstack/react-query';
-import Fuse from 'fuse.js';
+import { invoke } from '@tauri-apps/api/core';
 import React, { useMemo } from 'react';
 
 import { useDebouncedSearch } from '~/hooks/use-debounced-search';
 import { analytics } from '~/lib/analytics/posthog-analytics';
-import { trpc } from '~/trpc';
-import { useGetDictations } from './use-get-dictations';
 
 export type UseInfiniteDictationsParams = {
   limit?: number;
   searchDelay?: number;
 };
 
+type LocalDictationRow = {
+  id: string;
+  content: string;
+  engineId?: string | null;
+  mode?: string | null;
+  createdAt: string;
+};
+
 type DictationGroup = {
   date: string;
   items: {
-    id: number;
+    id: string;
     timestamp: string;
     content: string;
     status: 'normal' | 'silent';
     createdAt?: string;
   }[];
+};
+
+const isSameDay = (a: Date, b: Date) =>
+  a.getFullYear() === b.getFullYear() &&
+  a.getMonth() === b.getMonth() &&
+  a.getDate() === b.getDate();
+
+const getLocalDateLabel = (date: Date) => {
+  const today = new Date();
+  const yesterday = new Date();
+  yesterday.setDate(today.getDate() - 1);
+
+  if (isSameDay(date, today)) {
+    return 'TODAY';
+  }
+  if (isSameDay(date, yesterday)) {
+    return 'YESTERDAY';
+  }
+
+  return date
+    .toLocaleDateString(undefined, {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    })
+    .toUpperCase();
+};
+
+const getLocalTime = (date: Date) =>
+  date.toLocaleTimeString(undefined, {
+    hour: 'numeric',
+    minute: '2-digit',
+  });
+
+const groupRows = (rows: LocalDictationRow[]): DictationGroup[] => {
+  const groupsMap = new Map<string, DictationGroup>();
+
+  for (const row of rows) {
+    const date = row.createdAt ? new Date(row.createdAt) : new Date();
+    const dateLabel = getLocalDateLabel(date);
+    const localTime = getLocalTime(date);
+    const status: 'normal' | 'silent' =
+      row.content === 'Audio is silent.' ? 'silent' : 'normal';
+
+    if (!groupsMap.has(dateLabel)) {
+      groupsMap.set(dateLabel, { date: dateLabel, items: [] });
+    }
+
+    const group = groupsMap.get(dateLabel);
+    if (!group) {
+      continue;
+    }
+
+    if (!group.items.some((existing) => existing.id === row.id)) {
+      group.items.push({
+        id: row.id,
+        timestamp: localTime,
+        content: row.content,
+        status,
+        createdAt: row.createdAt,
+      });
+    }
+  }
+
+  const result = Array.from(groupsMap.values()).map((g) => ({
+    ...g,
+    items: g.items.sort((a, b) => {
+      const aTime = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const bTime = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      return bTime - aTime;
+    }),
+  }));
+
+  result.sort((a, b) => {
+    if (a.date === 'TODAY') {
+      return -1;
+    }
+    if (b.date === 'TODAY') {
+      return 1;
+    }
+    if (a.date === 'YESTERDAY') {
+      return -1;
+    }
+    if (b.date === 'YESTERDAY') {
+      return 1;
+    }
+    return 0;
+  });
+
+  return result;
 };
 
 export const useInfiniteDictations = ({
@@ -29,270 +126,60 @@ export const useInfiniteDictations = ({
 }: UseInfiniteDictationsParams = {}) => {
   const search = useDebouncedSearch({ delay: searchDelay });
 
-  // Track search usage
   React.useEffect(() => {
     if (search.debouncedSearchTerm) {
       analytics.track('dictation_searched', {
         search_term_length: search.debouncedSearchTerm.length,
-        search_type: 'server_search',
+        search_type: 'local_search',
       });
 
       analytics.trackFeatureFirstUse('dictation_search');
     }
   }, [search.debouncedSearchTerm]);
 
-  // Main infinite query for dictations
-  const infiniteQuery = useInfiniteQuery(
-    trpc.dictation.getAll.infiniteQueryOptions(
-      {
+  const infiniteQuery = useInfiniteQuery({
+    queryKey: ['local-dictations', limit, search.debouncedSearchTerm],
+    queryFn: async ({ pageParam }) => {
+      const rows = await invoke<LocalDictationRow[]>('list_local_dictations', {
         limit,
-        search: search.debouncedSearchTerm || undefined,
-      },
-      {
-        getNextPageParam: (lastPage) => {
-          return lastPage.hasNextPage ? lastPage.nextCursor : undefined;
-        },
-      }
-    )
-  );
-
-  // Fallback query for fuzzy search when server search returns no results
-  const shouldUseFuzzySearch =
-    search.debouncedSearchTerm &&
-    (infiniteQuery.data?.pages[0]?.groups.length === 0 ||
-      !infiniteQuery.data) &&
-    !infiniteQuery.isLoading;
-
-  const { dictations: allDictations } = useGetDictations({
-    limit: 50, // Get more for fuzzy search (max allowed by backend is 50)
+        search: search.debouncedSearchTerm || null,
+        cursor: pageParam ?? null,
+      });
+      const totalResults = await invoke<number>('count_local_dictations', {
+        search: search.debouncedSearchTerm || null,
+      });
+      const nextCursor =
+        rows.length === limit ? (rows.at(-1)?.id ?? undefined) : undefined;
+      return { rows, totalResults, nextCursor };
+    },
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (lastPage) => lastPage.nextCursor,
   });
 
-  // Perform fuzzy search with memoization
-  const fuzzySearchResults = useMemo(() => {
-    if (
-      !(shouldUseFuzzySearch && search.debouncedSearchTerm) ||
-      allDictations.length === 0
-    ) {
-      return [];
-    }
-
-    // Flatten all items for fuzzy search
-    const allItems = allDictations.flatMap((group) =>
-      group.items.map((item) => ({
-        ...item,
-        groupDate: group.date,
-      }))
-    );
-
-    const fuse = new Fuse(allItems, {
-      keys: ['content'],
-      threshold: 0.4,
-      includeScore: true,
-    });
-
-    const fuzzyResults = fuse.search(search.debouncedSearchTerm);
-
-    // Helper functions for local formatting
-    const isSameDay = (a: Date, b: Date) =>
-      a.getFullYear() === b.getFullYear() &&
-      a.getMonth() === b.getMonth() &&
-      a.getDate() === b.getDate();
-
-    const getLocalDateLabel = (date: Date) => {
-      const today = new Date();
-      const yesterday = new Date();
-      yesterday.setDate(today.getDate() - 1);
-
-      if (isSameDay(date, today)) {
-        return 'TODAY';
-      }
-      if (isSameDay(date, yesterday)) {
-        return 'YESTERDAY';
-      }
-
-      return date
-        .toLocaleDateString(undefined, {
-          weekday: 'long',
-          year: 'numeric',
-          month: 'long',
-          day: 'numeric',
-        })
-        .toUpperCase();
-    };
-
-    const getLocalTime = (date: Date) =>
-      date.toLocaleTimeString(undefined, {
-        hour: 'numeric',
-        minute: '2-digit',
-      });
-
-    // Group fuzzy results back by local date
-    const groupedResults = fuzzyResults.reduce((acc, { item }) => {
-      const date = item.createdAt ? new Date(item.createdAt) : undefined;
-      const dateLabel = date ? getLocalDateLabel(date) : item.groupDate;
-      const localTime = date ? getLocalTime(date) : item.timestamp;
-
-      const existingGroup = acc.find((g) => g.date === dateLabel);
-      if (existingGroup) {
-        existingGroup.items.push({
-          id: item.id,
-          timestamp: localTime,
-          content: item.content,
-          status: item.status,
-          createdAt: item.createdAt,
-        });
-      } else {
-        acc.push({
-          date: dateLabel,
-          items: [
-            {
-              id: item.id,
-              timestamp: localTime,
-              content: item.content,
-              status: item.status,
-              createdAt: item.createdAt,
-            },
-          ],
-        });
-      }
-      return acc;
-    }, [] as DictationGroup[]);
-
-    return groupedResults;
-  }, [shouldUseFuzzySearch, search.debouncedSearchTerm, allDictations]);
-
-  // Flatten, reformat to local, and regroup all items from all pages
-  const serverDictations = useMemo(() => {
+  const dictations = useMemo(() => {
     if (!infiniteQuery.data) {
       return [];
     }
-
-    const isSameDay = (a: Date, b: Date) =>
-      a.getFullYear() === b.getFullYear() &&
-      a.getMonth() === b.getMonth() &&
-      a.getDate() === b.getDate();
-
-    const getLocalDateLabel = (date: Date) => {
-      const today = new Date();
-      const yesterday = new Date();
-      yesterday.setDate(today.getDate() - 1);
-
-      if (isSameDay(date, today)) {
-        return 'TODAY';
-      }
-      if (isSameDay(date, yesterday)) {
-        return 'YESTERDAY';
-      }
-
-      return date
-        .toLocaleDateString(undefined, {
-          weekday: 'long',
-          year: 'numeric',
-          month: 'long',
-          day: 'numeric',
-        })
-        .toUpperCase();
-    };
-
-    const getLocalTime = (date: Date) =>
-      date.toLocaleTimeString(undefined, {
-        hour: 'numeric',
-        minute: '2-digit',
-      });
-
-    const allItems = infiniteQuery.data.pages.flatMap((page) =>
-      page.groups.flatMap((group) => group.items)
-    );
-
-    const groupsMap = new Map<string, DictationGroup>();
-
-    for (const item of allItems) {
-      const date = item.createdAt ? new Date(item.createdAt) : undefined;
-      const dateLabel = date ? getLocalDateLabel(date) : 'UNKNOWN DATE';
-      const localTime = date ? getLocalTime(date) : item.timestamp;
-
-      if (!groupsMap.has(dateLabel)) {
-        groupsMap.set(dateLabel, { date: dateLabel, items: [] });
-      }
-
-      const group = groupsMap.get(dateLabel);
-      if (!group) {
-        continue;
-      }
-
-      if (!group.items.some((existing) => existing.id === item.id)) {
-        group.items.push({
-          id: item.id,
-          timestamp: localTime,
-          content: item.content,
-          status: item.status,
-          createdAt: item.createdAt,
-        });
-      }
-    }
-
-    const result = Array.from(groupsMap.values()).map((g) => ({
-      ...g,
-      items: g.items.sort((a, b) => b.id - a.id),
-    }));
-
-    result.sort((a, b) => {
-      if (a.date === 'TODAY') {
-        return -1;
-      }
-      if (b.date === 'TODAY') {
-        return 1;
-      }
-      if (a.date === 'YESTERDAY') {
-        return -1;
-      }
-      if (b.date === 'YESTERDAY') {
-        return 1;
-      }
-      return 0;
-    });
-
-    return result;
+    const allRows = infiniteQuery.data.pages.flatMap((page) => page.rows);
+    return groupRows(allRows);
   }, [infiniteQuery.data]);
 
-  const dictations = shouldUseFuzzySearch
-    ? fuzzySearchResults
-    : serverDictations;
-  const totalResults = shouldUseFuzzySearch
-    ? fuzzySearchResults.length
-    : infiniteQuery.data?.pages[0]?.totalResults;
-
-  const handleSearch = (value: string) => {
-    search.setSearchTerm(value);
-  };
-
-  const clearSearch = () => {
-    search.clearSearch();
-  };
+  const totalResults = infiniteQuery.data?.pages[0]?.totalResults;
 
   return {
-    // Search state
     searchTerm: search.searchTerm,
     debouncedSearchTerm: search.debouncedSearchTerm,
     isSearching: search.isSearching,
-    handleSearch,
-    clearSearch,
-
-    // Data
+    handleSearch: search.setSearchTerm,
+    clearSearch: search.clearSearch,
     dictations,
     totalResults,
-
-    // Loading states
     isLoading: infiniteQuery.isLoading,
     isFetchingNextPage: infiniteQuery.isFetchingNextPage,
-    hasNextPage: shouldUseFuzzySearch ? false : infiniteQuery.hasNextPage,
-
-    // Actions
+    hasNextPage: infiniteQuery.hasNextPage,
     fetchNextPage: infiniteQuery.fetchNextPage,
     refetch: infiniteQuery.refetch,
     error: infiniteQuery.error,
-
-    // Metadata
-    isFuzzySearch: shouldUseFuzzySearch,
+    isFuzzySearch: false,
   };
 };

@@ -1,9 +1,13 @@
 import { useQuery } from '@tanstack/react-query';
-
-import { trpc } from '~/trpc';
+import { invoke } from '@tauri-apps/api/core';
 
 export const useDictionaryPrompt = () => {
-  const query = useQuery(trpc.dictionary.getPrompt.queryOptions());
+  const query = useQuery({
+    queryKey: ['local-dictionary-prompt'],
+    queryFn: async () => {
+      return (await invoke<string | null>('get_local_dictionary_prompt')) ?? '';
+    },
+  });
 
   return {
     prompt: query.data ?? '',

@@ -23,8 +23,9 @@ export const env = createEnv({
     STRIPE_SECRET_KEY: z.string().min(1),
     STRIPE_PRICE_ID_PRO_MONTHLY: z.string().min(1),
     STRIPE_PRICE_ID_PRO_YEARLY: z.string().min(1),
-    STRIPE_PRICE_ID_TEAM_MONTHLY: z.string().min(1),
-    STRIPE_PRICE_ID_TEAM_YEARLY: z.string().min(1),
+    // Optional: legacy Team subscribers only (new Team checkout disabled)
+    STRIPE_PRICE_ID_TEAM_MONTHLY: z.string().min(1).optional(),
+    STRIPE_PRICE_ID_TEAM_YEARLY: z.string().min(1).optional(),
     REVALIDATE_SECRET: z
       .string()
       .min(1, 'Revalidation secret is required for ISR'),

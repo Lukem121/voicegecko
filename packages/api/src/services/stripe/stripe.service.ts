@@ -29,38 +29,56 @@ export interface PriceWithMetadata extends Price {
   };
 }
 
-// Map environment variables to plan metadata
-const PRICE_METADATA = {
-  [apiEnv().STRIPE_PRICE_ID_PRO_MONTHLY]: {
-    planName: 'voice gecko pro',
-    intervalType: 'monthly' as const,
-    minimumQuantity: 1,
-  },
-  [apiEnv().STRIPE_PRICE_ID_PRO_YEARLY]: {
-    planName: 'voice gecko pro',
-    intervalType: 'yearly' as const,
-    minimumQuantity: 1,
-  },
-  [apiEnv().STRIPE_PRICE_ID_TEAM_MONTHLY]: {
-    planName: 'voice gecko team',
-    intervalType: 'monthly' as const,
-    minimumQuantity: 3,
-  },
-  [apiEnv().STRIPE_PRICE_ID_TEAM_YEARLY]: {
-    planName: 'voice gecko team',
-    intervalType: 'yearly' as const,
-    minimumQuantity: 3,
-  },
+type PlanMeta = {
+  planName: string;
+  intervalType: 'monthly' | 'yearly';
+  minimumQuantity: number;
 };
+
+function buildPriceMetadata(): Record<string, PlanMeta> {
+  const env = apiEnv();
+  const metadata: Record<string, PlanMeta> = {
+    [env.STRIPE_PRICE_ID_PRO_MONTHLY]: {
+      planName: 'voice gecko pro',
+      intervalType: 'monthly',
+      minimumQuantity: 1,
+    },
+    [env.STRIPE_PRICE_ID_PRO_YEARLY]: {
+      planName: 'voice gecko pro',
+      intervalType: 'yearly',
+      minimumQuantity: 1,
+    },
+  };
+
+  if (env.STRIPE_PRICE_ID_TEAM_MONTHLY) {
+    metadata[env.STRIPE_PRICE_ID_TEAM_MONTHLY] = {
+      planName: 'voice gecko team',
+      intervalType: 'monthly',
+      minimumQuantity: 3,
+    };
+  }
+  if (env.STRIPE_PRICE_ID_TEAM_YEARLY) {
+    metadata[env.STRIPE_PRICE_ID_TEAM_YEARLY] = {
+      planName: 'voice gecko team',
+      intervalType: 'yearly',
+      minimumQuantity: 3,
+    };
+  }
+
+  return metadata;
+}
 
 export const stripeService = {
   async getPrices(): Promise<Record<PriceId, PriceWithMetadata>> {
+    const env = apiEnv();
     const priceIds = [
-      apiEnv().STRIPE_PRICE_ID_PRO_MONTHLY,
-      apiEnv().STRIPE_PRICE_ID_PRO_YEARLY,
-      apiEnv().STRIPE_PRICE_ID_TEAM_MONTHLY,
-      apiEnv().STRIPE_PRICE_ID_TEAM_YEARLY,
-    ];
+      env.STRIPE_PRICE_ID_PRO_MONTHLY,
+      env.STRIPE_PRICE_ID_PRO_YEARLY,
+      env.STRIPE_PRICE_ID_TEAM_MONTHLY,
+      env.STRIPE_PRICE_ID_TEAM_YEARLY,
+    ].filter((id): id is string => Boolean(id));
+
+    const priceMetadata = buildPriceMetadata();
 
     const results = await Promise.allSettled(
       priceIds.map((id) =>
@@ -97,13 +115,10 @@ export const stripeService = {
 
     log.info('Retrieved Stripe prices', { count: prices.length });
 
-    // Transform the data into a more usable format with metadata
     const priceData = prices.reduce(
       (acc, price) => {
-        const metadata =
-          PRICE_METADATA[price.id as keyof typeof PRICE_METADATA];
+        const metadata = priceMetadata[price.id];
 
-        // Extract currency options from Stripe price object
         const currencies = {
           usd: {
             currency: 'usd',

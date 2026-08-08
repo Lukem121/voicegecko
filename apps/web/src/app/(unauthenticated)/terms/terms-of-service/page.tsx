@@ -142,11 +142,12 @@ export default function TermsOfServicePage() {
           <section className="scroll-mt-28" id="what-voice-gecko-does">
             <h2>1) What Voice Gecko does</h2>
             <p>
-              Voice Gecko converts audio that you submit into text dictations
-              and provides tools to manage those dictations. By default we store
-              the text and related metadata (timestamps, language, account
-              identifiers). We do not store your original audio unless you ask
-              us to for support or a specific feature.
+              Voice Gecko converts audio into text dictations on your device
+              using local speech models, and provides tools to manage those
+              dictations locally. By default, transcripts and dictionary words
+              stay on your computer and are not uploaded to Voice Gecko servers.
+              Optional Support accounts store billing and account identifiers
+              only — not your dictation content.
             </p>
             <p>
               A separate Privacy Policy explains how we handle personal data (UK
@@ -274,10 +275,13 @@ export default function TermsOfServicePage() {
             <p>We’re a UK company and follow UK GDPR. We act as:</p>
             <ul>
               <li>
-                a processor for your User Content (dictations and related data),
-                and
+                a controller for account, billing, support, and optional
+                analytics related to the hosted website and Support product, and
               </li>
-              <li>a controller for account, billing and operations data.</li>
+              <li>
+                not a processor of desktop dictation text or dictionary words —
+                those stay on your device and are not uploaded to our servers.
+              </li>
             </ul>
             <p>
               We use reputable providers and encrypt data in transit and at
@@ -410,15 +414,21 @@ export default function TermsOfServicePage() {
             <h2>5) Your content and our rights to operate the Service</h2>
             <h3>5.1 Ownership</h3>
             <p>
-              You own the content you provide to us, including uploaded audio,
-              the resulting dictations, and related metadata (“User Content”).
+              You own the content you create with Voice Gecko, including
+              dictation text and dictionary words stored on your device
+              (“User Content”). Desktop User Content stays on your computer and
+              is not uploaded to Voice Gecko servers. If you contact support or
+              send optional feedback, you may choose to share limited
+              information with us.
             </p>
             <h3>5.2 Licence to run the Service</h3>
             <p>
-              You grant us a worldwide, non-exclusive, royalty-free licence to
-              host, process, transmit, display and back up your User Content
-              only as needed to provide, maintain, protect and improve the
-              Service.
+              For User Content that remains on your device, no licence to Voice
+              Gecko is required. If you voluntarily send us content (for
+              example feedback or support attachments), you grant us a
+              worldwide, non-exclusive, royalty-free licence to host, process,
+              transmit, display and back up that material only as needed to
+              provide, maintain, protect and improve the Service.
             </p>
             <h3>5.3 Analytics and improvements</h3>
             <p>
@@ -434,9 +444,10 @@ export default function TermsOfServicePage() {
             <h3>5.5 Your responsibilities</h3>
             <p>
               You are responsible for the legality of your User Content (e.g.,
-              you have consent to record; you’re not uploading infringing
-              materials). If we receive a credible complaint, we may remove
-              content or restrict access.
+              you have consent to record; you’re not creating infringing
+              materials). If we receive a credible complaint about content you
+              voluntarily shared with us, we may remove or refuse to process it,
+              or restrict access where required.
             </p>
           </section>
 

@@ -20,7 +20,7 @@ import { analytics } from '~/lib/analytics/posthog-analytics';
 type FeedbackModalProps = {
   isOpen: boolean;
   onClose: () => void;
-  dictationId: number;
+  dictationId: string;
   dictationContent: string;
 };
 

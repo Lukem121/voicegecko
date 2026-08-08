@@ -391,6 +391,22 @@ function SettingsPage() {
                 }
               />
             </div>
+
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label>Privacy / air-gap mode</Label>
+                <p className="text-muted-foreground text-sm">
+                  Skip update checks and connectivity probes. Dictations and
+                  dictionary already stay on this device.
+                </p>
+              </div>
+              <Switch
+                checked={settings.privacy.airGap}
+                onCheckedChange={(checked) =>
+                  updatePrivacySetting('airGap', checked)
+                }
+              />
+            </div>
           </CardContent>
         </Card>
 
@@ -516,20 +532,6 @@ function SettingsPage() {
                 checked={settings.features.requireAuth}
                 onCheckedChange={(checked) =>
                   updateFeatureSetting('requireAuth', checked)
-                }
-              />
-            </div>
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label>Cloud GPT-4o engines</Label>
-                <p className="text-muted-foreground text-sm">
-                  Enable GPT-4o cloud transcription engines
-                </p>
-              </div>
-              <Switch
-                checked={settings.features.cloudGpt4o}
-                onCheckedChange={(checked) =>
-                  updateFeatureSetting('cloudGpt4o', checked)
                 }
               />
             </div>

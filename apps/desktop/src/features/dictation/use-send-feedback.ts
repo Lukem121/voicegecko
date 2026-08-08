@@ -6,7 +6,7 @@ export const useSendFeedback = () => {
   const mutation = useMutation(trpc.dictation.sendFeedback.mutationOptions());
 
   return {
-    sendFeedback: async (input: { dictationId: number; feedback: string }) => {
+    sendFeedback: async (input: { dictationId?: string; feedback: string }) => {
       const result = await mutation.mutateAsync(input);
 
       if (!result.success) {

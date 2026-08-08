@@ -1,15 +1,12 @@
 import { db } from '@acme/db/client';
-import { sendStudentDiscountEmail } from '@acme/email/send/student-discount';
 import { log } from '@acme/observability/log';
 import { stripeClient } from '@acme/payment/stripe';
-import { createRateLimiter, slidingWindow } from '@acme/rate-limit';
 import type { TRPCRouterRecord } from '@trpc/server';
 import { z } from 'zod/v4';
 import { apiEnv } from '../../env';
-import { EDUCATIONAL_DOMAINS } from '../consts/educational-domains';
 import { subscriptionRepository } from '../repository/subscription.repository';
 import { stripeService } from '../services/stripe/stripe.service';
-import { protectedProcedure, publicProcedure } from '../trpc';
+import { protectedProcedure } from '../trpc';
 
 export const stripeRouter = {
   getPrices: protectedProcedure.query(() => {
@@ -49,54 +46,6 @@ export const stripeRouter = {
       return {
         url: billingPortalSession.url,
       };
-    }),
-
-  createTeamCheckoutSession: protectedProcedure
-    .input(
-      z.object({
-        interval: z.enum(['monthly', 'yearly']).default('monthly'),
-        successUrl: z
-          .string()
-          .optional()
-          .default('/app/plans?sub_success=true'),
-        cancelUrl: z.string().optional().default('/app/plans'),
-        initialQuantity: z.number().int().min(3).optional().default(3),
-      })
-    )
-    .mutation(async ({ input, ctx }) => {
-      const user = ctx.session.user as typeof ctx.session.user & {
-        stripeCustomerId?: string;
-      };
-      const customerId = user.stripeCustomerId;
-
-      if (!customerId) {
-        throw new Error('No Stripe customer found for user');
-      }
-
-      const priceId =
-        input.interval === 'yearly'
-          ? apiEnv().STRIPE_PRICE_ID_TEAM_YEARLY
-          : apiEnv().STRIPE_PRICE_ID_TEAM_MONTHLY;
-
-      const successUrl = `${apiEnv().VOICEGECKO_APP_URL}${input.successUrl}`;
-      const cancelUrl = `${apiEnv().VOICEGECKO_APP_URL}${input.cancelUrl}`;
-
-      const session = await stripeClient.checkout.sessions.create({
-        mode: 'subscription',
-        customer: customerId,
-        allow_promotion_codes: true,
-        success_url: successUrl,
-        cancel_url: cancelUrl,
-        line_items: [
-          {
-            price: priceId,
-            quantity: input.initialQuantity,
-            adjustable_quantity: { enabled: true, minimum: 3 },
-          },
-        ],
-      });
-
-      return { url: session.url };
     }),
 
   restoreSubscription: protectedProcedure
@@ -190,75 +139,4 @@ export const stripeRouter = {
       return null;
     }
   }),
-
-  requestStudentDiscount: publicProcedure
-    .input(
-      z.object({
-        email: z.email('Please enter a valid email address'),
-      })
-    )
-    .mutation(async ({ input }) => {
-      const limiter = createRateLimiter({
-        limiter: slidingWindow(1, '30s'),
-        prefix: 'request-student-discount',
-      });
-
-      const { success } = await limiter.limit(input.email);
-
-      log.info('success', success);
-
-      if (!success) {
-        return {
-          success: false,
-          error: {
-            message: 'Too many requests. Please try again later.',
-            code: 'TOO_MANY_REQUESTS',
-          },
-        };
-      }
-
-      try {
-        const emailDomain = input.email.toLowerCase();
-        const isEducationalEmail = EDUCATIONAL_DOMAINS.some((domain) =>
-          emailDomain.endsWith(domain)
-        );
-
-        if (!isEducationalEmail) {
-          return {
-            success: false,
-            error: {
-              message:
-                'Please use your educational email address (.edu, .ac.uk, etc.)',
-              code: 'INVALID_EDUCATIONAL_EMAIL',
-            },
-          };
-        }
-
-        // Send the student discount email
-        await sendStudentDiscountEmail({
-          user: {
-            email: input.email,
-          },
-          couponCode: 'RYGALTMSXJAA',
-          discountPercentage: '50',
-          redemptionUrl: 'https://www.voicegecko.dev/pricing?student=true',
-        });
-
-        return {
-          success: true,
-          data: {
-            message: 'Student discount code sent to your email!',
-          },
-        };
-      } catch (error) {
-        log.error(error, 'Error sending student discount email:');
-        return {
-          success: false,
-          error: {
-            message: 'Failed to send discount code. Please try again later.',
-            code: 'EMAIL_SEND_FAILED',
-          },
-        };
-      }
-    }),
 } satisfies TRPCRouterRecord;

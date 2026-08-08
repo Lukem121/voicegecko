@@ -446,12 +446,6 @@ importers:
       drizzle-orm:
         specifier: 'catalog:'
         version: 0.44.5(@neondatabase/serverless@1.0.2)(@opentelemetry/api@1.9.0)(@types/pg@8.11.6)(@upstash/redis@1.36.2)(@vercel/postgres@0.10.0)(kysely@0.28.5)
-      ipflare:
-        specifier: ^2.0.0
-        version: 2.0.0
-      openai:
-        specifier: ^6.22.0
-        version: 6.22.0(ws@8.18.0(bufferutil@4.0.8))(zod@4.4.3)
       stripe:
         specifier: ^20.3.1
         version: 20.3.1(@types/node@25.2.3)
@@ -578,6 +572,9 @@ importers:
 
   packages/email:
     dependencies:
+      '@acme/rate-limit':
+        specifier: workspace:*
+        version: link:../rate-limit
       '@react-email/components':
         specifier: 1.0.7
         version: 1.0.7(react-dom@19.0.0(react@19.0.0))(react@19.0.0)
@@ -5298,9 +5295,6 @@ packages:
     resolution: {integrity: sha512-5Hh7Y1wQbvY5ooGgPbDaL5iYLAPzMTUrjMulskHLH6wnv/A+1q5rgEaiuqEjB+oxGXIVZs1FF+R/KPN3ZSQYYg==}
     engines: {node: '>=12'}
 
-  ipflare@2.0.0:
-    resolution: {integrity: sha512-1kt5/dtg297ol4vYHpdjkCnwBefza9EBb0NCUdnRgCs/0gatEffeCOMTekGGU3+0SMxL4L2jblgNpLX/1wS2lQ==}
-
   is-alphabetical@2.0.1:
     resolution: {integrity: sha512-FWyyY60MeTNyeSRpkM2Iry0G9hpr7/9kD40mD/cGQEuilcZYS4okz8SN2Q6rLCJ8gbCt6fN+rC+6tMGS99LaxQ==}
 
@@ -5746,18 +5740,6 @@ packages:
   onetime@7.0.0:
     resolution: {integrity: sha512-VXJjc87FScF88uafS3JllDgvAm+c/Slfz06lorj2uAY34rlUu0Nt+v8wreiImcrgAjjIHp1rXpTDlLOGw29WwQ==}
     engines: {node: '>=18'}
-
-  openai@6.22.0:
-    resolution: {integrity: sha512-7Yvy17F33Bi9RutWbsaYt5hJEEJ/krRPOrwan+f9aCPuMat1WVsb2VNSII5W1EksKT6fF69TG/xj4XzodK3JZw==}
-    hasBin: true
-    peerDependencies:
-      ws: ^8.18.0
-      zod: ^3.25 || ^4.0
-    peerDependenciesMeta:
-      ws:
-        optional: true
-      zod:
-        optional: true
 
   ora@8.2.0:
     resolution: {integrity: sha512-weP+BZ8MVNnlCm8c0Qdc1WSWq4Qn7I+9CJGm7Qali6g44e/PUzbjNqJX5NJ9ljlNMosfJvg1fKEGILklK9cwnw==}
@@ -10836,12 +10818,6 @@ snapshots:
 
   internmap@2.0.3: {}
 
-  ipflare@2.0.0:
-    dependencies:
-      axios: 1.10.0
-    transitivePeerDependencies:
-      - debug
-
   is-alphabetical@2.0.1: {}
 
   is-alphanumerical@2.0.1:
@@ -11185,11 +11161,6 @@ snapshots:
   onetime@7.0.0:
     dependencies:
       mimic-function: 5.0.1
-
-  openai@6.22.0(ws@8.18.0(bufferutil@4.0.8))(zod@4.4.3):
-    optionalDependencies:
-      ws: 8.18.0(bufferutil@4.0.8)
-      zod: 4.4.3
 
   ora@8.2.0:
     dependencies:
@@ -12277,7 +12248,7 @@ snapshots:
       expect-type: 1.2.2
       magic-string: 0.30.21
       pathe: 2.0.3
-      picomatch: 4.0.3
+      picomatch: 4.0.4
       std-env: 3.9.0
       tinybench: 2.9.0
       tinyexec: 0.3.2
@@ -12319,7 +12290,7 @@ snapshots:
       expect-type: 1.2.2
       magic-string: 0.30.21
       pathe: 2.0.3
-      picomatch: 4.0.3
+      picomatch: 4.0.4
       std-env: 3.9.0
       tinybench: 2.9.0
       tinyexec: 0.3.2

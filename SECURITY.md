@@ -16,6 +16,8 @@ Include as much detail as you can (steps to reproduce, affected component, impac
 
 For general product security practices, see [voicegecko.dev/terms/security-policy](https://www.voicegecko.dev/terms/security-policy).
 
+Community conduct is covered by our [Code of Conduct](CODE_OF_CONDUCT.md).
+
 ## Secrets and credentials
 
 - Never commit `.env` files or private keys. Example env files must use placeholders only.

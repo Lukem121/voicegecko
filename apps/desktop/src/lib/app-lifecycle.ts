@@ -183,6 +183,13 @@ class AppLifecycleManager {
     this.hasCheckedForUpdates = true;
 
     try {
+      const { isAirGapMode } = await import('./air-gap');
+      if (await isAirGapMode()) {
+        log.info('[AppLifecycle] Privacy mode on — skipping update check');
+        this.notifyStatusChange('no-update');
+        return;
+      }
+
       log.info('[AppLifecycle] 🔍 Performing one-time update check...');
       this.notifyStatusChange('checking');
 

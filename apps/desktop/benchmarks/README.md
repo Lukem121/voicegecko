@@ -33,7 +33,6 @@ Record new clips with the desktop app (Engine Lab → save audio) or place 16kHz
 | `whisper_sidecar_legacy` | via Tauri | Baseline |
 | `parakeet_tdt_v2` | `spike/parakeet` | Requires model download |
 | `moonshine_medium` | `spike/moonshine-ffi` | Requires moonshine.dll |
-| `gpt4o_transcribe` | env `OPENAI_API_KEY` | Cloud ceiling |
 
 ## WER
 

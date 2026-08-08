@@ -188,8 +188,6 @@ export function modeForShortcutId(shortcutId: string): InteractionModeId {
       return 'flow_stream';
     case 'hands-free':
       return 'hands_free';
-    case 'accuracy-cloud':
-      return 'accuracy_cloud';
     case 'capsule-compose':
       return 'capsule_compose';
     default:

@@ -1,5 +1,6 @@
 import { sendEmail } from '../lib/send-email';
 import { renderVerificationTemplate } from '../lib/template-renderer';
+import { assertEmailRateLimit } from '../lib/email-rate-limit';
 
 type UserWithEmail = {
   email: string;
@@ -13,6 +14,8 @@ export const sendVerificationEmail = async ({
   user: UserWithEmail;
   url: string;
 }) => {
+  await assertEmailRateLimit('verification', user.email);
+
   await sendEmail({
     to: {
       email: user.email,

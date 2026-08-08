@@ -58,7 +58,6 @@ const MODE_SHORTCUTS: Record<InteractionModeId, string> = {
   ptt_batch: 'Ctrl+Shift+X',
   flow_stream: 'Ctrl+Shift+Space',
   hands_free: 'Ctrl+Shift+Alt+Z',
-  accuracy_cloud: 'Ctrl+Shift+A',
   capsule_compose: 'Ctrl+Shift+G',
 };
 
@@ -67,7 +66,6 @@ const MODES: Array<{ id: InteractionModeId; label: string }> = [
   { id: 'ptt_batch', label: 'Push-to-talk' },
   { id: 'flow_stream', label: 'Flow stream' },
   { id: 'hands_free', label: 'Hands-free' },
-  { id: 'accuracy_cloud', label: 'Accuracy cloud' },
   { id: 'capsule_compose', label: 'Capsule compose' },
 ];
 
@@ -582,14 +580,9 @@ function EngineLabPage() {
             model from the full catalog above (default <code>base.en</code>).
           </p>
           <p>
-            <strong>Cloud GPT-4o:</strong> set <code>OPENAI_API_KEY</code> in
-            repo root <code>.env</code> or{' '}
-            <code>apps/desktop/.env.development</code>
-          </p>
-          <p>
             <strong>Debug logs:</strong> speech engine logs appear in the dev
             terminal with prefix <code>[speech]</code> — filter for engine name
-            (parakeet, moonshine, cloud_gpt4o, gpu_whisper, dictation).
+            (parakeet, moonshine, gpu_whisper, dictation).
           </p>
         </CardContent>
       </Card>

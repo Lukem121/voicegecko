@@ -22,8 +22,6 @@ export const shortcutActions: Record<
 
   'hands-free': () => recordingForShortcut('hands-free'),
 
-  'accuracy-cloud': () => recordingForShortcut('accuracy-cloud'),
-
   'capsule-compose': () => recordingForShortcut('capsule-compose'),
 
   'paste-last-dictation': () => dictationService.pasteLastDictation(),

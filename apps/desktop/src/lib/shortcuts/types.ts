@@ -7,7 +7,6 @@ export type ShortcutAction =
   | 'paste-last-dictation'
   | 'open-last-dictation'
   | 'hands-free'
-  | 'accuracy-cloud'
   | 'capsule-compose'
   | 'undo-dictation'
   | 'open-engine-lab'

@@ -3,7 +3,6 @@ import { adminRouter } from './router/admin.route';
 import { authRouter } from './router/auth.route';
 import { contactRouter } from './router/contact.route';
 import { dictationRouter } from './router/dictation.route';
-import { dictionaryRouter } from './router/dictionary.route';
 import { geolocationRouter } from './router/geolocation.route';
 import { stripeRouter } from './router/stripe.route';
 import { teamRouter } from './router/team.route';
@@ -19,7 +18,6 @@ export const appRouter = createTRPCRouter({
   dictation: dictationRouter,
   stripe: stripeRouter,
   usage: usageRouter,
-  dictionary: dictionaryRouter,
   geolocation: geolocationRouter,
   team: teamRouter,
 });

@@ -21,13 +21,11 @@ export const POSTHOG_SOURCES = {
   STICKY_CTA: 'sticky_cta',
   FINAL_CTA: 'final_cta',
   ORGANIC: 'organic',
-  STUDENT_DISCOUNT: 'student_discount',
 } as const;
 
 // Modal names for consistency
 export const MODAL_NAMES = {
   SYSTEM_REQUIREMENTS: 'system_requirements',
-  STUDENT_DISCOUNT: 'student_discount',
   BILLING_PORTAL: 'billing_portal',
   PLATFORM_VOTE: 'platform_vote',
 } as const;

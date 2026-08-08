@@ -9,7 +9,7 @@ import {
   user as UserTable,
 } from '@acme/db/schema';
 import { stripeClient } from '@acme/payment/stripe';
-import { apiEnv } from '../../env';
+import { isTeamPriceId } from '../utils/stripe-plan';
 
 export type UsageData = {
   userId: string;
@@ -265,9 +265,7 @@ class UsageRepository {
     const activeStripe = list.data.find((s) => s.items?.data?.length);
     const item = activeStripe?.items?.data?.[0];
     const priceId = item?.price?.id;
-    const isTeam =
-      priceId === apiEnv().STRIPE_PRICE_ID_TEAM_MONTHLY ||
-      priceId === apiEnv().STRIPE_PRICE_ID_TEAM_YEARLY;
+    const isTeam = isTeamPriceId(priceId);
     if (activeStripe && isTeam) {
       return {
         stripeCustomerId: owner.stripeCustomerId,

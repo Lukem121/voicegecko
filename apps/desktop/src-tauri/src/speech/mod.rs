@@ -1,5 +1,4 @@
 pub mod engine_status;
-pub mod cloud_gpt4o;
 pub mod download_events;
 pub mod engine;
 pub mod gpu_whisper;

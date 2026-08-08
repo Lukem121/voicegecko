@@ -1,7 +1,6 @@
 import type { ReactElement } from 'react';
 import LinkTemplate from '../templates/link';
 import { PaymentFailedTemplate } from '../templates/payment-failed';
-import { StudentDiscountTemplate } from '../templates/student-discount';
 import { SubscriptionCancelledTemplate } from '../templates/subscription-cancelled';
 import { WelcomeTemplate } from '../templates/welcome';
 import { WelcomeProTemplate } from '../templates/welcome-pro';
@@ -34,22 +33,6 @@ export const renderResetPasswordTemplate = ({
     description="Your reset password link is below - click it to reset your password. This will redirect you back to VoiceGecko."
     heading="Reset your password"
     url={url}
-  />
-);
-
-export const renderStudentDiscountTemplate = ({
-  couponCode,
-  discountPercentage,
-  redemptionUrl,
-}: {
-  couponCode: string;
-  discountPercentage: string;
-  redemptionUrl: string;
-}): ReactElement => (
-  <StudentDiscountTemplate
-    couponCode={couponCode}
-    discountPercentage={discountPercentage}
-    redemptionUrl={redemptionUrl}
   />
 );
 

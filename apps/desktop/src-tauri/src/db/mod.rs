@@ -216,6 +216,161 @@ pub fn upsert_dictionary_word(conn: &rusqlite::Connection, word: &str) -> Result
     Ok(())
 }
 
+#[derive(Debug, Clone, serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct LocalDictionaryRow {
+    pub id: String,
+    pub word: String,
+    pub created_at: i64,
+}
+
+pub fn add_dictionary_word(
+    conn: &rusqlite::Connection,
+    word: &str,
+) -> Result<LocalDictionaryRow, String> {
+    let trimmed = word.trim();
+    if trimmed.is_empty() {
+        return Err("Word cannot be empty".into());
+    }
+
+    let existing: Option<(String, String, i64)> = conn
+        .query_row(
+            "SELECT id, word, created_at FROM dictionary WHERE lower(word) = lower(?1) LIMIT 1",
+            rusqlite::params![trimmed],
+            |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)),
+        )
+        .ok();
+
+    if let Some((id, word, created_at)) = existing {
+        return Ok(LocalDictionaryRow {
+            id,
+            word,
+            created_at,
+        });
+    }
+
+    let id = uuid::Uuid::new_v4().to_string();
+    conn.execute(
+        "INSERT INTO dictionary (id, word) VALUES (?1, ?2)",
+        rusqlite::params![id, trimmed],
+    )
+    .map_err(|e| e.to_string())?;
+    let _ = conn.execute(
+        "INSERT OR IGNORE INTO dictionary_fts (word) VALUES (?1)",
+        rusqlite::params![trimmed],
+    );
+
+    let created_at: i64 = conn
+        .query_row(
+            "SELECT created_at FROM dictionary WHERE id = ?1",
+            rusqlite::params![id],
+            |row| row.get(0),
+        )
+        .unwrap_or(0);
+
+    Ok(LocalDictionaryRow {
+        id,
+        word: trimmed.to_string(),
+        created_at,
+    })
+}
+
+pub fn update_dictionary_word(
+    conn: &rusqlite::Connection,
+    id: &str,
+    word: &str,
+) -> Result<LocalDictionaryRow, String> {
+    let trimmed = word.trim();
+    if trimmed.is_empty() {
+        return Err("Word cannot be empty".into());
+    }
+
+    let old_word: String = conn
+        .query_row(
+            "SELECT word FROM dictionary WHERE id = ?1",
+            rusqlite::params![id],
+            |row| row.get(0),
+        )
+        .map_err(|_| "Dictionary entry not found".to_string())?;
+
+    conn.execute(
+        "UPDATE dictionary SET word = ?1 WHERE id = ?2",
+        rusqlite::params![trimmed, id],
+    )
+    .map_err(|e| e.to_string())?;
+
+    let _ = conn.execute(
+        "DELETE FROM dictionary_fts WHERE word = ?1",
+        rusqlite::params![old_word],
+    );
+    let _ = conn.execute(
+        "INSERT OR IGNORE INTO dictionary_fts (word) VALUES (?1)",
+        rusqlite::params![trimmed],
+    );
+
+    let created_at: i64 = conn
+        .query_row(
+            "SELECT created_at FROM dictionary WHERE id = ?1",
+            rusqlite::params![id],
+            |row| row.get(0),
+        )
+        .unwrap_or(0);
+
+    Ok(LocalDictionaryRow {
+        id: id.to_string(),
+        word: trimmed.to_string(),
+        created_at,
+    })
+}
+
+pub fn delete_dictionary_word(conn: &rusqlite::Connection, id: &str) -> Result<(), String> {
+    let old_word: String = conn
+        .query_row(
+            "SELECT word FROM dictionary WHERE id = ?1",
+            rusqlite::params![id],
+            |row| row.get(0),
+        )
+        .map_err(|_| "Dictionary entry not found".to_string())?;
+
+    conn.execute(
+        "DELETE FROM dictionary WHERE id = ?1",
+        rusqlite::params![id],
+    )
+    .map_err(|e| e.to_string())?;
+    let _ = conn.execute(
+        "DELETE FROM dictionary_fts WHERE word = ?1",
+        rusqlite::params![old_word],
+    );
+    Ok(())
+}
+
+pub fn list_dictionary_words(
+    conn: &rusqlite::Connection,
+    sort_by: &str,
+) -> Result<Vec<LocalDictionaryRow>, String> {
+    let order = match sort_by {
+        "newest" => "created_at DESC",
+        "oldest" => "created_at ASC",
+        _ => "lower(word) ASC",
+    };
+
+    let sql = format!("SELECT id, word, created_at FROM dictionary ORDER BY {order}");
+    let mut stmt = conn.prepare(&sql).map_err(|e| e.to_string())?;
+
+    let rows = stmt
+        .query_map([], |row| {
+            Ok(LocalDictionaryRow {
+                id: row.get(0)?,
+                word: row.get(1)?,
+                created_at: row.get(2)?,
+            })
+        })
+        .map_err(|e| e.to_string())?;
+
+    rows.collect::<Result<Vec<_>, _>>()
+        .map_err(|e| e.to_string())
+}
+
 pub fn get_dictionary_prompt(conn: &rusqlite::Connection) -> Result<Option<String>, String> {
     let mut stmt = conn
         .prepare(
@@ -304,25 +459,136 @@ pub fn list_local_dictations(
     conn: &rusqlite::Connection,
     limit: usize,
 ) -> Result<Vec<LocalDictationRow>, String> {
-    let mut stmt = conn
-        .prepare(
-            "SELECT id, content, engine_id, mode, created_at
-             FROM dictations ORDER BY created_at DESC LIMIT ?1",
+    list_local_dictations_filtered(conn, limit, None, None)
+}
+
+pub fn list_local_dictations_filtered(
+    conn: &rusqlite::Connection,
+    limit: usize,
+    search: Option<&str>,
+    cursor: Option<&str>,
+) -> Result<Vec<LocalDictationRow>, String> {
+    let search_term = search.map(str::trim).filter(|s| !s.is_empty());
+    let limit_i = limit as i64;
+
+    let map_row = |row: &rusqlite::Row<'_>| -> rusqlite::Result<LocalDictationRow> {
+        Ok(LocalDictationRow {
+            id: row.get(0)?,
+            content: row.get(1)?,
+            engine_id: row.get(2)?,
+            mode: row.get(3)?,
+            created_at: row.get(4)?,
+        })
+    };
+
+    match (search_term, cursor) {
+        (Some(term), Some(cursor_id)) => {
+            let pattern = format!("%{term}%");
+            let mut stmt = conn
+                .prepare(
+                    "SELECT id, content, engine_id, mode, created_at
+                     FROM dictations
+                     WHERE content LIKE ?1
+                       AND created_at < COALESCE(
+                         (SELECT created_at FROM dictations WHERE id = ?2),
+                         datetime('now')
+                       )
+                     ORDER BY created_at DESC
+                     LIMIT ?3",
+                )
+                .map_err(|e| e.to_string())?;
+            let rows = stmt
+                .query_map(rusqlite::params![pattern, cursor_id, limit_i], map_row)
+                .map_err(|e| e.to_string())?;
+            rows.collect::<Result<Vec<_>, _>>()
+                .map_err(|e| e.to_string())
+        }
+        (Some(term), None) => {
+            let pattern = format!("%{term}%");
+            let mut stmt = conn
+                .prepare(
+                    "SELECT id, content, engine_id, mode, created_at
+                     FROM dictations
+                     WHERE content LIKE ?1
+                     ORDER BY created_at DESC
+                     LIMIT ?2",
+                )
+                .map_err(|e| e.to_string())?;
+            let rows = stmt
+                .query_map(rusqlite::params![pattern, limit_i], map_row)
+                .map_err(|e| e.to_string())?;
+            rows.collect::<Result<Vec<_>, _>>()
+                .map_err(|e| e.to_string())
+        }
+        (None, Some(cursor_id)) => {
+            let mut stmt = conn
+                .prepare(
+                    "SELECT id, content, engine_id, mode, created_at
+                     FROM dictations
+                     WHERE created_at < COALESCE(
+                       (SELECT created_at FROM dictations WHERE id = ?1),
+                       datetime('now')
+                     )
+                     ORDER BY created_at DESC
+                     LIMIT ?2",
+                )
+                .map_err(|e| e.to_string())?;
+            let rows = stmt
+                .query_map(rusqlite::params![cursor_id, limit_i], map_row)
+                .map_err(|e| e.to_string())?;
+            rows.collect::<Result<Vec<_>, _>>()
+                .map_err(|e| e.to_string())
+        }
+        (None, None) => {
+            let mut stmt = conn
+                .prepare(
+                    "SELECT id, content, engine_id, mode, created_at
+                     FROM dictations ORDER BY created_at DESC LIMIT ?1",
+                )
+                .map_err(|e| e.to_string())?;
+            let rows = stmt
+                .query_map(rusqlite::params![limit_i], map_row)
+                .map_err(|e| e.to_string())?;
+            rows.collect::<Result<Vec<_>, _>>()
+                .map_err(|e| e.to_string())
+        }
+    }
+}
+
+pub fn delete_local_dictation(conn: &rusqlite::Connection, id: &str) -> Result<(), String> {
+    let changed = conn
+        .execute(
+            "DELETE FROM dictations WHERE id = ?1",
+            rusqlite::params![id],
         )
         .map_err(|e| e.to_string())?;
+    if changed == 0 {
+        return Err("Dictation not found".into());
+    }
+    Ok(())
+}
 
-    let rows = stmt
-        .query_map(rusqlite::params![limit as i64], |row| {
-            Ok(LocalDictationRow {
-                id: row.get(0)?,
-                content: row.get(1)?,
-                engine_id: row.get(2)?,
-                mode: row.get(3)?,
-                created_at: row.get(4)?,
+pub fn count_local_dictations(
+    conn: &rusqlite::Connection,
+    search: Option<&str>,
+) -> Result<usize, String> {
+    let search_term = search.map(str::trim).filter(|s| !s.is_empty());
+    match search_term {
+        Some(term) => {
+            let pattern = format!("%{term}%");
+            conn.query_row(
+                "SELECT COUNT(*) FROM dictations WHERE content LIKE ?1",
+                rusqlite::params![pattern],
+                |row| row.get::<_, i64>(0),
+            )
+            .map(|n| n as usize)
+            .map_err(|e| e.to_string())
+        }
+        None => conn
+            .query_row("SELECT COUNT(*) FROM dictations", [], |row| {
+                row.get::<_, i64>(0)
             })
-        })
-        .map_err(|e| e.to_string())?;
-
-    rows.collect::<Result<Vec<_>, _>>()
-        .map_err(|e| e.to_string())
+            .map(|n| n as usize)
+            .map_err(|e| e.to_string()),
+    }
 }

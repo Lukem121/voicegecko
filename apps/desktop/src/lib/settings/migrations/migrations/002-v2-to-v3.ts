@@ -28,7 +28,6 @@ export const migrationV2ToV3: MigrationV2ToV3 = {
       features: {
         moonshineFlow: true,
         engineLab: true,
-        cloudGpt4o: true,
         gpuWhisper: true,
         localLlmPolish: true,
         requireAuth: false,
