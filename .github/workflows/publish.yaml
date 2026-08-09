@@ -17,26 +17,37 @@ jobs:
     defaults:
       run:
         shell: powershell
-    # Persist heavy artifacts outside the wiped workspace between self-hosted runs
-    env:
-      CARGO_TARGET_DIR: ${{ runner.tool_cache }}/voicegecko/cargo-target
-      TAURI_TARGET_DIR: ${{ runner.tool_cache }}/voicegecko/cargo-target
-      TAURI_BUNDLE_DIR: ${{ runner.tool_cache }}/voicegecko/cargo-target/release/bundle
-      PNPM_STORE_DIR: ${{ runner.tool_cache }}/voicegecko/pnpm-store
     steps:
       - uses: actions/checkout@v4
         with:
           lfs: true
 
-      - name: Ensure persistent cache dirs
+      # Persist heavy artifacts outside the wiped workspace between self-hosted runs.
+      # runner.* is not available in job-level env, so set paths here via GITHUB_ENV.
+      - name: Configure persistent caches
         run: |
+          $cacheRoot = Join-Path $env:RUNNER_TOOL_CACHE "voicegecko"
+          $cargoTarget = Join-Path $cacheRoot "cargo-target"
+          $pnpmStore = Join-Path $cacheRoot "pnpm-store"
+          $whisperModels = Join-Path $cacheRoot "whisper-models"
+
           @(
-            $env:CARGO_TARGET_DIR
-            $env:PNPM_STORE_DIR
-            (Join-Path $env:RUNNER_TOOL_CACHE "voicegecko\whisper-models")
+            $cargoTarget
+            $pnpmStore
+            $whisperModels
           ) | ForEach-Object {
             New-Item -ItemType Directory -Force -Path $_ | Out-Null
             Write-Host "Cache dir ready: $_"
+          }
+
+          @(
+            "CARGO_TARGET_DIR=$cargoTarget"
+            "TAURI_TARGET_DIR=$cargoTarget"
+            "TAURI_BUNDLE_DIR=$(Join-Path $cargoTarget 'release\bundle')"
+            "PNPM_STORE_DIR=$pnpmStore"
+          ) | ForEach-Object {
+            $_ | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+            Write-Host $_
           }
 
       - name: Setup Node and pnpm
