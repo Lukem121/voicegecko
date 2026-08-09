@@ -9,11 +9,6 @@ concurrency:
   group: publish-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: false
 
-env:
-  CARGO_TARGET_DIR: ${{ github.workspace }}/apps/desktop/src-tauri/target
-  TAURI_TARGET_DIR: apps/desktop/src-tauri/target
-  TAURI_BUNDLE_DIR: apps/desktop/src-tauri/target/release/bundle
-
 jobs:
   publish-tauri:
     permissions:
@@ -22,10 +17,27 @@ jobs:
     defaults:
       run:
         shell: powershell
+    # Persist heavy artifacts outside the wiped workspace between self-hosted runs
+    env:
+      CARGO_TARGET_DIR: ${{ runner.tool_cache }}/voicegecko/cargo-target
+      TAURI_TARGET_DIR: ${{ runner.tool_cache }}/voicegecko/cargo-target
+      TAURI_BUNDLE_DIR: ${{ runner.tool_cache }}/voicegecko/cargo-target/release/bundle
+      PNPM_STORE_DIR: ${{ runner.tool_cache }}/voicegecko/pnpm-store
     steps:
       - uses: actions/checkout@v4
         with:
           lfs: true
+
+      - name: Ensure persistent cache dirs
+        run: |
+          @(
+            $env:CARGO_TARGET_DIR
+            $env:PNPM_STORE_DIR
+            (Join-Path $env:RUNNER_TOOL_CACHE "voicegecko\whisper-models")
+          ) | ForEach-Object {
+            New-Item -ItemType Directory -Force -Path $_ | Out-Null
+            Write-Host "Cache dir ready: $_"
+          }
 
       - name: Setup Node and pnpm
         uses: ./tooling/github/setup
@@ -119,13 +131,18 @@ jobs:
 
       - name: Download default Whisper model for bundle
         run: |
+          $cache = Join-Path $env:RUNNER_TOOL_CACHE "voicegecko\whisper-models\ggml-base.en.bin"
           $out = "apps/desktop/src-tauri/resources/ggml-base.en.bin"
-          if (-not (Test-Path $out)) {
+          New-Item -ItemType Directory -Force -Path (Split-Path $cache) | Out-Null
+          New-Item -ItemType Directory -Force -Path (Split-Path $out) | Out-Null
+          if (-not (Test-Path $cache)) {
             $url = "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-base.en.bin"
-            New-Item -ItemType Directory -Force -Path (Split-Path $out) | Out-Null
-            Write-Host "Downloading $url"
-            Invoke-WebRequest -Uri $url -OutFile $out
+            Write-Host "Downloading $url to persistent cache"
+            Invoke-WebRequest -Uri $url -OutFile $cache
+          } else {
+            Write-Host "Using cached Whisper model: $cache"
           }
+          Copy-Item -Force $cache $out
           Write-Host "Model size: $((Get-Item $out).Length) bytes"
 
       - name: Build full version
