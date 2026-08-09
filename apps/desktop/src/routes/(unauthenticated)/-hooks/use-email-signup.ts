@@ -1,24 +1,24 @@
-import type { z } from "zod/v4";
-import { useState } from "react";
+import type { SignUpSchema } from '@acme/auth/schemas/auth';
+import { log } from '@acme/observability/log';
+import { useState } from 'react';
+import type { z } from 'zod/v4';
 
-import type { SignUpSchema } from "@acme/auth/schemas";
-import { authClient } from "@acme/auth/client";
+import { authClient } from '~/lib/client';
+import { getClientAuthErrorMessage } from '~/utils/client-error-messages';
 
-import { getClientAuthErrorMessage } from "~/utils/client-error-messages";
-
-interface UseEmailSignupOptions {
+type UseEmailSignupOptions = {
   callbackURL: string;
   onSuccess?: () => void;
   onError?: (error: string) => void;
-}
+};
 
-interface UseEmailSignupReturn {
+type UseEmailSignupReturn = {
   isLoading: boolean;
   error: string | null;
   signUp: (
-    values: z.infer<typeof SignUpSchema>,
+    values: z.infer<typeof SignUpSchema>
   ) => Promise<{ success: boolean }>;
-}
+};
 
 export function useEmailSignup({
   callbackURL,
@@ -45,19 +45,22 @@ export function useEmailSignup({
         password: values.password,
         fetchOptions: {
           onSuccess: () => {
-            console.log("Email signup successful, verification email sent");
+            log.info('Email signup successful, verification email sent');
             onSuccess?.();
           },
-          onError: ({ error }) => {
-            console.error("use-email-signup", { error });
+          onError: ({ error: signUpOnError }) => {
+            log.error({ error: signUpOnError }, 'use-email-signup');
 
-            if (error.code) {
-              const errorMessage = getClientAuthErrorMessage(error.code, "en");
+            if (signUpOnError.code) {
+              const errorMessage = getClientAuthErrorMessage(
+                signUpOnError.code,
+                'en'
+              );
               setError(errorMessage);
               onError?.(errorMessage);
             } else {
               const errorMessage =
-                error.message ?? "An unexpected error occurred.";
+                signUpOnError.message ?? 'An unexpected error occurred.';
               setError(errorMessage);
               onError?.(errorMessage);
             }
@@ -66,18 +69,18 @@ export function useEmailSignup({
       });
 
       if (signUpError) {
-        console.error("use-email-signup", { error: signUpError });
+        log.error({ error: signUpError }, 'use-email-signup');
 
         if (signUpError.code) {
           const errorMessage = getClientAuthErrorMessage(
             signUpError.code,
-            "en",
+            'en'
           );
           setError(errorMessage);
           onError?.(errorMessage);
         } else {
           const errorMessage =
-            signUpError.message ?? "An unexpected error occurred.";
+            signUpError.message ?? 'An unexpected error occurred.';
           setError(errorMessage);
           onError?.(errorMessage);
         }
@@ -87,8 +90,8 @@ export function useEmailSignup({
 
       return { success: true };
     } catch (err) {
-      console.error("use-email-signup", { error: err });
-      const errorMessage = "An unexpected error occurred.";
+      log.error({ error: err }, 'use-email-signup');
+      const errorMessage = 'An unexpected error occurred.';
       setError(errorMessage);
       onError?.(errorMessage);
       return { success: false };
@@ -104,8 +107,8 @@ export function useEmailSignup({
   };
 }
 
-const formatBanMessage = (reason: string | null, expires: Date | null) => {
-  let errorMessage = "You have been banned.";
+const _formatBanMessage = (reason: string | null, expires: Date | null) => {
+  let errorMessage = 'You have been banned.';
   if (reason && expires) {
     errorMessage = `You have been banned for ${reason}, expires in ${countdown(expires)}.`;
   } else if (reason) {
@@ -121,7 +124,7 @@ function countdown(expires: Date): string {
   const diff = expires.getTime() - now.getTime();
 
   if (diff <= 0) {
-    return "expired";
+    return 'expired';
   }
 
   const days = Math.floor(diff / (1000 * 60 * 60 * 24));
@@ -129,10 +132,10 @@ function countdown(expires: Date): string {
   const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
 
   if (days > 0) {
-    return `${days} day${days === 1 ? "" : "s"}`;
-  } else if (hours > 0) {
-    return `${hours} hour${hours === 1 ? "" : "s"}`;
-  } else {
-    return `${minutes} minute${minutes === 1 ? "" : "s"}`;
+    return `${days} day${days === 1 ? '' : 's'}`;
   }
+  if (hours > 0) {
+    return `${hours} hour${hours === 1 ? '' : 's'}`;
+  }
+  return `${minutes} minute${minutes === 1 ? '' : 's'}`;
 }

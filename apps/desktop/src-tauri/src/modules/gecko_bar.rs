@@ -1,0 +1,542 @@
+use serde::{Deserialize, Serialize};
+use std::sync::Mutex;
+use tauri::{AppHandle, Emitter, Manager, PhysicalPosition, PhysicalSize};
+use tauri_plugin_notification::NotificationExt;
+use tauri_plugin_positioner::{Position as PositionerPosition, WindowExt};
+use tauri_plugin_store::StoreExt;
+use tokio::time::{sleep, Duration};
+
+#[cfg(target_os = "windows")]
+use windows::Win32::Foundation::RECT;
+#[cfg(target_os = "windows")]
+use windows::Win32::UI::WindowsAndMessaging::{
+    GetClassNameW, GetForegroundWindow, GetSystemMetrics, GetWindowLongW, GetWindowRect,
+    SystemParametersInfoW, GWL_STYLE, SM_CXSCREEN, SM_CYSCREEN, SPI_GETWORKAREA,
+    SYSTEM_PARAMETERS_INFO_UPDATE_FLAGS, WINDOW_STYLE, WS_CAPTION, WS_THICKFRAME,
+};
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct GeckoBarNotification {
+    pub message: String,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub duration: Option<u32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub priority: Option<String>,
+}
+
+impl GeckoBarNotification {
+    #[allow(dead_code)]
+    pub fn new(message: impl Into<String>) -> Self {
+        Self {
+            message: message.into(),
+            duration: None,
+            priority: None,
+        }
+    }
+
+    #[allow(dead_code)]
+    pub fn with_duration(mut self, duration: u32) -> Self {
+        self.duration = Some(duration);
+        self
+    }
+
+    #[allow(dead_code)]
+    pub fn with_priority(mut self, priority: &str) -> Self {
+        self.priority = Some(priority.to_string());
+        self
+    }
+}
+
+/// Emit a notification to the gecko bar
+pub fn emit_gecko_bar_notification(
+    app: &AppHandle,
+    notification: GeckoBarNotification,
+) -> Result<(), String> {
+    app.emit("gecko-bar-notification", notification)
+        .map_err(|e| e.to_string())
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone)]
+pub struct GeckoBarState {
+    pub visible: bool,
+    pub expanded: bool,
+    pub recording: bool,
+}
+
+impl Default for GeckoBarState {
+    fn default() -> Self {
+        Self {
+            visible: false,
+            expanded: false,
+            recording: false,
+        }
+    }
+}
+
+/// Get the work area dimensions (screen area excluding taskbar) using Windows API
+#[cfg(target_os = "windows")]
+fn get_work_area() -> Option<(i32, i32, i32, i32)> {
+    unsafe {
+        let mut rect = RECT::default();
+        let result = SystemParametersInfoW(
+            SPI_GETWORKAREA,
+            0,
+            Some(&mut rect as *mut RECT as *mut _),
+            SYSTEM_PARAMETERS_INFO_UPDATE_FLAGS(0),
+        );
+
+        if result.is_ok() {
+            Some((rect.left, rect.top, rect.right, rect.bottom))
+        } else {
+            None
+        }
+    }
+}
+
+/// Fallback for non-Windows platforms
+#[cfg(not(target_os = "windows"))]
+fn get_work_area() -> Option<(i32, i32, i32, i32)> {
+    None
+}
+
+/// Calculate taskbar offset by comparing monitor size with work area
+fn calculate_taskbar_offset(monitor_size: &PhysicalSize<u32>) -> (u32, u32) {
+    #[cfg(target_os = "windows")]
+    {
+        if let Some((work_left, work_top, work_right, work_bottom)) = get_work_area() {
+            let work_width = (work_right - work_left) as u32;
+            let work_height = (work_bottom - work_top) as u32;
+
+            // Calculate taskbar dimensions
+            let taskbar_width = monitor_size.width.saturating_sub(work_width);
+            let taskbar_height = monitor_size.height.saturating_sub(work_height);
+
+            // Monitor info available for debugging if needed
+
+            return (taskbar_width, taskbar_height);
+        }
+    }
+
+    // Fallback to reasonable defaults for non-Windows or if API fails
+    (0, 48) // Default Windows taskbar height
+}
+
+#[derive(Deserialize, Default)]
+pub(crate) struct ShowGeckoBarOptions {
+    #[serde(default)]
+    #[serde(rename = "forRecording")]
+    for_recording: bool,
+}
+
+#[tauri::command]
+pub fn show_gecko_bar(app: AppHandle, options: Option<ShowGeckoBarOptions>) -> Result<(), String> {
+    use crate::modules::settings::get_gecko_bar_config;
+
+    let config = get_gecko_bar_config(app.clone())?;
+    let for_recording = options.as_ref().map_or(false, |o| o.for_recording);
+    let should_show = config.enabled
+        || (config.show_only_while_recording && for_recording);
+    if !should_show {
+        return Ok(());
+    }
+
+    if let Some(window) = app.get_webview_window("gecko-bar") {
+        // Check if window is already visible
+        let is_visible = window.is_visible().unwrap_or(false);
+
+        if is_visible {
+            // Even if visible, ensure it's positioned correctly
+            position_gecko_bar(&window)?;
+            return Ok(());
+        }
+
+        // Position the transparent window at bottom center first
+        position_gecko_bar(&window)?;
+
+        // Show the window (starts hidden and off-screen in tauri.conf.json)
+        window.show().map_err(|e| e.to_string())?;
+
+        Ok(())
+    } else {
+        Err("Gecko bar window not found".to_string())
+    }
+}
+
+#[tauri::command]
+pub fn hide_gecko_bar(app: AppHandle) -> Result<(), String> {
+    if let Some(window) = app.get_webview_window("gecko-bar") {
+        window.hide().map_err(|e| e.to_string())?;
+        Ok(())
+    } else {
+        Err("Gecko bar window not found".to_string())
+    }
+}
+
+// In-memory snooze state (session-only)
+pub struct SnoozeState {
+    pub until_ms: Mutex<Option<i64>>, // unix millis
+}
+
+impl Default for SnoozeState {
+    fn default() -> Self {
+        Self {
+            until_ms: Mutex::new(None),
+        }
+    }
+}
+
+#[tauri::command]
+pub fn snooze_gecko_bar_for_ms(
+    app: AppHandle,
+    state: tauri::State<SnoozeState>,
+    ms: i64,
+) -> Result<(), String> {
+    let until = chrono::Utc::now().timestamp_millis() + ms;
+    if let Ok(mut guard) = state.until_ms.lock() {
+        *guard = Some(until);
+    }
+    // Hide now
+    let _ = hide_gecko_bar(app.clone());
+
+    // Schedule wake-up
+    tauri::async_runtime::spawn(async move {
+        if ms > 0 {
+            sleep(Duration::from_millis(ms as u64)).await;
+        }
+        // After delay, re-show only if snooze expired
+        let app_handle = app.clone();
+        if let Some(state) = app_handle.try_state::<SnoozeState>() {
+            let mut should_show = true;
+            if let Ok(mut guard) = state.until_ms.lock() {
+                if let Some(until_ms) = *guard {
+                    let now = chrono::Utc::now().timestamp_millis();
+                    if now >= until_ms {
+                        *guard = None; // clear
+                        should_show = true;
+                    } else {
+                        should_show = false;
+                    }
+                }
+            }
+            if should_show {
+                let _ = show_gecko_bar(app_handle, None);
+            }
+        }
+    });
+
+    Ok(())
+}
+
+#[derive(Serialize, Deserialize, Debug, Clone, Default)]
+pub struct GeckoBarSnoozeConfig {
+    pub enabled: bool,
+    #[serde(default)]
+    pub snooze_until: Option<i64>, // unix millis
+}
+
+#[tauri::command]
+pub fn snooze_gecko_bar_until(app: AppHandle, until_unix_ms: i64) -> Result<(), String> {
+    // Persist snooze-until in the same settings store
+    let store = app.store("settings.json").map_err(|e| e.to_string())?;
+    let key = "geckoBarSnooze".to_string();
+    let data = GeckoBarSnoozeConfig {
+        enabled: true,
+        snooze_until: Some(until_unix_ms),
+    };
+    store.set(key, serde_json::to_value(data).map_err(|e| e.to_string())?);
+    store.save().map_err(|e| e.to_string())?;
+
+    // Hide immediately
+    hide_gecko_bar(app)
+}
+
+#[tauri::command]
+pub fn should_show_gecko_bar(app: AppHandle) -> Result<bool, String> {
+    // If snoozed and not expired, do not show
+    let store = app.store("settings.json").map_err(|e| e.to_string())?;
+    if let Some(value) = store.get("geckoBarSnooze") {
+        if let Ok(cfg) = serde_json::from_value::<GeckoBarSnoozeConfig>(value.clone()) {
+            if let Some(until) = cfg.snooze_until {
+                let now = chrono::Utc::now().timestamp_millis();
+                if now < until {
+                    return Ok(false);
+                }
+            }
+        }
+    }
+
+    // Fallback to gecko bar enabled config
+    let cfg = crate::modules::settings::get_gecko_bar_config(app.clone())?;
+    Ok(cfg.enabled)
+}
+
+fn position_gecko_bar(window: &tauri::WebviewWindow) -> Result<(), String> {
+    // Try using the Tauri positioner plugin first (more reliable)
+    match position_gecko_bar_with_positioner(window) {
+        Ok(_) => Ok(()),
+        Err(e) => {
+            println!("Positioner failed ({}), using manual positioning", e);
+            position_gecko_bar_manual(window)
+        }
+    }
+}
+
+fn position_gecko_bar_with_positioner(window: &tauri::WebviewWindow) -> Result<(), String> {
+    // Use the Tauri positioner plugin for more reliable positioning
+    window
+        .move_window(PositionerPosition::BottomCenter)
+        .map_err(|e| e.to_string())?;
+
+    // Get current position and adjust up to avoid taskbar
+    let current_pos = window.outer_position().map_err(|e| e.to_string())?;
+
+    // Get monitor information for dynamic taskbar calculation
+    let monitor = window.primary_monitor().map_err(|e| e.to_string())?;
+
+    if let Some(monitor) = monitor {
+        let monitor_size = monitor.size();
+
+        // Calculate dynamic taskbar offset
+        let (_taskbar_width, taskbar_height) = calculate_taskbar_offset(&monitor_size);
+
+        // Use calculated taskbar height plus some margin
+        let taskbar_offset = taskbar_height;
+
+        let adjusted_position =
+            PhysicalPosition::new(current_pos.x, current_pos.y - taskbar_offset as i32);
+
+        // Ensure the position is visible on screen
+        let final_position = if adjusted_position.x < 0 || adjusted_position.y < 0 {
+            // Fallback to a safe position
+            PhysicalPosition::new(
+                (monitor_size.width / 2) as i32,
+                monitor_size.height as i32 - 200, // 200px from bottom
+            )
+        } else {
+            adjusted_position
+        };
+
+        window
+            .set_position(final_position)
+            .map_err(|e| e.to_string())?;
+    } else {
+        return Err("Could not get monitor information".to_string());
+    }
+
+    Ok(())
+}
+
+fn position_gecko_bar_manual(window: &tauri::WebviewWindow) -> Result<(), String> {
+    // Fallback to manual positioning if positioner fails
+    let monitor = window.primary_monitor().map_err(|e| e.to_string())?;
+
+    if let Some(monitor) = monitor {
+        let monitor_size = monitor.size();
+        let monitor_position = monitor.position();
+        let window_size = window.outer_size().map_err(|e| e.to_string())?;
+
+        // Calculate dynamic taskbar offset
+        let (_taskbar_width, taskbar_height) = calculate_taskbar_offset(&monitor_size);
+
+        // Calculate position for bottom center with proper bounds checking
+        let margin_from_bottom = 10u32; // Base margin from bottom
+        let margin_from_edges = 10u32;
+
+        // Use the calculated taskbar height instead of hardcoded value
+        let total_bottom_margin = margin_from_bottom + taskbar_height;
+
+        // Ensure minimum distance from screen edges and taskbar
+        let available_width = monitor_size.width.saturating_sub(margin_from_edges * 2);
+        let available_height = monitor_size.height.saturating_sub(total_bottom_margin);
+
+        // Calculate center position
+        let center_x = if window_size.width <= available_width {
+            monitor_position.x + ((monitor_size.width - window_size.width) / 2) as i32
+        } else {
+            monitor_position.x + margin_from_edges as i32
+        };
+
+        let x = center_x;
+
+        let y = if window_size.height <= available_height {
+            monitor_position.y
+                + (monitor_size.height - window_size.height - total_bottom_margin) as i32
+        } else {
+            monitor_position.y + (monitor_size.height - window_size.height - taskbar_height) as i32
+        };
+
+        // Ensure position is within screen bounds (but above taskbar)
+        let final_x = x
+            .max(monitor_position.x)
+            .min(monitor_position.x + monitor_size.width as i32 - window_size.width as i32);
+        let final_y = y.max(monitor_position.y).min(
+            monitor_position.y + monitor_size.height as i32
+                - window_size.height as i32
+                - taskbar_height as i32,
+        );
+
+        let position = PhysicalPosition::new(final_x, final_y);
+        window.set_position(position).map_err(|e| e.to_string())?;
+    }
+
+    Ok(())
+}
+
+#[tauri::command]
+pub fn is_gecko_bar_visible(app: AppHandle) -> Result<bool, String> {
+    if let Some(window) = app.get_webview_window("gecko-bar") {
+        window.is_visible().map_err(|e| e.to_string())
+    } else {
+        Ok(false)
+    }
+}
+
+#[tauri::command]
+pub fn reposition_gecko_bar(app: AppHandle) -> Result<(), String> {
+    if let Some(window) = app.get_webview_window("gecko-bar") {
+        position_gecko_bar(&window)?;
+        Ok(())
+    } else {
+        Err("Gecko bar window not found".to_string())
+    }
+}
+
+#[tauri::command]
+pub fn set_gecko_bar_cursor_passthrough(app: AppHandle, ignore: bool) -> Result<(), String> {
+    if let Some(window) = app.get_webview_window("gecko-bar") {
+        window
+            .set_ignore_cursor_events(ignore)
+            .map_err(|e| e.to_string())?;
+        Ok(())
+    } else {
+        Err("Gecko bar window not found".to_string())
+    }
+}
+
+#[tauri::command]
+pub fn is_fullscreen_app_active(_app: AppHandle) -> Result<bool, String> {
+    #[cfg(target_os = "windows")]
+    {
+        unsafe {
+            // Get the foreground window (currently active window)
+            let foreground_window = GetForegroundWindow();
+
+            // Check if we got a valid window handle
+            if foreground_window.is_invalid() {
+                return Ok(false);
+            }
+
+            // Check if the foreground window is the desktop (Show Desktop button pressed)
+            // Desktop windows have class names like "Progman" or "WorkerW"
+            let mut class_name: [u16; 256] = [0; 256];
+            let class_len = GetClassNameW(foreground_window, &mut class_name);
+
+            if class_len > 0 {
+                let class_str = String::from_utf16_lossy(&class_name[..class_len as usize]);
+                // Desktop windows should not be considered fullscreen
+                if class_str == "Progman" || class_str == "WorkerW" {
+                    return Ok(false);
+                }
+            }
+
+            // Get window style to check if it has borders/caption
+            let style = GetWindowLongW(foreground_window, GWL_STYLE);
+            let window_style = WINDOW_STYLE(style as u32);
+
+            // Check if window has typical window decorations
+            // Fullscreen windows typically don't have caption or thick frame
+            let has_caption = (window_style.0 & WS_CAPTION.0) != 0;
+            let has_thick_frame = (window_style.0 & WS_THICKFRAME.0) != 0;
+
+            // If the window has standard decorations (caption bar, thick frame),
+            // it's very likely a normal/maximized window, not fullscreen
+            if has_caption || has_thick_frame {
+                return Ok(false);
+            }
+
+            // Get the window rect
+            let mut window_rect = RECT::default();
+            if GetWindowRect(foreground_window, &mut window_rect).is_err() {
+                return Ok(false);
+            }
+
+            // Get primary screen dimensions
+            let screen_width = GetSystemMetrics(SM_CXSCREEN);
+            let screen_height = GetSystemMetrics(SM_CYSCREEN);
+
+            // Calculate window dimensions
+            let window_width = window_rect.right - window_rect.left;
+            let window_height = window_rect.bottom - window_rect.top;
+
+            // A window is considered fullscreen if:
+            // 1. It has no caption (title bar) and no thick frame (resize border) - already checked above
+            // 2. It covers most/all of the screen (with tolerance for different screen configurations)
+            // 3. Its position is at or near the top-left corner (0,0)
+            // 4. It's not the desktop window - already checked above
+
+            // Use a tighter tolerance for more reliable detection
+            let position_tolerance = 5;
+            let size_tolerance = 20; // Slightly larger tolerance for size to handle DPI scaling issues
+
+            let at_origin = window_rect.left.abs() <= position_tolerance
+                && window_rect.top.abs() <= position_tolerance;
+
+            let covers_screen = window_width >= screen_width - size_tolerance
+                && window_height >= screen_height - size_tolerance;
+
+            // True fullscreen requires: no decorations + at screen origin + covering screen
+            let is_fullscreen = !has_caption && !has_thick_frame && at_origin && covers_screen;
+
+            Ok(is_fullscreen)
+        }
+    }
+
+    #[cfg(not(target_os = "windows"))]
+    {
+        // For non-Windows platforms, we can't easily detect other apps' fullscreen state
+        // So we'll just return false for now
+        Ok(false)
+    }
+}
+
+#[tauri::command]
+pub fn set_gecko_bar_fullscreen_mode(app: AppHandle, is_fullscreen: bool) -> Result<(), String> {
+    if is_fullscreen {
+        // Hide gecko bar during fullscreen
+        hide_gecko_bar(app)
+    } else {
+        // Show gecko bar when not in fullscreen (will check if enabled)
+        show_gecko_bar(app, None)
+    }
+}
+
+#[tauri::command]
+pub fn send_gecko_bar_notification(
+    app: AppHandle,
+    message: String,
+    duration: Option<u32>,
+    priority: Option<String>,
+) -> Result<(), String> {
+    let notification = GeckoBarNotification {
+        message: message.clone(),
+        duration,
+        priority,
+    };
+
+    // Check if gecko bar will be visible (enabled in settings and not snoozed)
+    let gecko_bar_visible = should_show_gecko_bar(app.clone()).unwrap_or(false);
+
+    if gecko_bar_visible {
+        // Show gecko bar and emit notification
+        let _ = show_gecko_bar(app.clone(), None);
+        emit_gecko_bar_notification(&app, notification)
+    } else {
+        // Gecko bar is hidden - fall back to system notification so user still gets alerted
+        app.notification()
+            .builder()
+            .title("VoiceGecko")
+            .body(&message)
+            .show()
+            .map_err(|e| e.to_string())
+    }
+}

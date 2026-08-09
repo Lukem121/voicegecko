@@ -2,7 +2,7 @@
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "default",
   "description": "enables the default permissions",
-  "windows": ["main"],
+  "windows": ["main", "gecko-bar"],
   "permissions": [
     "core:path:default",
     "core:event:default",
@@ -13,6 +13,12 @@
     "core:image:default",
     "core:menu:default",
     "core:tray:default",
+    "core:window:allow-hide",
+    "core:window:allow-show",
+    "core:app:allow-default-window-icon",
+    "core:window:allow-unminimize",
+    "core:window:allow-set-focus",
+    "core:window:allow-set-ignore-cursor-events",
     "deep-link:allow-register",
     "deep-link:allow-get-current",
     "deep-link:allow-is-registered",
@@ -22,9 +28,15 @@
     "store:default",
     "os:default",
     "opener:default",
+    "shell:allow-execute",
+    "shell:allow-spawn",
+    "shell:allow-stdin-write",
     "updater:default",
     "process:default",
     "process:allow-restart",
+    "autostart:allow-enable",
+    "autostart:allow-disable",
+    "autostart:allow-is-enabled",
     {
       "identifier": "http:default",
       "allow": [
@@ -32,9 +44,28 @@
           "url": "http://localhost:3000/*"
         },
         {
-          "url": "https://*.voicegecko.io"
+          "url": "http://localhost:1420/*"
+        },
+        {
+          "url": "https://*.voicegecko.dev/*"
+        },
+        {
+          "url": "https://www.voicegecko.dev/*"
+        },
+        {
+          "url": "https://github.com/Lukem121/voicegecko-releases/*"
         }
       ]
-    }
+    },
+    "clipboard-manager:default",
+    "global-shortcut:allow-unregister-all",
+    "global-shortcut:allow-register",
+    "global-shortcut:allow-unregister",
+    "clipboard-manager:allow-write-text",
+    "core:window:allow-start-dragging",
+    "core:window:allow-close",
+    "core:window:allow-minimize",
+    "core:window:allow-toggle-maximize",
+    "sentry:default","notification:default"
   ]
 }

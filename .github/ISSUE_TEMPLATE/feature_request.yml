@@ -1,0 +1,42 @@
+name: Feature request
+description: Suggest an improvement or new capability
+title: '[Feature]: '
+labels: ['enhancement']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Voice Gecko is free and open source. Feature ideas are welcome — especially ones that help all users, not only paid supporters.
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem / motivation
+      description: What problem does this solve?
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: Proposed solution
+      description: How should it work?
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+    validations:
+      required: false
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options:
+        - Desktop app
+        - Web app
+        - Dictation / transcription
+        - Auth / account
+        - Docs / DX / open source
+        - Other
+    validations:
+      required: true

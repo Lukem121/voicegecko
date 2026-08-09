@@ -1,15 +1,14 @@
-import { createEnv } from "@t3-oss/env-nextjs";
-import { vercel } from "@t3-oss/env-nextjs/presets-zod";
-import { z } from "zod";
-
-import { authEnv } from "@acme/auth/env";
+import { authEnv } from '@acme/auth/env';
+import { createEnv } from '@t3-oss/env-nextjs';
+import { vercel } from '@t3-oss/env-nextjs/presets-zod';
+import { z } from 'zod';
 
 export const env = createEnv({
   extends: [authEnv(), vercel()],
   shared: {
     NODE_ENV: z
-      .enum(["development", "production", "test"])
-      .default("development"),
+      .enum(['development', 'production', 'test'])
+      .default('development'),
   },
   /**
    * Specify your server-side environment variables schema here.
@@ -17,11 +16,27 @@ export const env = createEnv({
    */
   server: {
     DATABASE_URL: z.string().url(),
-
-    // GitHub updater configuration
-    GITHUB_TOKEN: z.string().min(1, "GitHub token is required for updater"),
-    GITHUB_OWNER: z.string().min(1, "GitHub repository owner is required"),
-    GITHUB_REPO: z.string().min(1, "GitHub repository name is required"),
+    GITHUB_TOKEN: z.string().min(1, 'GitHub token is required for updater'),
+    GITHUB_OWNER: z.string().min(1, 'GitHub repository owner is required'),
+    GITHUB_REPO: z.string().min(1, 'GitHub repository name is required'),
+    SENDGRID_API_KEY: z.string().min(1).startsWith('SG.'),
+    STRIPE_SECRET_KEY: z.string().min(1),
+    STRIPE_PRICE_ID_PRO_MONTHLY: z.string().min(1),
+    STRIPE_PRICE_ID_PRO_YEARLY: z.string().min(1),
+    // Optional: legacy Team subscribers only (new Team checkout disabled)
+    STRIPE_PRICE_ID_TEAM_MONTHLY: z.string().min(1).optional(),
+    STRIPE_PRICE_ID_TEAM_YEARLY: z.string().min(1).optional(),
+    REVALIDATE_SECRET: z
+      .string()
+      .min(1, 'Revalidation secret is required for ISR'),
+    SENTRY_AUTH_TOKEN: z.string().min(1, 'Sentry auth token is required'),
+    MIN_SUPPORTED_DESKTOP_VERSION: z.string().optional(),
+    RECOMMENDED_DESKTOP_VERSION: z.string().optional(),
+    DEFAULT_DESKTOP_CHANNEL: z
+      .enum(['stable', 'beta', 'canary'])
+      .default('stable'),
+    STAGED_ROLLOUT_PERCENT: z.string().optional(),
+    // Google Tag Manager server-side configuration
   },
 
   /**
@@ -29,15 +44,19 @@ export const env = createEnv({
    * For them to be exposed to the client, prefix them with `NEXT_PUBLIC_`.
    */
   client: {
-    // NEXT_PUBLIC_CLIENTVAR: z.string(),
+    NEXT_PUBLIC_VOICEGECKO_URL: z.string().min(1),
+    NEXT_PUBLIC_POSTHOG_KEY: z.string().min(1),
+    NEXT_PUBLIC_POSTHOG_HOST: z.string().min(1),
   },
   /**
    * Destructure all variables from `process.env` to make sure they aren't tree-shaken away.
    */
   experimental__runtimeEnv: {
     NODE_ENV: process.env.NODE_ENV,
-    // NEXT_PUBLIC_CLIENTVAR: process.env.NEXT_PUBLIC_CLIENTVAR,
+    NEXT_PUBLIC_VOICEGECKO_URL: process.env.NEXT_PUBLIC_VOICEGECKO_URL,
+    NEXT_PUBLIC_POSTHOG_KEY: process.env.NEXT_PUBLIC_POSTHOG_KEY,
+    NEXT_PUBLIC_POSTHOG_HOST: process.env.NEXT_PUBLIC_POSTHOG_HOST,
   },
   skipValidation:
-    !!process.env.CI || process.env.npm_lifecycle_event === "lint",
+    !!process.env.CI || process.env.npm_lifecycle_event === 'lint',
 });

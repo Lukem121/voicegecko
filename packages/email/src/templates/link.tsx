@@ -1,107 +1,62 @@
-import * as React from "react";
 import {
   Body,
-  Column,
   Container,
-  Head,
   Heading,
   Html,
-  Img,
   Link,
   Preview,
-  Row,
   Section,
   Tailwind,
   Text,
-} from "@react-email/components";
+} from '@react-email/components';
 
-interface LinkEmailProps {
+import { DarkModeAwareLogoFull } from '../components/dark-mode-aware-logo-full';
+import { DarkModeEmailHead } from '../components/dark-mode-email-head';
+import { EmailFooter } from '../components/email-footer';
+
+type LinkEmailProps = {
   heading: string;
   description: string;
   url: string;
-}
-
-const logoUrl =
-  "https://utfs.io/f/SYU615OjI5Qzt9xtEZV4oz5ETXIacVLrg1DiwfSHdv7YmGtU";
+};
 
 export const LinkTemplate = ({ heading, description, url }: LinkEmailProps) => (
   <Tailwind>
     <Html>
-      <Head />
+      <DarkModeEmailHead />
       <Preview>{heading}</Preview>
-      <Body className="mx-auto bg-white font-sans">
-        <Container className="mx-auto w-[580px] max-w-full py-5 pb-12">
-          <Section className="mt-8">
-            <Img src={logoUrl} width="144" height="36" alt="SMMHubX Logo" />
+      <Body className="mx-auto bg-white px-2 font-sans sm:px-4">
+        <Container className="mx-auto w-[580px] max-w-full py-3 pb-8 sm:py-5 sm:pb-12">
+          <Section className="mt-4 px-2 sm:mt-8 sm:px-0">
+            <DarkModeAwareLogoFull />
           </Section>
-          <Heading className="my-7 text-3xl leading-tight font-bold text-[#1d1c1d]">
+          <Heading className="my-4 px-2 font-bold text-2xl text-[#1d1c1d] leading-tight sm:my-7 sm:px-0 sm:text-3xl">
             {heading}
           </Heading>
-          <Text className="mb-7 text-lg leading-7">{description}</Text>
+          <Text className="mb-5 px-2 text-lg leading-6 sm:mb-7 sm:px-0 sm:leading-7">
+            {description}
+          </Text>
 
-          <Section className="mb-7 rounded-md bg-gray-100 p-10">
+          <Section className="mx-2 mb-5 rounded-md bg-gray-100 p-6 sm:mx-0 sm:mb-7 sm:p-10">
             <Link
-              className="text-lg leading-6 break-all text-blue-600 hover:text-blue-800"
+              className="block min-h-[44px] break-words py-2 text-base text-blue-600 leading-6 hover:text-blue-800 sm:text-lg"
               href={url}
+              style={{
+                wordBreak: 'break-word',
+                overflowWrap: 'break-word',
+                color: '#2563eb',
+              }}
             >
               {url}
             </Link>
           </Section>
 
-          <Text className="text-base leading-6 text-black">
+          <Text className="px-2 text-base text-black leading-6 sm:px-0">
             If you didn't request this email, there's nothing to worry about,
             you can safely ignore it.
           </Text>
 
-          <Section>
-            <Row className="mb-8 w-full px-2">
-              <Column className="w-2/3">
-                <Img src={logoUrl} width="144" height="36" alt="SMMHubX Logo" />
-              </Column>
-            </Row>
-          </Section>
-
-          <Section>
-            <Link
-              className="text-[#b7b7b7] underline hover:text-gray-600"
-              href="https://docs.smmhubx.com"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Docs
-            </Link>
-            &nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;
-            <Link
-              className="text-[#b7b7b7] underline hover:text-gray-600"
-              href="https://www.smmhubx.com/legal"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Policies
-            </Link>
-            &nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;
-            <Link
-              className="text-[#b7b7b7] underline hover:text-gray-600"
-              href="https://www.smmhubx.com/help"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Help center
-            </Link>
-            &nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;
-            <Link
-              className="text-[#b7b7b7] underline hover:text-gray-600"
-              href="https://discord.gg/VJh8GyAnuK"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Discord Community
-            </Link>
-            <Text className="mb-12 text-left text-xs leading-4 text-[#b7b7b7]">
-              ©2025 SMMHUBX, SFN. <br />
-              All rights reserved.
-            </Text>
-          </Section>
+          <EmailFooter />
         </Container>
       </Body>
     </Html>

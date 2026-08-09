@@ -1,43 +1,52 @@
 {
   "name": "@acme/auth",
-  "version": "0.1.0",
+  "version": "2.0.0",
   "private": true,
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
     "./middleware": "./src/middleware.ts",
     "./client": "./src/client.ts",
-    "./schemas": "./src/schemas/index.ts",
-    "./utils": "./src/utils/index.ts",
+    "./schemas/auth": "./src/schemas/auth.schema.ts",
+    "./utils/auth-error-messages": "./src/utils/auth-error-messages.ts",
+    "./utils/get-session": "./src/utils/get-session.ts",
+    "./utils/get-session-cookie": "./src/utils/get-session-cookie.ts",
+    "./tauri": "./src/lib/tauri-plugin/use-better-auth-tauri.ts",
+    "./tauri/social": "./src/lib/tauri-plugin/client/sign-in-social.ts",
     "./env": "./env.ts"
   },
   "scripts": {
     "clean": "git clean -xdf .cache .turbo dist node_modules",
-    "format": "prettier --check . --ignore-path ../../.gitignore",
-    "lint": "eslint",
+    "lint": "ultracite lint",
+    "format": "ultracite format",
     "generate": "dotenv -e ../../.env -- pnpx @better-auth/cli generate --output ../db/src/auth-schema.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@acme/db": "workspace:*",
     "@acme/email": "workspace:*",
-    "@better-auth/expo": "1.2.12",
-    "@daveyplate/better-auth-tauri": "^0.0.24",
-    "@t3-oss/env-nextjs": "^0.13.8",
-    "better-auth": "1.2.12",
-    "next": "^15.3.4",
+    "@acme/notifications": "workspace:*",
+    "@acme/observability": "workspace:*",
+    "@acme/payment": "workspace:*",
+    "@better-auth/stripe": "^1.4.18",
+    "@daveyplate/tauri-fetch": "^1.0.5",
+    "@t3-oss/env-nextjs": "catalog:",
+    "@tauri-apps/api": "2.10.1",
+    "@tauri-apps/plugin-deep-link": "2.4.7",
+    "@tauri-apps/plugin-opener": "~2.5.3",
+    "@tauri-apps/plugin-os": "~2.3.2",
+    "better-auth": "1.4.18",
+    "friendlier-words": "^1.2.0",
+    "next": "^16.1.6",
     "react": "catalog:react19",
     "react-dom": "catalog:react19",
+    "unique-username-generator": "^1.5.1",
     "zod": "catalog:"
   },
   "devDependencies": {
-    "@acme/eslint-config": "workspace:*",
-    "@acme/prettier-config": "workspace:*",
     "@acme/tsconfig": "workspace:*",
+    "@biomejs/biome": "catalog:",
     "@types/react": "catalog:react19",
-    "eslint": "catalog:",
-    "prettier": "catalog:",
     "typescript": "catalog:"
-  },
-  "prettier": "@acme/prettier-config"
+  }
 }

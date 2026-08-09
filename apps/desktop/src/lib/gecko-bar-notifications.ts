@@ -1,0 +1,59 @@
+import { log } from '@acme/observability/log';
+import { invoke } from '@tauri-apps/api/core';
+
+export type GeckoBarNotification = {
+  message: string;
+  duration?: number; // milliseconds
+  priority?: 'high' | 'normal';
+};
+
+/**
+ * Send a notification to the gecko bar
+ */
+export async function sendGeckoBarNotification(
+  notification: GeckoBarNotification
+): Promise<void> {
+  try {
+    await invoke('send_gecko_bar_notification', {
+      message: notification.message,
+      duration: notification.duration,
+      priority: notification.priority,
+    });
+  } catch (error) {
+    log.error(error, '[GeckoBarNotifications] Failed to send notification:');
+  }
+}
+
+/**
+ * Show a usage limit notification in the gecko bar
+ */
+export function showUsageLimitNotification(): Promise<void> {
+  return sendGeckoBarNotification({
+    message: 'Usage limit reached',
+    duration: 3000, // 3 seconds
+    priority: 'high',
+  });
+}
+
+/**
+ * Show a no internet connection notification in the gecko bar
+ */
+export function showNoInternetNotification(): Promise<void> {
+  return sendGeckoBarNotification({
+    message: 'No internet connection',
+    duration: 3000, // 3 seconds
+    priority: 'high',
+  });
+}
+
+/**
+ * Show a microphone not detected notification in the gecko bar.
+ * Used when the selected microphone is unplugged or unavailable.
+ */
+export function showMicrophoneNotFoundNotification(): Promise<void> {
+  return sendGeckoBarNotification({
+    message: 'Microphone not detected. Please reconnect your microphone and try again.',
+    duration: 5000, // 5 seconds - slightly longer so user can read
+    priority: 'high',
+  });
+}

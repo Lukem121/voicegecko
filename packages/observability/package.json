@@ -1,0 +1,28 @@
+{
+  "name": "@acme/observability",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./log": {
+      "default": "./src/log.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "lint": "ultracite lint",
+    "format": "ultracite format",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "pino": "catalog:",
+    "pino-pretty": "catalog:",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@acme/tsconfig": "workspace:*",
+    "@biomejs/biome": "catalog:",
+    "typescript": "catalog:"
+  }
+}

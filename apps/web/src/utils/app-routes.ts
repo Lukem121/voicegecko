@@ -1,10 +1,22 @@
 // URL configuration constants
 export const APP_ROUTES = {
   HOME: '/',
-  ORDERS: {
-    ROOT: '/orders',
-    ORDER_ID: '/orders/[orderId]',
+  APP: {
+    ROOT: '/app',
+    USAGE: '/app/usage',
+    PLANS: '/app/plans',
+    BILLING: '/app/billing',
+    PROFILE: '/app/profile',
   },
+  MARKETING: {
+    PRICING: '/pricing',
+    DOWNLOAD: '/download',
+    DOWNLOAD_SUCCESS: '/download/success',
+    CONTACT: '/contact',
+    CONTACT_SUCCESS: '/contact/success',
+    BLOG: '/blog',
+  },
+
   AUTH: {
     SIGN_IN: '/sign-in',
     SIGN_UP: '/sign-up',
@@ -13,37 +25,20 @@ export const APP_ROUTES = {
     VERIFY_EMAIL: '/verify-email',
     ERROR: '/authentication-error',
   },
-  SERVICES: {
-    ROOT: '/services',
-  },
-  CREDIT: {
-    ROOT: '/add-credit',
-    HISTORY: '/add-credit/history',
-    REFUNDS: '/add-credit/refunds',
-  },
-  XP: {
-    ROOT: '/xp',
-    LEADERBOARD: '/xp/leaderboard',
-    HISTORY: '/xp/history',
-  },
   SETTINGS: {
     ROOT: '/settings/profile',
     ACCOUNT: '/settings/account',
     SECURITY: '/settings/security',
     APPEARANCE: '/settings/appearance',
   },
-  ADMIN: {
-    ROOT: '/admin',
-    USERS: '/admin/users',
-    SERVICES: '/admin/services',
-    SERVICES_INGEST: '/admin/services/ingest',
-    ANALYTICS: '/admin/analytics',
-    CRON: '/admin/cron',
-    SEED: '/admin/seed',
-  },
   LEGAL: {
-    TERMS: '/legal/terms',
-    PRIVACY: '/legal/privacy',
+    TERMS: '/terms/terms-of-service',
+    PRIVACY: '/terms/privacy-policy',
+    SECURITY_POLICY: '/terms/security-policy',
+  },
+  SOCIALS: {
+    DISCORD: 'https://discord.gg/BFxNQCzZjB',
+    TWITTER: 'https://twitter.com/VoiceGeckoAI',
   },
 } as const;
 

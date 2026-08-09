@@ -1,13 +1,19 @@
-import { NextResponse } from "next/server";
-
-import type { GitHubRelease, TauriTarget } from "~/types/updater";
-import { env } from "~/env";
-import { PLATFORM_FILE_EXTENSIONS } from "~/types/updater";
+import { Octokit } from '@octokit/rest';
+import { NextResponse } from 'next/server';
+import { env } from '~/env';
+import type { GitHubRelease, TauriTarget } from '~/types/updater';
+import { PLATFORM_FILE_EXTENSIONS } from '~/types/updater';
 
 // Environment variables
 const GITHUB_TOKEN = env.GITHUB_TOKEN;
 const GITHUB_OWNER = env.GITHUB_OWNER;
 const GITHUB_REPO = env.GITHUB_REPO;
+
+// Initialize GitHub client
+const octokit = new Octokit({
+  auth: GITHUB_TOKEN,
+  userAgent: 'VoiceGecko-Updater/1.0',
+});
 
 /**
  * GET /api/updater/releases
@@ -18,17 +24,17 @@ const GITHUB_REPO = env.GITHUB_REPO;
 export async function GET() {
   try {
     // Validate environment configuration
-    if (!GITHUB_TOKEN || !GITHUB_OWNER || !GITHUB_REPO) {
+    if (!(GITHUB_TOKEN && GITHUB_OWNER && GITHUB_REPO)) {
       return NextResponse.json(
         {
           success: false,
           error: {
-            code: "CONFIG_ERROR",
+            code: 'CONFIG_ERROR',
             message:
-              "Missing required environment variables: GITHUB_TOKEN, GITHUB_OWNER, GITHUB_REPO",
+              'Missing required environment variables: GITHUB_TOKEN, GITHUB_OWNER, GITHUB_REPO',
           },
         },
-        { status: 500 },
+        { status: 500 }
       );
     }
 
@@ -41,29 +47,42 @@ export async function GET() {
         data: {
           repository: `${GITHUB_OWNER}/${GITHUB_REPO}`,
           releases: [],
-          message: "No releases found in repository",
+          message: 'No releases found in repository',
         },
       });
     }
 
     // Process each release to show platform compatibility
     const processedReleases = releases.map((release) => {
-      const platforms: Record<string, any> = {};
+      const platforms: Record<
+        string,
+        {
+          compatible: boolean;
+          assets: Array<{
+            name: string;
+            size: number;
+            download_url: string;
+            has_signature: boolean;
+            signature_url?: string;
+          }>;
+          missing_signatures: number;
+        }
+      > = {};
 
       // Check each supported platform
-      Object.keys(PLATFORM_FILE_EXTENSIONS).forEach((platform) => {
+      for (const platform of Object.keys(PLATFORM_FILE_EXTENSIONS)) {
         const supportedExtensions =
           PLATFORM_FILE_EXTENSIONS[platform as TauriTarget];
 
         // Find binary assets for this platform
         const binaryAssets = release.assets.filter((asset) =>
-          supportedExtensions.some((ext) => asset.name.endsWith(ext)),
+          supportedExtensions.some((ext) => asset.name.endsWith(ext))
         );
 
         // Check for signature files
         const assetsWithSignatures = binaryAssets.map((binaryAsset) => {
           const signatureAsset = release.assets.find(
-            (asset) => asset.name === `${binaryAsset.name}.sig`,
+            (asset) => asset.name === `${binaryAsset.name}.sig`
           );
 
           return {
@@ -79,10 +98,10 @@ export async function GET() {
           compatible: binaryAssets.length > 0,
           assets: assetsWithSignatures,
           missing_signatures: assetsWithSignatures.filter(
-            (asset) => !asset.has_signature,
+            (asset) => !asset.has_signature
           ).length,
         };
-      });
+      }
 
       return {
         tag_name: release.tag_name,
@@ -108,17 +127,17 @@ export async function GET() {
       platforms_summary: Object.keys(PLATFORM_FILE_EXTENSIONS).reduce(
         (acc, platform) => {
           const compatibleReleases = processedReleases.filter(
-            (release) => release.platforms[platform].compatible,
+            (release) => release.platforms[platform]?.compatible
           ).length;
           acc[platform] = {
             compatible_releases: compatibleReleases,
             percentage: Math.round(
-              (compatibleReleases / processedReleases.length) * 100,
+              (compatibleReleases / processedReleases.length) * 100
             ),
           };
           return acc;
         },
-        {} as Record<string, unknown>,
+        {} as Record<string, unknown>
       ),
     };
 
@@ -131,17 +150,17 @@ export async function GET() {
       },
     });
   } catch (error) {
-    if (error instanceof Error && error.message.includes("rate limit")) {
+    if (error instanceof Error && error.message.includes('rate limit')) {
       return NextResponse.json(
         {
           success: false,
           error: {
-            code: "GITHUB_API_ERROR",
-            message: "GitHub API rate limit exceeded. Please try again later.",
+            code: 'GITHUB_API_ERROR',
+            message: 'GitHub API rate limit exceeded. Please try again later.',
             details: { retryAfter: 3600 },
           },
         },
-        { status: 429 },
+        { status: 429 }
       );
     }
 
@@ -149,39 +168,38 @@ export async function GET() {
       {
         success: false,
         error: {
-          code: "GITHUB_API_ERROR",
+          code: 'GITHUB_API_ERROR',
           message:
-            error instanceof Error ? error.message : "Unknown error occurred",
+            error instanceof Error ? error.message : 'Unknown error occurred',
         },
       },
-      { status: 500 },
+      { status: 500 }
     );
   }
 }
 
 /**
- * Fetch all releases from GitHub API
+ * Fetch all releases from GitHub API using Octokit
  */
 async function fetchAllReleases(): Promise<GitHubRelease[] | null> {
-  const url = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/releases`;
+  try {
+    const { data: releases } = await octokit.rest.repos.listReleases({
+      owner: GITHUB_OWNER,
+      repo: GITHUB_REPO,
+    });
 
-  const response = await fetch(url, {
-    headers: {
-      Authorization: `Bearer ${GITHUB_TOKEN}`,
-      Accept: "application/vnd.github+json",
-      "X-GitHub-Api-Version": "2022-11-28",
-      "User-Agent": "VoiceGecko-Updater/1.0",
-    },
-  });
-
-  if (!response.ok) {
-    if (response.status === 404) {
+    return releases as GitHubRelease[];
+  } catch (error) {
+    if (
+      error &&
+      typeof error === 'object' &&
+      'status' in error &&
+      error.status === 404
+    ) {
       return null;
     }
     throw new Error(
-      `GitHub API error: ${response.status} ${response.statusText}`,
+      `GitHub API error: ${error && typeof error === 'object' && 'status' in error ? error.status : 'Unknown'} ${error && typeof error === 'object' && 'message' in error ? error.message : 'Unknown error'}`
     );
   }
-
-  return response.json() as Promise<GitHubRelease[]>;
 }

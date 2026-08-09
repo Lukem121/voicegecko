@@ -1,83 +1,40 @@
-import type { NextRequest } from "next/server";
-import { fetchRequestHandler } from "@trpc/server/adapters/fetch";
-
-import { appRouter, createTRPCContext } from "@acme/api";
-import { serverAuth } from "@acme/auth";
-
-// Configuration constants
-const ALLOWED_ORIGINS = [
-  "http://localhost:1420", // Tauri desktop app
-  "http://localhost:3000", // Next.js web app
-] as const;
-
-const ALLOWED_HEADERS = [
-  "Content-Type",
-  "Authorization",
-  "Cookie",
-  "x-trpc-source",
-  "trpc-accept",
-  "x-trpc-accept",
-  "sec-ch-ua",
-  "sec-ch-ua-mobile",
-  "sec-ch-ua-platform",
-  "user-agent",
-] as const;
-
-const ALLOWED_METHODS = ["GET", "POST", "PUT", "DELETE", "OPTIONS"] as const;
-
-/**
- * Configure CORS headers for cookie-based authentication.
- * Specific origin required when using credentials.
- */
-const setCorsHeaders = (
-  response: Response,
-  request?: NextRequest,
-): Response => {
-  const origin = request?.headers.get("origin");
-
-  // Set origin if it's in our allowed list
-  if (
-    origin &&
-    ALLOWED_ORIGINS.includes(origin as (typeof ALLOWED_ORIGINS)[number])
-  ) {
-    response.headers.set("Access-Control-Allow-Origin", origin);
-  }
-
-  // Set essential CORS headers
-  response.headers.set("Access-Control-Allow-Credentials", "true");
-  response.headers.set(
-    "Access-Control-Allow-Methods",
-    ALLOWED_METHODS.join(", "),
-  );
-  response.headers.set(
-    "Access-Control-Allow-Headers",
-    ALLOWED_HEADERS.join(", "),
-  );
-  response.headers.set("Access-Control-Max-Age", "86400"); // 24 hours
-
-  return response;
-};
-
-/**
- * Handle preflight OPTIONS requests
- */
-export function OPTIONS(request: NextRequest) {
-  const origin = request.headers.get("origin");
-  console.log(`🔄 CORS preflight request from: ${origin}`);
-
-  const response = new Response(null, { status: 200 });
-  return setCorsHeaders(response, request);
-}
+import { appRouter } from '@acme/api/src/root';
+import { createTRPCContext } from '@acme/api/src/trpc';
+import { serverAuth } from '@acme/auth';
+import { log } from '@acme/observability/log';
+import { fetchRequestHandler } from '@trpc/server/adapters/fetch';
+import type { NextRequest } from 'next/server';
+import { resolveMinSupportedVersion } from '~/config/desktop-policy';
 
 /**
  * Handle all tRPC requests (GET and POST)
+ * CORS is handled by next.config.js
  */
 const handler = async (request: NextRequest) => {
-  const origin = request.headers.get("origin");
-  console.log(`📡 tRPC request from: ${origin}`);
+  // Enforce minimum client version if provided via config env
+  const MIN_VERSION = resolveMinSupportedVersion(
+    process.env.MIN_SUPPORTED_DESKTOP_VERSION
+  );
+  const CLIENT_VERSION = request.headers.get('x-client-version');
+  if (MIN_VERSION && CLIENT_VERSION) {
+    // compare semantic versions as fixed-length tuples to avoid undefined
+    const toTuple = (v: string): [number, number, number] => {
+      const s = v.startsWith('v') ? v.slice(1) : v;
+      const parts = s.split('.').map((n) => Number.parseInt(n, 10));
+      return [parts[0] ?? 0, parts[1] ?? 0, parts[2] ?? 0];
+    };
+    const a = toTuple(CLIENT_VERSION);
+    const b = toTuple(MIN_VERSION);
+    const older =
+      a[0] < b[0] ||
+      (a[0] === b[0] && (a[1] < b[1] || (a[1] === b[1] && a[2] < b[2])));
+    if (older) {
+      return new Response('Upgrade required', { status: 426 });
+    }
+  }
 
-  const response = await fetchRequestHandler({
-    endpoint: "/api/trpc",
+  return await fetchRequestHandler({
+    endpoint: '/api/trpc',
     req: request,
     router: appRouter,
     createContext: () =>
@@ -86,11 +43,16 @@ const handler = async (request: NextRequest) => {
         auth: serverAuth,
       }),
     onError: ({ error, path }) => {
-      console.error(`❌ tRPC Error on '${path}':`, error);
+      log.error(error, `tRPC error on '${path}'`);
     },
   });
-
-  return setCorsHeaders(response, request);
 };
 
 export { handler as GET, handler as POST };
+
+/**
+ * Handle OPTIONS preflight requests
+ */
+export function OPTIONS() {
+  return new Response(null, { status: 200 });
+}

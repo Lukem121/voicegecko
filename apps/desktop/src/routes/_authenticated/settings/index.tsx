@@ -1,0 +1,664 @@
+import { Button } from '@acme/ui/components/ui/button';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@acme/ui/components/ui/card';
+import { Label } from '@acme/ui/components/ui/label';
+import { Progress } from '@acme/ui/components/ui/progress';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@acme/ui/components/ui/select';
+import { Slider } from '@acme/ui/components/ui/slider';
+import { Switch } from '@acme/ui/components/ui/switch';
+import { ThemeToggle } from '@acme/ui/components/ui/theme';
+import { createFileRoute, Link } from '@tanstack/react-router';
+import { getVersion } from '@tauri-apps/api/app';
+import { ChevronRight, Mic, Palette, Settings, Shield, Sliders, Volume2 } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { useSettingsStore } from '~/stores/settings.store';
+import { useUpdateStore } from '~/stores/update.store';
+
+export const Route = createFileRoute('/_authenticated/settings/')({
+  component: SettingsPage,
+});
+
+function SettingsPage() {
+  const {
+    settings,
+    audioDevices,
+    updateAudioDevice,
+    updateNotificationSound,
+    updateNotificationTiming,
+    updateNotificationVolume,
+    updateMuteSystemAudio,
+    updateAudioPipeline,
+    updateLaunchOnStartup,
+    updateShowGeckoBar,
+    updateShowGeckoBarWhileRecording,
+    updateHideGeckoOnFullscreen,
+    updatePrivacySetting,
+    updatePersonalizationSetting,
+    updateDictationSetting,
+    updateFeatureSetting,
+    playTestSound,
+  } = useSettingsStore();
+
+  const [currentVersion, setCurrentVersion] = useState<string>('');
+  const updateStore = useUpdateStore();
+
+  useEffect(() => {
+    getVersion()
+      .then(setCurrentVersion)
+      .catch(() => setCurrentVersion(''));
+  }, []);
+
+  return (
+    <div className="flex flex-1 flex-col gap-4">
+      {updateStore.availableUpdate && (
+        <div className="rounded-md border p-3">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-2">
+              <span
+                aria-hidden="true"
+                className="inline-block h-2 w-2 rounded-full bg-red-500"
+              />
+              <span className="font-medium">Update available</span>
+              <span className="text-muted-foreground text-sm">
+                v{updateStore.availableUpdate.version}
+              </span>
+            </div>
+            <Button
+              disabled={updateStore.isInstalling}
+              onClick={() => updateStore.installUpdate()}
+              size="sm"
+              type="button"
+            >
+              {updateStore.isInstalling ? 'Installing…' : 'Install now'}
+            </Button>
+          </div>
+          {updateStore.isInstalling && (
+            <div className="mt-2">
+              <Progress className="h-1.5" value={updateStore.progress} />
+            </div>
+          )}
+          <div className="mt-2 text-[11px] text-muted-foreground">
+            {currentVersion ? `v${currentVersion}` : 'Loading version…'}
+            {updateStore.lastCheckedAt
+              ? ` • Last checked ${new Date(updateStore.lastCheckedAt).toLocaleString()}`
+              : ''}
+          </div>
+        </div>
+      )}
+      <div className="grid gap-4 md:grid-cols-2">
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Settings className="h-5 w-5" />
+              General
+            </CardTitle>
+            <CardDescription>Basic application settings</CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label>Launch on startup</Label>
+                  <p className="text-muted-foreground text-sm">
+                    Start the application when your computer boots
+                  </p>
+                </div>
+                <Switch
+                  checked={settings.general.launchOnStartup}
+                  onCheckedChange={updateLaunchOnStartup}
+                />
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label>Show gecko bar at all times</Label>
+                  <p className="text-muted-foreground text-sm">
+                    Keep the gecko widget visible at the bottom of your screen
+                  </p>
+                </div>
+                <Switch
+                  checked={settings.general.showGeckoBar}
+                  onCheckedChange={updateShowGeckoBar}
+                />
+              </div>
+
+              {!settings.general.showGeckoBar && (
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label>Show while recording</Label>
+                    <p className="text-muted-foreground text-sm">
+                      Show the gecko bar only while recording or processing
+                      dictation
+                    </p>
+                  </div>
+                  <Switch
+                    checked={settings.general.showGeckoBarWhileRecording}
+                    onCheckedChange={updateShowGeckoBarWhileRecording}
+                  />
+                </div>
+              )}
+
+              {settings.general.showGeckoBar && (
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label>Hide on fullscreen</Label>
+                    <p className="text-muted-foreground text-sm">
+                      Automatically hide gecko bar when fullscreen apps are
+                      detected
+                    </p>
+                  </div>
+                  <Switch
+                    checked={settings.general.hideGeckoOnFullscreen}
+                    onCheckedChange={updateHideGeckoOnFullscreen}
+                  />
+                </div>
+              )}
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Audio Settings */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Mic className="h-5 w-5" />
+              Audio
+            </CardTitle>
+            <CardDescription>
+              Configure audio recording preferences
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label htmlFor="microphone">Default Microphone</Label>
+              <Select
+                onValueChange={(name) => {
+                  const device =
+                    audioDevices.find((d) => d.name === name) ?? null;
+                  updateAudioDevice(device);
+                }}
+                value={settings.audio.selectedDevice?.name ?? ''}
+              >
+                <SelectTrigger id="microphone">
+                  <SelectValue placeholder="Select a microphone" />
+                </SelectTrigger>
+                <SelectContent>
+                  {audioDevices.map((device) => (
+                    <SelectItem key={device.name} value={device.name}>
+                      {device.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="notification-sound">Notification Sound</Label>
+                <Select
+                  disabled={
+                    settings.audio.notificationTiming === 'disabled' ||
+                    !settings.personalization.interactionSounds
+                  }
+                  onValueChange={updateNotificationSound}
+                  value={settings.audio.selectedSound}
+                >
+                  <SelectTrigger id="notification-sound">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="chime">🔔 Chime</SelectItem>
+                    <SelectItem value="beep">📢 Beep</SelectItem>
+                    <SelectItem value="tone">🎵 Tone</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="notification-timing">
+                  Play Notification Sound
+                </Label>
+                <Select
+                  disabled={!settings.personalization.interactionSounds}
+                  onValueChange={updateNotificationTiming}
+                  value={settings.audio.notificationTiming}
+                >
+                  <SelectTrigger id="notification-timing">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="start_completion">
+                      Start + Completion
+                    </SelectItem>
+                    <SelectItem value="start_stop">
+                      Start + Stop Recording
+                    </SelectItem>
+                    <SelectItem value="completion_only">
+                      Completion Only
+                    </SelectItem>
+                    <SelectItem value="disabled">Disabled</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div>
+              <Label htmlFor="volume">Notification Volume</Label>
+              <div className="flex items-center gap-2">
+                <Slider
+                  disabled={!settings.personalization.interactionSounds}
+                  id="volume"
+                  max={1}
+                  onValueChange={(v) => updateNotificationVolume(v[0] ?? 1)}
+                  step={0.1}
+                  value={[settings.audio.notificationVolume]}
+                />
+                <Button
+                  className="h-8 w-8"
+                  disabled={!settings.personalization.interactionSounds}
+                  onClick={playTestSound}
+                  size="icon"
+                  type="button"
+                  variant="outline"
+                >
+                  <Volume2 className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+
+            {!settings.personalization.interactionSounds && (
+              <p className="text-muted-foreground text-xs">
+                Notification sound settings are{' '}
+                <span className="italic">disabled</span> because interaction
+                sounds are turned off in the Personalization section.
+              </p>
+            )}
+
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label>Mute system audio</Label>
+                <p className="text-muted-foreground text-sm">
+                  Silence all other audio when recording to reduce background
+                  noise
+                </p>
+              </div>
+              <Switch
+                checked={settings.audio.muteSystemAudio}
+                onCheckedChange={updateMuteSystemAudio}
+              />
+            </div>
+
+            <div className="border-t pt-4">
+              <p className="mb-3 font-medium text-sm">Audio processing</p>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label>High-pass filter</Label>
+                    <p className="text-muted-foreground text-sm">
+                      Remove low-frequency rumble (80 Hz cutoff)
+                    </p>
+                  </div>
+                  <Switch
+                    checked={settings.audio.pipeline.enableHighPass}
+                    onCheckedChange={(enabled) =>
+                      updateAudioPipeline({ enableHighPass: enabled })
+                    }
+                  />
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label>Trim silence</Label>
+                    <p className="text-muted-foreground text-sm">
+                      Remove dead air before and after speech for clearer
+                      transcription
+                    </p>
+                  </div>
+                  <Switch
+                    checked={settings.audio.pipeline.enableTrimSilence ?? true}
+                    onCheckedChange={(enabled) =>
+                      updateAudioPipeline({ enableTrimSilence: enabled })
+                    }
+                  />
+                </div>
+                <div className="flex items-center justify-between">
+                  <div className="space-y-0.5">
+                    <Label>Noise reduction</Label>
+                    <p className="text-muted-foreground text-sm">
+                      Light denoise for quiet environments (off by default)
+                    </p>
+                  </div>
+                  <Switch
+                    checked={settings.audio.pipeline.enableDenoise}
+                    onCheckedChange={(enabled) =>
+                      updateAudioPipeline({ enableDenoise: enabled })
+                    }
+                  />
+                </div>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Privacy & Security */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Shield className="h-5 w-5" />
+              Privacy & Security
+            </CardTitle>
+            <CardDescription>
+              Manage your privacy and security settings
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label>Usage analytics</Label>
+                <p className="text-muted-foreground text-sm">
+                  Help improve the app by sharing usage data
+                </p>
+              </div>
+              <Switch
+                checked={settings.privacy.usageAnalytics}
+                onCheckedChange={(checked) =>
+                  updatePrivacySetting('usageAnalytics', checked)
+                }
+              />
+            </div>
+
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label>Crash reports</Label>
+                <p className="text-muted-foreground text-sm">
+                  Automatically send crash reports
+                </p>
+              </div>
+              <Switch
+                checked={settings.privacy.crashReports}
+                onCheckedChange={(checked) =>
+                  updatePrivacySetting('crashReports', checked)
+                }
+              />
+            </div>
+
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label>Privacy / air-gap mode</Label>
+                <p className="text-muted-foreground text-sm">
+                  Skip update checks and connectivity probes. Dictations and
+                  dictionary already stay on this device.
+                </p>
+              </div>
+              <Switch
+                checked={settings.privacy.airGap}
+                onCheckedChange={(checked) =>
+                  updatePrivacySetting('airGap', checked)
+                }
+              />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Engine Lab */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Sliders className="h-5 w-5" />
+              Engine Lab
+            </CardTitle>
+            <CardDescription>
+              Download v2 models, compare engines, and tune per-mode overrides
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <Button asChild className="w-full justify-between" type="button" variant="outline">
+              <Link to="/settings/engine-lab">
+                <span>Manage models &amp; engines</span>
+                <ChevronRight className="h-4 w-4" />
+              </Link>
+            </Button>
+          </CardContent>
+        </Card>
+
+        {/* Dictation */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Mic className="h-5 w-5" />
+              Dictation
+            </CardTitle>
+            <CardDescription>
+              Configure v2 dictation behavior and live preview
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label>Live preview while dictating</Label>
+                <p className="text-muted-foreground text-sm">
+                  Show streaming transcript above the Gecko Bar (on by default)
+                </p>
+              </div>
+              <Switch
+                checked={settings.dictation.toggleBatchShowLivePreview}
+                onCheckedChange={(checked) =>
+                  updateDictationSetting('toggleBatchShowLivePreview', checked)
+                }
+              />
+            </div>
+
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label>Intent polish (local LLM)</Label>
+                <p className="text-muted-foreground text-sm">
+                  Post-process text via llama-server when enabled
+                </p>
+              </div>
+              <Switch
+                checked={settings.dictation.intentEnabled}
+                onCheckedChange={(checked) =>
+                  updateDictationSetting('intentEnabled', checked)
+                }
+              />
+            </div>
+
+            <div className="space-y-2 border-t pt-4">
+              <Label htmlFor="dev-context">Developer context</Label>
+              <p className="text-muted-foreground text-sm">
+                Stack, tools, and project terms sent to speech recognition and
+                polish (e.g. TypeScript, VoiceGecko, Cursor agents)
+              </p>
+              <textarea
+                className="border-input bg-background ring-offset-background placeholder:text-muted-foreground focus-visible:ring-ring flex min-h-[80px] w-full rounded-md border px-3 py-2 text-sm focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
+                id="dev-context"
+                onChange={(event) =>
+                  updateDictationSetting('devContext', event.target.value)
+                }
+                placeholder="TypeScript, React, Rust, Tauri, VoiceGecko, Cursor..."
+                value={settings.dictation.devContext}
+              />
+            </div>
+
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label>Always use developer profile</Label>
+                <p className="text-muted-foreground text-sm">
+                  Apply coding vocabulary even outside editors (auto-detect is
+                  usually enough)
+                </p>
+              </div>
+              <Switch
+                checked={settings.dictation.forceDeveloperProfile}
+                onCheckedChange={(checked) =>
+                  updateDictationSetting('forceDeveloperProfile', checked)
+                }
+              />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Feature flags */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Settings className="h-5 w-5" />
+              Engine features
+            </CardTitle>
+            <CardDescription>
+              Toggle engines and local-only mode. Auth is off by default for
+              personal offline use.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label>Require sign-in</Label>
+                <p className="text-muted-foreground text-sm">
+                  When off, dictation works without an account
+                </p>
+              </div>
+              <Switch
+                checked={settings.features.requireAuth}
+                onCheckedChange={(checked) =>
+                  updateFeatureSetting('requireAuth', checked)
+                }
+              />
+            </div>
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label>Moonshine Flow</Label>
+                <p className="text-muted-foreground text-sm">
+                  Enable Moonshine streaming engine when DLL is installed
+                </p>
+              </div>
+              <Switch
+                checked={settings.features.moonshineFlow}
+                onCheckedChange={(checked) =>
+                  updateFeatureSetting('moonshineFlow', checked)
+                }
+              />
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Personalization */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Palette className="h-5 w-5" />
+              Personalization
+            </CardTitle>
+            <CardDescription>
+              Customize the app experience for your needs
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label>Theme</Label>
+                <p className="text-muted-foreground text-sm">
+                  Choose your preferred theme for the application
+                </p>
+              </div>
+              <ThemeToggle />
+            </div>
+
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label>Interaction sounds</Label>
+                <p className="text-muted-foreground text-sm">
+                  Play sounds for key actions like start/stop recording
+                </p>
+              </div>
+              <Switch
+                checked={settings.personalization.interactionSounds}
+                onCheckedChange={(checked) =>
+                  updatePersonalizationSetting('interactionSounds', checked)
+                }
+              />
+            </div>
+
+            {/* TODO: Add back in when we have a model that supports this, these settings are implementing into setting system only  */}
+            {/* <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label>Smart formatting</Label>
+                <p className="text-muted-foreground text-sm">
+                  Use AI to intelligently format your dictation text
+                </p>
+              </div>
+              <Switch
+                checked={settings.personalization.smartFormatting}
+                onCheckedChange={(checked) =>
+                  updatePersonalizationSetting("smartFormatting", checked)
+                }
+              />
+            </div>
+
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label>Auto add to dictionary</Label>
+                <p className="text-muted-foreground text-sm">
+                  Help AI learn your frequently used words for better
+                  recognition
+                </p>
+              </div>
+              <Switch
+                checked={settings.personalization.autoAddToDictionary}
+                onCheckedChange={(checked) =>
+                  updatePersonalizationSetting("autoAddToDictionary", checked)
+                }
+              />
+            </div> */}
+
+            <div className="flex items-center justify-between">
+              <div className="space-y-0.5">
+                <Label>Auto-paste on completion</Label>
+                <p className="text-muted-foreground text-sm">
+                  Automatically paste dictations into the active text field when
+                  dictation completes
+                </p>
+              </div>
+              <Switch
+                checked={settings.personalization.autoPasteOnCompletion}
+                onCheckedChange={(checked) =>
+                  updatePersonalizationSetting('autoPasteOnCompletion', checked)
+                }
+              />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {!updateStore.availableUpdate && (
+        <div className="flex items-center justify-between rounded-md border p-3">
+          <span className="text-muted-foreground text-sm">
+            {currentVersion ? `v${currentVersion}` : 'Loading version…'}
+            {updateStore.lastCheckedAt
+              ? ` • Last checked ${new Date(updateStore.lastCheckedAt).toLocaleString()}`
+              : ''}
+          </span>
+          <Button
+            disabled={updateStore.isChecking}
+            onClick={() => updateStore.checkForUpdates()}
+            size="sm"
+            type="button"
+            variant="outline"
+          >
+            {updateStore.isChecking ? 'Checking…' : 'Check for updates'}
+          </Button>
+        </div>
+      )}
+    </div>
+  );
+}

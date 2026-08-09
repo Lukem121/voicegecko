@@ -1,0 +1,21 @@
+import { useMutation } from '@tanstack/react-query';
+
+import { trpc } from '~/trpc';
+
+export const useSendFeedback = () => {
+  const mutation = useMutation(trpc.dictation.sendFeedback.mutationOptions());
+
+  return {
+    sendFeedback: async (input: { dictationId?: string; feedback: string }) => {
+      const result = await mutation.mutateAsync(input);
+
+      if (!result.success) {
+        throw new Error(result.error.message);
+      }
+
+      return result.data;
+    },
+    isSending: mutation.isPending,
+    error: mutation.error,
+  };
+};

@@ -17,12 +17,6 @@ next-env.d.ts
 .nitro/
 .output/
 
-# expo
-.expo/
-expo-env.d.ts
-apps/expo/.gitignore
-apps/expo/ios
-apps/expo/android
 
 # production
 build
@@ -39,7 +33,10 @@ yarn-error.log*
 
 # local env files
 .env
+.env.development
+.env.production
 .env*.local
+.env.bak
 
 # vercel
 .vercel
@@ -56,3 +53,20 @@ target/
 
 # PK inside tauri
 .tauri
+
+# .NET sidecar build output (do not commit)
+sidecar/**/bin/
+sidecar/**/obj/
+
+# Desktop bundled binaries / models — build or download locally / in CI
+# See docs/sidecar.md. Keep sounds/ and other small resources tracked.
+apps/desktop/src-tauri/resources/binaries/**
+!apps/desktop/src-tauri/resources/binaries/README.md
+apps/desktop/src-tauri/resources/*.bin
+*.pdb
+
+# Local Cursor plans (keep rules; do not publish scratch plans)
+.cursor/plans/
+
+# TanStack Router generator temp output
+apps/desktop/.tanstack/

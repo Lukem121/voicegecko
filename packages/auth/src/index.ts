@@ -1,55 +1,92 @@
-import type { BetterAuthOptions } from "better-auth";
-import { expo } from "@better-auth/expo";
-import { tauri } from "@daveyplate/better-auth-tauri/plugin";
-import { betterAuth } from "better-auth";
-import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import { db } from '@acme/db/client';
+import { sendResetPasswordEmail } from '@acme/email/send/reset-password';
+import { sendVerificationEmail } from '@acme/email/send/verification';
+import { stripeClient } from '@acme/payment/stripe';
+import { onSubscriptionCancel } from '@acme/payment/subscription-handlers/on-subscription-cancel';
+import { onSubscriptionComplete } from '@acme/payment/subscription-handlers/on-subscription-complete';
+import { onSubscriptionDeleted } from '@acme/payment/subscription-handlers/on-subscription-deleted';
+import { onSubscriptionUpdate } from '@acme/payment/subscription-handlers/on-subscription-update';
+import { stripe } from '@better-auth/stripe';
+import { betterAuth } from 'better-auth';
+import { drizzleAdapter } from 'better-auth/adapters/drizzle';
+import { nextCookies } from 'better-auth/next-js';
 import {
   admin as adminPlugin,
-  oAuthProxy,
   phoneNumber,
   twoFactor,
   username,
-} from "better-auth/plugins";
-
-import { db } from "@acme/db/client";
-import { sendResetPasswordEmail, sendVerificationEmail } from "@acme/email";
-
-import { authEnv } from "../env";
-import { checkBannedMiddleware } from "./middleware/check-banned-middleware";
-import { usernameValidator } from "./schemas/username.schema";
+} from 'better-auth/plugins';
+import { authEnv } from '../env';
+import { tauri } from './lib/tauri-plugin/plugin/tauri';
+import { handleAfterHook } from './middleware/handle-after-hook';
+import { handleCreateAfterHook } from './middleware/handle-create-after-hook';
+import { usernameValidator } from './schemas/username.schema';
+import { generateUniqueUsernameFromEmail } from './utils/generate-unique-username';
 
 export const serverAuth = betterAuth({
-  appName: "Voice Gecko",
+  appName: 'Voice Gecko',
   account: {
     accountLinking: {
       enabled: true,
     },
   },
   database: drizzleAdapter(db, {
-    provider: "pg",
+    provider: 'pg',
   }),
   secret: authEnv().AUTH_SECRET,
   session: {
-    cookieCache: {
-      enabled: true,
-      maxAge: 5 * 60, // Cache duration: 5 minutes
+    expiresIn: 60 * 60 * 24 * 365, // 1 year (365 days)
+    updateAge: 60 * 60 * 24 * 7, // Refresh session every 7 days of use
+  },
+  advanced: {
+    cookies: {
+      session_token: {
+        attributes: {
+          sameSite: 'none',
+          secure: true,
+        },
+      },
+      session_data: {
+        attributes: {
+          sameSite: 'none',
+          secure: true,
+        },
+      },
     },
   },
   plugins: [
-    oAuthProxy({
-      /**
-       * Auto-inference blocked by https://github.com/better-auth/better-auth/pull/2891
-       */
-      currentURL: "http://localhost:3000",
-      productionURL: "https://voicegecko.io",
+    stripe({
+      stripeClient,
+      stripeWebhookSecret: authEnv().STRIPE_WEBHOOK_SECRET,
+      createCustomerOnSignUp: true,
+      subscription: {
+        enabled: true,
+        plans: [
+          {
+            name: 'voice gecko pro',
+            priceId: authEnv().STRIPE_PRICE_ID_PRO_MONTHLY,
+            annualDiscountPriceId: authEnv().STRIPE_PRICE_ID_PRO_YEARLY,
+          },
+        ],
+        onSubscriptionComplete,
+        onSubscriptionUpdate,
+        onSubscriptionCancel,
+        onSubscriptionDeleted,
+        getCheckoutSessionParams: (_, request) => {
+          const currency = request?.headers?.get('x-currency') ?? undefined;
+          return {
+            params: {
+              allow_promotion_codes: true,
+              currency,
+            },
+          };
+        },
+      },
     }),
-    expo(),
     tauri({
-      scheme: "voicegecko", // Your app's deep link scheme
-      callbackURL: "/", // Optional: Where to redirect after auth (default: "/")
-      successText: "Authentication successful! You can close this window.", // Optional
-      successURL: "/auth/success", // Optional: Custom success page URL that will receive a ?tauriRedirect search parameter
-      debugLogs: true, // Optional: Enable debug logs
+      scheme: 'voicegecko',
+      debugLogs: true,
+      successURL: '/redirect-deeplink',
     }),
     adminPlugin(),
     phoneNumber(),
@@ -57,13 +94,21 @@ export const serverAuth = betterAuth({
     username({
       usernameValidator,
     }),
+    nextCookies(),
   ],
   hooks: {
-    after: checkBannedMiddleware,
+    after: handleAfterHook,
+  },
+  databaseHooks: {
+    user: {
+      create: {
+        after: handleCreateAfterHook,
+      },
+    },
   },
   emailVerification: {
     autoSignInAfterVerification: true,
-    sendVerificationEmail: sendVerificationEmail,
+    sendVerificationEmail,
   },
   emailAndPassword: {
     enabled: true,
@@ -71,6 +116,7 @@ export const serverAuth = betterAuth({
     requireEmailVerification: true,
     sendResetPassword: sendResetPasswordEmail,
   },
+
   socialProviders: {
     discord: {
       clientId: authEnv().AUTH_DISCORD_ID,
@@ -82,14 +128,34 @@ export const serverAuth = betterAuth({
         };
       },
     },
+    google: {
+      clientId: authEnv().AUTH_GOOGLE_CLIENT_ID,
+      clientSecret: authEnv().AUTH_GOOGLE_CLIENT_SECRET,
+      mapProfileToUser: async (profile: {
+        email?: string;
+        verified?: boolean;
+      }) => {
+        // Better Auth Google returns at least email and name/image in profile
+        const email: string | undefined = profile?.email;
+        const username2 = await generateUniqueUsernameFromEmail(email ?? null);
+        return {
+          username: username2,
+          emailVerified: profile?.verified ?? true,
+        };
+      },
+    },
   },
   trustedOrigins: [
-    "expo://",
-    "voicegecko://",
-    "http://localhost:1420", // Tauri desktop app
-    "http://127.0.0.1:1420", // Alternative localhost format
+    'voicegecko://',
+
+    'http://localhost:3000', // Next.js app
+    'http://localhost:1420', // Tauri desktop app
+    'http://tauri.localhost', // Tauri desktop app
+
+    'https://www.voicegecko.dev',
   ],
 });
 
 export type Auth = typeof serverAuth;
 export type Session = typeof serverAuth.$Infer.Session;
+export type User = (typeof serverAuth.$Infer.Session)['user'];

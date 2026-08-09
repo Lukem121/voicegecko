@@ -1,49 +1,52 @@
-import { useBetterAuthTauri } from "@daveyplate/better-auth-tauri/react";
-import { createRootRouteWithContext, Outlet } from "@tanstack/react-router";
+import type { Session } from '@acme/auth';
+import { createRootRouteWithContext, Outlet } from '@tanstack/react-router';
+import { Toaster } from 'sonner';
 
-import type { Session } from "@acme/auth";
-import { authClient } from "@acme/auth/client";
-
-import { AppUpdater } from "~/components/updater";
-import { VersionDisplay } from "~/components/version-display";
+import { PageTracker } from '~/components/analytics/page-tracker';
+import { TrayProvider } from '~/components/tray-provider';
+import { VersionDisplay } from '~/components/version-display';
 
 // Define the router context interface
-interface MyRouterContext {
+type MyRouterContext = {
   auth: {
     isAuthenticated: boolean;
     isLoading: boolean;
-    user: Session["user"] | null;
+    user: Session['user'] | null;
+    connectivity?: {
+      isOnline: boolean;
+      isApiReachable: boolean;
+      isChecking: boolean;
+      hasConnectivityIssue: boolean;
+      checkConnectivity: () => void;
+      // Enhanced diagnostic information
+      diagnosis: 'healthy' | 'no_internet' | 'api_down' | 'unknown';
+      getDiagnosisMessage: () => string;
+      lastSuccessfulCheck: Date | null;
+      isVoiceGeckoIssue: boolean;
+      isInternetIssue: boolean;
+    };
+    error?: unknown;
+    isConnectivityError?: boolean;
+    getAuthIssueType?: () =>
+      | 'loading'
+      | 'connectivity'
+      | 'auth'
+      | 'unauthenticated'
+      | 'authenticated';
   };
-}
+};
 
 export const Route = createRootRouteWithContext<MyRouterContext>()({
   component: RouteLayout,
 });
 
 function RouteLayout() {
-  const { refetch } = authClient.useSession();
-
-  useBetterAuthTauri({
-    authClient,
-    scheme: "voicegecko",
-    debugLogs: true,
-    onRequest: (href) => {
-      console.log("Auth request:", href);
-    },
-    onSuccess: (callbackURL) => {
-      console.log("Auth successful", callbackURL);
-      refetch();
-    },
-    onError: (error) => {
-      console.error("Auth error:", error);
-    },
-  });
-
   return (
-    <>
+    <TrayProvider>
+      <PageTracker />
       <Outlet />
-      <AppUpdater />
       <VersionDisplay />
-    </>
+      <Toaster closeButton position="top-right" richColors />
+    </TrayProvider>
   );
 }

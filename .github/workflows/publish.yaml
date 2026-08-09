@@ -5,66 +5,216 @@ on:
     branches:
       - release
 
+concurrency:
+  group: publish-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  CARGO_TARGET_DIR: ${{ github.workspace }}/apps/desktop/src-tauri/target
+  TAURI_TARGET_DIR: apps/desktop/src-tauri/target
+  TAURI_BUNDLE_DIR: apps/desktop/src-tauri/target/release/bundle
+
 jobs:
   publish-tauri:
     permissions:
       contents: write
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          # - platform: "macos-latest" # for Arm based macs (M1 and above).
-          #   args: "--target aarch64-apple-darwin"
-          # - platform: "macos-latest" # for Intel based macs.
-          #   args: "--target x86_64-apple-darwin"
-          # - platform: "ubuntu-22.04"
-          #   args: ""
-          # - platform: "windows-latest"
-          #   args: ""
-          - platform: "self-hosted"
-            args: ""
-
-    runs-on: ${{ matrix.platform }}
+    runs-on: self-hosted
     defaults:
       run:
         shell: powershell
     steps:
       - uses: actions/checkout@v4
-
-      - name: setup node
-        uses: actions/setup-node@v4
         with:
-          node-version: lts/*
+          lfs: true
 
-      - name: install pnpm
-        uses: pnpm/action-setup@v2
+      - name: Setup Node and pnpm
+        uses: ./tooling/github/setup
         with:
-          version: latest
+          enable-cache: false
+          install-turbo: false
+          install-dependencies: false
 
-      - name: install Rust stable
-        uses: dtolnay/rust-toolchain@stable
-        with:
-          targets: ${{ matrix.platform == 'macos-latest' && 'aarch64-apple-darwin,x86_64-apple-darwin' || '' }}
+      - name: Install desktop dependencies
+        run: pnpm install --frozen-lockfile --filter @acme/desktop... --ignore-scripts
 
-      - name: install dependencies (ubuntu only)
-        if: matrix.platform == 'ubuntu-22.04' # This must match the platform value defined above.
+      - name: setup Rust on self-hosted Windows
         run: |
-          sudo apt-get update
-          sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+          $rustInstalled = Get-Command rustc -ErrorAction SilentlyContinue
+          if ($rustInstalled) {
+            Write-Host "Rust is already installed at: $($rustInstalled.Path)"
+            rustup default stable
+          } else {
+            Write-Host "Installing Rust..."
+            $rustupUrl = "https://win.rustup.rs/x86_64"
+            $rustupInstaller = "$env:TEMP\rustup-init.exe"
+            Invoke-WebRequest -Uri $rustupUrl -OutFile $rustupInstaller
+            & $rustupInstaller -y --default-toolchain stable --default-host x86_64-pc-windows-msvc
+          }
 
-      - name: install frontend dependencies
-        run: pnpm install
+          $cargoPath = "$env:USERPROFILE\.cargo\bin"
+          if (Test-Path $cargoPath) {
+            "$cargoPath" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+            Write-Host "Added $cargoPath to GITHUB_PATH"
+          }
 
-      - uses: tauri-apps/tauri-action@v0
+          $env:PATH = "$cargoPath;$env:PATH"
+          rustc --version
+          cargo --version
+
+      - name: install dependencies (windows self-hosted)
+        run: |
+          $cmakeInstalled = Get-Command cmake -ErrorAction SilentlyContinue
+          if (-not $cmakeInstalled) {
+            Write-Host "Installing CMake..."
+            $cmakeUrl = "https://github.com/Kitware/CMake/releases/download/v3.28.1/cmake-3.28.1-windows-x86_64.msi"
+            $cmakeInstaller = "$env:TEMP\cmake-installer.msi"
+            Invoke-WebRequest -Uri $cmakeUrl -OutFile $cmakeInstaller
+            Start-Process msiexec.exe -ArgumentList "/i", $cmakeInstaller, "/quiet", "/norestart" -Wait
+
+            if (Test-Path "C:\Program Files\CMake\bin\cmake.exe") {
+              "C:\Program Files\CMake\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+            } else {
+              Write-Error "CMake installation failed"
+              exit 1
+            }
+          } else {
+            Write-Host "CMake is already installed"
+          }
+
+          if (-not (Test-Path "C:\VulkanSDK")) {
+            Write-Host "Installing Vulkan SDK..."
+            $vulkanUrl = "https://sdk.lunarg.com/sdk/download/1.4.321.1/windows/VulkanSDK-1.4.321.1-Installer.exe"
+            $vulkanInstaller = "$env:TEMP\VulkanSDK-Installer.exe"
+            Invoke-WebRequest -Uri $vulkanUrl -OutFile $vulkanInstaller
+            Start-Process -FilePath $vulkanInstaller -ArgumentList "/S" -Wait
+            "VULKAN_SDK=C:\VulkanSDK\1.4.321.1" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+            "C:\VulkanSDK\1.4.321.1\Bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+          } else {
+            Write-Host "Vulkan SDK is already installed"
+            $vulkanVersion = Get-ChildItem "C:\VulkanSDK" | Select-Object -First 1 -ExpandProperty Name
+            $vulkanPath = "C:\VulkanSDK\$vulkanVersion"
+            "VULKAN_SDK=$vulkanPath" | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
+            "$vulkanPath\Bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+          }
+
+      - name: Setup .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Build Whisper sidecar
+        run: |
+          $out = "apps/desktop/src-tauri/resources/binaries/whisper-sidecar/win-x64"
+          dotnet publish sidecar/whisper-sidecar/WhisperSidecar.csproj `
+            -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true `
+            -o $out
+          Remove-Item -Force "$out/*.pdb" -ErrorAction SilentlyContinue
+          if (-not (Test-Path "$out/WhisperSidecar.exe")) {
+            Write-Error "WhisperSidecar.exe missing after publish"
+            exit 1
+          }
+
+      - name: Download default Whisper model for bundle
+        run: |
+          $out = "apps/desktop/src-tauri/resources/ggml-base.en.bin"
+          if (-not (Test-Path $out)) {
+            $url = "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-base.en.bin"
+            New-Item -ItemType Directory -Force -Path (Split-Path $out) | Out-Null
+            Write-Host "Downloading $url"
+            Invoke-WebRequest -Uri $url -OutFile $out
+          }
+          Write-Host "Model size: $((Get-Item $out).Length) bytes"
+
+      - name: Build full version
+        uses: tauri-apps/tauri-action@v0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+          VITE_PUBLIC_VOICEGECKO_URL: ${{ vars.VITE_PUBLIC_VOICEGECKO_URL }}
+          VITE_PUBLIC_POSTHOG_KEY: ${{ vars.VITE_PUBLIC_POSTHOG_KEY }}
+          VITE_PUBLIC_POSTHOG_HOST: ${{ vars.VITE_PUBLIC_POSTHOG_HOST }}
         with:
-          tagName: app-v__VERSION__ # the action automatically replaces \_\_VERSION\_\_ with the app version.
-          releaseName: "App v__VERSION__"
-          releaseBody: "See the assets to download this version and install."
-          releaseDraft: true
+          tagName: app-v__VERSION__-full
+          releaseName: "App v__VERSION__ (Full)"
+          releaseBody: "Full installation package."
+          releaseDraft: false
           prerelease: false
-          args: ${{ matrix.args }}
+          tauriScript: pnpm run tauri
+          args: --config src-tauri/tauri.conf.full.json
           projectPath: apps/desktop
+
+      - name: Upload debug symbols to Sentry (full)
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: ${{ vars.SENTRY_ORG }}
+          SENTRY_PROJECT: ${{ vars.SENTRY_PROJECT }}
+        run: ./scripts/ci/sentry-upload-windows.ps1 -TargetDir "${{ env.TAURI_TARGET_DIR }}/release"
+
+      - name: Create full release (public repo)
+        env:
+          GITHUB_TOKEN: ${{ secrets.RELEASES_REPO_TOKEN }}
+        run: |
+          ./scripts/ci/release-upload-windows.ps1 `
+            -TagSuffix "-full" `
+            -ReleaseNameSuffix " (Full)" `
+            -ReleaseNotes "Full installation package." `
+            -BundleDir "${{ env.TAURI_BUNDLE_DIR }}"
+
+      - name: Build update version
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
+          TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
+          VITE_PUBLIC_VOICEGECKO_URL: ${{ vars.VITE_PUBLIC_VOICEGECKO_URL }}
+          VITE_PUBLIC_POSTHOG_KEY: ${{ vars.VITE_PUBLIC_POSTHOG_KEY }}
+          VITE_PUBLIC_POSTHOG_HOST: ${{ vars.VITE_PUBLIC_POSTHOG_HOST }}
+        with:
+          tagName: app-v__VERSION__-update
+          releaseName: "App v__VERSION__ (Update)"
+          releaseBody: "Lightweight update package."
+          releaseDraft: false
+          prerelease: false
+          tauriScript: pnpm run tauri
+          args: --config src-tauri/tauri.conf.update.json
+          projectPath: apps/desktop
+
+      - name: Upload debug symbols to Sentry (update)
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: ${{ vars.SENTRY_ORG }}
+          SENTRY_PROJECT: ${{ vars.SENTRY_PROJECT }}
+        run: ./scripts/ci/sentry-upload-windows.ps1 -TargetDir "${{ env.TAURI_TARGET_DIR }}/release"
+
+      - name: Create update release (public repo)
+        env:
+          GITHUB_TOKEN: ${{ secrets.RELEASES_REPO_TOKEN }}
+        run: |
+          ./scripts/ci/release-upload-windows.ps1 `
+            -TagSuffix "-update" `
+            -ReleaseNameSuffix " (Update)" `
+            -ReleaseNotes "Lightweight update package." `
+            -BundleDir "${{ env.TAURI_BUNDLE_DIR }}"
+
+  # When adding macOS/Linux hosted runners, use a separate matrix job with
+  # tooling/github/setup (enable-cache: true), rust-cache, and max-parallel per runner count.
+
+  revalidate-cache:
+    needs: publish-tauri
+    runs-on: ubuntu-latest
+    if: success()
+    steps:
+      - name: Revalidate Website Cache
+        run: |
+          echo "Triggering ISR revalidation for landing page..."
+          curl -X POST "${{ vars.VITE_PUBLIC_VOICEGECKO_URL }}/api/revalidate" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "secret": "${{ secrets.REVALIDATE_SECRET }}",
+              "paths": ["/"],
+              "tags": ["downloads", "landing-page"]
+            }' \
+            --fail-with-body \
+            --max-time 30 \
+            || echo "Revalidation failed - this is non-critical"

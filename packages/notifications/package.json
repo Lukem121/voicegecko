@@ -1,0 +1,29 @@
+{
+  "name": "@acme/notifications",
+  "version": "2.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./discord-adapter": {
+      "default": "./src/discord-adapter.ts"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsc --watch",
+    "lint": "ultracite lint",
+    "format": "ultracite format",
+    "type-check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@acme/observability": "workspace:*",
+    "@t3-oss/env-nextjs": "catalog:",
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@acme/tsconfig": "workspace:*",
+    "@biomejs/biome": "catalog:",
+    "@types/minimatch": "^6.0.0",
+    "typescript": "catalog:"
+  }
+}

@@ -1,12 +1,13 @@
-import { createEnv } from "@t3-oss/env-nextjs";
-import { z } from "zod/v4";
+import { createEnv } from '@t3-oss/env-nextjs';
+import { z } from 'zod/v4';
 
-export const keys = () =>
-  createEnv({
+export const keys = () => {
+  return createEnv({
     server: {
-      SENDGRID_API_KEY: z.string().min(1).startsWith("SG."),
+      SENDGRID_API_KEY: z.string().min(1).startsWith('SG.'),
     },
-    runtimeEnv: {
-      SENDGRID_API_KEY: process.env.SENDGRID_API_KEY,
-    },
+    experimental__runtimeEnv: {},
+    skipValidation:
+      !!process.env.CI || process.env.npm_lifecycle_event === 'lint',
   });
+};

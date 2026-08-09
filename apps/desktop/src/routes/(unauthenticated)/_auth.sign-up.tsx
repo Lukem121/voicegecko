@@ -1,17 +1,12 @@
-import type { z } from "zod/v4";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
-import { Loader } from "lucide-react";
-
-import { SignUpSchema } from "@acme/auth/schemas";
-import VoiceGeckoLogo from "@acme/ui/components/logos/voice-gecko";
-import { Button } from "@acme/ui/components/ui/button";
+import { SignUpSchema } from '@acme/auth/schemas/auth';
+import LogoFull from '@acme/ui/components/logos/logo-full';
+import { Button } from '@acme/ui/components/ui/button';
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
-} from "@acme/ui/components/ui/card";
+} from '@acme/ui/components/ui/card';
 import {
   Form,
   FormControl,
@@ -20,15 +15,19 @@ import {
   FormLabel,
   FormMessage,
   useForm,
-} from "@acme/ui/components/ui/form";
-import { Input } from "@acme/ui/components/ui/input";
+} from '@acme/ui/components/ui/form';
+import { Input } from '@acme/ui/components/ui/input';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { createFileRoute, Link, useRouter } from '@tanstack/react-router';
+import { Loader } from 'lucide-react';
+import type { z } from 'zod/v4';
+import { useAuthError } from '~/stores/auth.store';
+import { SocialSignInButton } from './-components/social-sign-in-button';
+import TermsAndPrivacyNotice from './-components/terms-and-privacy-notice';
+import { useEmailSignup } from './-hooks/use-email-signup';
+import { useSocialAuth } from './-hooks/use-social-auth';
 
-import { SocialSignInButton } from "./-components/social-sign-in-button";
-import TermsAndPrivacyNotice from "./-components/terms-and-privacy-notice";
-import { useEmailSignup } from "./-hooks/use-email-signup";
-import { useSocialAuth } from "./-hooks/use-social-auth";
-
-export const Route = createFileRoute("/(unauthenticated)/_auth/sign-up")({
+export const Route = createFileRoute('/(unauthenticated)/_auth/sign-up')({
   validateSearch: (search: Record<string, unknown>) => {
     return {
       redirect: (search.redirect as string | undefined) ?? null,
@@ -39,28 +38,27 @@ export const Route = createFileRoute("/(unauthenticated)/_auth/sign-up")({
 
 const isEmailError = (error: string) => {
   return (
-    error.toLowerCase().includes("email") ||
-    error.toLowerCase().includes("user_already_exists")
+    error.toLowerCase().includes('email') ||
+    error.toLowerCase().includes('user_already_exists')
   );
 };
 
 const isUsernameError = (error: string) => {
-  return error.toLowerCase().includes("username");
+  return error.toLowerCase().includes('username');
 };
 
 function SignUp() {
   const router = useRouter();
   const search = Route.useSearch();
-  const callbackURL = search.redirect ?? "/";
+  const callbackURL = search.redirect ?? '/';
+  const storeError = useAuthError();
 
   const {
     signIn: handleSocialSignIn,
     isLoading: socialLoading,
     error: socialError,
     loading: isSocialLoading,
-  } = useSocialAuth({
-    callbackURL,
-  });
+  } = useSocialAuth(); // Remove callbackURL - let Tauri plugin handle deep links
 
   const {
     signUp: handleEmailSignup,
@@ -71,16 +69,16 @@ function SignUp() {
   });
 
   const loading = emailLoading || isSocialLoading;
-  const error = emailError || socialError;
+  const error = storeError || emailError || socialError;
 
   const form = useForm({
     resolver: zodResolver(SignUpSchema),
     defaultValues: {
-      email: "",
-      username: "",
-      name: "",
-      password: "",
-      passwordConfirmation: "",
+      email: '',
+      username: '',
+      name: '',
+      password: '',
+      passwordConfirmation: '',
     },
   });
 
@@ -88,35 +86,33 @@ function SignUp() {
     const { success } = await handleEmailSignup(values);
 
     if (success) {
-      void router.navigate({
-        to: "/verify-email",
+      router.navigate({
+        to: '/verify-email',
         search: { email: values.email, redirect: callbackURL },
       });
-    } else {
+    } else if (emailError) {
       // Handle field-specific errors
-      if (emailError) {
-        if (isUsernameError(emailError)) {
-          form.setError("username", {
-            message: emailError,
-          });
-        } else if (isEmailError(emailError)) {
-          form.setError("email", {
-            message: emailError,
-          });
-        }
+      if (isUsernameError(emailError)) {
+        form.setError('username', {
+          message: emailError,
+        });
+      } else if (isEmailError(emailError)) {
+        form.setError('email', {
+          message: emailError,
+        });
       }
     }
   };
 
   return (
     <>
-      <div className={"flex flex-col gap-4"}>
+      <div className={'flex flex-col gap-4'}>
         <Card>
           <CardHeader className="items-start">
-            <VoiceGeckoLogo className="h-10" />
+            <LogoFull className="h-10" />
             <CardDescription>
-              sign up to continue to{" "}
-              <span className="font-mono font-bold">voicegecko</span>
+              sign up to continue to{' '}
+              <span className="font-bold font-mono">voicegecko</span>
             </CardDescription>
           </CardHeader>
 
@@ -134,9 +130,9 @@ function SignUp() {
                             <FormLabel>Username</FormLabel>
                             <FormControl>
                               <Input
-                                placeholder="johndoe"
                                 autoComplete="username"
                                 inputMode="text"
+                                placeholder="johndoe"
                                 {...field}
                                 disabled={loading}
                               />
@@ -155,9 +151,9 @@ function SignUp() {
                             <FormLabel>Email</FormLabel>
                             <FormControl>
                               <Input
+                                autoComplete="email"
                                 inputMode="email"
                                 placeholder="john@example.com"
-                                autoComplete="email"
                                 {...field}
                                 disabled={loading}
                               />
@@ -176,9 +172,9 @@ function SignUp() {
                             <FormLabel>Name</FormLabel>
                             <FormControl>
                               <Input
-                                placeholder="John Doe"
                                 autoComplete="name"
                                 inputMode="text"
+                                placeholder="John Doe"
                                 {...field}
                                 disabled={loading}
                               />
@@ -199,9 +195,9 @@ function SignUp() {
                             </div>
                             <FormControl>
                               <Input
-                                type="password"
                                 autoComplete="password"
                                 inputMode="text"
+                                type="password"
                                 {...field}
                                 disabled={loading}
                               />
@@ -222,9 +218,9 @@ function SignUp() {
                             </div>
                             <FormControl>
                               <Input
-                                type="password"
                                 autoComplete="password"
                                 inputMode="text"
+                                type="password"
                                 {...field}
                                 disabled={loading}
                               />
@@ -236,43 +232,49 @@ function SignUp() {
                       {error &&
                         !form.formState.errors.email &&
                         !form.formState.errors.username && (
-                          <p className="text-[0.8rem] font-medium text-red-600">
+                          <p className="font-medium text-[0.8rem] text-red-600">
                             {error}
                           </p>
                         )}
                     </div>
-                    <Button type="submit" className="w-full" disabled={loading}>
+                    <Button className="w-full" disabled={loading} type="submit">
                       {emailLoading ? (
-                        <Loader className={"animate-spin"} />
+                        <Loader className={'animate-spin'} />
                       ) : (
-                        "Sign Up"
+                        'Sign Up'
                       )}
                     </Button>
                   </div>
-                  <div className="after:border-border relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-t">
-                    <span className="bg-background text-muted-foreground relative z-10 px-2">
+                  <div className="relative text-center text-sm after:absolute after:inset-0 after:top-1/2 after:z-0 after:flex after:items-center after:border-border after:border-t">
+                    <span className="relative z-10 bg-card px-2 text-muted-foreground">
                       Or continue with
                     </span>
                   </div>
                   <div className="flex flex-col gap-4">
                     <SocialSignInButton
-                      provider="discord"
-                      isLoading={socialLoading.discord}
-                      onClick={() => handleSocialSignIn("discord")}
                       disabled={loading}
+                      isLoading={socialLoading.google}
+                      onClick={() => handleSocialSignIn('google')}
+                      provider="google"
                     />
-                    {socialError && (
-                      <p className="text-center text-[0.8rem] font-medium text-red-600">
-                        {socialError}
+                    <SocialSignInButton
+                      disabled={loading}
+                      isLoading={socialLoading.discord}
+                      onClick={() => handleSocialSignIn('discord')}
+                      provider="discord"
+                    />
+                    {(socialError || storeError) && (
+                      <p className="text-center font-medium text-[0.8rem] text-red-600">
+                        {storeError ?? socialError}
                       </p>
                     )}
                   </div>
                   <div className="text-center text-sm">
-                    Already have an account?{" "}
+                    Already have an account?{' '}
                     <Link
-                      to="/sign-in"
-                      search={{ redirect: callbackURL }}
                       className="underline underline-offset-4"
+                      search={{ redirect: callbackURL }}
+                      to="/sign-in"
                     >
                       Sign in
                     </Link>

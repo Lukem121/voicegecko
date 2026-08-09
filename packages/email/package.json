@@ -1,34 +1,40 @@
 {
   "name": "@acme/email",
-  "version": "0.0.0",
+  "version": "2.0.0",
   "private": true,
   "type": "module",
   "exports": {
-    ".": {
-      "default": "./src/index.ts"
-    }
+    "./lib/send-email": "./src/lib/send-email.ts",
+    "./send/payment-failed": "./src/send/payment-failed.ts",
+    "./send/reset-password": "./src/send/reset-password.ts",
+    "./send/subscription-cancelled": "./src/send/subscription-cancelled.ts",
+    "./send/verification": "./src/send/verification.ts",
+    "./send/welcome": "./src/send/welcome.ts",
+    "./send/welcome-pro": "./src/send/welcome-pro.ts",
+    "./send/team-member-added": "./src/send/team-member-added.ts"
   },
   "scripts": {
-    "build": "tsc",
+    "dev": "email dev --dir ./src/emails --port 3001",
     "clean": "git clean -xdf .cache .turbo dist node_modules",
     "typecheck": "tsc --noEmit --emitDeclarationOnly false"
   },
   "dependencies": {
-    "@react-email/components": "0.1.1",
-    "@sendgrid/mail": "^8.1.5",
-    "@t3-oss/env-nextjs": "^0.13.8",
+    "@acme/rate-limit": "workspace:*",
+    "@react-email/components": "1.0.7",
+    "@sendgrid/mail": "^8.1.6",
+    "@t3-oss/env-nextjs": "^0.13.10",
     "react": "catalog:react19",
     "react-dom": "catalog:react19",
     "zod": "catalog:"
   },
   "devDependencies": {
-    "@acme/eslint-config": "workspace:*",
-    "@acme/prettier-config": "workspace:*",
     "@acme/tsconfig": "workspace:*",
+    "@biomejs/biome": "catalog:",
+    "@react-email/preview-server": "5.2.8",
+    "@types/node": "^25.2.3",
     "@types/react": "catalog:react19",
     "@types/react-dom": "catalog:react19",
-    "eslint": "catalog:",
-    "prettier": "catalog:",
+    "react-email": "^5.2.8",
     "typescript": "catalog:"
   }
 }

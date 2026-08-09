@@ -1,70 +1,85 @@
-import type { Metadata, Viewport } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
-import { NuqsAdapter } from "nuqs/adapters/next/app";
+import { Toaster } from '@acme/ui/components/ui/sonner';
+import { ThemeProvider } from '@acme/ui/components/ui/theme';
+import { cn } from '@acme/ui/lib/utils';
+import { GoogleTagManager } from '@next/third-parties/google';
+import type { Metadata, Viewport } from 'next';
+import { NuqsAdapter } from 'nuqs/adapters/next/app';
+import { CurrencyProvider } from '~/providers/currency';
+import { TRPCReactProvider } from '~/trpc/react';
+import { plusJakartaSans, roobert } from './fonts';
 
-import { Toaster } from "@acme/ui/components/ui/sonner";
-import { ThemeProvider, ThemeToggle } from "@acme/ui/components/ui/theme";
-import { cn } from "@acme/ui/lib/utils";
-
-import { TRPCReactProvider } from "~/trpc/react";
-
-import "@acme/ui/globals.css";
-
-import { env } from "~/env";
+import '@acme/ui/globals.css';
+import Script from 'next/script';
+import { PostHogUserIdentifier } from '~/components/posthog';
+import AttributionTracker from '~/components/attribution-tracker';
 
 export const metadata: Metadata = {
-  metadataBase: new URL(
-    env.VERCEL_ENV === "production"
-      ? "https://turbo.t3.gg"
-      : "http://localhost:3000",
-  ),
-  title: "Create T3 Turbo",
-  description: "Simple monorepo with shared backend for web & mobile apps",
+  metadataBase: new URL('https://www.voicegecko.dev'),
+  title: 'VoiceGecko | Instant Voice-to-Text for Desktop',
+  description:
+    'Instant dictation for desktop. Press a shortcut, speak, and instantly get accurate text on your clipboard—perfect for emails, coding, AI prompts, or brain dumps.',
   openGraph: {
-    title: "Create T3 Turbo",
-    description: "Simple monorepo with shared backend for web & mobile apps",
-    url: "https://create-t3-turbo.vercel.app",
-    siteName: "Create T3 Turbo",
+    title: 'VoiceGecko | Instant Voice-to-Text for Desktop',
+    description:
+      'Instant voice-to-text dictation for desktop. Press a shortcut, speak, and instantly get accurate text on your clipboard—perfect for emails, coding, AI prompts, or brain dumps.',
+    url: 'https://www.voicegecko.dev',
+    siteName: 'VoiceGecko',
+    images: [
+      {
+        url: 'https://www.voicegecko.dev/opengraph-image', // update with your OG image
+        width: 1200,
+        height: 630,
+        alt: 'VoiceGecko App Preview',
+      },
+    ],
+    locale: 'en_US',
+    type: 'website',
   },
   twitter: {
-    card: "summary_large_image",
-    site: "@jullerino",
-    creator: "@jullerino",
+    card: 'summary_large_image',
+    site: '@VoiceGeckoAI',
+    creator: '@VoiceGeckoAI',
+    title: 'VoiceGecko | Instant Voice-to-Text for Desktop',
+    description:
+      'Instant voice-to-text dictation for desktop. Press a shortcut, speak, and instantly get accurate text on your clipboard—perfect for emails, coding, AI prompts, or brain dumps.',
+    images: ['https://www.voicegecko.dev/opengraph-image'], // update with your image
   },
 };
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "white" },
-    { media: "(prefers-color-scheme: dark)", color: "black" },
+    { media: '(prefers-color-scheme: light)', color: 'white' },
+    { media: '(prefers-color-scheme: dark)', color: 'black' },
   ],
 };
-
-const geistSans = Geist({
-  subsets: ["latin"],
-  variable: "--font-geist-sans",
-});
-const geistMono = Geist_Mono({
-  subsets: ["latin"],
-  variable: "--font-geist-mono",
-});
 
 export default function RootLayout(props: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <GoogleTagManager gtmId="GTM-N623RRVD" />
+      <Script
+        async
+        defer
+        id="lucky-orange"
+        src="https://tools.luckyorange.com/core/lo.js?site-id=b5d9ffe4"
+        strategy="afterInteractive"
+      />
       <body
         className={cn(
-          "bg-background text-foreground min-h-screen font-sans antialiased",
-          geistSans.variable,
-          geistMono.variable,
+          'min-h-screen bg-background font-sans text-foreground antialiased',
+          plusJakartaSans.variable,
+          roobert.variable
         )}
       >
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
           <NuqsAdapter>
-            <TRPCReactProvider>{props.children}</TRPCReactProvider>
-            <div className="absolute right-4 bottom-4">
-              <ThemeToggle />
-            </div>
+            <TRPCReactProvider>
+              <CurrencyProvider>
+                <AttributionTracker />
+                <PostHogUserIdentifier />
+                {props.children}
+              </CurrencyProvider>
+            </TRPCReactProvider>
             <Toaster />
           </NuqsAdapter>
         </ThemeProvider>

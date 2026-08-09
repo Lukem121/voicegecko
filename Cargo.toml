@@ -1,9 +1,10 @@
 [workspace]
+resolver = "2"
 members = [
     "apps/desktop/src-tauri"
 ]
 
 [workspace.package]
-version = "0.1.0"
+version = "2.0.0"
 authors = ["Luke Askew"]
 edition = "2021"

@@ -8,25 +8,36 @@
 // You should NOT make any changes in this file as it will be overwritten.
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
-import { createFileRoute } from '@tanstack/react-router'
-
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as UpdateRequiredRouteImport } from './routes/update-required'
+import { Route as OnboardingRouteImport } from './routes/onboarding'
 import { Route as AuthenticatedRouteImport } from './routes/_authenticated'
 import { Route as AuthenticatedIndexRouteImport } from './routes/_authenticated/index'
-import { Route as AuthSignInRouteImport } from './routes/auth/sign-in'
+import { Route as OnboardingPushToTalkTutorialRouteImport } from './routes/onboarding/push-to-talk-tutorial'
+import { Route as OnboardingMicrophoneSetupRouteImport } from './routes/onboarding/microphone-setup'
+import { Route as OnboardingCompletionRouteImport } from './routes/onboarding/completion'
+import { Route as AuthenticatedUsageRouteImport } from './routes/_authenticated/usage'
+import { Route as AuthenticatedDictionaryRouteImport } from './routes/_authenticated/dictionary'
+import { Route as AuthenticatedDictationsRouteImport } from './routes/_authenticated/dictations'
 import { Route as unauthenticatedAuthRouteImport } from './routes/(unauthenticated)/_auth'
+import { Route as AuthenticatedSettingsIndexRouteImport } from './routes/_authenticated/settings/index'
+import { Route as AuthenticatedSettingsShortcutsRouteImport } from './routes/_authenticated/settings/shortcuts'
+import { Route as AuthenticatedSettingsModelsRouteImport } from './routes/_authenticated/settings/models'
+import { Route as AuthenticatedSettingsEngineLabRouteImport } from './routes/_authenticated/settings/engine-lab'
 import { Route as unauthenticatedAuthVerifySuccessRouteImport } from './routes/(unauthenticated)/_auth.verify-success'
 import { Route as unauthenticatedAuthVerifyEmailRouteImport } from './routes/(unauthenticated)/_auth.verify-email'
 import { Route as unauthenticatedAuthSignUpRouteImport } from './routes/(unauthenticated)/_auth.sign-up'
 import { Route as unauthenticatedAuthSignInRouteImport } from './routes/(unauthenticated)/_auth.sign-in'
 import { Route as unauthenticatedAuthAuthenticationErrorRouteImport } from './routes/(unauthenticated)/_auth.authentication-error'
-import { Route as unauthenticatedAuthLegalTermsRouteImport } from './routes/(unauthenticated)/_auth.legal/terms'
-import { Route as unauthenticatedAuthLegalPrivacyRouteImport } from './routes/(unauthenticated)/_auth.legal/privacy'
 
-const unauthenticatedRouteImport = createFileRoute('/(unauthenticated)')()
-
-const unauthenticatedRoute = unauthenticatedRouteImport.update({
-  id: '/(unauthenticated)',
+const UpdateRequiredRoute = UpdateRequiredRouteImport.update({
+  id: '/update-required',
+  path: '/update-required',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OnboardingRoute = OnboardingRouteImport.update({
+  id: '/onboarding',
+  path: '/onboarding',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedRoute = AuthenticatedRouteImport.update({
@@ -38,15 +49,66 @@ const AuthenticatedIndexRoute = AuthenticatedIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
-const AuthSignInRoute = AuthSignInRouteImport.update({
-  id: '/auth/sign-in',
-  path: '/auth/sign-in',
-  getParentRoute: () => rootRouteImport,
+const OnboardingPushToTalkTutorialRoute =
+  OnboardingPushToTalkTutorialRouteImport.update({
+    id: '/push-to-talk-tutorial',
+    path: '/push-to-talk-tutorial',
+    getParentRoute: () => OnboardingRoute,
+  } as any)
+const OnboardingMicrophoneSetupRoute =
+  OnboardingMicrophoneSetupRouteImport.update({
+    id: '/microphone-setup',
+    path: '/microphone-setup',
+    getParentRoute: () => OnboardingRoute,
+  } as any)
+const OnboardingCompletionRoute = OnboardingCompletionRouteImport.update({
+  id: '/completion',
+  path: '/completion',
+  getParentRoute: () => OnboardingRoute,
+} as any)
+const AuthenticatedUsageRoute = AuthenticatedUsageRouteImport.update({
+  id: '/usage',
+  path: '/usage',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedDictionaryRoute = AuthenticatedDictionaryRouteImport.update({
+  id: '/dictionary',
+  path: '/dictionary',
+  getParentRoute: () => AuthenticatedRoute,
+} as any)
+const AuthenticatedDictationsRoute = AuthenticatedDictationsRouteImport.update({
+  id: '/dictations',
+  path: '/dictations',
+  getParentRoute: () => AuthenticatedRoute,
 } as any)
 const unauthenticatedAuthRoute = unauthenticatedAuthRouteImport.update({
-  id: '/_auth',
-  getParentRoute: () => unauthenticatedRoute,
+  id: '/(unauthenticated)/_auth',
+  getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedSettingsIndexRoute =
+  AuthenticatedSettingsIndexRouteImport.update({
+    id: '/settings/',
+    path: '/settings/',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedSettingsShortcutsRoute =
+  AuthenticatedSettingsShortcutsRouteImport.update({
+    id: '/settings/shortcuts',
+    path: '/settings/shortcuts',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedSettingsModelsRoute =
+  AuthenticatedSettingsModelsRouteImport.update({
+    id: '/settings/models',
+    path: '/settings/models',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+const AuthenticatedSettingsEngineLabRoute =
+  AuthenticatedSettingsEngineLabRouteImport.update({
+    id: '/settings/engine-lab',
+    path: '/settings/engine-lab',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 const unauthenticatedAuthVerifySuccessRoute =
   unauthenticatedAuthVerifySuccessRouteImport.update({
     id: '/verify-success',
@@ -77,114 +139,162 @@ const unauthenticatedAuthAuthenticationErrorRoute =
     path: '/authentication-error',
     getParentRoute: () => unauthenticatedAuthRoute,
   } as any)
-const unauthenticatedAuthLegalTermsRoute =
-  unauthenticatedAuthLegalTermsRouteImport.update({
-    id: '/legal/terms',
-    path: '/legal/terms',
-    getParentRoute: () => unauthenticatedAuthRoute,
-  } as any)
-const unauthenticatedAuthLegalPrivacyRoute =
-  unauthenticatedAuthLegalPrivacyRouteImport.update({
-    id: '/legal/privacy',
-    path: '/legal/privacy',
-    getParentRoute: () => unauthenticatedAuthRoute,
-  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedIndexRoute
-  '/auth/sign-in': typeof AuthSignInRoute
+  '/onboarding': typeof OnboardingRouteWithChildren
+  '/update-required': typeof UpdateRequiredRoute
+  '/dictations': typeof AuthenticatedDictationsRoute
+  '/dictionary': typeof AuthenticatedDictionaryRoute
+  '/usage': typeof AuthenticatedUsageRoute
+  '/onboarding/completion': typeof OnboardingCompletionRoute
+  '/onboarding/microphone-setup': typeof OnboardingMicrophoneSetupRoute
+  '/onboarding/push-to-talk-tutorial': typeof OnboardingPushToTalkTutorialRoute
   '/authentication-error': typeof unauthenticatedAuthAuthenticationErrorRoute
   '/sign-in': typeof unauthenticatedAuthSignInRoute
   '/sign-up': typeof unauthenticatedAuthSignUpRoute
   '/verify-email': typeof unauthenticatedAuthVerifyEmailRoute
   '/verify-success': typeof unauthenticatedAuthVerifySuccessRoute
-  '/legal/privacy': typeof unauthenticatedAuthLegalPrivacyRoute
-  '/legal/terms': typeof unauthenticatedAuthLegalTermsRoute
+  '/settings/engine-lab': typeof AuthenticatedSettingsEngineLabRoute
+  '/settings/models': typeof AuthenticatedSettingsModelsRoute
+  '/settings/shortcuts': typeof AuthenticatedSettingsShortcutsRoute
+  '/settings/': typeof AuthenticatedSettingsIndexRoute
 }
 export interface FileRoutesByTo {
+  '/onboarding': typeof OnboardingRouteWithChildren
+  '/update-required': typeof UpdateRequiredRoute
+  '/dictations': typeof AuthenticatedDictationsRoute
+  '/dictionary': typeof AuthenticatedDictionaryRoute
+  '/usage': typeof AuthenticatedUsageRoute
+  '/onboarding/completion': typeof OnboardingCompletionRoute
+  '/onboarding/microphone-setup': typeof OnboardingMicrophoneSetupRoute
+  '/onboarding/push-to-talk-tutorial': typeof OnboardingPushToTalkTutorialRoute
   '/': typeof AuthenticatedIndexRoute
-  '/auth/sign-in': typeof AuthSignInRoute
   '/authentication-error': typeof unauthenticatedAuthAuthenticationErrorRoute
   '/sign-in': typeof unauthenticatedAuthSignInRoute
   '/sign-up': typeof unauthenticatedAuthSignUpRoute
   '/verify-email': typeof unauthenticatedAuthVerifyEmailRoute
   '/verify-success': typeof unauthenticatedAuthVerifySuccessRoute
-  '/legal/privacy': typeof unauthenticatedAuthLegalPrivacyRoute
-  '/legal/terms': typeof unauthenticatedAuthLegalTermsRoute
+  '/settings/engine-lab': typeof AuthenticatedSettingsEngineLabRoute
+  '/settings/models': typeof AuthenticatedSettingsModelsRoute
+  '/settings/shortcuts': typeof AuthenticatedSettingsShortcutsRoute
+  '/settings': typeof AuthenticatedSettingsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/_authenticated': typeof AuthenticatedRouteWithChildren
-  '/(unauthenticated)': typeof unauthenticatedRouteWithChildren
+  '/onboarding': typeof OnboardingRouteWithChildren
+  '/update-required': typeof UpdateRequiredRoute
   '/(unauthenticated)/_auth': typeof unauthenticatedAuthRouteWithChildren
-  '/auth/sign-in': typeof AuthSignInRoute
+  '/_authenticated/dictations': typeof AuthenticatedDictationsRoute
+  '/_authenticated/dictionary': typeof AuthenticatedDictionaryRoute
+  '/_authenticated/usage': typeof AuthenticatedUsageRoute
+  '/onboarding/completion': typeof OnboardingCompletionRoute
+  '/onboarding/microphone-setup': typeof OnboardingMicrophoneSetupRoute
+  '/onboarding/push-to-talk-tutorial': typeof OnboardingPushToTalkTutorialRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
   '/(unauthenticated)/_auth/authentication-error': typeof unauthenticatedAuthAuthenticationErrorRoute
   '/(unauthenticated)/_auth/sign-in': typeof unauthenticatedAuthSignInRoute
   '/(unauthenticated)/_auth/sign-up': typeof unauthenticatedAuthSignUpRoute
   '/(unauthenticated)/_auth/verify-email': typeof unauthenticatedAuthVerifyEmailRoute
   '/(unauthenticated)/_auth/verify-success': typeof unauthenticatedAuthVerifySuccessRoute
-  '/(unauthenticated)/_auth/legal/privacy': typeof unauthenticatedAuthLegalPrivacyRoute
-  '/(unauthenticated)/_auth/legal/terms': typeof unauthenticatedAuthLegalTermsRoute
+  '/_authenticated/settings/engine-lab': typeof AuthenticatedSettingsEngineLabRoute
+  '/_authenticated/settings/models': typeof AuthenticatedSettingsModelsRoute
+  '/_authenticated/settings/shortcuts': typeof AuthenticatedSettingsShortcutsRoute
+  '/_authenticated/settings/': typeof AuthenticatedSettingsIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
     | '/'
-    | '/auth/sign-in'
+    | '/onboarding'
+    | '/update-required'
+    | '/dictations'
+    | '/dictionary'
+    | '/usage'
+    | '/onboarding/completion'
+    | '/onboarding/microphone-setup'
+    | '/onboarding/push-to-talk-tutorial'
     | '/authentication-error'
     | '/sign-in'
     | '/sign-up'
     | '/verify-email'
     | '/verify-success'
-    | '/legal/privacy'
-    | '/legal/terms'
+    | '/settings/engine-lab'
+    | '/settings/models'
+    | '/settings/shortcuts'
+    | '/settings/'
   fileRoutesByTo: FileRoutesByTo
   to:
+    | '/onboarding'
+    | '/update-required'
+    | '/dictations'
+    | '/dictionary'
+    | '/usage'
+    | '/onboarding/completion'
+    | '/onboarding/microphone-setup'
+    | '/onboarding/push-to-talk-tutorial'
     | '/'
-    | '/auth/sign-in'
     | '/authentication-error'
     | '/sign-in'
     | '/sign-up'
     | '/verify-email'
     | '/verify-success'
-    | '/legal/privacy'
-    | '/legal/terms'
+    | '/settings/engine-lab'
+    | '/settings/models'
+    | '/settings/shortcuts'
+    | '/settings'
   id:
     | '__root__'
     | '/_authenticated'
-    | '/(unauthenticated)'
+    | '/onboarding'
+    | '/update-required'
     | '/(unauthenticated)/_auth'
-    | '/auth/sign-in'
+    | '/_authenticated/dictations'
+    | '/_authenticated/dictionary'
+    | '/_authenticated/usage'
+    | '/onboarding/completion'
+    | '/onboarding/microphone-setup'
+    | '/onboarding/push-to-talk-tutorial'
     | '/_authenticated/'
     | '/(unauthenticated)/_auth/authentication-error'
     | '/(unauthenticated)/_auth/sign-in'
     | '/(unauthenticated)/_auth/sign-up'
     | '/(unauthenticated)/_auth/verify-email'
     | '/(unauthenticated)/_auth/verify-success'
-    | '/(unauthenticated)/_auth/legal/privacy'
-    | '/(unauthenticated)/_auth/legal/terms'
+    | '/_authenticated/settings/engine-lab'
+    | '/_authenticated/settings/models'
+    | '/_authenticated/settings/shortcuts'
+    | '/_authenticated/settings/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
-  unauthenticatedRoute: typeof unauthenticatedRouteWithChildren
-  AuthSignInRoute: typeof AuthSignInRoute
+  OnboardingRoute: typeof OnboardingRouteWithChildren
+  UpdateRequiredRoute: typeof UpdateRequiredRoute
+  unauthenticatedAuthRoute: typeof unauthenticatedAuthRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/(unauthenticated)': {
-      id: '/(unauthenticated)'
-      path: '/'
-      fullPath: '/'
-      preLoaderRoute: typeof unauthenticatedRouteImport
+    '/update-required': {
+      id: '/update-required'
+      path: '/update-required'
+      fullPath: '/update-required'
+      preLoaderRoute: typeof UpdateRequiredRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/onboarding': {
+      id: '/onboarding'
+      path: '/onboarding'
+      fullPath: '/onboarding'
+      preLoaderRoute: typeof OnboardingRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated': {
       id: '/_authenticated'
       path: ''
-      fullPath: ''
+      fullPath: '/'
       preLoaderRoute: typeof AuthenticatedRouteImport
       parentRoute: typeof rootRouteImport
     }
@@ -195,19 +305,82 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedIndexRouteImport
       parentRoute: typeof AuthenticatedRoute
     }
-    '/auth/sign-in': {
-      id: '/auth/sign-in'
-      path: '/auth/sign-in'
-      fullPath: '/auth/sign-in'
-      preLoaderRoute: typeof AuthSignInRouteImport
-      parentRoute: typeof rootRouteImport
+    '/onboarding/push-to-talk-tutorial': {
+      id: '/onboarding/push-to-talk-tutorial'
+      path: '/push-to-talk-tutorial'
+      fullPath: '/onboarding/push-to-talk-tutorial'
+      preLoaderRoute: typeof OnboardingPushToTalkTutorialRouteImport
+      parentRoute: typeof OnboardingRoute
+    }
+    '/onboarding/microphone-setup': {
+      id: '/onboarding/microphone-setup'
+      path: '/microphone-setup'
+      fullPath: '/onboarding/microphone-setup'
+      preLoaderRoute: typeof OnboardingMicrophoneSetupRouteImport
+      parentRoute: typeof OnboardingRoute
+    }
+    '/onboarding/completion': {
+      id: '/onboarding/completion'
+      path: '/completion'
+      fullPath: '/onboarding/completion'
+      preLoaderRoute: typeof OnboardingCompletionRouteImport
+      parentRoute: typeof OnboardingRoute
+    }
+    '/_authenticated/usage': {
+      id: '/_authenticated/usage'
+      path: '/usage'
+      fullPath: '/usage'
+      preLoaderRoute: typeof AuthenticatedUsageRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/dictionary': {
+      id: '/_authenticated/dictionary'
+      path: '/dictionary'
+      fullPath: '/dictionary'
+      preLoaderRoute: typeof AuthenticatedDictionaryRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/dictations': {
+      id: '/_authenticated/dictations'
+      path: '/dictations'
+      fullPath: '/dictations'
+      preLoaderRoute: typeof AuthenticatedDictationsRouteImport
+      parentRoute: typeof AuthenticatedRoute
     }
     '/(unauthenticated)/_auth': {
       id: '/(unauthenticated)/_auth'
-      path: '/'
-      fullPath: '/'
+      path: ''
+      fullPath: ''
       preLoaderRoute: typeof unauthenticatedAuthRouteImport
-      parentRoute: typeof unauthenticatedRoute
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/settings/': {
+      id: '/_authenticated/settings/'
+      path: '/settings'
+      fullPath: '/settings/'
+      preLoaderRoute: typeof AuthenticatedSettingsIndexRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/settings/shortcuts': {
+      id: '/_authenticated/settings/shortcuts'
+      path: '/settings/shortcuts'
+      fullPath: '/settings/shortcuts'
+      preLoaderRoute: typeof AuthenticatedSettingsShortcutsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/settings/models': {
+      id: '/_authenticated/settings/models'
+      path: '/settings/models'
+      fullPath: '/settings/models'
+      preLoaderRoute: typeof AuthenticatedSettingsModelsRouteImport
+      parentRoute: typeof AuthenticatedRoute
+    }
+    '/_authenticated/settings/engine-lab': {
+      id: '/_authenticated/settings/engine-lab'
+      path: '/settings/engine-lab'
+      fullPath: '/settings/engine-lab'
+      preLoaderRoute: typeof AuthenticatedSettingsEngineLabRouteImport
+      parentRoute: typeof AuthenticatedRoute
     }
     '/(unauthenticated)/_auth/verify-success': {
       id: '/(unauthenticated)/_auth/verify-success'
@@ -244,33 +417,49 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof unauthenticatedAuthAuthenticationErrorRouteImport
       parentRoute: typeof unauthenticatedAuthRoute
     }
-    '/(unauthenticated)/_auth/legal/terms': {
-      id: '/(unauthenticated)/_auth/legal/terms'
-      path: '/legal/terms'
-      fullPath: '/legal/terms'
-      preLoaderRoute: typeof unauthenticatedAuthLegalTermsRouteImport
-      parentRoute: typeof unauthenticatedAuthRoute
-    }
-    '/(unauthenticated)/_auth/legal/privacy': {
-      id: '/(unauthenticated)/_auth/legal/privacy'
-      path: '/legal/privacy'
-      fullPath: '/legal/privacy'
-      preLoaderRoute: typeof unauthenticatedAuthLegalPrivacyRouteImport
-      parentRoute: typeof unauthenticatedAuthRoute
-    }
   }
 }
 
 interface AuthenticatedRouteChildren {
+  AuthenticatedDictationsRoute: typeof AuthenticatedDictationsRoute
+  AuthenticatedDictionaryRoute: typeof AuthenticatedDictionaryRoute
+  AuthenticatedUsageRoute: typeof AuthenticatedUsageRoute
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
+  AuthenticatedSettingsEngineLabRoute: typeof AuthenticatedSettingsEngineLabRoute
+  AuthenticatedSettingsModelsRoute: typeof AuthenticatedSettingsModelsRoute
+  AuthenticatedSettingsShortcutsRoute: typeof AuthenticatedSettingsShortcutsRoute
+  AuthenticatedSettingsIndexRoute: typeof AuthenticatedSettingsIndexRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
+  AuthenticatedDictationsRoute: AuthenticatedDictationsRoute,
+  AuthenticatedDictionaryRoute: AuthenticatedDictionaryRoute,
+  AuthenticatedUsageRoute: AuthenticatedUsageRoute,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
+  AuthenticatedSettingsEngineLabRoute: AuthenticatedSettingsEngineLabRoute,
+  AuthenticatedSettingsModelsRoute: AuthenticatedSettingsModelsRoute,
+  AuthenticatedSettingsShortcutsRoute: AuthenticatedSettingsShortcutsRoute,
+  AuthenticatedSettingsIndexRoute: AuthenticatedSettingsIndexRoute,
 }
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
   AuthenticatedRouteChildren,
+)
+
+interface OnboardingRouteChildren {
+  OnboardingCompletionRoute: typeof OnboardingCompletionRoute
+  OnboardingMicrophoneSetupRoute: typeof OnboardingMicrophoneSetupRoute
+  OnboardingPushToTalkTutorialRoute: typeof OnboardingPushToTalkTutorialRoute
+}
+
+const OnboardingRouteChildren: OnboardingRouteChildren = {
+  OnboardingCompletionRoute: OnboardingCompletionRoute,
+  OnboardingMicrophoneSetupRoute: OnboardingMicrophoneSetupRoute,
+  OnboardingPushToTalkTutorialRoute: OnboardingPushToTalkTutorialRoute,
+}
+
+const OnboardingRouteWithChildren = OnboardingRoute._addFileChildren(
+  OnboardingRouteChildren,
 )
 
 interface unauthenticatedAuthRouteChildren {
@@ -279,8 +468,6 @@ interface unauthenticatedAuthRouteChildren {
   unauthenticatedAuthSignUpRoute: typeof unauthenticatedAuthSignUpRoute
   unauthenticatedAuthVerifyEmailRoute: typeof unauthenticatedAuthVerifyEmailRoute
   unauthenticatedAuthVerifySuccessRoute: typeof unauthenticatedAuthVerifySuccessRoute
-  unauthenticatedAuthLegalPrivacyRoute: typeof unauthenticatedAuthLegalPrivacyRoute
-  unauthenticatedAuthLegalTermsRoute: typeof unauthenticatedAuthLegalTermsRoute
 }
 
 const unauthenticatedAuthRouteChildren: unauthenticatedAuthRouteChildren = {
@@ -290,29 +477,16 @@ const unauthenticatedAuthRouteChildren: unauthenticatedAuthRouteChildren = {
   unauthenticatedAuthSignUpRoute: unauthenticatedAuthSignUpRoute,
   unauthenticatedAuthVerifyEmailRoute: unauthenticatedAuthVerifyEmailRoute,
   unauthenticatedAuthVerifySuccessRoute: unauthenticatedAuthVerifySuccessRoute,
-  unauthenticatedAuthLegalPrivacyRoute: unauthenticatedAuthLegalPrivacyRoute,
-  unauthenticatedAuthLegalTermsRoute: unauthenticatedAuthLegalTermsRoute,
 }
 
 const unauthenticatedAuthRouteWithChildren =
   unauthenticatedAuthRoute._addFileChildren(unauthenticatedAuthRouteChildren)
 
-interface unauthenticatedRouteChildren {
-  unauthenticatedAuthRoute: typeof unauthenticatedAuthRouteWithChildren
-}
-
-const unauthenticatedRouteChildren: unauthenticatedRouteChildren = {
-  unauthenticatedAuthRoute: unauthenticatedAuthRouteWithChildren,
-}
-
-const unauthenticatedRouteWithChildren = unauthenticatedRoute._addFileChildren(
-  unauthenticatedRouteChildren,
-)
-
 const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
-  unauthenticatedRoute: unauthenticatedRouteWithChildren,
-  AuthSignInRoute: AuthSignInRoute,
+  OnboardingRoute: OnboardingRouteWithChildren,
+  UpdateRequiredRoute: UpdateRequiredRoute,
+  unauthenticatedAuthRoute: unauthenticatedAuthRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

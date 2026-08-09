@@ -1,37 +1,37 @@
 {
   "name": "@acme/api",
-  "version": "0.1.0",
+  "version": "2.0.0",
   "private": true,
   "type": "module",
-  "exports": {
-    ".": {
-      "default": "./src/index.ts"
-    }
-  },
-  "license": "MIT",
   "scripts": {
     "build": "tsc",
     "clean": "git clean -xdf .cache .turbo dist node_modules",
     "dev": "tsc",
-    "format": "prettier --check . --ignore-path ../../.gitignore",
-    "lint": "eslint",
+    "lint": "ultracite lint",
+    "format": "ultracite format",
     "typecheck": "tsc --noEmit --emitDeclarationOnly false"
   },
   "dependencies": {
     "@acme/auth": "workspace:*",
     "@acme/db": "workspace:*",
+    "@acme/email": "workspace:*",
+    "@acme/notifications": "workspace:*",
+    "@acme/observability": "workspace:*",
+    "@acme/payment": "workspace:*",
+    "@acme/rate-limit": "workspace:*",
     "@acme/validators": "workspace:*",
+    "@better-auth/stripe": "^1.4.18",
+    "@t3-oss/env-nextjs": "catalog:",
     "@trpc/server": "catalog:",
-    "superjson": "2.2.2",
+    "@vercel/functions": "^3.4.2",
+    "drizzle-orm": "catalog:",
+    "stripe": "^20.3.1",
+    "superjson": "2.2.6",
     "zod": "catalog:"
   },
   "devDependencies": {
-    "@acme/eslint-config": "workspace:*",
-    "@acme/prettier-config": "workspace:*",
     "@acme/tsconfig": "workspace:*",
-    "eslint": "catalog:",
-    "prettier": "catalog:",
+    "@biomejs/biome": "catalog:",
     "typescript": "catalog:"
-  },
-  "prettier": "@acme/prettier-config"
+  }
 }

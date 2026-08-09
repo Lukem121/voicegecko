@@ -1,0 +1,11 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Discord community
+    url: https://discord.gg/BFxNQCzZjB
+    about: Ask questions and chat with other Voice Gecko users
+  - name: Security vulnerability
+    url: https://github.com/Lukem121/voicegecko/blob/main/SECURITY.md
+    about: Report security issues privately — do not open a public issue
+  - name: Optional Support
+    url: https://www.voicegecko.dev/pricing
+    about: Fund development with optional $5.99/mo Support (same product as Free)

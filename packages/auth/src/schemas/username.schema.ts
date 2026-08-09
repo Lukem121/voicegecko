@@ -1,17 +1,22 @@
-import { z } from "zod/v4";
+import { z } from 'zod/v4';
 
 // List of restricted usernames by category
 const restrictedUsernamesByCategory = {
-  admin: ["admin", "administrator", "moderator", "mod", "staff", "owner"],
-  support: ["support", "help", "contact", "service", "customer"],
-  system: ["system", "root", "superuser", "sudo", "api", "webhook", "bot"],
-  account: ["account", "profile", "billing", "payment"],
-  security: ["security", "auth", "login", "logout", "signin", "signout"],
-  settings: ["settings", "config", "configuration", "preferences"],
-  spam: ["official", "verify", "verified", "genuine"],
-  company: ["smmhubx", "hubx"],
-  offensive: ["abuse", "spam", "scam"],
+  admin: ['admin', 'administrator', 'moderator', 'mod', 'staff', 'owner'],
+  support: ['support', 'help', 'contact', 'service', 'customer'],
+  system: ['system', 'root', 'superuser', 'sudo', 'api', 'webhook', 'bot'],
+  account: ['account', 'profile', 'billing', 'payment'],
+  security: ['security', 'auth', 'login', 'logout', 'signin', 'signout'],
+  settings: ['settings', 'config', 'configuration', 'preferences'],
+  spam: ['official', 'verify', 'verified', 'genuine'],
+  company: ['smmhubx', 'hubx'],
+  offensive: ['abuse', 'spam', 'scam'],
 };
+
+const VALID_CHARACTER_PATTERN = /^[a-z0-9_]+$/;
+const REPEATED_CHAR_PATTERN = /(.)\1{4,}/;
+const NUMBERS_ONLY_PATTERN = /^\d+$/;
+const LETTERS_ONLY_PATTERN = /[a-z]/;
 
 // Flatten for checking
 const restrictedUsernames = Object.values(restrictedUsernamesByCategory).flat();
@@ -20,58 +25,57 @@ export const usernameSchema = z
   .string()
   .trim()
   .toLowerCase()
-  .min(3, { error: "Username must be at least 3 characters long" })
-  .max(20, { error: "Username must be less than 20 characters long" })
+  .min(3, { error: 'Username must be at least 3 characters long' })
+  .max(20, { error: 'Username must be less than 20 characters long' })
   .regex(/^[a-z0-9_]+$/, {
-    error: "Username can only contain letters, numbers, and underscores",
+    error: 'Username can only contain letters, numbers, and underscores',
   })
   .check((ctx) => {
     const username = ctx.value;
 
     if (
-      username.startsWith("_") ||
-      username.startsWith("-") ||
-      username.endsWith("_") ||
-      username.endsWith("-")
+      username.startsWith('_') ||
+      username.startsWith('-') ||
+      username.endsWith('_') ||
+      username.endsWith('-')
     ) {
       ctx.issues.push({
         input: username,
-        code: "custom",
-        message: "Username cannot start or end with an underscore or hyphen",
+        code: 'custom',
+        message: 'Username cannot start or end with an underscore or hyphen',
       });
     }
 
-    if (username.includes("__")) {
+    if (username.includes('__')) {
       ctx.issues.push({
         input: username,
-        code: "custom",
-        message: "Username cannot contain adjacent underscores",
+        code: 'custom',
+        message: 'Username cannot contain adjacent underscores',
       });
     }
 
-    const repeatedCharRegex = /(.)\1{4,}/;
-    if (repeatedCharRegex.test(username)) {
+    if (REPEATED_CHAR_PATTERN.test(username)) {
       ctx.issues.push({
         input: username,
-        code: "custom",
+        code: 'custom',
         message:
-          "Username cannot contain more than 4 repeated characters in a row",
+          'Username cannot contain more than 4 repeated characters in a row',
       });
     }
 
-    if (/^\d+$/.test(username)) {
+    if (NUMBERS_ONLY_PATTERN.test(username)) {
       ctx.issues.push({
         input: username,
-        code: "custom",
-        message: "Username cannot consist of only numbers",
+        code: 'custom',
+        message: 'Username cannot consist of only numbers',
       });
     }
 
-    if (!/[a-z]/.test(username)) {
+    if (!LETTERS_ONLY_PATTERN.test(username)) {
       ctx.issues.push({
         input: username,
-        code: "custom",
-        message: "Username must contain at least one letter",
+        code: 'custom',
+        message: 'Username must contain at least one letter',
       });
     }
 
@@ -79,7 +83,7 @@ export const usernameSchema = z
     if (exactMatch) {
       ctx.issues.push({
         input: username,
-        code: "custom",
+        code: 'custom',
         message: `Username cannot be '${exactMatch}'`,
       });
     }
@@ -88,14 +92,14 @@ export const usernameSchema = z
       const containedWord = words.find(
         (word) =>
           username.includes(word) ||
-          username.replace(/\d+/g, "").includes(word) ||
-          username.replace(/[._-]/g, "").includes(word),
+          username.replace(/\d+/g, '').includes(word) ||
+          username.replace(/[._-]/g, '').includes(word)
       );
 
       if (containedWord) {
         ctx.issues.push({
           input: username,
-          code: "custom",
+          code: 'custom',
           message: `Username cannot contain '${containedWord}'`,
         });
       }
@@ -103,10 +107,9 @@ export const usernameSchema = z
   });
 
 export type Username = z.infer<typeof usernameSchema>;
-
 export const usernameValidator = (_username: string) => {
   // If no username provided or not a string, reject
-  if (!_username || typeof _username !== "string") {
+  if (!_username || typeof _username !== 'string') {
     return false;
   }
 
@@ -118,8 +121,8 @@ export const usernameValidator = (_username: string) => {
   }
 
   // Only allow alphanumeric characters and underscores
-  const validCharacterPattern = /^[a-z0-9_]+$/;
-  if (!validCharacterPattern.test(username)) {
+
+  if (!VALID_CHARACTER_PATTERN.test(username)) {
     return false;
   }
 
@@ -134,9 +137,13 @@ export const usernameValidator = (_username: string) => {
     return (
       username.includes(restricted) ||
       // Check for common number substitutions (e.g., admin1, 1admin, admin123)
-      username.replace(/\d+/g, "").includes(restricted) ||
+      username
+        .replace(/\d+/g, '')
+        .includes(restricted) ||
       // Check for common character substitutions
-      username.replace(/[._-]/g, "").includes(restricted)
+      username
+        .replace(/[._-]/g, '')
+        .includes(restricted)
     );
   });
 
@@ -146,10 +153,10 @@ export const usernameValidator = (_username: string) => {
 
   // Prevent usernames starting or ending with special characters
   if (
-    username.startsWith("_") ||
-    username.startsWith("-") ||
-    username.endsWith("_") ||
-    username.endsWith("-")
+    username.startsWith('_') ||
+    username.startsWith('-') ||
+    username.endsWith('_') ||
+    username.endsWith('-')
   ) {
     return false;
   }
