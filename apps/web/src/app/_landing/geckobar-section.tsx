@@ -137,7 +137,7 @@ export default function GeckoBarSection() {
         {/* Main Content */}
         <div className="relative z-10 mx-auto max-w-6xl">
           <SectionHeader
-            description="A persistent, interactive bar that lets you trigger dictation or see exactly what's happening."
+            description="A persistent, interactive bar that lets you trigger dictation or see exactly what's happening — speech recognition runs on your device."
             descriptionWidth="wide"
             eyebrow="Always Within Reach"
             heading="Meet the GeckoBar"

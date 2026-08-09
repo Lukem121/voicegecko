@@ -8,7 +8,7 @@ Please read the [Code of Conduct](CODE_OF_CONDUCT.md). By participating, you agr
 
 - **Bug reports** and **feature ideas** via [GitHub Issues](https://github.com/Lukem121/voicegecko/issues)
 - **Pull requests** — docs, UI polish, accessibility, desktop UX, tests, refactors
-- **Discussions** on [Discord](https://discord.gg/BFxNQCzZjB)
+- **Discussions** on [Discord](https://discord.gg/wfMY47mUvM)
 - **Optional Support** ($5.99/mo) at [voicegecko.dev/pricing](https://www.voicegecko.dev/pricing) if you want to fund development (same product as Free)
 
 Good first areas: copy/docs, landing/pricing clarity, desktop settings UX, a11y, TypeScript cleanups, and issue triage.

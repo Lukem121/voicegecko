@@ -5,7 +5,7 @@ import { cn } from '@acme/ui/lib/utils';
 import { motion } from 'motion/react';
 import Link from 'next/link';
 import type { IconType } from 'react-icons';
-import { SiDiscord, SiX } from 'react-icons/si';
+import { SiDiscord, SiGithub, SiX } from 'react-icons/si';
 import { TbBolt, TbCalendarTime, TbGauge, TbLock } from 'react-icons/tb';
 import { CurrencySelector } from '~/providers/currency';
 import { APP_ROUTES } from '~/utils/app-routes';
@@ -23,8 +23,8 @@ const iconMap = {
 const benefits = [
   { text: 'Type less, say more.', icon: 'logo' as const },
   { text: 'Free & open source', icon: 'calendar' as const },
-  { text: 'Fast updates', icon: 'bolt' as const },
-  { text: 'Secure by design', icon: 'lock' as const },
+  { text: '100% local STT', icon: 'bolt' as const },
+  { text: 'Private by design', icon: 'lock' as const },
   { text: 'Optional support', icon: 'speedometer' as const },
 ];
 
@@ -73,6 +73,12 @@ const footerSections: FooterSection[] = [
   {
     title: 'Socials',
     links: [
+      {
+        name: 'GitHub',
+        href: APP_ROUTES.SOCIALS.GITHUB,
+        icon: SiGithub,
+        openInNewTab: true,
+      },
       {
         name: 'Discord',
         href: APP_ROUTES.SOCIALS.DISCORD,

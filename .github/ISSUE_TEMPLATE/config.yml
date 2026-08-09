@@ -1,7 +1,7 @@
 blank_issues_enabled: true
 contact_links:
   - name: Discord community
-    url: https://discord.gg/BFxNQCzZjB
+    url: https://discord.gg/wfMY47mUvM
     about: Ask questions and chat with other Voice Gecko users
   - name: Security vulnerability
     url: https://github.com/Lukem121/voicegecko/blob/main/SECURITY.md

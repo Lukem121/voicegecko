@@ -82,7 +82,7 @@ export default function StickyCta() {
                 src={GeckoInvisibleWall}
               />
               <p className="text-muted-foreground text-sm leading-tight sm:text-base">
-                Turn speech into text in seconds, not minutes.
+                Free &amp; open source — 100% local dictation on your device.
               </p>
             </div>
 

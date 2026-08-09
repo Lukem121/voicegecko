@@ -190,7 +190,7 @@ export default function SpeedComparisonSection() {
               <span>Download for Windows</span>
             </a>
           }
-          description="Turn your speech into instant, accurate text, so you skip the typos and keep your flow."
+          description="Turn your speech into instant, accurate text on your device — skip the typos, keep your flow, and keep your voice private."
           descriptionWidth="normal"
           eyebrow="Typing Can't Keep Up"
           heading="5x Faster Than Your Keyboard"

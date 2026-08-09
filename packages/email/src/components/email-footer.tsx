@@ -50,7 +50,7 @@ export const EmailFooter = () => (
             <span className="mx-1 hidden text-[#b7b7b7] sm:inline">|</span>
             <Link
               className="mr-3 mb-2 inline-block min-h-[44px] py-1 text-[#b7b7b7] underline hover:text-gray-600"
-              href="https://discord.gg/BFxNQCzZjB"
+              href="https://discord.gg/wfMY47mUvM"
               rel="noopener noreferrer"
               style={{ minHeight: '44px', padding: '8px 4px' }}
               target="_blank"
