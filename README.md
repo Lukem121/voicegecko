@@ -67,6 +67,10 @@ See [CONTRIBUTING.md](CONTRIBUTING.md). Prerequisites: Node 22.14+, PNPM 9.6+, R
 
 Stack: React 19, Next.js 15, tRPC, Better Auth, Stripe, PostHog.
 
+## Sponsors
+
+Sponsored by [**Social Fetch**](https://www.socialfetch.dev/) — social media scraper API for 21 platforms. Profiles, posts, transcripts, and metrics with live data and consistent fields. [100 free credits](https://www.socialfetch.dev/) · [Docs](https://www.socialfetch.dev/docs)
+
 ## Community
 
 - [Contributing](CONTRIBUTING.md) · [Code of Conduct](CODE_OF_CONDUCT.md) · [Security](SECURITY.md)
