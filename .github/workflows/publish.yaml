@@ -99,6 +99,9 @@ jobs:
 
       - name: Setup .NET 8
         uses: actions/setup-dotnet@v4
+        env:
+          # Self-hosted runner can't write to C:\Program Files\dotnet
+          DOTNET_INSTALL_DIR: ${{ runner.temp }}/.dotnet
         with:
           dotnet-version: "8.0.x"
 
