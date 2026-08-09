@@ -4,7 +4,6 @@ import { useEffect } from 'react';
 
 import { AuthTitleBar } from '~/components/auth-title-bar';
 import { useAuth } from '~/hooks/use-auth';
-import { isLocalOnlyMode } from '~/lib/local-mode';
 
 export const Route = createFileRoute('/(unauthenticated)/_auth')({
   component: AuthLayout,
@@ -14,15 +13,8 @@ function AuthLayout() {
   const router = useRouter();
   const auth = useAuth();
 
-  useEffect(() => {
-    void isLocalOnlyMode().then((localOnly) => {
-      if (localOnly) {
-        router.navigate({ to: '/' });
-      }
-    });
-  }, [router]);
-
-  // If user is authenticated, redirect away from auth pages
+  // Auth is optional by default (local-only mode). Still allow voluntary
+  // sign-in/sign-up; only bounce away once there is a real session.
   useEffect(() => {
     log.info('Auth layout useEffect', auth.isAuthenticated, auth.isLoading);
     if (auth.isAuthenticated && !auth.isLoading) {
