@@ -29,6 +29,10 @@ export const serverAuth = betterAuth({
     accountLinking: {
       enabled: true,
     },
+    // Desktop OAuth: WebView starts the flow; system browser completes it.
+    // The signed state cookie never returns with the callback. DB state +
+    // tauri claim token still validate the flow.
+    skipStateCookieCheck: true,
   },
   database: drizzleAdapter(db, {
     provider: 'pg',

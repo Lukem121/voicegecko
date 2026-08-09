@@ -1,6 +1,6 @@
 # Release Process
 
-## Current Version: 2.0.0
+## Current Version: 2.0.1
 
 ## Overview
 
