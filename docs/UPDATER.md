@@ -21,7 +21,7 @@
     - Adds `x-client-version` on each request.
     - On HTTP 426, calls `appLifecycle.forceUpdateNow()`.
   - `apps/desktop/src-tauri/src/modules/updater.rs`
-    - Configures the Tauri updater endpoint (localhost in debug, production in release).
+    - Setup hook only; JS `check()` uses the HTTPS endpoints in `tauri.conf.json`.
 - Web
   - `apps/web/src/app/api/trpc/[trpc]/route.ts`
     - Enforces minimum version: if `x-client-version` < `MIN_SUPPORTED_DESKTOP_VERSION`, returns 426.
@@ -73,9 +73,11 @@ Notes:
 
 - Optional update: publish a GitHub Release and run the desktop; it should detect availability.
 - Forced update: set `MIN_SUPPORTED_DESKTOP_VERSION` above the desktop’s current version locally and hit any TRPC endpoint; desktop should auto-update.
+- The desktop updater talks only to `https://www.voicegecko.dev/api/updater/...` (not localhost). Probe the local Next.js route with curl when you are iterating on the API itself.
 
 ## Troubleshooting
 
+- Settings stuck on "Checking…": the updater request has no default HTTP timeout unless the client passes one. Confirm the production updater URL responds, and that `tauri.conf*.json` does not list `http://localhost:3000` first (that endpoint hangs indefinitely if anything accepts the socket but never finishes the response).
 - No update found: verify GitHub Release contains the correct platform artifacts (with signatures if required) and that the updater endpoint is reachable.
 - Not receiving 426: ensure desktop sends `x-client-version`, and the env `MIN_SUPPORTED_DESKTOP_VERSION` is set to a higher value than the client.
 - Update loops: confirm the new version installs successfully and the version number increments.

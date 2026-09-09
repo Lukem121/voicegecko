@@ -1,8 +1,8 @@
 import { log } from '@acme/observability/log';
 import { relaunch } from '@tauri-apps/plugin-process';
-import { check } from '@tauri-apps/plugin-updater';
 import { toast } from 'sonner';
 import { create } from 'zustand';
+import { checkForAppUpdate } from '~/lib/check-app-update';
 
 type UpdateInfo = {
   version: string;
@@ -74,13 +74,14 @@ export const useUpdateStore = create<UpdateState>((set, get) => ({
         return;
       }
 
-      const update = await check();
+      const update = await checkForAppUpdate();
       if (update) {
         log.info('[UpdateStore] Update available', { version: update.version });
         get().setAvailable({ version: update.version });
       } else {
         log.info('[UpdateStore] No updates available');
         get().setAvailable(null);
+        toast.success('You are on the latest version.');
       }
       get().setLastCheckedNow();
     } catch (e) {
@@ -99,7 +100,7 @@ export const useUpdateStore = create<UpdateState>((set, get) => ({
     }
     set({ isInstalling: true, progress: 0, error: null });
     try {
-      const update = await check();
+      const update = await checkForAppUpdate();
       if (!update) {
         toast.info('You are already on the latest version.');
         set({ isInstalling: false });

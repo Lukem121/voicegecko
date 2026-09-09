@@ -2,7 +2,7 @@
 import { log } from '@acme/observability/log';
 import { emit } from '@tauri-apps/api/event';
 import { relaunch } from '@tauri-apps/plugin-process';
-import { check } from '@tauri-apps/plugin-updater';
+import { checkForAppUpdate } from '~/lib/check-app-update';
 
 import { dictionaryService } from '~/services/dictionary.service';
 import { storeRegistry } from '~/stores/store-registry';
@@ -193,7 +193,7 @@ class AppLifecycleManager {
       log.info('[AppLifecycle] 🔍 Performing one-time update check...');
       this.notifyStatusChange('checking');
 
-      const update = await check();
+      const update = await checkForAppUpdate();
       if (!update) {
         log.info('[AppLifecycle] ✅ No updates available');
         this.notifyStatusChange('no-update');
@@ -272,7 +272,7 @@ class AppLifecycleManager {
         log.debug('[AppLifecycle] update store not ready', e as unknown);
       }
 
-      const update = await check();
+      const update = await checkForAppUpdate();
       if (!update) {
         log.info('[AppLifecycle] No update available during forced update');
         this.notifyStatusChange('no-update');
