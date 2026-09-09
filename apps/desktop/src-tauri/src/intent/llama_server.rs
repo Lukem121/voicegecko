@@ -58,8 +58,7 @@ Do not wrap prose in code blocks."
         system.push_str(ctx);
     }
     if let Some(words) = dictionary.filter(|d| !d.trim().is_empty()) {
-        system.push_str("\n\nDictionary terms (preserve exactly): ");
-        system.push_str(words);
+        system.push_str(&format_dictionary_instruction(words));
     }
 
     let ocr_symbols = crate::context::ocr::capture_active_window_text().unwrap_or_default();
@@ -124,4 +123,39 @@ Do not wrap prose in code blocks."
         .map(|s| s.trim().to_string())
         .filter(|s| !s.is_empty())
         .ok_or_else(|| "Empty LLM response".to_string())
+}
+
+fn format_dictionary_instruction(words: &str) -> String {
+    let terms: Vec<&str> = words
+        .split(',')
+        .map(str::trim)
+        .filter(|term| !term.is_empty())
+        .collect();
+    if terms.is_empty() {
+        return String::new();
+    }
+
+    let mut block = String::from(
+        "\n\nDictionary terms — if the transcript contains a close match to any of these, \
+spell that term exactly as written (same casing and spaces). Do not invent extra terms.\n",
+    );
+    for term in terms {
+        block.push_str("- ");
+        block.push_str(term);
+        block.push('\n');
+    }
+    block
+}
+
+#[cfg(test)]
+mod tests {
+    use super::format_dictionary_instruction;
+
+    #[test]
+    fn lists_each_dictionary_term_on_its_own_line() {
+        let block = format_dictionary_instruction("Social Fetch, Vercel");
+        assert!(block.contains("spell that term exactly as written"));
+        assert!(block.contains("- Social Fetch\n"));
+        assert!(block.contains("- Vercel\n"));
+    }
 }
