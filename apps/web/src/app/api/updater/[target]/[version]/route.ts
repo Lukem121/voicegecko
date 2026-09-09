@@ -549,13 +549,14 @@ function parseReleaseMetadata(release: GitHubRelease): {
 }
 
 function normalizeVersion(version: string): string {
-  if (version.startsWith('app-v')) {
-    return version.slice(5);
+  let normalized = version;
+  if (normalized.startsWith('app-v')) {
+    normalized = normalized.slice(5);
+  } else if (normalized.startsWith('v')) {
+    normalized = normalized.slice(1);
   }
-  if (version.startsWith('v')) {
-    return version.slice(1);
-  }
-  return version;
+  // Release tags like app-v2.0.2-update must compare as 2.0.2 for Tauri semver.
+  return normalized.replace(/-(update|full)$/i, '');
 }
 
 const PlatformUtils = {

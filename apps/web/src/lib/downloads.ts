@@ -229,13 +229,13 @@ function processAssetsForPlatform(
  * Normalize version string (remove prefixes like 'app-v' or 'v')
  */
 function normalizeVersion(version: string): string {
-  if (version.startsWith('app-v')) {
-    return version.slice(5);
+  let normalized = version;
+  if (normalized.startsWith('app-v')) {
+    normalized = normalized.slice(5);
+  } else if (normalized.startsWith('v')) {
+    normalized = normalized.slice(1);
   }
-  if (version.startsWith('v')) {
-    return version.slice(1);
-  }
-  return version;
+  return normalized.replace(/-(update|full)$/i, '');
 }
 
 /**
