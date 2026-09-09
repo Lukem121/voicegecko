@@ -72,7 +72,7 @@ function CompletionStep() {
   }, [markStepCompleted]);
 
   const handleJoinDiscord = () => {
-    openUrl('https://discord.gg/BFxNQCzZjB');
+    openUrl('https://discord.gg/wfMY47mUvM');
   };
 
   const handleUpgradeToPro = () => {

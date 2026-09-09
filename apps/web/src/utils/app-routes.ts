@@ -37,8 +37,9 @@ export const APP_ROUTES = {
     SECURITY_POLICY: '/terms/security-policy',
   },
   SOCIALS: {
-    DISCORD: 'https://discord.gg/BFxNQCzZjB',
+    DISCORD: 'https://discord.gg/wfMY47mUvM',
     TWITTER: 'https://twitter.com/VoiceGeckoAI',
+    GITHUB: 'https://github.com/Lukem121/voicegecko',
   },
 } as const;
 

@@ -170,7 +170,7 @@ if (isDev) {
 }
 
 // Discord URL for feedback
-const DISCORD_URL = 'https://discord.gg/BFxNQCzZjB';
+const DISCORD_URL = 'https://discord.gg/wfMY47mUvM';
 
 export function AppSidebar() {
   const auth = useAuthWithConnectivity();

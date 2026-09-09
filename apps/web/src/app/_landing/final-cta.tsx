@@ -58,15 +58,16 @@ export default function FinalCtaSection() {
 
             {/* Heading */}
             <h2 className="mt-2 font-bold font-hero text-4xl leading-tight tracking-tight">
-              Work at the Speed
+              Free, open source,
               <br />
-              of Thought
+              and fully local
             </h2>
 
             {/* Description */}
             <p className="mt-2 max-w-sm text-white lg:max-w-sm">
-              Stop letting the keyboard slow you down. Capture ideas instantly,
-              keep your flow, and get more done with Voice Gecko.
+              Download Voice Gecko, speak, and get text on your clipboard —
+              without sending your voice to the cloud. Star us on GitHub or
+              Support the project if you want to help it grow.
             </p>
 
             {/* CTA Button */}

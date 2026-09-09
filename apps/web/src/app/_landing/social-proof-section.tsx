@@ -14,12 +14,17 @@ export default function SocialProofSection() {
     <SectionWrapper className="max-w-7xl py-0">
       <div className="mt-10 text-center text-muted-foreground text-xs md:text-sm">
         <p className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1">
-          <span>Loved by 2,000+ users</span>
+          <span>Free &amp; open source (MIT)</span>
           <span
             aria-hidden
             className="hidden h-1.5 w-1.5 rounded-full bg-gray-300 md:inline-block"
           />
-          <span>10,000+ hours transcribed</span>
+          <span>100% local speech-to-text</span>
+          <span
+            aria-hidden
+            className="hidden h-1.5 w-1.5 rounded-full bg-gray-300 md:inline-block"
+          />
+          <span>Loved by 2,000+ users</span>
         </p>
         <Eyebrow className="mt-2">
           WORKS ACROSS VIRTUALLY ANY DESKTOP APP

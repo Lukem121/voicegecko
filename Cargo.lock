@@ -1639,7 +1639,7 @@ dependencies = [
 
 [[package]]
 name = "desktop"
-version = "2.0.1"
+version = "2.0.2"
 dependencies = [
  "async-trait",
  "bzip2",

@@ -11,7 +11,7 @@ Press a shortcut, speak, get text on your clipboard. Local speech models (Parake
 |---|---|
 | **Download** | [voicegecko.dev/download](https://www.voicegecko.dev/download) · [GitHub Releases](https://github.com/Lukem121/voicegecko-releases/releases/latest) |
 | **Website** | [voicegecko.dev](https://www.voicegecko.dev) |
-| **Discord** | [Join](https://discord.gg/BFxNQCzZjB) |
+| **Discord** | [Join](https://discord.gg/wfMY47mUvM) |
 | **Support the project** | [Optional $5.99/mo](https://www.voicegecko.dev/pricing) |
 | **Security** | [SECURITY.md](SECURITY.md) |
 
@@ -67,10 +67,14 @@ See [CONTRIBUTING.md](CONTRIBUTING.md). Prerequisites: Node 22.14+, PNPM 9.6+, R
 
 Stack: React 19, Next.js 15, tRPC, Better Auth, Stripe, PostHog.
 
+## Sponsors
+
+Sponsored by [**Social Fetch**](https://www.socialfetch.dev/) — social media scraper API for 21 platforms. Profiles, posts, transcripts, and metrics with live data and consistent fields. [100 free credits](https://www.socialfetch.dev/) · [Docs](https://www.socialfetch.dev/docs)
+
 ## Community
 
 - [Contributing](CONTRIBUTING.md) · [Code of Conduct](CODE_OF_CONDUCT.md) · [Security](SECURITY.md)
-- [Discord](https://discord.gg/BFxNQCzZjB)
+- [Discord](https://discord.gg/wfMY47mUvM)
 
 ## License
 

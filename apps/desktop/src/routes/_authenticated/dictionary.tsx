@@ -1,3 +1,4 @@
+import { Alert, AlertDescription, AlertTitle } from '@acme/ui/components/ui/alert';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -25,8 +26,9 @@ import {
 } from '@acme/ui/components/ui/dropdown-menu';
 import { Input } from '@acme/ui/components/ui/input';
 import { Label } from '@acme/ui/components/ui/label';
-import { createFileRoute } from '@tanstack/react-router';
+import { createFileRoute, Link } from '@tanstack/react-router';
 import {
+  AlertCircle,
   ArrowDownAZ,
   Calendar,
   CalendarDays,
@@ -43,6 +45,9 @@ import { useAddDictionary } from '~/features/dictionary/use-add-dictionary';
 import { useDeleteDictionary } from '~/features/dictionary/use-delete-dictionary';
 import { useGetDictionary } from '~/features/dictionary/use-get-dictionary';
 import { useUpdateDictionary } from '~/features/dictionary/use-update-dictionary';
+import { useSettingsStore } from '~/stores/settings.store';
+
+const GPU_WHISPER_ENGINE_ID = 'insanely_fast_whisper';
 
 // Extract sort utilities
 const getSortIcon = (sortBy: string) => {
@@ -210,6 +215,11 @@ function DictionaryPage() {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const usesGpuWhisper = useSettingsStore((state) =>
+    Object.values(state.settings.dictation.modeEngineOverrides).includes(
+      GPU_WHISPER_ENGINE_ID
+    )
+  );
 
   const onAddWord = async () => {
     const success = await handleAddWord();
@@ -307,8 +317,29 @@ function DictionaryPage() {
     <div className="flex flex-1 flex-col gap-4">
       <p className="text-muted-foreground text-sm">
         <strong className="text-foreground">Local dictionary:</strong> words
-        stay on this device in SQLite and never sync to the cloud.
+        stay on this device in SQLite and never sync to the cloud. GPU Whisper
+        (Engine Lab) uses these terms as an initial prompt; Parakeet and
+        Moonshine cannot take a custom vocabulary.
       </p>
+      {!usesGpuWhisper && (
+        <Alert>
+          <AlertCircle />
+          <AlertTitle>Dictionary is not used by your current engines</AlertTitle>
+          <AlertDescription>
+            <p>
+              Toggle, PTT, and flow default to Parakeet or Moonshine. Assign GPU
+              Whisper in{' '}
+              <Link
+                className="font-medium text-foreground underline underline-offset-4"
+                to="/settings/engine-lab"
+              >
+                Engine Lab
+              </Link>{' '}
+              for a mode to bias those spellings.
+            </p>
+          </AlertDescription>
+        </Alert>
+      )}
       <div className="flex h-10 items-center justify-between">
         <h1 className="font-bold text-2xl tracking-tight">Dictionary</h1>
         <div className="flex items-center gap-2">

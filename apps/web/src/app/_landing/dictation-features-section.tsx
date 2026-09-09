@@ -17,15 +17,15 @@ export default function DictationFeaturesSection() {
       <div className="mx-auto max-w-4xl">
         <div className="text-left">
           <p className="font-medium text-primary text-sm">
-            Full Control, Every Time
+            Open Source · On Your Device
           </p>
           <h2 className="mt-2 font-hero font-semibold text-2xl tracking-[-0.05em]">
             Dictation That Works Your Way
           </h2>
           <p className="mt-2 max-w-lg text-pretty text-muted-foreground text-sm">
-            From saved transcripts to a custom dictionary and personalized
-            shortcuts, Voice Gecko adapts to you — delivering accurate text
-            exactly how and where you need it.
+            History, dictionary, and shortcuts live on your machine. Voice Gecko
+            is free and open source — local speech models, no cloud transcription,
+            no account required to dictate.
           </p>
           <div className="mt-6">
             <a
@@ -60,16 +60,15 @@ export default function DictationFeaturesSection() {
             </div>
             <div className="relative z-10">
               <p className="font-medium text-white/80 text-xs uppercase tracking-wide">
-                NEVER LOSE WORK
+                ON-DEVICE ONLY
               </p>
               <h3 className="mt-2 font-hero font-semibold text-2xl tracking-[-0.05em]">
                 Never Lose Work
               </h3>
               <p className="mt-2 text-sm text-white/90 leading-relaxed">
-                Every dictation you make is saved in a searchable history on
-                this device for easy review, copying, or reuse anytime. Your raw
-                audio is never uploaded — finished text stays in local storage
-                on your computer.
+                Every dictation is saved in a searchable history on this device.
+                Transcripts stay in local SQLite — nothing is synced to Voice
+                Gecko servers. Audio is processed locally and never uploaded.
               </p>
             </div>
           </motion.div>
@@ -99,8 +98,9 @@ export default function DictationFeaturesSection() {
               </h3>
               <p className="mt-2 text-sm text-white/90 leading-relaxed">
                 Add your own words, names, or industry jargon so they're always
-                transcribed correctly — from SQL to product names. Fine-tune it
-                once and enjoy perfect results forever.
+                transcribed correctly — from SQL to product names. Your
+                dictionary stays on this device with the rest of your local
+                data.
               </p>
             </div>
           </motion.div>

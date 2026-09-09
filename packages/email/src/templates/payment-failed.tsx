@@ -117,7 +117,7 @@ export const PaymentFailedTemplate = ({
               <span className="hidden sm:inline"> • </span>
               <Link
                 className="mb-2 inline-block min-h-[44px] py-2 text-blue-600 underline hover:text-blue-800"
-                href="https://discord.gg/BFxNQCzZjB"
+                href="https://discord.gg/wfMY47mUvM"
                 style={{ minHeight: '44px', padding: '8px 4px' }}
               >
                 Discord Community

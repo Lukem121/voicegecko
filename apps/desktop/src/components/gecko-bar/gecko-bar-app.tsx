@@ -360,7 +360,7 @@ export function GeckoBarApp() {
           </DropdownMenuItem>
           <DropdownMenuItem
             onClick={() => {
-              openUrl('https://discord.gg/BFxNQCzZjB');
+              openUrl('https://discord.gg/wfMY47mUvM');
               setIsMenuOpen(false);
             }}
           >

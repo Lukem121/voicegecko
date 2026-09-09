@@ -15,13 +15,13 @@ import AttributionTracker from '~/components/attribution-tracker';
 
 export const metadata: Metadata = {
   metadataBase: new URL('https://www.voicegecko.dev'),
-  title: 'VoiceGecko | Instant Voice-to-Text for Desktop',
+  title: 'VoiceGecko | Free Open Source Local Voice-to-Text',
   description:
-    'Instant dictation for desktop. Press a shortcut, speak, and instantly get accurate text on your clipboard—perfect for emails, coding, AI prompts, or brain dumps.',
+    'Free and open source desktop dictation. Speech runs 100% locally — transcripts stay on your device. Press a shortcut, speak, and get accurate text on your clipboard.',
   openGraph: {
-    title: 'VoiceGecko | Instant Voice-to-Text for Desktop',
+    title: 'VoiceGecko | Free Open Source Local Voice-to-Text',
     description:
-      'Instant voice-to-text dictation for desktop. Press a shortcut, speak, and instantly get accurate text on your clipboard—perfect for emails, coding, AI prompts, or brain dumps.',
+      'Free and open source desktop dictation. Speech runs 100% locally — transcripts stay on your device. Press a shortcut, speak, and get accurate text on your clipboard.',
     url: 'https://www.voicegecko.dev',
     siteName: 'VoiceGecko',
     images: [
@@ -39,9 +39,9 @@ export const metadata: Metadata = {
     card: 'summary_large_image',
     site: '@VoiceGeckoAI',
     creator: '@VoiceGeckoAI',
-    title: 'VoiceGecko | Instant Voice-to-Text for Desktop',
+    title: 'VoiceGecko | Free Open Source Local Voice-to-Text',
     description:
-      'Instant voice-to-text dictation for desktop. Press a shortcut, speak, and instantly get accurate text on your clipboard—perfect for emails, coding, AI prompts, or brain dumps.',
+      'Free and open source desktop dictation. Speech runs 100% locally — transcripts stay on your device.',
     images: ['https://www.voicegecko.dev/opengraph-image'], // update with your image
   },
 };
