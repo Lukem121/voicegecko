@@ -5,17 +5,26 @@ use std::sync::OnceLock;
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct FeatureFlags {
+    #[serde(default)]
     pub moonshine_flow: bool,
+    #[serde(default)]
     pub engine_lab: bool,
+    #[serde(default = "default_true")]
     pub gpu_whisper: bool,
+    #[serde(default)]
     pub local_llm_polish: bool,
+    #[serde(default)]
     pub require_auth: bool,
+}
+
+fn default_true() -> bool {
+    true
 }
 
 impl Default for FeatureFlags {
     fn default() -> Self {
         Self {
-            moonshine_flow: true,
+            moonshine_flow: false,
             engine_lab: true,
             gpu_whisper: true,
             local_llm_polish: false,
@@ -38,11 +47,6 @@ pub fn set_feature_flags(flags: FeatureFlags) {
     *flags_store().write() = flags;
 }
 
-pub fn is_engine_enabled(engine_id: &str) -> bool {
-    let flags = get_feature_flags();
-    match engine_id {
-        "moonshine_medium" => flags.moonshine_flow,
-        "insanely_fast_whisper" => flags.gpu_whisper,
-        _ => true,
-    }
+pub fn is_engine_enabled(_engine_id: &str) -> bool {
+    true
 }

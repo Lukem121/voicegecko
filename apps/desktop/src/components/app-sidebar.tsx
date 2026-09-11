@@ -44,12 +44,12 @@ import {
   CreditCard,
   ExternalLink,
   FileText,
+  Gauge,
   Keyboard,
   LogOut,
   MessageCircle,
   Mic,
   Settings2,
-  Sliders,
   Wand2,
 } from 'lucide-react';
 import { useState } from 'react';
@@ -163,9 +163,9 @@ const isDev = import.meta.env.DEV;
 
 if (isDev) {
   data.navSecondary.splice(4, 0, {
-    title: 'Engine Lab',
+    title: 'Speed & accuracy',
     url: '/settings/engine-lab',
-    icon: Sliders,
+    icon: Gauge,
   });
 }
 

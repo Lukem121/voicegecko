@@ -1,4 +1,5 @@
 import { cn } from '@acme/ui/lib/utils';
+import { formatLatency } from '~/lib/whisper-accuracy';
 import { useDictationStore } from '~/stores/dictation.store';
 
 type LatencyBadgeProps = {
@@ -9,18 +10,22 @@ export function LatencyBadge({ className }: LatencyBadgeProps) {
   const lastLatencyMs = useDictationStore((s) => s.lastLatencyMs);
   const phase = useDictationStore((s) => s.phase);
 
-  if (lastLatencyMs == null || phase === 'idle') {
+  const showBadge =
+    lastLatencyMs != null &&
+    (phase === 'transcribing' || phase === 'formatting' || phase === 'done');
+
+  if (!showBadge || lastLatencyMs == null) {
     return null;
   }
 
   return (
     <span
       className={cn(
-        'rounded-full bg-primary/20 px-2 py-0.5 font-mono text-primary text-xs',
+        'rounded-full bg-primary/20 px-2 py-0.5 font-medium text-primary text-xs',
         className
       )}
     >
-      {lastLatencyMs}ms
+      {formatLatency(lastLatencyMs)}
     </span>
   );
 }

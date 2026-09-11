@@ -28,7 +28,7 @@ fn default_target_rms() -> f32 {
 impl Default for AudioPipelineConfig {
     fn default() -> Self {
         Self {
-            // Parakeet/Moonshine handle noise well — denoise off by default.
+            // Whisper benefits from a clean clip; denoise stays off unless the user enables it.
             enable_denoise: false,
             enable_high_pass: true,
             enable_trim_silence: true,

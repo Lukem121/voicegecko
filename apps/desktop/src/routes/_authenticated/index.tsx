@@ -308,7 +308,7 @@ function RecordingArea({
           <div className="relative">
             <Textarea
               className="min-h-[200px] resize-none border-0 text-base focus-visible:ring-0"
-              placeholder="Start typing or click the microphone to record..."
+              placeholder="Click the mic or press Ctrl+Shift+Z, then speak…"
               value={transcript ?? ''}
             />
             <Tooltip>

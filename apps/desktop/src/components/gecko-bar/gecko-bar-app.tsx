@@ -369,6 +369,16 @@ export function GeckoBarApp() {
           <DropdownMenuItem
             onClick={() => {
               emit('gecko-bar-navigation', {
+                to: '/settings/engine-lab',
+              });
+              setIsMenuOpen(false);
+            }}
+          >
+            Speed & accuracy
+          </DropdownMenuItem>
+          <DropdownMenuItem
+            onClick={() => {
+              emit('gecko-bar-navigation', {
                 to: '/settings',
               });
               setIsMenuOpen(false);

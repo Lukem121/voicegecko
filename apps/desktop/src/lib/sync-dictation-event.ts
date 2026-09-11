@@ -30,7 +30,7 @@ export function syncDictationEventToStores(
       store.setDictationProgress('Complete', payload.text, {
         model_used: useDictationStore.getState().lastEngineId ?? undefined,
       });
-      if (!options.isGeckoBar && payload.text) {
+      if (!options.isGeckoBar) {
         store.setRecordingStatus('idle');
       }
       break;

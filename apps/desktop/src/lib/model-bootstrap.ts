@@ -11,9 +11,9 @@ type V2ModelDownloadProgressPayload = {
 
 const MODEL_LABELS: Record<string, string> = {
   bootstrap: 'speech models',
-  silero_vad: 'Silero VAD',
-  parakeet_tdt_v2: 'Parakeet STT',
-  sherpa_sidecar: 'Parakeet runtime',
+  whisper_sidecar: 'Whisper engine',
+  'small.en': 'Small English Whisper',
+  'base.en': 'Base English Whisper',
   llama_server: 'LLM server',
   qwen2_5_3b: 'Qwen polish model',
 };
@@ -65,7 +65,7 @@ const showReadyToast = (): void => {
   modelsReady = true;
   dismissBootstrapToast();
   toast.success('Ready to dictate', {
-    description: 'Press Ctrl+Shift+Z — live transcript shows as you speak.',
+    description: 'Press Ctrl+Shift+Z, then speak. Toggle again to paste. Tune Speed & accuracy in Settings anytime.',
     duration: 5000,
   });
 };
@@ -116,6 +116,16 @@ export async function initializeModelBootstrapListeners(): Promise<void> {
       updateBootstrapToast(payload);
     }
   );
+
+  await listen<[string, number]>('model-download-progress', (event) => {
+    const [modelId, progress] = event.payload;
+    log.info('[Bootstrap] ggml download progress', { modelId, progress });
+    updateBootstrapToast({
+      modelId,
+      progress,
+      status: 'downloading',
+    });
+  });
 
   await listen('v2-models-ready', () => {
     log.info('[Bootstrap] required speech models ready');

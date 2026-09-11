@@ -1,5 +1,6 @@
 import { log } from '@acme/observability/log';
 import { invoke } from '@tauri-apps/api/core';
+import { emit } from '@tauri-apps/api/event';
 import { toast } from 'sonner';
 
 import {
@@ -23,6 +24,7 @@ export type RecordingOptions = {
   playEndSound?: boolean;
   isKeyboardShortcut?: boolean;
   mode?: string;
+  outputTarget?: 'paste_only' | 'box_only' | 'score_only';
 };
 
 export class RecordingService {
@@ -30,6 +32,7 @@ export class RecordingService {
 
   private isToggling = false;
   private isPushToTalkActive = false;
+  private startInFlight: Promise<void> | null = null;
 
   private constructor() {
     // Private constructor to prevent instantiation
@@ -98,6 +101,7 @@ export class RecordingService {
     }
 
     this.isPushToTalkActive = false;
+    await this.awaitStartIfNeeded();
     const { recordingStatus } = useEventStore.getState();
 
     if (recordingStatus === 'recording') {
@@ -114,6 +118,7 @@ export class RecordingService {
     }
 
     this.isPushToTalkActive = false;
+    await this.awaitStartIfNeeded();
     const { recordingStatus } = useEventStore.getState();
 
     if (recordingStatus === 'recording') {
@@ -131,18 +136,53 @@ export class RecordingService {
     }
   }
 
+  private async awaitStartIfNeeded(): Promise<void> {
+    if (this.startInFlight) {
+      await this.startInFlight.catch(() => undefined);
+    }
+  }
+
   /**
    * Start recording with proper error handling and notifications
    */
   private async startRecording(options: RecordingOptions): Promise<void> {
-    const mode = options.mode ?? 'toggle_batch';
+    const pending = this.doStartRecording(options);
+    this.startInFlight = pending;
+    try {
+      await pending;
+    } finally {
+      if (this.startInFlight === pending) {
+        this.startInFlight = null;
+      }
+    }
+  }
+
+  private async doStartRecording(options: RecordingOptions): Promise<void> {
+    const mode = options.mode === 'ptt_batch' ? 'ptt_batch' : 'toggle_batch';
 
     const modelsReady = await isSpeechModelsReady();
     if (!modelsReady) {
+      let description =
+        'Keep VoiceGecko open. Open Settings → Speed & accuracy to see download progress.';
+      try {
+        const setup = await invoke<{ message: string }>(
+          'get_speech_setup_status'
+        );
+        if (setup.message) {
+          description = setup.message;
+        }
+      } catch {
+        // Keep the default description.
+      }
       toast.info('Speech models are still setting up', {
-        description:
-          'First launch downloads models in the background. Keep VoiceGecko open and try again shortly.',
-        duration: 8000,
+        description,
+        duration: 10_000,
+        action: {
+          label: 'Open',
+          onClick: () => {
+            void emit('navigate', '/settings/engine-lab');
+          },
+        },
       });
       return;
     }
@@ -153,21 +193,33 @@ export class RecordingService {
         this.performAsyncUsageCheck();
       }
 
-      // v2: start dictation session before audio capture
       void dictionaryService.getDictionaryPrompt().catch(() => undefined);
 
-      try {
-        const { settings } = useSettingsStore.getState();
-        const engineOverride = settings.dictation.modeEngineOverrides[mode];
+      const { settings } = useSettingsStore.getState();
+      const deviceName = options.device ?? settings.audio.selectedDevice?.name;
 
-        await invoke('start_dictation_session', {
+      let captureStarted = false;
+      try {
+        // Open the mic immediately so speech is captured during session setup.
+        const capturePromise = invoke('start_recording', {
+          device: deviceName,
+        }).then(() => {
+          captureStarted = true;
+          if (settings.audio.muteSystemAudio) {
+            void invoke('mute_system_audio').catch((error) => {
+              log.warn('Failed to mute system audio:', error);
+            });
+          }
+        });
+
+        const sessionPromise = invoke('start_dictation_session', {
           request: {
             mode,
-            engineId: engineOverride,
-            showLivePreview:
-              mode === 'toggle_batch' || mode === 'ptt_batch'
-                ? settings.dictation.toggleBatchShowLivePreview
-                : undefined,
+            outputTarget:
+              options.outputTarget ??
+              (settings.personalization.autoPasteOnCompletion
+                ? 'paste_only'
+                : 'box_only'),
             audioPipeline: {
               enableDenoise: settings.audio.pipeline.enableDenoise,
               enableHighPass: settings.audio.pipeline.enableHighPass,
@@ -180,27 +232,31 @@ export class RecordingService {
             forceDeveloperProfile: settings.dictation.forceDeveloperProfile,
           },
         });
+
+        await Promise.all([capturePromise, sessionPromise]);
       } catch (error) {
-        log.warn('Failed to start dictation session:', error);
-      }
-
-      const { settings } = useSettingsStore.getState();
-      const deviceName = options.device ?? settings.audio.selectedDevice?.name;
-
-      // Mute system audio if enabled (before capture)
-      if (settings.audio.muteSystemAudio) {
-        try {
-          await invoke('mute_system_audio');
-        } catch (error) {
-          log.warn('Failed to mute system audio:', error);
+        if (captureStarted) {
+          await invoke('cancel_recording').catch(() => undefined);
         }
+        await invoke('cancel_dictation_session').catch(() => undefined);
+
+        const message =
+          typeof error === 'string'
+            ? error
+            : error instanceof Error
+              ? error.message
+              : 'Could not start dictation';
+        const isDeviceUnavailable = DEVICE_UNAVAILABLE_PATTERN.test(message);
+        if (isDeviceUnavailable) {
+          throw error;
+        }
+        log.warn('Failed to start dictation session:', error);
+        toast.error('Could not start dictation', { description: message });
+        return;
       }
 
-      await invoke('start_recording', { device: deviceName });
-
-      // Play start sound after mic is open so the first word is not clipped
       if (options.playStartSound ?? this.shouldPlayStartSound()) {
-        await this.playNotificationSound('Start');
+        void this.playNotificationSound('Start');
       }
     } catch (error) {
       log.error(error, 'Failed to start recording:');
@@ -225,6 +281,8 @@ export class RecordingService {
    * Stop recording with proper error handling and dictation
    */
   private async stopRecording(options: RecordingOptions): Promise<void> {
+    await this.awaitStartIfNeeded();
+
     try {
       // Set processing state immediately to avoid UI gap
       useEventStore.getState().setRecordingStatus('processing');
@@ -278,6 +336,8 @@ export class RecordingService {
    * Cancel recording without dictation - discards audio completely
    */
   async cancelRecording(_options: RecordingOptions = {}): Promise<void> {
+    await this.awaitStartIfNeeded();
+
     try {
       log.info('[RecordingService] Canceling recording...');
 
@@ -383,6 +443,7 @@ export class RecordingService {
   reset(): void {
     this.isToggling = false;
     this.isPushToTalkActive = false;
+    this.startInFlight = null;
   }
 }
 

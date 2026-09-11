@@ -1,4 +1,4 @@
-//! v2 model download manager — Silero VAD, Parakeet INT8, Moonshine manual path.
+//! Optional polish-model downloads. Whisper ggml lives in model_manager.
 
 use futures_util::StreamExt;
 use serde::{Deserialize, Serialize};
@@ -14,11 +14,10 @@ use thiserror::Error;
 use crate::dictation::features;
 use crate::intent::llama_process::LlamaProcessManager;
 use crate::speech::download_events::emit_download_progress;
-use crate::speech::parakeet_sidecar;
-use crate::speech::vad;
 
-/// Models required for Ctrl+Shift+Z toggle dictation offline.
-pub const REQUIRED_TOGGLE_MODEL_IDS: &[&str] = &["silero_vad", "parakeet_tdt_v2"];
+pub fn v2_models_dir() -> Option<PathBuf> {
+    dirs::data_local_dir().map(|d| d.join("voicegecko").join("models"))
+}
 
 const STORE_PATH: &str = "v2-models.json";
 const STATUSES_KEY: &str = "statuses";
@@ -102,124 +101,23 @@ struct CatalogItem {
 }
 
 fn catalog() -> Vec<CatalogItem> {
-    vec![
-        CatalogItem {
-            id: "silero_vad",
-            name: "Silero VAD",
-            description: "Voice activity detection for hands-free segmentation (~2 MB).",
-            size: "~2 MB",
-            url: Some(
-                "https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/silero_vad.onnx",
-            ),
-            relative_path: "silero_vad.onnx",
-            sha256: None,
-            manual_install: false,
-            install_notes: None,
-        },
-        CatalogItem {
-            id: "parakeet_tdt_v2",
-            name: "Parakeet TDT v2 INT8",
-            description: "NVIDIA Parakeet TDT 0.6B INT8 ONNX pack for local batch STT (~640 MB).",
-            size: "~640 MB",
-            url: Some(
-                "https://github.com/k2-fsa/sherpa-onnx/releases/download/asr-models/sherpa-onnx-nemo-parakeet-tdt-0.6b-v2-int8.tar.bz2",
-            ),
-            relative_path: "parakeet-tdt-v2",
-            sha256: None,
-            manual_install: false,
-            install_notes: None,
-        },
-        CatalogItem {
-            id: "qwen2_5_3b",
-            name: "Qwen2.5 3B Instruct",
-            description: "Local LLM for polish post-processing (Q4_K_M, ~2 GB).",
-            size: "~2 GB",
-            url: Some(
-                "https://huggingface.co/Qwen/Qwen2.5-3B-Instruct-GGUF/resolve/main/qwen2.5-3b-instruct-q4_k_m.gguf",
-            ),
-            relative_path: "llm/qwen2.5-3b-instruct-q4_k_m.gguf",
-            sha256: None,
-            manual_install: false,
-            install_notes: None,
-        },
-        CatalogItem {
-            id: "moonshine_medium",
-            name: "Moonshine Medium (manual)",
-            description: "Moonshine streaming DLL + models are installed manually by the user.",
-            size: "varies",
-            url: None,
-            relative_path: "moonshine-medium-streaming",
-            sha256: None,
-            manual_install: true,
-            install_notes: Some(
-                "Install moonshine.dll to %LOCALAPPDATA%\\voicegecko\\moonshine\\ and run \
-                 `python -m moonshine_voice.download --language en`. Models are copied automatically \
-                 from %LOCALAPPDATA%\\voicegecko\\models\\moonshine-medium-streaming\\ when found.",
-            ),
-        },
-    ]
+    vec![CatalogItem {
+        id: "qwen2_5_3b",
+        name: "Qwen2.5 3B Instruct",
+        description: "Local LLM for polish post-processing (Q4_K_M, ~2 GB).",
+        size: "~2 GB",
+        url: Some(
+            "https://huggingface.co/Qwen/Qwen2.5-3B-Instruct-GGUF/resolve/main/qwen2.5-3b-instruct-q4_k_m.gguf",
+        ),
+        relative_path: "llm/qwen2.5-3b-instruct-q4_k_m.gguf",
+        sha256: None,
+        manual_install: false,
+        install_notes: None,
+    }]
 }
+
 pub fn is_toggle_ready() -> bool {
-    let Ok(root) = models_root() else {
-        return false;
-    };
-
-    let silero = catalog()
-        .into_iter()
-        .find(|item| item.id == "silero_vad")
-        .map(|item| item_local_path(&root, &item));
-    let parakeet = catalog()
-        .into_iter()
-        .find(|item| item.id == "parakeet_tdt_v2")
-        .map(|item| item_local_path(&root, &item));
-
-    let silero_ok = silero
-        .as_ref()
-        .is_some_and(|path| detect_disk_status(
-            &find_catalog_item("silero_vad").expect("silero catalog"),
-            path,
-        ));
-    let parakeet_ok = parakeet
-        .as_ref()
-        .is_some_and(|path| detect_disk_status(
-            &find_catalog_item("parakeet_tdt_v2").expect("parakeet catalog"),
-            path,
-        ));
-
-    silero_ok && parakeet_ok && parakeet_sidecar::is_sidecar_available()
-}
-
-/// Copies `resources/models/silero_vad.onnx` when bundled; otherwise returns false
-/// so bootstrap falls through to the network download (~2 MB).
-fn copy_bundled_silero_if_available(app: &AppHandle) -> Result<bool, V2ModelError> {
-    let root = models_root()?;
-    let item = find_catalog_item("silero_vad")
-        .ok_or_else(|| V2ModelError::ModelNotFound("silero_vad".into()))?;
-    let dest = item_local_path(&root, &item);
-    if detect_disk_status(&item, &dest) {
-        return Ok(true);
-    }
-
-    let bundled = app
-        .path()
-        .resolve(
-            "resources/models/silero_vad.onnx",
-            tauri::path::BaseDirectory::Resource,
-        )
-        .ok()
-        .filter(|path| path.exists());
-
-    if let Some(src) = bundled {
-        if let Some(parent) = dest.parent() {
-            fs::create_dir_all(parent)?;
-        }
-        fs::copy(&src, &dest)?;
-        write_status(app, "silero_vad", V2ModelStatus::Downloaded)?;
-        emit_download_progress(app, "silero_vad", 100, "complete");
-        return Ok(true);
-    }
-
-    Ok(false)
+    crate::speech::whisper_sidecar::is_ready()
 }
 
 async fn download_v2_model_inner(app: &AppHandle, model_id: &str) -> Result<(), V2ModelError> {
@@ -227,9 +125,7 @@ async fn download_v2_model_inner(app: &AppHandle, model_id: &str) -> Result<(), 
         .ok_or_else(|| V2ModelError::ModelNotFound(model_id.to_string()))?;
 
     if item.manual_install {
-        return Err(V2ModelError::DownloadFailed(
-            "Moonshine is installed manually — see install notes".into(),
-        ));
+        return Err(V2ModelError::DownloadFailed("This model is installed manually".into()));
     }
 
     let url = item
@@ -253,31 +149,12 @@ async fn download_v2_model_inner(app: &AppHandle, model_id: &str) -> Result<(), 
     )?;
     emit_download_progress(app, model_id, 0, "downloading");
 
-    match item.id {
-        "silero_vad" | "qwen2_5_3b" => {
-            if let Some(parent) = local_path.parent() {
-                fs::create_dir_all(parent)?;
-            }
-            download_file_with_resume(app, model_id, url, &local_path).await?;
-            if let Some(expected) = item.sha256 {
-                verify_sha256(&local_path, expected)?;
-            }
-        }
-        "parakeet_tdt_v2" => {
-            let archive_path = root.join("parakeet-tdt-v2.tar.bz2");
-            download_file_with_resume(app, model_id, url, &archive_path).await?;
-            if let Some(expected) = item.sha256 {
-                verify_sha256(&archive_path, expected)?;
-            }
-            extract_parakeet_archive(&archive_path, &local_path)?;
-            let _ = fs::remove_file(&archive_path);
-            parakeet_sidecar::ensure_sidecar_installed(app)
-                .await
-                .map_err(|e| V2ModelError::DownloadFailed(e))?;
-        }
-        _ => {
-            return Err(V2ModelError::ModelNotFound(model_id.to_string()));
-        }
+    if let Some(parent) = local_path.parent() {
+        fs::create_dir_all(parent)?;
+    }
+    download_file_with_resume(app, model_id, url, &local_path).await?;
+    if let Some(expected) = item.sha256 {
+        verify_sha256(&local_path, expected)?;
     }
 
     write_status(app, model_id, V2ModelStatus::Downloaded)?;
@@ -286,20 +163,37 @@ async fn download_v2_model_inner(app: &AppHandle, model_id: &str) -> Result<(), 
     Ok(())
 }
 
-async fn ensure_required_v2_models(app: &AppHandle) -> Result<(), String> {
-    let _ = copy_bundled_silero_if_available(app).map_err(|e| e.to_string());
+async fn ensure_whisper_ready(app: &AppHandle) -> Result<(), String> {
+    emit_download_progress(app, "whisper_sidecar", 10, "downloading");
+    crate::speech::whisper_sidecar::ensure_sidecar_installed(app).await?;
+    emit_download_progress(app, "whisper_sidecar", 100, "complete");
 
-    for model_id in REQUIRED_TOGGLE_MODEL_IDS {
-        download_v2_model_inner(app, model_id)
-            .await
-            .map_err(|e| format!("Failed to download {model_id}: {e}"))?;
+    let _ = crate::modules::model_manager::synchronize_models(app.clone());
+    let _ = crate::speech::whisper_sidecar::ensure_whisper_model(app)?;
+
+    let recommended = crate::modules::model_manager::DEFAULT_GPU_WHISPER_MODEL_ID;
+    if crate::modules::model_manager::model_file_path(app, recommended).is_none() {
+        emit_download_progress(app, recommended, 0, "downloading");
+        if let Err(error) =
+            crate::modules::model_manager::download_model(app.clone(), recommended.to_string()).await
+        {
+            crate::speech::stt_log::warn(
+                "bootstrap",
+                &format!("Recommended {recommended} download skipped: {error}"),
+            );
+            emit_download_progress(app, recommended, 0, "error");
+        } else {
+            emit_download_progress(app, recommended, 100, "complete");
+        }
     }
 
-    parakeet_sidecar::ensure_sidecar_installed(app)
-        .await
-        .map_err(|e| format!("Failed to install Parakeet sidecar: {e}"))?;
-
-    Ok(())
+    if crate::speech::whisper_sidecar::is_ready_for_app(app)
+        || crate::speech::whisper_sidecar::is_ready()
+    {
+        Ok(())
+    } else {
+        Err("Whisper is still missing. Open Settings → Speed & accuracy to download a model.".into())
+    }
 }
 
 async fn bootstrap_optional_llm(app: &AppHandle) {
@@ -330,29 +224,23 @@ async fn bootstrap_optional_llm(app: &AppHandle) {
 }
 
 async fn run_first_run_bootstrap(app: AppHandle) {
-    if is_toggle_ready() {
-        let _ = app.emit("v2-models-ready", ());
-        bootstrap_optional_llm(&app).await;
-        return;
-    }
-
     emit_download_progress(&app, "bootstrap", 0, "downloading");
 
-    match ensure_required_v2_models(&app).await {
+    match ensure_whisper_ready(&app).await {
         Ok(()) => {
             emit_download_progress(&app, "bootstrap", 100, "complete");
             let _ = app.emit("v2-models-ready", ());
             bootstrap_optional_llm(&app).await;
         }
         Err(error) => {
-            crate::speech::stt_log::error("bootstrap", &format!("Required models failed: {error}"));
+            crate::speech::stt_log::error("bootstrap", &format!("Whisper setup failed: {error}"));
             emit_download_progress(&app, "bootstrap", 0, "error");
             let _ = app.emit("v2-bootstrap-failed", error);
         }
     }
 }
 
-/// Auto-download speech models required for offline toggle dictation (non-blocking).
+/// Auto-download the Whisper sidecar and recommended ggml (non-blocking).
 pub fn bootstrap_required_models(app: &AppHandle) {
     let app = app.clone();
     tauri::async_runtime::spawn(async move {
@@ -360,20 +248,118 @@ pub fn bootstrap_required_models(app: &AppHandle) {
     });
 }
 
-/// Whether Silero VAD, Parakeet model, and sherpa sidecar are all present.
-#[tauri::command]
-pub fn is_v2_toggle_ready() -> bool {
-    is_toggle_ready()
+#[derive(Debug, Clone, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct SpeechSetupStatus {
+    pub ready: bool,
+    pub sidecar_installed: bool,
+    pub selected_model_id: String,
+    pub selected_model_ready: bool,
+    pub waiting_on: String,
+    pub message: String,
+    pub progress: u8,
+    pub activity: String,
 }
 
-/// Re-run required-model bootstrap (e.g. after a failed first-run download).
+#[tauri::command]
+pub fn get_speech_setup_status(app: AppHandle) -> SpeechSetupStatus {
+    let sidecar_installed = crate::speech::whisper_sidecar::is_sidecar_installed();
+    let selected_model_id = crate::speech::whisper_sidecar::selected_model_id(&app);
+    let selected_model_ready =
+        crate::modules::model_manager::model_file_path(&app, &selected_model_id).is_some();
+    let ready = crate::speech::whisper_sidecar::is_ready_for_app(&app) || is_toggle_ready();
+
+    let (waiting_on, message) = if ready && selected_model_ready {
+        (
+            "none".to_string(),
+            format!("Ready — using {selected_model_id}"),
+        )
+    } else if ready {
+        (
+            "model".to_string(),
+            format!(
+                "{selected_model_id} is selected but not downloaded. Dictation is using a fallback until you download it."
+            ),
+        )
+    } else if !sidecar_installed {
+        (
+            "sidecar".to_string(),
+            "The Whisper engine is still being copied. Keep VoiceGecko open.".to_string(),
+        )
+    } else if !selected_model_ready {
+        (
+            "model".to_string(),
+            format!(
+                "{selected_model_id} is selected but not downloaded yet. Download it below, or pick a ready model."
+            ),
+        )
+    } else {
+        (
+            "setup".to_string(),
+            "Speech setup is still finishing. Keep VoiceGecko open.".to_string(),
+        )
+    };
+
+    let live = crate::speech::download_events::current_setup_progress();
+    let mut progress = 0u8;
+    let mut activity = message.clone();
+    if let Some(live) = live {
+        if live.status == "downloading" {
+            progress = live.progress;
+            let label = match live.model_id.as_str() {
+                "whisper_sidecar" => "Whisper engine".to_string(),
+                "bootstrap" => "Speech setup".to_string(),
+                id => id.to_string(),
+            };
+            if live.model_id == "whisper_sidecar" || live.model_id == "bootstrap" {
+                activity = format!("Copying {label}… {progress}%");
+            } else {
+                activity = format!("Downloading {label}… {progress}%");
+            }
+        } else if live.status == "complete" {
+            progress = 100;
+        }
+    }
+
+    if let Ok(models) = crate::modules::model_manager::list_gpu_whisper_models(app.clone()) {
+        if let Some(downloading) = models.iter().find(|model| {
+            matches!(
+                model.status,
+                crate::modules::model_manager::ModelStatus::Downloading(_)
+            )
+        }) {
+            if let crate::modules::model_manager::ModelStatus::Downloading(pct) = downloading.status
+            {
+                progress = pct;
+                activity = format!("Downloading {}… {pct}%", downloading.name);
+            }
+        }
+    }
+
+    SpeechSetupStatus {
+        ready,
+        sidecar_installed,
+        selected_model_id,
+        selected_model_ready,
+        waiting_on,
+        message,
+        progress,
+        activity,
+    }
+}
+
+#[tauri::command]
+pub fn is_v2_toggle_ready(app: AppHandle) -> bool {
+    crate::speech::whisper_sidecar::is_ready_for_app(&app) || is_toggle_ready()
+}
+
 #[tauri::command]
 pub async fn retry_v2_bootstrap(app: AppHandle) {
     run_first_run_bootstrap(app).await;
 }
 
 pub fn models_root() -> Result<PathBuf, V2ModelError> {
-    let root = vad::v2_models_dir().ok_or_else(|| {
+    let root = v2_models_dir().ok_or_else(|| {
         V2ModelError::PathError("Could not resolve local data directory".into())
     })?;
     fs::create_dir_all(&root)?;
@@ -427,27 +413,8 @@ fn verify_sha256(path: &Path, expected: &str) -> Result<(), V2ModelError> {
     }
 }
 
-fn parakeet_ready(path: &Path) -> bool {
-    path.join("model.onnx").exists()
-        || path.join("encoder.onnx").exists()
-        || path.join("tokens.txt").exists()
-}
-
-fn moonshine_ready(path: &Path) -> bool {
-    path.join("encoder_model.ort").is_file()
-}
-
-fn detect_disk_status(item: &CatalogItem, local_path: &Path) -> bool {
-    if item.manual_install {
-        return moonshine_ready(local_path);
-    }
-
-    match item.id {
-        "silero_vad" => local_path.is_file(),
-        "parakeet_tdt_v2" => parakeet_ready(local_path),
-        "qwen2_5_3b" => local_path.is_file(),
-        _ => local_path.exists(),
-    }
+fn detect_disk_status(_item: &CatalogItem, local_path: &Path) -> bool {
+    local_path.is_file()
 }
 
 fn bytes_on_disk(path: &Path) -> u64 {
@@ -476,10 +443,6 @@ fn sync_status_from_disk(app: &AppHandle, item: &CatalogItem, local_path: &Path)
     let stored = statuses.get(item.id).cloned();
 
     if item.manual_install {
-        if item.id == "moonshine_medium" && crate::speech::moonshine_ffi::is_available() {
-            let _ = write_status(app, item.id, V2ModelStatus::Downloaded);
-            return V2ModelStatus::Downloaded;
-        }
         if detect_disk_status(item, local_path) {
             let _ = write_status(app, item.id, V2ModelStatus::Downloaded);
             return V2ModelStatus::Downloaded;
@@ -621,48 +584,6 @@ async fn download_file_with_resume(
     Ok(())
 }
 
-fn extract_parakeet_archive(archive_path: &Path, dest_dir: &Path) -> Result<(), V2ModelError> {
-    fs::create_dir_all(dest_dir)?;
-    let file = fs::File::open(archive_path)?;
-    let decompressor = bzip2::read::BzDecoder::new(file);
-    let mut archive = tar::Archive::new(decompressor);
-
-    archive
-        .unpack(dest_dir)
-        .map_err(|e| V2ModelError::IoError(format!("Failed to extract Parakeet archive: {e}")))?;
-
-    // Sherpa tarballs often contain a single top-level directory — flatten if needed.
-    if !parakeet_ready(dest_dir) {
-        if let Ok(entries) = fs::read_dir(dest_dir) {
-            let subdirs: Vec<PathBuf> = entries
-                .flatten()
-                .map(|e| e.path())
-                .filter(|p| p.is_dir())
-                .collect();
-            if subdirs.len() == 1 {
-                let inner = &subdirs[0];
-                if let Ok(inner_entries) = fs::read_dir(inner) {
-                    for entry in inner_entries.flatten() {
-                        let from = entry.path();
-                        let to = dest_dir.join(entry.file_name());
-                        if to.exists() {
-                            if to.is_dir() {
-                                fs::remove_dir_all(&to)?;
-                            } else {
-                                fs::remove_file(&to)?;
-                            }
-                        }
-                        fs::rename(from, to)?;
-                    }
-                }
-                let _ = fs::remove_dir(inner);
-            }
-        }
-    }
-
-    Ok(())
-}
-
 #[tauri::command]
 pub fn list_v2_models(app: AppHandle) -> Result<Vec<V2ModelEntry>, V2ModelError> {
     let root = models_root()?;
@@ -710,12 +631,11 @@ pub fn delete_v2_model(app: AppHandle, model_id: String) -> Result<(), V2ModelEr
 
     if item.manual_install {
         return Err(V2ModelError::FileSystemError(
-            "Moonshine is managed manually".into(),
+            "This model is installed manually".into(),
         ));
     }
 
-    let root = models_root()?;
-    let local_path = item_local_path(&root, &item);
+    let local_path = item_local_path(&models_root()?, &item);
 
     if local_path.is_file() && local_path.exists() {
         fs::remove_file(&local_path)?;
@@ -723,15 +643,9 @@ pub fn delete_v2_model(app: AppHandle, model_id: String) -> Result<(), V2ModelEr
         fs::remove_dir_all(&local_path)?;
     }
 
-    let partial = match item.id {
-        "parakeet_tdt_v2" => Some(root.join("parakeet-tdt-v2.tar.partial")),
-        "qwen2_5_3b" => Some(local_path.with_extension("partial")),
-        _ => Some(local_path.with_extension("partial")),
-    };
-    if let Some(p) = partial {
-        if p.exists() {
-            let _ = fs::remove_file(p);
-        }
+    let partial = local_path.with_extension("partial");
+    if partial.exists() {
+        let _ = fs::remove_file(partial);
     }
 
     write_status(&app, &model_id, V2ModelStatus::NotDownloaded)?;

@@ -410,21 +410,22 @@ function SettingsPage() {
           </CardContent>
         </Card>
 
-        {/* Engine Lab */}
+        {/* Speed & accuracy */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Sliders className="h-5 w-5" />
-              Engine Lab
+              Speed & accuracy
             </CardTitle>
             <CardDescription>
-              Download v2 models, compare engines, and tune per-mode overrides
+              Fast, Recommended, or Best — then read a paragraph to score
+              both
             </CardDescription>
           </CardHeader>
           <CardContent>
             <Button asChild className="w-full justify-between" type="button" variant="outline">
               <Link to="/settings/engine-lab">
-                <span>Manage models &amp; engines</span>
+                <span>Tune speed and accuracy</span>
                 <ChevronRight className="h-4 w-4" />
               </Link>
             </Button>
@@ -439,30 +440,16 @@ function SettingsPage() {
               Dictation
             </CardTitle>
             <CardDescription>
-              Configure v2 dictation behavior and live preview
+              Configure polish, vocabulary, and paste behavior
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
-                <Label>Live preview while dictating</Label>
+                <Label>Clean up after dictation</Label>
                 <p className="text-muted-foreground text-sm">
-                  Show streaming transcript above the Gecko Bar (on by default)
-                </p>
-              </div>
-              <Switch
-                checked={settings.dictation.toggleBatchShowLivePreview}
-                onCheckedChange={(checked) =>
-                  updateDictationSetting('toggleBatchShowLivePreview', checked)
-                }
-              />
-            </div>
-
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label>Intent polish (local LLM)</Label>
-                <p className="text-muted-foreground text-sm">
-                  Post-process text via llama-server when enabled
+                  Local polish for punctuation and wording. Turn off if you
+                  want the raw Whisper transcript.
                 </p>
               </div>
               <Switch
@@ -513,11 +500,10 @@ function SettingsPage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Settings className="h-5 w-5" />
-              Engine features
+              Account
             </CardTitle>
             <CardDescription>
-              Toggle engines and local-only mode. Auth is off by default for
-              personal offline use.
+              Dictation works without an account unless you turn this on.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -532,20 +518,6 @@ function SettingsPage() {
                 checked={settings.features.requireAuth}
                 onCheckedChange={(checked) =>
                   updateFeatureSetting('requireAuth', checked)
-                }
-              />
-            </div>
-            <div className="flex items-center justify-between">
-              <div className="space-y-0.5">
-                <Label>Moonshine Flow</Label>
-                <p className="text-muted-foreground text-sm">
-                  Enable Moonshine streaming engine when DLL is installed
-                </p>
-              </div>
-              <Switch
-                checked={settings.features.moonshineFlow}
-                onCheckedChange={(checked) =>
-                  updateFeatureSetting('moonshineFlow', checked)
                 }
               />
             </div>
@@ -623,10 +595,10 @@ function SettingsPage() {
 
             <div className="flex items-center justify-between">
               <div className="space-y-0.5">
-                <Label>Auto-paste on completion</Label>
+                <Label>Paste when dictation finishes</Label>
                 <p className="text-muted-foreground text-sm">
-                  Automatically paste dictations into the active text field when
-                  dictation completes
+                  Insert the transcript into the app you were using. Off copies
+                  to the clipboard only.
                 </p>
               </div>
               <Switch

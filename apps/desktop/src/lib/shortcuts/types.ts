@@ -6,8 +6,6 @@ export type ShortcutAction =
   | 'toggle-recording'
   | 'paste-last-dictation'
   | 'open-last-dictation'
-  | 'hands-free'
-  | 'capsule-compose'
   | 'undo-dictation'
   | 'open-engine-lab'
   | 'cancel-recording';
@@ -15,7 +13,7 @@ export type ShortcutAction =
 /**
  * Special shortcuts that need custom handling beyond simple key press
  */
-export type SpecialShortcut = 'push-to-talk' | 'flow-stream';
+export type SpecialShortcut = 'push-to-talk';
 
 /**
  * All possible shortcut identifiers

@@ -43,40 +43,13 @@ const mergeCatalogWithState = (
 };
 
 const inferStatesFromEngineStatus = async (): Promise<V2ModelState[]> => {
-  try {
-    const engineStatus = await invoke<
-      Array<{ id: string; available: boolean }>
-    >('get_engine_status');
-    const parakeetReady = engineStatus.some(
-      (engine) => engine.id.includes('parakeet') && engine.available
-    );
-    const moonshineReady = engineStatus.some(
-      (engine) => engine.id.includes('moonshine') && engine.available
-    );
-    return V2_MODEL_CATALOG.map((entry) => ({
-      id: entry.id,
-      status:
-        (entry.id === 'parakeet_tdt_v2' && parakeetReady) ||
-        (entry.id === 'moonshine_medium' && moonshineReady)
-          ? ('ready' as const)
-          : ('not_downloaded' as const),
-      progress:
-        (entry.id === 'parakeet_tdt_v2' && parakeetReady) ||
-        (entry.id === 'moonshine_medium' && moonshineReady)
-          ? 100
-          : 0,
-      error: null,
-      installedPath: null,
-    }));
-  } catch {
-    return V2_MODEL_CATALOG.map((entry) => ({
-      id: entry.id,
-      status: 'not_downloaded' as const,
-      progress: 0,
-      error: null,
-      installedPath: null,
-    }));
-  }
+  return V2_MODEL_CATALOG.map((entry) => ({
+    id: entry.id,
+    status: 'not_downloaded' as const,
+    progress: 0,
+    error: null,
+    installedPath: null,
+  }));
 };
 
 const mapBackendStatus = (

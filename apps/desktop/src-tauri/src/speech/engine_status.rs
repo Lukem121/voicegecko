@@ -1,4 +1,4 @@
-//! Per-engine availability checks with human-readable reasons for Engine Lab.
+//! Whisper availability checks with human-readable reasons for Speed & accuracy.
 
 use crate::dictation::types::EngineId;
 use tauri::AppHandle;
@@ -10,48 +10,7 @@ pub struct EngineAvailability {
 
 pub fn evaluate(app: &AppHandle, id: EngineId) -> EngineAvailability {
     match id {
-        EngineId::ParakeetTdtV2 => evaluate_parakeet(),
-        EngineId::MoonshineMedium => evaluate_moonshine(),
         EngineId::InsanelyFastWhisper => evaluate_gpu_whisper(app),
-    }
-}
-
-fn evaluate_parakeet() -> EngineAvailability {
-    if !crate::speech::models::is_toggle_ready() {
-        let silero = crate::speech::vad::silero_vad_model_path()
-            .map(|p| p.is_file())
-            .unwrap_or(false);
-        let sidecar = crate::speech::parakeet_sidecar::is_sidecar_available();
-        let reason = if !silero && !sidecar {
-            "Missing Silero VAD model and Sherpa sidecar".to_string()
-        } else if !silero {
-            "Missing Silero VAD model".to_string()
-        } else if !sidecar {
-            "Missing Sherpa sidecar (sherpa-onnx-offline.exe)".to_string()
-        } else {
-            "Parakeet ONNX model pack incomplete".to_string()
-        };
-        return EngineAvailability {
-            available: false,
-            reason: Some(reason),
-        };
-    }
-    EngineAvailability {
-        available: true,
-        reason: None,
-    }
-}
-
-fn evaluate_moonshine() -> EngineAvailability {
-    if crate::speech::moonshine_ffi::is_available() {
-        return EngineAvailability {
-            available: true,
-            reason: None,
-        };
-    }
-    EngineAvailability {
-        available: false,
-        reason: Some(crate::speech::moonshine_ffi::availability_status()),
     }
 }
 
@@ -68,15 +27,11 @@ fn evaluate_gpu_whisper(app: &AppHandle) -> EngineAvailability {
     let model = crate::speech::whisper_sidecar::whisper_model_path_for_app(app).is_some();
 
     let reason = if !sidecar && !model {
-        format!(
-            "WhisperSidecar and ggml-{model_id}.bin model missing"
-        )
+        format!("WhisperSidecar and ggml-{model_id}.bin model missing")
     } else if !sidecar {
-        "WhisperSidecar not installed — restart app or run optional bootstrap".to_string()
+        "WhisperSidecar not installed — restart the app".to_string()
     } else {
-        format!(
-            "ggml-{model_id}.bin not downloaded — download from Engine Lab → GPU Whisper model"
-        )
+        format!("ggml-{model_id}.bin not downloaded — download it from Speed & accuracy")
     };
 
     EngineAvailability {

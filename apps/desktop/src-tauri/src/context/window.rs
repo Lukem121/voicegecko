@@ -44,10 +44,11 @@ fn gather_windows_context() -> WindowContext {
         GetWindowThreadProcessId(hwnd, Some(&mut pid));
 
         let process_name = if pid > 0 {
+            let pid_key = Pid::from_u32(pid);
             let mut system = System::new();
-            system.refresh_processes(ProcessesToUpdate::All, true);
+            system.refresh_processes(ProcessesToUpdate::Some(&[pid_key]), true);
             system
-                .process(Pid::from_u32(pid))
+                .process(pid_key)
                 .map(|p| p.name().to_string_lossy().into_owned())
         } else {
             None

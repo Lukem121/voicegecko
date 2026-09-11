@@ -1,7 +1,7 @@
 use crate::dictation::dictionary_cache::DictionaryPromptCache;
 use crate::dictation::features::FeatureFlags;
 use crate::dictation::session::{DictationSessionManager, EngineStatusItem};
-use crate::dictation::types::{EngineCompareResponse, SessionStatus, StartSessionRequest, WhisperModelCompareResponse};
+use crate::dictation::types::{SessionStatus, StartSessionRequest, WhisperModelCompareResponse};
 use std::sync::Arc;
 use tauri::{AppHandle, State};
 
@@ -199,30 +199,22 @@ pub fn set_intent_enabled(enabled: bool) {
 }
 
 #[tauri::command]
-pub async fn compare_engines_on_samples(
-    app: AppHandle,
-    samples: Option<Vec<f32>>,
-    sample_rate: Option<u32>,
-    manager: State<'_, Arc<DictationSessionManager>>,
-) -> Result<EngineCompareResponse, String> {
-    let (samples, sample_rate) = if let (Some(samples), Some(sample_rate)) = (samples, sample_rate) {
-        (samples, sample_rate)
-    } else {
-        manager.last_compare_samples()?
-    };
-
-    manager
-        .compare_engines_on_samples(&app, samples, sample_rate)
-        .await
-}
-
-#[tauri::command]
 pub async fn compare_ready_whisper_models_on_samples(
     app: AppHandle,
     manager: State<'_, Arc<DictationSessionManager>>,
 ) -> Result<WhisperModelCompareResponse, String> {
     let (samples, sample_rate) = manager.last_compare_samples()?;
     crate::speech::whisper_sidecar::compare_ready_models_on_samples(&app, &samples, sample_rate)
+}
+
+#[tauri::command]
+pub async fn score_whisper_models_on_last_clip(
+    app: AppHandle,
+    manager: State<'_, Arc<DictationSessionManager>>,
+    model_ids: Vec<String>,
+) -> Result<WhisperModelCompareResponse, String> {
+    let (samples, sample_rate) = manager.last_compare_samples()?;
+    crate::speech::whisper_sidecar::score_models_on_samples(&app, &samples, sample_rate, &model_ids)
 }
 
 #[tauri::command]

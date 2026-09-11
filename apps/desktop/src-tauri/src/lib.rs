@@ -12,7 +12,6 @@ mod db;
 
 use std::sync::Arc;
 use dictation::dictionary_cache::DictionaryPromptCache;
-use dictation::hands_free::HandsFreeController;
 use dictation::session::DictationSessionManager;
 use intent::llama_process::LlamaProcessManager;
 use audio::StreamingAudioHub;
@@ -48,7 +47,6 @@ pub fn run() {
         )
         .manage(Arc::new(DictationSessionManager::new()))
         .manage(Arc::new(StreamingAudioHub::new()))
-        .manage(Arc::new(HandsFreeController::new()))
         .manage(Arc::new(LlamaProcessManager::new()))
         .manage(DictionaryPromptCache::default())
         .manage(speech::transcription_hint::TranscriptionHintState::default())
@@ -170,9 +168,10 @@ pub fn run() {
             speech::models::download_v2_model,
             speech::models::delete_v2_model,
             speech::models::is_v2_toggle_ready,
+            speech::models::get_speech_setup_status,
             speech::models::retry_v2_bootstrap,
-            dictation::compare_engines_on_samples,
             dictation::compare_ready_whisper_models_on_samples,
+            dictation::score_whisper_models_on_last_clip,
             modules::settings::get_cpu_count,
             modules::settings::get_gecko_bar_config,
             modules::settings::set_gecko_bar_config,
@@ -247,7 +246,7 @@ pub fn run() {
 
             speech::models::bootstrap_required_models(app.handle());
 
-            // Prewarm v2 engines (Moonshine, etc.)
+            // Prewarm Whisper after startup
             let app_handle = app.handle().clone();
             tauri::async_runtime::spawn(async move {
                 let manager = app_handle
