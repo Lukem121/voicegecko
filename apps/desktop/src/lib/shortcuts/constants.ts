@@ -22,27 +22,6 @@ export const DEFAULT_SHORTCUTS: ShortcutCategory[] = [
         enabled: true,
       },
       {
-        id: 'flow-stream',
-        name: 'Flow — live streaming dictation',
-        keys: ['CommandOrControl', 'Shift', 'Space'],
-        global: true,
-        enabled: true,
-      },
-      {
-        id: 'hands-free',
-        name: 'Hands-free VAD dictation',
-        keys: ['CommandOrControl', 'Shift', 'Alt', 'Z'],
-        global: true,
-        enabled: true,
-      },
-      {
-        id: 'capsule-compose',
-        name: 'Capsule compose mode',
-        keys: ['CommandOrControl', 'Shift', 'G'],
-        global: true,
-        enabled: true,
-      },
-      {
         id: 'cancel-recording',
         name: 'Cancel recording',
         keys: ['Escape'],
@@ -77,7 +56,7 @@ export const DEFAULT_SHORTCUTS: ShortcutCategory[] = [
       },
       {
         id: 'open-engine-lab',
-        name: 'Open Engine Lab',
+        name: 'Open speed & accuracy',
         keys: ['CommandOrControl', 'Shift', 'E'],
         global: true,
         enabled: true,

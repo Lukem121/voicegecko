@@ -23,7 +23,21 @@ pub fn process(samples: Vec<f32>, config: &AudioPipelineConfig) -> Vec<f32> {
         current = trim_silence(current);
     }
 
-    normalize(current, config.target_rms)
+    // Whisper often drops or hallucinates the first token when speech starts at t=0.
+    pad_leading_silence(normalize(current, config.target_rms))
+}
+
+/// Silence prepended so Whisper has a lead-in before the first syllable.
+const WHISPER_LEAD_IN_MS: u32 = 400;
+
+fn pad_leading_silence(samples: Vec<f32>) -> Vec<f32> {
+    if samples.is_empty() {
+        return samples;
+    }
+    let pad_samples = (TARGET_SAMPLE_RATE as usize * WHISPER_LEAD_IN_MS as usize) / 1000;
+    let mut padded = vec![0.0f32; pad_samples];
+    padded.extend(samples);
+    padded
 }
 
 fn frame_rms(samples: &[f32]) -> f32 {
@@ -36,7 +50,7 @@ fn frame_rms(samples: &[f32]) -> f32 {
 /// Trim leading silence and only strip long trailing dead air (never cut quiet syllables).
 fn trim_silence(samples: Vec<f32>) -> Vec<f32> {
     const FRAME_MS: u32 = 20;
-    const PRE_ROLL_MS: u32 = 200;
+    const PRE_ROLL_MS: u32 = 400;
     const POST_ROLL_MS: u32 = 400;
     const MIN_SPEECH_MS: u32 = 300;
     const MIN_THRESHOLD: f32 = 0.008;
@@ -340,5 +354,24 @@ mod tests {
         let samples = vec![0.05f32; 800];
         let trimmed = trim_silence(samples.clone());
         assert_eq!(trimmed.len(), samples.len());
+    }
+
+    #[test]
+    fn process_pads_leading_silence_for_whisper() {
+        let config = AudioPipelineConfig {
+            enable_denoise: false,
+            enable_high_pass: false,
+            enable_trim_silence: false,
+            high_pass_hz: 80.0,
+            target_rms: 0.22,
+        };
+        let speech = vec![0.1f32; 1600];
+        let out = process(speech, &config);
+        let pad = (TARGET_SAMPLE_RATE as usize * WHISPER_LEAD_IN_MS as usize) / 1000;
+        assert!(out.len() >= pad + 1600, "expected Whisper lead-in pad");
+        assert!(
+            out.iter().take(pad).all(|s| s.abs() < 1e-6),
+            "lead-in should be silence"
+        );
     }
 }

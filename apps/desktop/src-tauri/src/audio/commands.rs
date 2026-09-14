@@ -37,8 +37,6 @@ pub fn start_recording(
     app: tauri::AppHandle,
     device: Option<String>,
 ) -> Result<(), String> {
-    devices::validate_device(device.as_deref())?;
-
     let hub = state.streaming_hub.clone();
     let handle = CaptureHandle::start(app.clone(), device, Some(hub))?;
     state.start_capture(handle)?;

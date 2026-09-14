@@ -1,10 +1,6 @@
 /** v2 on-device model catalog — mirrors planned Rust `list_v2_models` payloads */
 
-export type V2ModelId =
-  | 'silero_vad'
-  | 'parakeet_tdt_v2'
-  | 'moonshine_medium'
-  | 'qwen2_5_3b';
+export type V2ModelId = 'qwen2_5_3b';
 
 export type V2ModelStatus =
   | 'not_downloaded'

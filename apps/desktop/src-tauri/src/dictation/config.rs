@@ -13,35 +13,11 @@ pub struct ModeConfig {
 impl ModeConfig {
     pub fn for_mode(mode: InteractionMode) -> Self {
         match mode {
-            InteractionMode::ToggleBatch => Self {
+            InteractionMode::ToggleBatch | InteractionMode::PttBatch => Self {
                 mode,
-                default_engine: EngineId::ParakeetTdtV2,
+                default_engine: EngineId::InsanelyFastWhisper,
                 output_target: OutputTarget::PasteOnly,
-                show_live_preview: true,
-            },
-            InteractionMode::PttBatch => Self {
-                mode,
-                default_engine: EngineId::ParakeetTdtV2,
-                output_target: OutputTarget::PasteOnly,
-                show_live_preview: true,
-            },
-            InteractionMode::FlowStream => Self {
-                mode,
-                default_engine: EngineId::MoonshineMedium,
-                output_target: OutputTarget::BoxThenPaste,
-                show_live_preview: true,
-            },
-            InteractionMode::HandsFree => Self {
-                mode,
-                default_engine: EngineId::MoonshineMedium,
-                output_target: OutputTarget::BoxThenPaste,
                 show_live_preview: false,
-            },
-            InteractionMode::CapsuleCompose => Self {
-                mode,
-                default_engine: EngineId::ParakeetTdtV2,
-                output_target: OutputTarget::BoxConfirmPaste,
-                show_live_preview: true,
             },
         }
     }
@@ -64,9 +40,6 @@ impl Default for DictationSettingsV3 {
             mode_configs: vec![
                 ModeConfig::for_mode(InteractionMode::ToggleBatch),
                 ModeConfig::for_mode(InteractionMode::PttBatch),
-                ModeConfig::for_mode(InteractionMode::FlowStream),
-                ModeConfig::for_mode(InteractionMode::HandsFree),
-                ModeConfig::for_mode(InteractionMode::CapsuleCompose),
             ],
             default_dictionary: vec![],
             intent_enabled: false,

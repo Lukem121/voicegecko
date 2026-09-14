@@ -12,7 +12,6 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from '@acme/ui/components/ui/collapsible';
-import { Input } from '@acme/ui/components/ui/input';
 import { Progress } from '@acme/ui/components/ui/progress';
 import {
   Table,
@@ -22,60 +21,196 @@ import {
   TableHeader,
   TableRow,
 } from '@acme/ui/components/ui/table';
+import { cn } from '@acme/ui/lib/utils';
 import { listen } from '@tauri-apps/api/event';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { Check, ChevronDown, Loader2, Trash2 } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
+import { Check, ChevronDown, Loader2, Sparkles, Timer, Trash2, Zap } from 'lucide-react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { CompareTranscriptCell } from '~/components/compare-transcript-cell';
+import { formatLatency, whisperProfileLabel } from '~/lib/whisper-accuracy';
 import {
   cancelWhisperModelDownload,
   compareReadyWhisperModelsOnSamples,
   deleteWhisperModel,
   downloadWhisperModel,
+  getSpeechSetupStatus,
   listWhisperModels,
   setSelectedWhisperModelId,
 } from '~/services/whisper-models.service';
-import type { WhisperModelCompareResponse } from '~/types/whisper-models';
 import type {
+  WhisperModelCompareResponse,
   WhisperModelId,
   WhisperModelListItem,
-  WhisperModelTier,
 } from '~/types/whisper-models';
 import {
   WHISPER_TIER_LABELS,
   WHISPER_TIER_ORDER,
 } from '~/types/whisper-models';
+import { queryClient } from '~/trpc';
 
 type GpuWhisperModelsCardProps = {
   onRefreshStatus: () => void;
 };
 
-const modelStatusLabel = (status: string): string => {
-  switch (status) {
-    case 'ready':
-      return 'Ready';
-    case 'downloading':
-      return 'Downloading';
-    default:
-      return 'Not installed';
+const HERO_MODELS: Array<{
+  id: WhisperModelId;
+  label: string;
+  speed: string;
+  accuracy: string;
+  icon: 'zap' | 'sparkles' | 'timer';
+}> = [
+  {
+    id: 'base.en',
+    label: 'Fast',
+    speed: 'Quickest',
+    accuracy: 'More misses',
+    icon: 'zap',
+  },
+  {
+    id: 'small.en',
+    label: 'Recommended',
+    speed: 'Everyday speed',
+    accuracy: 'Strong accuracy',
+    icon: 'sparkles',
+  },
+  {
+    id: 'large-v3-turbo',
+    label: 'Best',
+    speed: 'Slowest',
+    accuracy: 'Fewest mistakes',
+    icon: 'timer',
+  },
+];
+
+const HERO_IDS = new Set(HERO_MODELS.map((hero) => hero.id));
+
+const HeroIcon = ({ name }: { name: (typeof HERO_MODELS)[number]['icon'] }) => {
+  if (name === 'zap') {
+    return <Zap className="h-5 w-5" />;
   }
+  if (name === 'sparkles') {
+    return <Sparkles className="h-5 w-5" />;
+  }
+  return <Timer className="h-5 w-5" />;
 };
 
-const modelStatusVariant = (
-  status: string
-): 'default' | 'secondary' | 'destructive' | 'outline' => {
-  switch (status) {
-    case 'ready':
-      return 'default';
-    case 'downloading':
-      return 'secondary';
-    default:
-      return 'outline';
-  }
+type WhisperChoiceCardProps = {
+  label: string;
+  speed: string;
+  accuracy: string;
+  icon: (typeof HERO_MODELS)[number]['icon'];
+  model: WhisperModelListItem;
+  isDownloading: boolean;
+  progress: number;
+  onDownload: (modelId: WhisperModelId) => void;
+  onCancel: (modelId: WhisperModelId) => void;
+  onSelect: (modelId: WhisperModelId) => void;
+  downloadDisabled: boolean;
+  selectPending: boolean;
 };
 
-type WhisperModelRowProps = {
+function WhisperChoiceCard({
+  label,
+  speed,
+  accuracy,
+  icon,
+  model,
+  isDownloading,
+  progress,
+  onDownload,
+  onCancel,
+  onSelect,
+  downloadDisabled,
+  selectPending,
+}: WhisperChoiceCardProps) {
+  const isReady = model.status === 'ready';
+  const canSelect = isReady && !model.selected && !selectPending;
+
+  const activate = () => {
+    if (canSelect) {
+      onSelect(model.id);
+      return;
+    }
+    if (!(isReady || isDownloading || downloadDisabled)) {
+      onDownload(model.id);
+    }
+  };
+
+  return (
+    <div
+      className={cn(
+        'flex h-full flex-col rounded-xl border p-4 text-left',
+        model.selected && 'border-primary bg-primary/5 ring-2 ring-primary/20'
+      )}
+    >
+      <button
+        className="flex flex-1 flex-col items-start gap-3 text-left"
+        disabled={model.selected || isDownloading || selectPending}
+        onClick={activate}
+        type="button"
+      >
+        <div className="flex w-full items-start justify-between gap-2">
+          <span className="text-muted-foreground">
+            <HeroIcon name={icon} />
+          </span>
+          {model.selected ? (
+            <Badge variant="default">
+              <Check className="mr-1 h-3 w-3" />
+              In use
+            </Badge>
+          ) : null}
+        </div>
+        <div>
+          <p className="font-semibold text-lg">{label}</p>
+          <p className="text-muted-foreground text-sm">
+            {speed} · {accuracy}
+          </p>
+          <p className="mt-1 text-muted-foreground text-xs">{model.sizeLabel}</p>
+        </div>
+      </button>
+
+      {isDownloading ? (
+        <div className="mt-4 space-y-2">
+          <Progress value={progress} />
+          <p className="text-muted-foreground text-xs">{progress}% downloaded</p>
+          <Button
+            onClick={() => onCancel(model.id)}
+            size="sm"
+            type="button"
+            variant="outline"
+          >
+            Cancel
+          </Button>
+        </div>
+      ) : null}
+
+      {!isReady && !isDownloading ? (
+        <Button
+          className="mt-4"
+          disabled={downloadDisabled}
+          onClick={() => onDownload(model.id)}
+          type="button"
+        >
+          Download
+        </Button>
+      ) : null}
+
+      {canSelect ? (
+        <Button
+          className="mt-4"
+          onClick={() => onSelect(model.id)}
+          type="button"
+          variant="secondary"
+        >
+          Use this
+        </Button>
+      ) : null}
+    </div>
+  );
+}
+
+type AdvancedModelRowProps = {
   model: WhisperModelListItem;
   isDownloading: boolean;
   progress: number;
@@ -88,7 +223,7 @@ type WhisperModelRowProps = {
   deletePending: boolean;
 };
 
-function WhisperModelRow({
+function AdvancedModelRow({
   model,
   isDownloading,
   progress,
@@ -99,54 +234,30 @@ function WhisperModelRow({
   downloadDisabled,
   selectPending,
   deletePending,
-}: WhisperModelRowProps) {
+}: AdvancedModelRowProps) {
   const isReady = model.status === 'ready';
-  const displayStatus = isDownloading
-    ? 'downloading'
-    : isReady
-      ? 'ready'
-      : 'not_downloaded';
 
   return (
-    <div className="space-y-2 rounded-md border p-3">
+    <div className="space-y-3 rounded-lg border p-3">
       <div className="flex items-start justify-between gap-3">
         <div>
-          <div className="flex flex-wrap items-center gap-2">
-            <p className="font-medium">{model.name}</p>
-            <code className="text-muted-foreground text-xs">{model.id}</code>
-            {model.recommended ? (
-              <Badge className="text-[10px]" variant="secondary">
-                Bundled default
-              </Badge>
-            ) : null}
-          </div>
-          <p className="text-muted-foreground text-xs">{model.description}</p>
+          <p className="font-medium">{model.name}</p>
           <p className="text-muted-foreground text-xs">
-            {model.sizeLabel} · RAM {model.ramLabel}
+            {model.id} · {model.sizeLabel}
           </p>
+          <p className="text-muted-foreground text-xs">{model.description}</p>
         </div>
-        <div className="flex flex-col items-end gap-1">
-          {model.selected ? (
-            <Badge variant="default">
-              <Check className="mr-1 h-3 w-3" />
-              Active
-            </Badge>
+          {model.selected ? <Badge variant="default">In use</Badge> : null}
+          {isReady && !model.selected ? (
+            <Badge variant="outline">Ready</Badge>
           ) : null}
-          <Badge variant={modelStatusVariant(displayStatus)}>
-            {modelStatusLabel(displayStatus)}
-          </Badge>
-        </div>
+          {!isReady && !isDownloading ? (
+            <Badge variant="outline">Not downloaded</Badge>
+          ) : null}
       </div>
-
       {isDownloading ? (
         <div className="space-y-1">
           <Progress value={progress} />
-          <p className="text-muted-foreground text-xs">{progress}% complete</p>
-        </div>
-      ) : null}
-
-      <div className="flex flex-wrap gap-2">
-        {isDownloading ? (
           <Button
             onClick={() => onCancel(model.id)}
             size="sm"
@@ -155,7 +266,9 @@ function WhisperModelRow({
           >
             Cancel
           </Button>
-        ) : null}
+        </div>
+      ) : null}
+      <div className="flex flex-wrap gap-2">
         {!isReady && !isDownloading ? (
           <Button
             disabled={downloadDisabled}
@@ -173,7 +286,7 @@ function WhisperModelRow({
             size="sm"
             type="button"
           >
-            Use this model
+            Use this
           </Button>
         ) : null}
         {isReady && model.id !== 'base.en' ? (
@@ -185,7 +298,7 @@ function WhisperModelRow({
             variant="outline"
           >
             <Trash2 className="mr-1 h-3.5 w-3.5" />
-            Delete
+            Remove
           </Button>
         ) : null}
       </div>
@@ -193,10 +306,48 @@ function WhisperModelRow({
   );
 }
 
+function SpeechSetupBanner({
+  ready,
+  message,
+  waitingOn,
+  progress,
+  activity,
+}: {
+  ready: boolean;
+  message: string;
+  waitingOn: string;
+  progress: number;
+  activity: string;
+}) {
+  if (ready && waitingOn === 'none') {
+    return (
+      <div className="rounded-lg border bg-emerald-500/10 px-3 py-2 text-sm">
+        {message}
+      </div>
+    );
+  }
+
+  const showBar = !ready || waitingOn !== 'none';
+
+  return (
+    <div className="space-y-2 rounded-lg border border-amber-500/40 bg-amber-500/10 px-3 py-3 text-sm">
+      <p className="font-medium">Speech setup</p>
+      <p className="text-muted-foreground text-xs">{activity || message}</p>
+      {showBar ? (
+        <div className="space-y-1">
+          <Progress value={progress} />
+          <p className="text-muted-foreground text-xs tabular-nums">
+            {progress}%
+          </p>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 export function GpuWhisperModelsCard({
   onRefreshStatus,
 }: GpuWhisperModelsCardProps) {
-  const [search, setSearch] = useState('');
   const [whisperDownloadProgress, setWhisperDownloadProgress] = useState<
     Record<string, number>
   >({});
@@ -205,8 +356,18 @@ export function GpuWhisperModelsCard({
   );
   const [whisperCompareResult, setWhisperCompareResult] =
     useState<WhisperModelCompareResponse | null>(null);
+  const userRequestedDownloads = useRef(new Set<string>());
 
   const activeDownloadCount = activeDownloadIds.size;
+
+  const { data: setupStatus } = useQuery({
+    queryKey: ['speech-setup-status'],
+    queryFn: getSpeechSetupStatus,
+    refetchInterval: (query) =>
+      query.state.data?.ready && query.state.data.waitingOn === 'none'
+        ? 4000
+        : 400,
+  });
 
   const {
     data: whisperModels = [],
@@ -215,7 +376,8 @@ export function GpuWhisperModelsCard({
   } = useQuery({
     queryKey: ['gpu-whisper-models'],
     queryFn: listWhisperModels,
-    refetchInterval: activeDownloadCount > 0 ? 1000 : false,
+    refetchInterval:
+      activeDownloadCount > 0 || setupStatus?.ready === false ? 1000 : false,
   });
 
   const removeActiveDownload = (modelId: string) => {
@@ -237,6 +399,7 @@ export function GpuWhisperModelsCard({
     }
 
     setActiveDownloadIds((current) => new Set(current).add(modelId));
+    userRequestedDownloads.current.add(modelId);
     setWhisperDownloadProgress((current) => ({ ...current, [modelId]: 0 }));
 
     void downloadWhisperModel(modelId).catch((error: unknown) => {
@@ -267,10 +430,10 @@ export function GpuWhisperModelsCard({
       (event) => {
         const [modelId, progress] = event.payload;
         setActiveDownloadIds((current) => {
-          if (!current.has(modelId)) {
-            return new Set(current).add(modelId);
+          if (current.has(modelId)) {
+            return current;
           }
-          return current;
+          return new Set(current).add(modelId);
         });
         setWhisperDownloadProgress((current) => ({
           ...current,
@@ -282,17 +445,9 @@ export function GpuWhisperModelsCard({
       'model-download-complete',
       (event) => {
         const modelId = event.payload;
+        const userRequested = userRequestedDownloads.current.has(modelId);
+        userRequestedDownloads.current.delete(modelId);
         setActiveDownloadIds((current) => {
-          const wasOnlyDownload = current.size === 1 && current.has(modelId);
-          if (wasOnlyDownload) {
-            void setSelectedWhisperModelId(modelId as WhisperModelId).then(
-              () => {
-                toast.success(`GPU Whisper now uses ${modelId}`);
-                void refetchWhisperModels();
-                onRefreshStatus();
-              }
-            );
-          }
           const next = new Set(current);
           next.delete(modelId);
           return next;
@@ -302,6 +457,15 @@ export function GpuWhisperModelsCard({
           delete next[modelId];
           return next;
         });
+        if (userRequested) {
+          void setSelectedWhisperModelId(modelId as WhisperModelId).then(
+            () => {
+              toast.success(`Now using ${whisperProfileLabel(modelId)}`);
+              void refetchWhisperModels();
+              onRefreshStatus();
+            }
+          );
+        }
         void refetchWhisperModels();
         onRefreshStatus();
       }
@@ -324,18 +488,43 @@ export function GpuWhisperModelsCard({
       }
     );
 
+    const unlistenV2Progress = listen<{
+      modelId: string;
+      progress: number;
+      status: string;
+    }>('v2-model-download-progress', (event) => {
+      const { modelId, progress, status } = event.payload;
+      void queryClient.invalidateQueries({ queryKey: ['speech-setup-status'] });
+      if (modelId === 'bootstrap' || modelId === 'whisper_sidecar') {
+        return;
+      }
+      if (status === 'downloading') {
+        setActiveDownloadIds((current) => {
+          if (current.has(modelId)) {
+            return current;
+          }
+          return new Set(current).add(modelId);
+        });
+        setWhisperDownloadProgress((current) => ({
+          ...current,
+          [modelId]: progress,
+        }));
+      }
+    });
+
     return () => {
       void unlistenProgress.then((unlisten) => unlisten());
       void unlistenComplete.then((unlisten) => unlisten());
       void unlistenError.then((unlisten) => unlisten());
       void unlistenCancelled.then((unlisten) => unlisten());
+      void unlistenV2Progress.then((unlisten) => unlisten());
     };
   }, [onRefreshStatus, refetchWhisperModels]);
 
   const whisperDeleteMutation = useMutation({
     mutationFn: (modelId: WhisperModelId) => deleteWhisperModel(modelId),
-    onSuccess: () => {
-      toast.success('Whisper model removed');
+    onSuccess: (_result, modelId) => {
+      toast.success(`${whisperProfileLabel(modelId)} removed`);
       void refetchWhisperModels();
       onRefreshStatus();
     },
@@ -346,8 +535,8 @@ export function GpuWhisperModelsCard({
 
   const whisperSelectMutation = useMutation({
     mutationFn: (modelId: WhisperModelId) => setSelectedWhisperModelId(modelId),
-    onSuccess: () => {
-      toast.success('GPU Whisper model updated');
+    onSuccess: (_result, modelId) => {
+      toast.success(`Now using ${whisperProfileLabel(modelId)}`);
       void refetchWhisperModels();
       onRefreshStatus();
     },
@@ -361,7 +550,7 @@ export function GpuWhisperModelsCard({
     onSuccess: (result) => {
       setWhisperCompareResult(result);
       toast.success(
-        `Compared ${result.results.length} ready Whisper model${result.results.length === 1 ? '' : 's'}`
+        `Compared ${result.results.length} model${result.results.length === 1 ? '' : 's'}`
       );
     },
     onError: (error: Error) => {
@@ -369,165 +558,106 @@ export function GpuWhisperModelsCard({
     },
   });
 
-  const readyModelCount = useMemo(
-    () => whisperModels.filter((model) => model.status === 'ready').length,
-    [whisperModels]
-  );
-
-  const filteredModels = useMemo(() => {
-    const query = search.trim().toLowerCase();
-    if (!query) {
-      return whisperModels;
+  const modelsById = useMemo(() => {
+    const map = new Map<string, WhisperModelListItem>();
+    for (const model of whisperModels) {
+      map.set(model.id, model);
     }
-    return whisperModels.filter(
-      (model) =>
-        model.id.toLowerCase().includes(query) ||
-        model.name.toLowerCase().includes(query) ||
-        model.description.toLowerCase().includes(query)
-    );
-  }, [search, whisperModels]);
+    return map;
+  }, [whisperModels]);
 
-  const groupedModels = useMemo(() => {
-    return WHISPER_TIER_ORDER.map((tier) => ({
-      tier,
-      label: WHISPER_TIER_LABELS[tier],
-      models: filteredModels.filter((model) => model.tier === tier),
-    })).filter((group) => group.models.length > 0);
-  }, [filteredModels]);
+  const heroModels = HERO_MODELS.map((hero) => ({
+    ...hero,
+    model: modelsById.get(hero.id),
+  }));
 
-  const selectedTier = whisperModels.find((model) => model.selected)?.tier;
+  const catalogModels = whisperModels.filter((model) => !HERO_IDS.has(model.id));
+  const modelsByTier = WHISPER_TIER_ORDER.map((tier) => ({
+    tier,
+    label: WHISPER_TIER_LABELS[tier],
+    models: catalogModels.filter((model) => model.tier === tier),
+  })).filter((group) => group.models.length > 0);
 
-  const tierDefaultOpen = (tier: WhisperModelTier): boolean => {
-    if (search.trim()) {
-      return true;
-    }
-    if (tier === selectedTier) {
-      return true;
-    }
-    return tier === 'maximum' || tier === 'minimal';
-  };
+  const readyCount = whisperModels.filter(
+    (model) => model.status === 'ready'
+  ).length;
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>GPU Whisper model</CardTitle>
+        <CardTitle>Choose speed vs accuracy</CardTitle>
         <CardDescription>
-          Full whisper.cpp catalog for Insanely Fast Whisper — all sizes and
-          quantizations. Download a model, then click Use. Large models can take
-          several minutes — use Cancel if a download stalls, then retry. Stored
-          under{' '}
-          <code className="text-xs">%LOCALAPPDATA%/voicegecko/models/</code>
+          Fast, Recommended, and Best cover most people. Every Whisper.cpp model
+          is still listed under Advanced if you want to compare them.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="space-y-3 rounded-md border p-3">
-          <div>
-            <p className="font-medium text-sm">Compare ready models</p>
-            <p className="text-muted-foreground text-xs">
-              Run every downloaded Whisper model on your most recent dictation.
-              Dictate once first, then compare. {readyModelCount} model
-              {readyModelCount === 1 ? '' : 's'} ready.
-            </p>
-          </div>
-          <Button
-            disabled={
-              whisperCompareMutation.isPending || readyModelCount === 0
-            }
-            onClick={() => whisperCompareMutation.mutate()}
-            type="button"
-            variant="secondary"
-          >
-            {whisperCompareMutation.isPending ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Comparing ready models…
-              </>
-            ) : (
-              'Compare ready models on last dictation'
-            )}
-          </Button>
-
-          {whisperCompareResult ? (
-            <div className="space-y-2">
-              <p className="text-muted-foreground text-xs">
-                {whisperCompareResult.sampleLabel}
-              </p>
-              <div className="overflow-x-auto">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Model</TableHead>
-                      <TableHead>Latency</TableHead>
-                      <TableHead>Transcript</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {whisperCompareResult.results.map((row) => (
-                      <TableRow key={row.modelId}>
-                        <TableCell className="align-top font-medium">
-                          <div className="flex flex-wrap items-center gap-2">
-                            <span>{row.modelName}</span>
-                            <code className="text-muted-foreground text-xs">
-                              {row.modelId}
-                            </code>
-                            {row.selected ? (
-                              <Badge variant="default">Active</Badge>
-                            ) : null}
-                          </div>
-                        </TableCell>
-                        <TableCell className="align-top whitespace-nowrap">
-                          {row.latencyMs > 0 ? `${row.latencyMs} ms` : '—'}
-                        </TableCell>
-                        <TableCell className="align-top">
-                          <CompareTranscriptCell
-                            text={row.text}
-                            textSnippet={row.textSnippet}
-                          />
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            </div>
-          ) : null}
-        </div>
-
-        <Input
-          onChange={(event) => setSearch(event.target.value)}
-          placeholder="Search models (e.g. large-v3-turbo-q8_0, medium.en)…"
-          value={search}
-        />
-
+        {setupStatus ? (
+          <SpeechSetupBanner
+            activity={setupStatus.activity}
+            message={setupStatus.message}
+            progress={setupStatus.progress}
+            ready={setupStatus.ready}
+            waitingOn={setupStatus.waitingOn}
+          />
+        ) : null}
         {whisperModelsLoading ? (
           <div className="flex items-center gap-2 text-muted-foreground text-sm">
             <Loader2 className="h-4 w-4 animate-spin" />
-            Loading Whisper catalog…
+            Loading models…
           </div>
-        ) : groupedModels.length === 0 ? (
-          <p className="text-muted-foreground text-sm">
-            No models match your search.
-          </p>
         ) : (
-          groupedModels.map((group) => (
-            <Collapsible defaultOpen={tierDefaultOpen(group.tier)} key={group.tier}>
-              <CollapsibleTrigger className="flex w-full items-center justify-between rounded-md border px-3 py-2 text-left text-sm hover:bg-muted/50">
-                <span className="font-medium">{group.label}</span>
-                <span className="flex items-center gap-2 text-muted-foreground text-xs">
-                  {group.models.length} models
-                  <ChevronDown className="h-4 w-4" />
-                </span>
-              </CollapsibleTrigger>
-              <CollapsibleContent className="space-y-3 pt-3">
+          <div className="grid gap-3 md:grid-cols-3">
+            {heroModels.map((hero) =>
+              hero.model ? (
+                <WhisperChoiceCard
+                  accuracy={hero.accuracy}
+                  downloadDisabled={activeDownloadIds.has(hero.model.id)}
+                  icon={hero.icon}
+                  isDownloading={
+                    activeDownloadIds.has(hero.model.id) ||
+                    hero.model.status === 'downloading'
+                  }
+                  key={hero.id}
+                  label={hero.label}
+                  model={hero.model}
+                  onCancel={cancelWhisperDownload}
+                  onDownload={startWhisperDownload}
+                  onSelect={(modelId) => whisperSelectMutation.mutate(modelId)}
+                  progress={
+                    whisperDownloadProgress[hero.model.id] ??
+                    hero.model.progress
+                  }
+                  selectPending={whisperSelectMutation.isPending}
+                  speed={hero.speed}
+                />
+              ) : (
+                <div
+                  className="rounded-xl border p-4 text-muted-foreground text-sm"
+                  key={hero.id}
+                >
+                  {hero.label} is not in the catalog.
+                </div>
+              )
+            )}
+          </div>
+        )}
+
+        <Collapsible defaultOpen>
+          <CollapsibleTrigger className="flex w-full items-center justify-between rounded-md px-1 py-2 text-left text-muted-foreground text-sm hover:text-foreground">
+            <span>Advanced — all Whisper models</span>
+            <ChevronDown className="h-4 w-4" />
+          </CollapsibleTrigger>
+          <CollapsibleContent className="space-y-4 pt-2">
+            {modelsByTier.map((group) => (
+              <div className="space-y-3" key={group.tier}>
+                <p className="font-medium text-sm">{group.label}</p>
                 {group.models.map((model) => {
                   const isDownloading =
                     activeDownloadIds.has(model.id) ||
                     model.status === 'downloading';
-                  const progress =
-                    whisperDownloadProgress[model.id] ?? model.progress;
-
                   return (
-                    <WhisperModelRow
+                    <AdvancedModelRow
                       deletePending={whisperDeleteMutation.isPending}
                       downloadDisabled={isDownloading}
                       isDownloading={isDownloading}
@@ -541,26 +671,81 @@ export function GpuWhisperModelsCard({
                       onSelect={(modelId) =>
                         whisperSelectMutation.mutate(modelId)
                       }
-                      progress={progress}
+                      progress={
+                        whisperDownloadProgress[model.id] ?? model.progress
+                      }
                       selectPending={whisperSelectMutation.isPending}
                     />
                   );
                 })}
-              </CollapsibleContent>
-            </Collapsible>
-          ))
-        )}
+              </div>
+            ))}
 
-        <Button
-          onClick={() => {
-            void refetchWhisperModels();
-            onRefreshStatus();
-          }}
-          type="button"
-          variant="outline"
-        >
-          Refresh Whisper models
-        </Button>
+            <div className="space-y-3 rounded-lg border p-3">
+              <div>
+                <p className="font-medium text-sm">Replay last clip</p>
+                <p className="text-muted-foreground text-xs">
+                  Dictate once, then run every installed model on that audio. Shows
+                  speed side by side. {readyCount} installed.
+                </p>
+              </div>
+              <Button
+                disabled={whisperCompareMutation.isPending || readyCount === 0}
+                onClick={() => whisperCompareMutation.mutate()}
+                type="button"
+                variant="secondary"
+              >
+                {whisperCompareMutation.isPending ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Comparing…
+                  </>
+                ) : (
+                  'Compare installed models'
+                )}
+              </Button>
+
+              {whisperCompareResult ? (
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Model</TableHead>
+                        <TableHead>Speed</TableHead>
+                        <TableHead>Transcript</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {whisperCompareResult.results.map((row) => (
+                        <TableRow key={row.modelId}>
+                          <TableCell className="align-top font-medium">
+                            {row.modelName}
+                            {row.selected ? (
+                              <Badge className="ml-2" variant="default">
+                                In use
+                              </Badge>
+                            ) : null}
+                          </TableCell>
+                          <TableCell className="align-top whitespace-nowrap">
+                            {row.latencyMs > 0
+                              ? formatLatency(row.latencyMs)
+                              : '—'}
+                          </TableCell>
+                          <TableCell className="align-top">
+                            <CompareTranscriptCell
+                              text={row.text}
+                              textSnippet={row.textSnippet}
+                            />
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              ) : null}
+            </div>
+          </CollapsibleContent>
+        </Collapsible>
       </CardContent>
     </Card>
   );

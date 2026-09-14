@@ -20,10 +20,6 @@ export const shortcutActions: Record<
 > = {
   'toggle-recording': () => recordingForShortcut('toggle-recording'),
 
-  'hands-free': () => recordingForShortcut('hands-free'),
-
-  'capsule-compose': () => recordingForShortcut('capsule-compose'),
-
   'paste-last-dictation': () => dictationService.pasteLastDictation(),
 
   'open-last-dictation': () => dictationService.openLastDictation(),
@@ -39,7 +35,7 @@ export const shortcutActions: Record<
 
   'open-engine-lab': () => {
     emit('navigate', '/settings/engine-lab').catch(() => {
-      toast.info('Open Settings → Engine Lab');
+      toast.info('Open Settings → Speed & accuracy');
     });
   },
 

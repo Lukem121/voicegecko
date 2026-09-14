@@ -1,13 +1,26 @@
+use once_cell::sync::Lazy;
+use parking_lot::Mutex;
 use std::fs;
+use std::io::{BufRead, BufReader, Read, Write};
 use std::path::{Path, PathBuf};
-use std::process::{Command, Stdio};
-use tauri::{AppHandle, Manager};
+use std::process::{Child, ChildStdin, Command, Stdio};
+use tauri::{AppHandle, Emitter, Manager};
 
 use crate::speech::stt_log;
 
 const ENGINE: &str = "gpu_whisper";
-const SIDECAR_VERSION: &str = "whisper-sidecar-v2";
+const SIDECAR_VERSION: &str = "whisper-sidecar-v3";
 const VERSION_MARKER: &str = ".whisper-sidecar-version";
+const FALLBACK_MODEL_IDS: &[&str] = &["small.en", "base.en", "large-v3-turbo"];
+
+struct PersistentSidecar {
+    child: Child,
+    stdin: ChildStdin,
+    stdout: BufReader<std::process::ChildStdout>,
+    model_path: PathBuf,
+}
+
+static SERVER: Lazy<Mutex<Option<PersistentSidecar>>> = Lazy::new(|| Mutex::new(None));
 
 pub fn sidecar_dir() -> PathBuf {
     dirs::data_local_dir()
@@ -43,7 +56,15 @@ pub fn selected_model_id(app: &AppHandle) -> String {
 
 pub fn whisper_model_path_for_app(app: &AppHandle) -> Option<PathBuf> {
     let model_id = selected_model_id(app);
-    crate::modules::model_manager::model_file_path(app, &model_id)
+    if let Some(path) = crate::modules::model_manager::model_file_path(app, &model_id) {
+        return Some(path);
+    }
+    for id in FALLBACK_MODEL_IDS {
+        if let Some(path) = crate::modules::model_manager::model_file_path(app, id) {
+            return Some(path);
+        }
+    }
+    crate::modules::model_manager::legacy_whisper_model_path()
 }
 
 fn sidecar_layout_valid(dir: &Path) -> bool {
@@ -69,8 +90,7 @@ fn sidecar_layout_valid(dir: &Path) -> bool {
 }
 
 pub fn is_sidecar_installed() -> bool {
-    let dir = sidecar_dir();
-    sidecar_layout_valid(&dir) && sidecar_version_matches()
+    sidecar_layout_valid(&sidecar_dir())
 }
 
 pub fn is_ready() -> bool {
@@ -96,27 +116,104 @@ fn bundled_sidecar_dir_candidates(app: &AppHandle) -> Vec<PathBuf> {
     ) {
         candidates.push(path);
     }
+    if let Ok(resource_dir) = app.path().resource_dir() {
+        candidates.push(resource_dir.join("resources/binaries/whisper-sidecar/win-x64"));
+        candidates.push(resource_dir.join("binaries/whisper-sidecar/win-x64"));
+    }
+    if let Ok(exe) = std::env::current_exe() {
+        if let Some(dir) = exe.parent() {
+            candidates.push(dir.join("resources/binaries/whisper-sidecar/win-x64"));
+            candidates.push(dir.join("whisper-sidecar/win-x64"));
+        }
+    }
     candidates.push(PathBuf::from(
         "apps/desktop/src-tauri/resources/binaries/whisper-sidecar/win-x64",
+    ));
+    candidates.push(PathBuf::from(
+        "src-tauri/resources/binaries/whisper-sidecar/win-x64",
     ));
     candidates
 }
 
-fn copy_dir_recursive(src: &Path, dest: &Path) -> Result<(), String> {
+fn collect_copy_jobs(
+    src: &Path,
+    dest: &Path,
+    jobs: &mut Vec<(PathBuf, PathBuf, u64)>,
+) -> Result<(), String> {
     fs::create_dir_all(dest).map_err(|e| e.to_string())?;
 
     for entry in fs::read_dir(src).map_err(|e| e.to_string())? {
         let entry = entry.map_err(|e| e.to_string())?;
         let path = entry.path();
         let dest_path = dest.join(entry.file_name());
-
         if path.is_dir() {
-            copy_dir_recursive(&path, &dest_path)?;
+            collect_copy_jobs(&path, &dest_path, jobs)?;
         } else if path.is_file() {
-            fs::copy(&path, &dest_path).map_err(|e| e.to_string())?;
+            let size = path.metadata().map(|meta| meta.len()).unwrap_or(0);
+            jobs.push((path, dest_path, size));
         }
     }
 
+    Ok(())
+}
+
+fn copy_dir_with_progress(app: &AppHandle, src: &Path, dest: &Path) -> Result<(), String> {
+    let mut jobs = Vec::new();
+    collect_copy_jobs(src, dest, &mut jobs)?;
+    let total: u64 = jobs.iter().map(|job| job.2).sum::<u64>().max(1);
+    let mut copied = 0u64;
+    let mut last_emitted = 0u8;
+
+    crate::speech::download_events::emit_download_progress(app, "whisper_sidecar", 0, "downloading");
+
+    for (src_path, dest_path, size) in jobs {
+        if let Some(parent) = dest_path.parent() {
+            fs::create_dir_all(parent).map_err(|e| e.to_string())?;
+        }
+        if size > 4_000_000 {
+            let mut input = fs::File::open(&src_path).map_err(|e| e.to_string())?;
+            let mut output = fs::File::create(&dest_path).map_err(|e| e.to_string())?;
+            let mut buffer = [0u8; 262_144];
+            loop {
+                let read = input.read(&mut buffer).map_err(|e| e.to_string())?;
+                if read == 0 {
+                    break;
+                }
+                output
+                    .write_all(&buffer[..read])
+                    .map_err(|e| e.to_string())?;
+                copied += read as u64;
+                let progress = ((copied as f64 / total as f64) * 100.0).floor() as u8;
+                let progress = progress.min(99);
+                if progress >= last_emitted.saturating_add(1) {
+                    last_emitted = progress;
+                    crate::speech::download_events::emit_download_progress(
+                        app,
+                        "whisper_sidecar",
+                        progress,
+                        "downloading",
+                    );
+                }
+            }
+            output.flush().map_err(|e| e.to_string())?;
+        } else {
+            fs::copy(&src_path, &dest_path).map_err(|e| e.to_string())?;
+            copied += size;
+            let progress = ((copied as f64 / total as f64) * 100.0).floor() as u8;
+            let progress = progress.min(99);
+            if progress >= last_emitted.saturating_add(1) {
+                last_emitted = progress;
+                crate::speech::download_events::emit_download_progress(
+                    app,
+                    "whisper_sidecar",
+                    progress,
+                    "downloading",
+                );
+            }
+        }
+    }
+
+    crate::speech::download_events::emit_download_progress(app, "whisper_sidecar", 100, "complete");
     Ok(())
 }
 
@@ -128,7 +225,7 @@ fn remove_stale_sidecar() -> Result<(), String> {
     Ok(())
 }
 
-fn install_sidecar_from_dir(src_dir: &Path) -> Result<(), String> {
+fn install_sidecar_from_dir(app: &AppHandle, src_dir: &Path) -> Result<(), String> {
     if !sidecar_layout_valid(src_dir) {
         return Err(format!(
             "Bundled WhisperSidecar layout is incomplete at {}",
@@ -137,24 +234,13 @@ fn install_sidecar_from_dir(src_dir: &Path) -> Result<(), String> {
     }
 
     remove_stale_sidecar()?;
-    copy_dir_recursive(src_dir, &sidecar_dir())?;
+    copy_dir_with_progress(app, src_dir, &sidecar_dir())?;
     write_version_marker()?;
     stt_log::info(
         ENGINE,
         &format!("Installed WhisperSidecar bundle from {}", src_dir.display()),
     );
     Ok(())
-}
-
-fn copy_bundled_sidecar(app: &AppHandle) -> Result<bool, String> {
-    for src_dir in bundled_sidecar_dir_candidates(app) {
-        if !src_dir.is_dir() || !src_dir.join("WhisperSidecar.exe").is_file() {
-            continue;
-        }
-        install_sidecar_from_dir(&src_dir)?;
-        return Ok(true);
-    }
-    Ok(false)
 }
 
 pub fn ensure_whisper_model(app: &AppHandle) -> Result<Option<PathBuf>, String> {
@@ -168,20 +254,142 @@ pub fn ensure_whisper_model(app: &AppHandle) -> Result<Option<PathBuf>, String> 
 }
 
 pub async fn ensure_sidecar_installed(app: &AppHandle) -> Result<(), String> {
+    if is_sidecar_installed() && sidecar_version_matches() {
+        return Ok(());
+    }
+
+    let bundled = bundled_sidecar_dir_candidates(app)
+        .into_iter()
+        .find(|dir| sidecar_layout_valid(dir));
+
+    if let Some(src_dir) = bundled {
+        install_sidecar_from_dir(app, &src_dir)?;
+        return Ok(());
+    }
+
     if is_sidecar_installed() {
+        stt_log::warn(
+            ENGINE,
+            "Using existing WhisperSidecar; bundled copy was not found to upgrade",
+        );
         return Ok(());
     }
 
-    if sidecar_dir().exists() {
-        stt_log::warn(ENGINE, "Removing incomplete WhisperSidecar install");
-        remove_stale_sidecar()?;
+    Err("Whisper is not installed yet. Restart the app or open Settings → Speed & accuracy.".into())
+}
+
+pub fn invalidate_server() {
+    let mut guard = SERVER.lock();
+    if let Some(mut server) = guard.take() {
+        let _ = server.child.kill();
+        let _ = server.child.wait();
+        stt_log::info(ENGINE, "Stopped persistent WhisperSidecar");
+    }
+}
+
+fn child_alive(child: &mut Child) -> bool {
+    match child.try_wait() {
+        Ok(None) => true,
+        _ => false,
+    }
+}
+
+fn start_server(model_path: &Path) -> Result<PersistentSidecar, String> {
+    if !is_sidecar_installed() {
+        return Err("WhisperSidecar not installed".into());
     }
 
-    if copy_bundled_sidecar(app)? {
-        return Ok(());
+    let exe = sidecar_exe();
+    let mut command = configure_hidden_command(&exe, &sidecar_dir());
+    command
+        .stdin(Stdio::piped())
+        .stderr(Stdio::inherit())
+        .arg("--server")
+        .arg("--model")
+        .arg(model_path)
+        .arg("--language")
+        .arg("en");
+
+    stt_log::info_fmt(
+        ENGINE,
+        format!("Starting persistent WhisperSidecar with {}", model_path.display()),
+    );
+
+    let mut child = command
+        .spawn()
+        .map_err(|e| format!("Failed to launch WhisperSidecar server: {e}"))?;
+    let stdin = child
+        .stdin
+        .take()
+        .ok_or("WhisperSidecar stdin not piped")?;
+    let stdout = child
+        .stdout
+        .take()
+        .ok_or("WhisperSidecar stdout not piped")?;
+    let mut stdout = BufReader::new(stdout);
+
+    let mut ready_line = String::new();
+    stdout
+        .read_line(&mut ready_line)
+        .map_err(|e| format!("Failed to read WhisperSidecar handshake: {e}"))?;
+    let ready: serde_json::Value = serde_json::from_str(ready_line.trim())
+        .map_err(|e| format!("Invalid WhisperSidecar handshake: {e}"))?;
+    if let Some(error) = ready.get("error").and_then(|v| v.as_str()) {
+        let _ = child.kill();
+        return Err(format!("WhisperSidecar server failed: {error}"));
+    }
+    if ready.get("ready").and_then(|v| v.as_bool()) != Some(true) {
+        let _ = child.kill();
+        return Err("WhisperSidecar server did not become ready".into());
     }
 
-    Err("GPU Whisper is not installed yet. Restart the app or use Engine Lab to set it up.".into())
+    Ok(PersistentSidecar {
+        child,
+        stdin,
+        stdout,
+        model_path: model_path.to_path_buf(),
+    })
+}
+
+fn transcribe_via_server(
+    model_path: &Path,
+    wav_path: &Path,
+    prompt: Option<&str>,
+) -> Result<String, String> {
+    let mut guard = SERVER.lock();
+    let restart = match guard.as_mut() {
+        Some(server) => {
+            server.model_path != model_path || !child_alive(&mut server.child)
+        }
+        None => true,
+    };
+    if restart {
+        if let Some(mut server) = guard.take() {
+            let _ = server.child.kill();
+            let _ = server.child.wait();
+        }
+        *guard = Some(start_server(model_path)?);
+    }
+
+    let server = guard
+        .as_mut()
+        .ok_or("WhisperSidecar server is not running")?;
+    let payload = serde_json::json!({
+        "path": wav_path.to_string_lossy(),
+        "prompt": prompt.unwrap_or(""),
+    });
+    writeln!(server.stdin, "{payload}").map_err(|e| format!("Failed to write Whisper request: {e}"))?;
+    server
+        .stdin
+        .flush()
+        .map_err(|e| format!("Failed to flush Whisper request: {e}"))?;
+
+    let mut response = String::new();
+    server
+        .stdout
+        .read_line(&mut response)
+        .map_err(|e| format!("Failed to read Whisper response: {e}"))?;
+    parse_sidecar_json(&response)
 }
 
 fn configure_hidden_command(exe: &Path, workdir: &Path) -> Command {
@@ -303,7 +511,11 @@ pub fn transcribe_samples(
 ) -> Result<String, String> {
     let model_path = whisper_model_path_for_app(app).ok_or("Whisper ggml model not found")?;
     let wav = write_temp_wav(samples, sample_rate)?;
-    let result = transcribe_wav_file(&model_path, &wav, prompt);
+    let result = transcribe_via_server(&model_path, &wav, prompt).or_else(|err| {
+        stt_log::warn(ENGINE, &format!("Persistent sidecar failed, retrying one-shot: {err}"));
+        invalidate_server();
+        transcribe_wav_file(&model_path, &wav, prompt)
+    });
     let _ = fs::remove_file(&wav);
     result
 }
@@ -321,7 +533,16 @@ pub fn compare_ready_models_on_samples(
     samples: &[f32],
     sample_rate: u32,
 ) -> Result<crate::dictation::types::WhisperModelCompareResponse, String> {
-    use crate::dictation::types::WhisperModelCompareResult;
+    score_models_on_samples(app, samples, sample_rate, &[])
+}
+
+pub fn score_models_on_samples(
+    app: &AppHandle,
+    samples: &[f32],
+    sample_rate: u32,
+    model_ids: &[String],
+) -> Result<crate::dictation::types::WhisperModelCompareResponse, String> {
+    use crate::dictation::types::{WhisperAccuracyProgress, WhisperModelCompareResult};
     use crate::modules::model_manager::{self, ModelStatus};
     use std::time::Instant;
 
@@ -337,6 +558,8 @@ pub fn compare_ready_models_on_samples(
     let selected_id =
         model_manager::get_gpu_whisper_model_id(app.clone()).map_err(|e| e.to_string())?;
 
+    invalidate_server();
+
     let ready: Vec<_> = catalog
         .into_iter()
         .filter(|entry| {
@@ -345,25 +568,46 @@ pub fn compare_ready_models_on_samples(
         })
         .collect();
 
-    if ready.is_empty() {
+    let targets: Vec<_> = if model_ids.is_empty() {
+        ready
+    } else {
+        model_ids
+            .iter()
+            .filter_map(|id| ready.iter().find(|entry| entry.id == *id).cloned())
+            .collect()
+    };
+
+    if targets.is_empty() {
         return Err(
-            "No Whisper models ready — download at least one model above, then try again".into(),
+            "No downloaded models selected — download a model or tick at least one above".into(),
         );
     }
 
     stt_log::info_fmt(
         ENGINE,
         format!(
-            "Comparing {} ready Whisper model(s) on {:.1}s clip",
-            ready.len(),
+            "Scoring {} Whisper model(s) on {:.1}s clip",
+            targets.len(),
             samples.len() as f64 / sample_rate as f64
         ),
     );
 
     let wav = write_temp_wav(samples, sample_rate)?;
-    let mut results = Vec::with_capacity(ready.len());
+    let total = targets.len();
+    let mut results = Vec::with_capacity(targets.len());
+    let prompt = super::transcription_hint::get_session_hint(app);
 
-    for entry in ready {
+    for (index, entry) in targets.into_iter().enumerate() {
+        let _ = app.emit(
+            "whisper-accuracy-progress",
+            WhisperAccuracyProgress {
+                index: index + 1,
+                total,
+                model_id: entry.id.clone(),
+                model_name: entry.name.clone(),
+            },
+        );
+
         let Some(model_path) = model_manager::model_file_path(app, &entry.id) else {
             results.push(WhisperModelCompareResult {
                 model_id: entry.id.clone(),
@@ -378,7 +622,7 @@ pub fn compare_ready_models_on_samples(
         };
 
         let start = Instant::now();
-        match transcribe_wav_file(&model_path, &wav, super::transcription_hint::get_session_hint(app).as_deref()) {
+        match transcribe_wav_file(&model_path, &wav, prompt.as_deref()) {
             Ok(text) => {
                 let snippet = summarize_text(&text, 160);
                 results.push(WhisperModelCompareResult {
@@ -407,13 +651,6 @@ pub fn compare_ready_models_on_samples(
     }
 
     let _ = fs::remove_file(&wav);
-
-    results.sort_by(|left, right| {
-        right
-            .selected
-            .cmp(&left.selected)
-            .then_with(|| left.model_name.cmp(&right.model_name))
-    });
 
     Ok(crate::dictation::types::WhisperModelCompareResponse {
         sample_id: "last_dictation".into(),

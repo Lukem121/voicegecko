@@ -1,5 +1,5 @@
 use cpal::traits::{DeviceTrait, StreamTrait};
-use crossbeam_channel::{unbounded, Receiver, Sender};
+use crossbeam_channel::{bounded, unbounded, Receiver, RecvTimeoutError, Sender};
 use ringbuf::traits::{Consumer, Observer};
 use sentry::Level;
 use std::sync::atomic::{AtomicBool, Ordering};
@@ -13,7 +13,9 @@ use crate::audio::capture::stream::build_ring_push_stream;
 use crate::audio::devices::resolve_input_device;
 use crate::audio::hub::StreamingAudioHub;
 use crate::audio::pipeline::MonoResampler;
-use crate::speech::vad::POST_ROLL_MS;
+
+const POST_ROLL_MS: u64 = 400;
+const OPEN_TIMEOUT: Duration = Duration::from_secs(5);
 
 enum CaptureCommand {
     Stop,
@@ -31,10 +33,28 @@ impl CaptureHandle {
         streaming_hub: Option<Arc<StreamingAudioHub>>,
     ) -> Result<Self, String> {
         let (stop_tx, stop_rx) = unbounded::<CaptureCommand>();
+        let (ready_tx, ready_rx) = bounded::<Result<(), String>>(1);
 
-        let thread = thread::spawn(move || run_capture(app, device, streaming_hub, stop_rx));
+        let thread = thread::spawn(move || {
+            run_capture(app, device, streaming_hub, stop_rx, ready_tx)
+        });
 
-        Ok(Self { thread, stop_tx })
+        match ready_rx.recv_timeout(OPEN_TIMEOUT) {
+            Ok(Ok(())) => Ok(Self { thread, stop_tx }),
+            Ok(Err(msg)) => {
+                let _ = thread.join();
+                Err(msg)
+            }
+            Err(RecvTimeoutError::Timeout) => {
+                let _ = stop_tx.send(CaptureCommand::Stop);
+                let _ = thread.join();
+                Err("Timed out opening microphone".to_string())
+            }
+            Err(RecvTimeoutError::Disconnected) => {
+                let _ = thread.join();
+                Err("Capture thread exited before the microphone opened".to_string())
+            }
+        }
     }
 
     pub fn stop(self) -> Result<Vec<f32>, String> {
@@ -48,34 +68,30 @@ impl CaptureHandle {
     }
 }
 
+fn fail_open(ready_tx: &Sender<Result<(), String>>, msg: String) -> Vec<f32> {
+    sentry::capture_message(&format!("audio:capture: {msg}"), Level::Error);
+    let _ = ready_tx.send(Err(msg));
+    Vec::new()
+}
+
 fn run_capture(
     app: AppHandle,
     device: Option<String>,
     streaming_hub: Option<Arc<StreamingAudioHub>>,
     stop_rx: Receiver<CaptureCommand>,
+    ready_tx: Sender<Result<(), String>>,
 ) -> Vec<f32> {
     let input_device = match resolve_input_device(device.as_deref()) {
         Ok(d) => d,
         Err(err_msg) => {
-            let _ = app.emit("recording-error", err_msg.clone());
-            sentry::capture_message(
-                &format!("audio:capture: device acquisition failed: {err_msg}"),
-                Level::Error,
-            );
-            return Vec::new();
+            return fail_open(&ready_tx, err_msg);
         }
     };
 
     let config = match input_device.default_input_config() {
         Ok(cfg) => cfg,
         Err(e) => {
-            let msg = format!("Failed to get default input config: {e}");
-            let _ = app.emit("recording-error", msg.clone());
-            sentry::capture_message(
-                &format!("audio:capture: default_input_config failed: {e}"),
-                Level::Error,
-            );
-            return Vec::new();
+            return fail_open(&ready_tx, format!("Failed to get default input config: {e}"));
         }
     };
 
@@ -131,24 +147,17 @@ fn run_capture(
                 Err(e) => {
                     worker_stop.store(true, Ordering::SeqCst);
                     let _ = worker_handle.join();
-                    let msg = format!("Failed to build input stream: {e}");
-                    let _ = app.emit("recording-error", msg.clone());
-                    sentry::capture_message(
-                        &format!("audio:capture: build stream failed: {e}"),
-                        Level::Error,
-                    );
-                    return Vec::new();
+                    return fail_open(&ready_tx, format!("Failed to build input stream: {e}"));
                 }
             };
 
             if let Err(e) = stream.play() {
                 worker_stop.store(true, Ordering::SeqCst);
                 let _ = worker_handle.join();
-                let msg = format!("Failed to start input stream: {e}");
-                let _ = app.emit("recording-error", msg.clone());
-                sentry::capture_message(&format!("audio:capture: play failed: {e}"), Level::Error);
-                return Vec::new();
+                return fail_open(&ready_tx, format!("Failed to start input stream: {e}"));
             }
+
+            let _ = ready_tx.send(Ok(()));
 
             match stop_rx.recv() {
                 Ok(CaptureCommand::Stop) => {
@@ -171,10 +180,10 @@ fn run_capture(
         other => {
             worker_stop.store(true, Ordering::SeqCst);
             let _ = worker_handle.join();
-            let msg = format!("Unsupported input sample format: {other:?}");
-            let _ = app.emit("recording-error", msg.clone());
-            sentry::capture_message(&format!("audio:capture: {msg}"), Level::Error);
-            Vec::new()
+            fail_open(
+                &ready_tx,
+                format!("Unsupported input sample format: {other:?}"),
+            )
         }
     }
 }

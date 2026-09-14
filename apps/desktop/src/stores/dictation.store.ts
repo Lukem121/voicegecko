@@ -20,6 +20,12 @@ type DictationStoreState = {
   error: string | null;
   lastEngineId: string | null;
   lastLatencyMs: number | null;
+  lastTranscript: string | null;
+  lastAccuracy: {
+    percent: number;
+    latencyMs: number | null;
+    profileLabel: string;
+  } | null;
   outputTarget: string | null;
   confirmText: string | null;
 
@@ -28,6 +34,11 @@ type DictationStoreState = {
   handleEvent: (event: DictationEvent) => void;
   clearConfirmText: () => void;
   confirmPaste: (text: string) => Promise<void>;
+  setLastAccuracy: (result: {
+    percent: number;
+    latencyMs: number | null;
+    profileLabel: string;
+  }) => void;
   reset: () => void;
 };
 
@@ -42,6 +53,8 @@ export const useDictationStore = create<DictationStoreState>()(
       error: null,
       lastEngineId: null,
       lastLatencyMs: null,
+      lastTranscript: null,
+      lastAccuracy: null,
       outputTarget: null,
       confirmText: null,
 
@@ -77,6 +90,7 @@ export const useDictationStore = create<DictationStoreState>()(
               partialText: '',
               finalText: '',
               formattedText: '',
+              lastTranscript: null,
             });
             break;
           case 'partialTranscript':
@@ -87,6 +101,7 @@ export const useDictationStore = create<DictationStoreState>()(
               finalText: event.text,
               lastEngineId: event.engineId,
               lastLatencyMs: event.latencyMs,
+              lastTranscript: event.text,
               phase: 'transcribing',
             });
             break;
@@ -142,6 +157,10 @@ export const useDictationStore = create<DictationStoreState>()(
         set({ confirmText: null, phase: 'done', session: null, outputTarget: null });
       },
 
+      setLastAccuracy: (result) => {
+        set({ lastAccuracy: result });
+      },
+
       reset: () => {
         set({
           session: null,
@@ -180,16 +199,8 @@ export async function listEngines(): Promise<
 
 export function modeForShortcutId(shortcutId: string): InteractionModeId {
   switch (shortcutId) {
-    case 'toggle-recording':
-      return 'toggle_batch';
     case 'push-to-talk':
       return 'ptt_batch';
-    case 'flow-stream':
-      return 'flow_stream';
-    case 'hands-free':
-      return 'hands_free';
-    case 'capsule-compose':
-      return 'capsule_compose';
     default:
       return 'toggle_batch';
   }

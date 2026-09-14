@@ -106,9 +106,34 @@ type BackendWhisperCompareResponse = {
   results: BackendWhisperCompareResult[];
 };
 
+export type SpeechSetupStatus = {
+  ready: boolean;
+  sidecarInstalled: boolean;
+  selectedModelId: string;
+  selectedModelReady: boolean;
+  waitingOn: string;
+  message: string;
+  progress: number;
+  activity: string;
+};
+
+export async function getSpeechSetupStatus(): Promise<SpeechSetupStatus> {
+  return invoke<SpeechSetupStatus>('get_speech_setup_status');
+}
+
 export async function compareReadyWhisperModelsOnSamples(): Promise<WhisperModelCompareResponse> {
   const response = await invoke<BackendWhisperCompareResponse>(
     'compare_ready_whisper_models_on_samples'
+  );
+  return response;
+}
+
+export async function scoreWhisperModelsOnLastClip(
+  modelIds: string[]
+): Promise<WhisperModelCompareResponse> {
+  const response = await invoke<BackendWhisperCompareResponse>(
+    'score_whisper_models_on_last_clip',
+    { modelIds }
   );
   return response;
 }

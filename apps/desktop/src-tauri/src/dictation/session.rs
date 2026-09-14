@@ -1,12 +1,9 @@
 use crate::dictation::config::ModeConfig;
-use crate::dictation::hands_free::HandsFreeController;
 use crate::dictation::registry::EngineRegistry;
-use crate::dictation::streaming::StreamingPipeline;
 use crate::dictation::types::{
-    DictationEvent, EngineCompareResult, EngineCompareResponse, EngineId, InteractionMode,
-    OutputTarget, SessionPhase, SessionStatus, StartSessionRequest,
+    DictationEvent, EngineId, InteractionMode, OutputTarget, SessionPhase, SessionStatus,
+    StartSessionRequest,
 };
-use crate::audio::StreamingAudioHub;
 use crate::inject::{clipboard, undo};
 use crate::intent::profiles;
 use crate::speech::spoken_commands;
@@ -34,7 +31,6 @@ pub struct EngineStatusItem {
 pub struct DictationSessionManager {
     registry: Arc<EngineRegistry>,
     active: Mutex<Option<ActiveSession>>,
-    streaming: StreamingPipeline,
 }
 
 struct ActiveSession {
@@ -42,7 +38,6 @@ struct ActiveSession {
     mode: InteractionMode,
     engine_id: EngineId,
     output_target: OutputTarget,
-    show_live_preview: bool,
     phase: SessionPhase,
     is_recording: bool,
 }
@@ -52,13 +47,6 @@ impl DictationSessionManager {
         Self {
             registry: Arc::new(EngineRegistry::new()),
             active: Mutex::new(None),
-            streaming: StreamingPipeline::new(),
-        }
-    }
-
-    fn stop_streaming(&self, app: &AppHandle) {
-        if let Some(hub) = app.try_state::<Arc<StreamingAudioHub>>() {
-            self.streaming.stop(&hub);
         }
     }
 
@@ -84,27 +72,23 @@ impl DictationSessionManager {
         let mode = InteractionMode::from_str_id(&request.mode)
             .ok_or_else(|| format!("Unknown mode: {}", request.mode))?;
 
-        if !crate::speech::models::is_toggle_ready() {
+        if !crate::speech::whisper_sidecar::is_ready_for_app(&app)
+            && !crate::speech::whisper_sidecar::is_ready()
+        {
             return Err(
-                "Speech models are still downloading. Keep VoiceGecko open and try again shortly."
+                "Whisper is still setting up. Open Settings → Speed & accuracy to download a model, then try again."
                     .into(),
             );
         }
 
         let config = ModeConfig::for_mode(mode);
-        let engine_id = request
-            .engine_id
-            .as_deref()
-            .and_then(EngineId::from_str_id)
-            .unwrap_or(config.default_engine);
+        let engine_id = EngineId::InsanelyFastWhisper;
 
         let output_target = request
             .output_target
             .as_deref()
             .and_then(OutputTarget::from_str_id)
             .unwrap_or(config.output_target);
-
-        let show_live_preview = request.show_live_preview.unwrap_or(config.show_live_preview);
 
         if let Some(pipeline) = request.audio_pipeline.clone() {
             let audio_state = app.state::<crate::audio::AudioState>();
@@ -135,7 +119,6 @@ impl DictationSessionManager {
                 mode,
                 engine_id,
                 output_target,
-                show_live_preview,
                 phase: SessionPhase::Recording,
                 is_recording: true,
             });
@@ -157,27 +140,6 @@ impl DictationSessionManager {
             },
         );
         self.emit_phase(&app, &session_id, SessionPhase::Recording);
-
-        if mode == InteractionMode::HandsFree {
-            if let Some(hub) = app.try_state::<Arc<StreamingAudioHub>>() {
-                hub.enable();
-                if let Some(hf) = app.try_state::<Arc<HandsFreeController>>() {
-                    let manager = app.state::<Arc<DictationSessionManager>>().inner().clone();
-                    hf.start(app.clone(), hub.inner().clone(), manager);
-                }
-            }
-        } else if StreamingPipeline::should_stream(mode, show_live_preview) {
-            if let Some(hub) = app.try_state::<Arc<StreamingAudioHub>>() {
-                self.streaming.start(
-                    app.clone(),
-                    hub.inner().clone(),
-                    session_id.clone(),
-                    mode,
-                    engine_id,
-                    Arc::clone(&self.registry),
-                );
-            }
-        }
 
         Ok(SessionStatus {
             session_id,
@@ -207,12 +169,25 @@ impl DictationSessionManager {
         };
 
         self.emit_phase(&app, &session_id, SessionPhase::Transcribing);
-        self.stop_streaming(&app);
 
         *LAST_COMPARE_SAMPLES.lock() = Some((
             audio_data.samples.clone(),
             audio_data.sample_rate,
         ));
+
+        if output_target == OutputTarget::ScoreOnly {
+            self.emit(
+                &app,
+                DictationEvent::SessionComplete {
+                    session_id: session_id.clone(),
+                    text: String::new(),
+                },
+            );
+            self.emit_phase(&app, &session_id, SessionPhase::Done);
+            *self.active.lock() = None;
+            crate::speech::transcription_hint::clear_session(&app);
+            return Ok(());
+        }
 
         let manager = Arc::clone(self);
         let app_clone = app.clone();
@@ -227,7 +202,6 @@ impl DictationSessionManager {
                     engine_id,
                     output_target,
                     audio_data,
-                    true,
                 )
                 .await
             {
@@ -246,95 +220,15 @@ impl DictationSessionManager {
         Ok(())
     }
 
-    pub async fn transcribe_segment(
-        &self,
-        app: AppHandle,
-        samples: Vec<f32>,
-    ) -> Result<(), String> {
-        let (session_id, engine_id, output_target) = {
-            let guard = self.active.lock();
-            let session = guard.as_ref().ok_or("No active session")?;
-            (
-                session.session_id.clone(),
-                session.engine_id,
-                session.output_target,
-            )
-        };
-
-        let audio_data = AudioData {
-            samples,
-            sample_rate: 16_000,
-            channels: 1,
-        };
-
-        self.run_transcription_pipeline(
-            app,
-            session_id,
-            InteractionMode::HandsFree,
-            engine_id,
-            output_target,
-            audio_data,
-            false,
-        )
-        .await
-    }
-
-    pub fn stop_hands_free_session(self: &Arc<Self>, app: AppHandle) {
-        let tail = app
-            .try_state::<Arc<HandsFreeController>>()
-            .map(|hf| hf.stop());
-
-        self.stop_streaming(&app);
-
-        let session_id = {
-            let guard = self.active.lock();
-            guard.as_ref().map(|s| s.session_id.clone())
-        };
-
-        let Some(sid) = session_id else {
-            return;
-        };
-
-        if let Some(tail_samples) = tail.flatten() {
-            let manager = Arc::clone(self);
-            let sid_clone = sid.clone();
-            let app_clone = app.clone();
-            tauri::async_runtime::spawn(async move {
-                let _ = manager
-                    .transcribe_segment(app_clone.clone(), tail_samples)
-                    .await;
-                manager.finish_hands_free_session(&app_clone, &sid_clone);
-                *manager.active.lock() = None;
-            });
-        } else {
-            self.finish_hands_free_session(&app, &sid);
-            *self.active.lock() = None;
-        }
-    }
-
-    fn finish_hands_free_session(&self, app: &AppHandle, session_id: &str) {
-        self.emit(
-            app,
-            DictationEvent::SessionComplete {
-                session_id: session_id.to_string(),
-                text: String::new(),
-            },
-        );
-        self.emit_phase(app, session_id, SessionPhase::Done);
-    }
-
     async fn run_transcription_pipeline(
         &self,
         app: AppHandle,
         session_id: String,
-        _mode: InteractionMode,
+        mode: InteractionMode,
         engine_id: EngineId,
         output_target: OutputTarget,
         audio_data: AudioData,
-        clear_session: bool,
     ) -> Result<(), String> {
-        let engine_id = self.resolve_engine_id(engine_id);
-
         let engine = self
             .registry
             .get(engine_id)
@@ -349,15 +243,6 @@ impl DictationSessionManager {
                 audio_data.sample_rate
             ),
         );
-
-        if !engine.is_available() {
-            let msg = format!(
-                "Engine {} is not available on this system",
-                engine.display_name()
-            );
-            crate::speech::stt_log::warn("dictation", &msg);
-            return Err(msg);
-        }
 
         let result = engine
             .transcribe_batch(&app, &audio_data.samples, audio_data.sample_rate)
@@ -405,7 +290,13 @@ impl DictationSessionManager {
             },
         );
 
-        let formatted = self.apply_intent_if_enabled(&app, &raw_text).await;
+        // Accuracy tests use score_only: score the raw Whisper transcript, skip polish/paste.
+        let skip_inject = output_target == OutputTarget::ScoreOnly;
+        let formatted = if skip_inject {
+            raw_text.clone()
+        } else {
+            self.apply_intent_if_enabled(&app, &raw_text).await
+        };
 
         if formatted != raw_text {
             self.emit(
@@ -423,19 +314,21 @@ impl DictationSessionManager {
             );
         }
 
-        self.emit_phase(&app, &session_id, SessionPhase::Injecting);
+        if !skip_inject {
+            self.emit_phase(&app, &session_id, SessionPhase::Injecting);
 
-        let previous_clipboard = clipboard::read_clipboard(&app).await;
-        let pasted = self
-            .inject_output(&app, &session_id, &formatted, output_target)
-            .await?;
+            let previous_clipboard = clipboard::read_clipboard(&app).await;
+            let pasted = self
+                .inject_output(&app, &session_id, &formatted, output_target)
+                .await?;
 
-        undo::record_dictation(
-            &session_id,
-            &formatted,
-            pasted,
-            previous_clipboard,
-        );
+            undo::record_dictation(
+                &session_id,
+                &formatted,
+                pasted,
+                previous_clipboard,
+            );
+        }
 
         let ctx = crate::context::window::gather_active_window_context();
         let profile = profiles::detect_profile(&raw_text).as_str();
@@ -446,7 +339,7 @@ impl DictationSessionManager {
                 &raw_text,
                 &formatted,
                 profile,
-                _mode.as_str(),
+                mode.as_str(),
                 engine_id.as_str(),
                 result.latency_ms,
                 Some(&ctx.title),
@@ -454,23 +347,19 @@ impl DictationSessionManager {
             );
         }
 
-        if clear_session {
-            self.emit(
-                &app,
-                DictationEvent::SessionComplete {
-                    session_id: session_id.clone(),
-                    text: formatted.clone(),
-                },
-            );
-            self.emit_phase(&app, &session_id, SessionPhase::Done);
-            if output_target != OutputTarget::BoxConfirmPaste {
-                *self.active.lock() = None;
-                crate::speech::transcription_hint::clear_session(&app);
-            } else if let Some(session) = self.active.lock().as_mut() {
-                session.is_recording = false;
-            }
-        } else {
-            self.emit_phase(&app, &session_id, SessionPhase::Recording);
+        self.emit(
+            &app,
+            DictationEvent::SessionComplete {
+                session_id: session_id.clone(),
+                text: formatted.clone(),
+            },
+        );
+        self.emit_phase(&app, &session_id, SessionPhase::Done);
+        if output_target != OutputTarget::BoxConfirmPaste {
+            *self.active.lock() = None;
+            crate::speech::transcription_hint::clear_session(&app);
+        } else if let Some(session) = self.active.lock().as_mut() {
+            session.is_recording = false;
         }
         Ok(())
     }
@@ -483,12 +372,7 @@ impl DictationSessionManager {
     ) -> Result<(), String> {
         let awaiting = {
             let guard = self.active.lock();
-            guard.as_ref().map(|s| {
-                (
-                    s.session_id.clone(),
-                    s.output_target,
-                )
-            })
+            guard.as_ref().map(|s| (s.session_id.clone(), s.output_target))
         };
 
         let Some((active_id, output_target)) = awaiting else {
@@ -527,32 +411,7 @@ impl DictationSessionManager {
     }
 
     pub async fn bootstrap_optional_engines(&self, app: &AppHandle) -> Result<(), String> {
-        crate::speech::stt_log::info("bootstrap", "Starting optional engine bootstrap");
-
-        let _ = crate::speech::moonshine_ffi::install_bundled_assets(app);
-        match crate::speech::moonshine_ffi::bootstrap_models() {
-            Ok(true) => crate::speech::stt_log::info("moonshine", "Models bootstrapped from known paths"),
-            Ok(false) => crate::speech::stt_log::warn(
-                "moonshine",
-                &crate::speech::moonshine_ffi::availability_status(),
-            ),
-            Err(e) => crate::speech::stt_log::warn("moonshine", &e),
-        }
-
-        match crate::speech::moonshine_ffi::prewarm() {
-            Ok(()) => crate::speech::stt_log::info("moonshine", "Prewarm succeeded"),
-            Err(e) => crate::speech::stt_log::warn("moonshine", &e),
-        }
-
-        crate::speech::gpu_whisper::bootstrap_gpu_whisper(app)
-            .await
-            .map_err(|e| {
-                crate::speech::stt_log::error("gpu_whisper", &e);
-                e
-            })?;
-
-        crate::speech::stt_log::info("bootstrap", "Optional engine bootstrap finished");
-        Ok(())
+        crate::speech::gpu_whisper::bootstrap_gpu_whisper(app).await
     }
 
     pub async fn prewarm_engines(&self, app: &AppHandle) -> Result<(), String> {
@@ -570,7 +429,7 @@ impl DictationSessionManager {
                         id: id.as_str().to_string(),
                         name: engine.display_name().to_string(),
                         available: availability.available,
-                        enabled: crate::dictation::features::is_engine_enabled(id.as_str()),
+                        enabled: true,
                         supports_streaming: engine.capabilities().supports_streaming,
                         unavailable_reason: availability.reason,
                     }
@@ -598,8 +457,8 @@ impl DictationSessionManager {
             dev_context.as_deref(),
             Some(app),
         )
-            .await
-            .unwrap_or_else(|_| text.to_string())
+        .await
+        .unwrap_or_else(|_| text.to_string())
     }
 
     async fn inject_output(
@@ -625,6 +484,7 @@ impl DictationSessionManager {
                 clipboard::copy_to_clipboard(app, text).await?;
                 false
             }
+            OutputTarget::ScoreOnly => false,
         };
 
         self.emit(
@@ -638,39 +498,6 @@ impl DictationSessionManager {
         Ok(pasted)
     }
 
-    fn resolve_engine_id(&self, preferred: EngineId) -> EngineId {
-        let try_engine = |id: EngineId| -> Option<EngineId> {
-            if !crate::dictation::features::is_engine_enabled(id.as_str()) {
-                return None;
-            }
-            self.registry.get(id).and_then(|engine| {
-                if engine.is_available() {
-                    Some(id)
-                } else {
-                    None
-                }
-            })
-        };
-
-        if let Some(id) = try_engine(preferred) {
-            return id;
-        }
-
-        const FALLBACK_ORDER: [EngineId; 3] = [
-            EngineId::ParakeetTdtV2,
-            EngineId::MoonshineMedium,
-            EngineId::InsanelyFastWhisper,
-        ];
-
-        for id in FALLBACK_ORDER {
-            if let Some(resolved) = try_engine(id) {
-                return resolved;
-            }
-        }
-
-        preferred
-    }
-
     pub fn get_status(&self) -> Option<SessionStatus> {
         self.active.lock().as_ref().map(|s| SessionStatus {
             session_id: s.session_id.clone(),
@@ -682,10 +509,6 @@ impl DictationSessionManager {
     }
 
     pub fn cancel_session(&self, app: &AppHandle) -> Result<(), String> {
-        if let Some(hf) = app.try_state::<Arc<HandsFreeController>>() {
-            hf.stop();
-        }
-        self.stop_streaming(app);
         crate::speech::transcription_hint::clear_session(app);
         let mut guard = self.active.lock();
         if guard.is_some() {
@@ -713,116 +536,8 @@ impl DictationSessionManager {
     }
 
     pub fn last_compare_samples(&self) -> Result<(Vec<f32>, u32), String> {
-        LAST_COMPARE_SAMPLES
-            .lock()
-            .clone()
-            .ok_or_else(|| {
-                "No recorded audio yet — dictate something first, then compare engines".into()
-            })
-    }
-
-    pub async fn compare_engines_on_samples(
-        &self,
-        app: &AppHandle,
-        samples: Vec<f32>,
-        sample_rate: u32,
-    ) -> Result<EngineCompareResponse, String> {
-        if samples.is_empty() {
-            return Err("Audio samples are empty".into());
-        }
-
-        let engine_ids = [
-            EngineId::ParakeetTdtV2,
-            EngineId::MoonshineMedium,
-            EngineId::InsanelyFastWhisper,
-        ];
-
-        let mut results = Vec::with_capacity(engine_ids.len());
-
-        for engine_id in engine_ids {
-            let id_str = engine_id.as_str().to_string();
-            let Some(engine) = self.registry.get(engine_id) else {
-                results.push(EngineCompareResult {
-                    engine_id: id_str.clone(),
-                    engine_name: id_str,
-                    text: String::new(),
-                    text_snippet: String::new(),
-                    latency_ms: 0,
-                    available: false,
-                    rating: None,
-                });
-                continue;
-            };
-
-            let availability = crate::speech::engine_status::evaluate(app, engine_id);
-            let engine_name = engine.display_name().to_string();
-            crate::speech::stt_log::info_fmt(
-                "dictation",
-                format!("Compare: {engine_name} available={}", availability.available),
-            );
-
-            if !availability.available {
-                results.push(EngineCompareResult {
-                    engine_id: id_str,
-                    engine_name,
-                    text: availability.reason.clone().unwrap_or_default(),
-                    text_snippet: availability
-                        .reason
-                        .unwrap_or_else(|| "Unavailable".into()),
-                    latency_ms: 0,
-                    available: false,
-                    rating: None,
-                });
-                continue;
-            }
-
-            match engine.transcribe_batch(app, &samples, sample_rate).await {
-                Ok(transcript) => {
-                    let snippet = summarize_text(&transcript.text, 160);
-                    results.push(EngineCompareResult {
-                        engine_id: id_str,
-                        engine_name,
-                        text_snippet: snippet,
-                        text: transcript.text,
-                        latency_ms: transcript.latency_ms,
-                        available: true,
-                        rating: None,
-                    });
-                }
-                Err(err) => results.push(EngineCompareResult {
-                    engine_id: id_str,
-                    engine_name,
-                    text: err.clone(),
-                    text_snippet: summarize_text(&err, 160),
-                    latency_ms: 0,
-                    available: true,
-                    rating: None,
-                }),
-            }
-        }
-
-        Ok(EngineCompareResponse {
-            sample_id: "last_dictation".into(),
-            sample_label: format!(
-                "Last dictation ({:.1}s @ {} Hz)",
-                samples.len() as f64 / sample_rate as f64,
-                sample_rate
-            ),
-            results,
+        LAST_COMPARE_SAMPLES.lock().clone().ok_or_else(|| {
+            "No recorded audio yet — dictate something first, then compare models".into()
         })
-    }
-}
-
-fn summarize_text(text: &str, max_chars: usize) -> String {
-    let trimmed = text.trim();
-    if trimmed.chars().count() <= max_chars {
-        return trimmed.to_string();
-    }
-    trimmed.chars().take(max_chars).collect::<String>() + "…"
-}
-
-impl Default for DictationSessionManager {
-    fn default() -> Self {
-        Self::new()
     }
 }

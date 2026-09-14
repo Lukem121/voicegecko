@@ -13,7 +13,6 @@ use zip::ZipArchive;
 use crate::dictation::features;
 use crate::intent::profiles;
 use crate::speech::download_events::emit_download_progress;
-use crate::speech::vad;
 
 const DEFAULT_PORT: u16 = 8080;
 const LLAMA_CPU_ZIP_URL: &str =
@@ -79,7 +78,7 @@ impl LlamaProcessManager {
     }
 
     pub fn find_gguf_model() -> Option<PathBuf> {
-        let llm_dir = vad::v2_models_dir()?.join("llm");
+        let llm_dir = crate::speech::models::v2_models_dir()?.join("llm");
         if !llm_dir.exists() {
             return None;
         }

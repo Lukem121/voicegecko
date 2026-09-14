@@ -34,7 +34,6 @@ impl DictationEngine for GpuWhisperEngine {
 
     fn is_available(&self) -> bool {
         super::whisper_sidecar::is_sidecar_installed()
-            && super::whisper_sidecar::whisper_model_path().is_some()
     }
 
     async fn transcribe_batch(
@@ -43,13 +42,13 @@ impl DictationEngine for GpuWhisperEngine {
         samples: &[f32],
         sample_rate: u32,
     ) -> Result<TranscriptionResult, String> {
-        if !self.is_available() {
+        if !super::whisper_sidecar::is_ready_for_app(app) {
             stt_log::warn(
                 ENGINE,
                 "GPU Whisper unavailable — sidecar or ggml model missing",
             );
             return Err(
-                "GPU Whisper unavailable — install WhisperSidecar and download a Whisper model from Engine Lab".into(),
+                "Whisper is not ready — download a model from Settings → Speed & accuracy".into(),
             );
         }
 
@@ -74,6 +73,7 @@ impl DictationEngine for GpuWhisperEngine {
             stt_log::error_fmt(ENGINE, &e);
             e
         })?;
+        let text = super::transcription_hint::strip_leading_hint_echo(&text, hint.as_deref());
 
         let latency_ms = start.elapsed().as_millis() as u64;
         stt_log::info_fmt(

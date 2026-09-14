@@ -1,6 +1,6 @@
 use crate::dictation::types::EngineId;
 use crate::speech::engine::DictationEngine;
-use crate::speech::{gpu_whisper, moonshine, parakeet};
+use crate::speech::gpu_whisper;
 use std::sync::Arc;
 
 pub struct EngineRegistry {
@@ -9,27 +9,17 @@ pub struct EngineRegistry {
 
 impl EngineRegistry {
     pub fn new() -> Self {
-        let engines: Vec<Arc<dyn DictationEngine>> = vec![
-            Arc::new(parakeet::ParakeetEngine::new()),
-            Arc::new(moonshine::MoonshineEngine::new()),
-            Arc::new(gpu_whisper::GpuWhisperEngine::new()),
-        ];
-        Self { engines }
+        Self {
+            engines: vec![Arc::new(gpu_whisper::GpuWhisperEngine::new())],
+        }
     }
 
     pub fn get(&self, id: EngineId) -> Option<Arc<dyn DictationEngine>> {
-        self.engines
-            .iter()
-            .find(|e| e.id() == id)
-            .cloned()
+        self.engines.iter().find(|e| e.id() == id).cloned()
     }
 
     pub fn list(&self) -> Vec<EngineId> {
-        self.engines
-            .iter()
-            .filter(|e| crate::dictation::features::is_engine_enabled(e.id().as_str()))
-            .map(|e| e.id())
-            .collect()
+        self.engines.iter().map(|e| e.id()).collect()
     }
 }
 

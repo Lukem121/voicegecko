@@ -134,13 +134,13 @@ const defaultSettings: AppSettings = {
     intentEnabled: true,
     llmServerUrl: 'http://127.0.0.1:8080',
     modeEngineOverrides: {},
-    toggleBatchShowLivePreview: true,
+    toggleBatchShowLivePreview: false,
     devContext:
       'TypeScript, React, Rust, Tauri, VoiceGecko, Cursor, coding agents, software engineering',
     forceDeveloperProfile: false,
   },
   features: {
-    moonshineFlow: true,
+    moonshineFlow: false,
     engineLab: true,
     gpuWhisper: true,
     localLlmPolish: false,
@@ -681,7 +681,7 @@ async function loadDictationSettings(): Promise<SettingsV3DictationSettings> {
 async function loadFeatureSettings(): Promise<SettingsV3FeatureFlags> {
   return {
     moonshineFlow:
-      (await settingsStore.get<boolean>('features.moonshineFlow')) ?? true,
+      (await settingsStore.get<boolean>('features.moonshineFlow')) ?? false,
     engineLab: (await settingsStore.get<boolean>('features.engineLab')) ?? true,
     gpuWhisper:
       (await settingsStore.get<boolean>('features.gpuWhisper')) ?? true,

@@ -168,13 +168,95 @@ fn format_vocabulary_segment(dictionary: Option<&str>) -> Option<String> {
         return None;
     }
 
-    let mut repeated = Vec::with_capacity(terms.len().saturating_mul(2));
-    for term in &terms {
-        repeated.push(term.as_str());
-        repeated.push(term.as_str());
+    Some(finished_vocabulary_sentence(&terms))
+}
+
+/// Whisper treats `WithPrompt` as prior transcript. A finished sentence (period)
+/// is much less likely to be echoed than a trailing comma-list of hotwords.
+fn finished_vocabulary_sentence(terms: &[String]) -> String {
+    match terms {
+        [] => String::new(),
+        [one] => format!("I already mentioned {one}."),
+        [first, second] => format!("I already mentioned {first} and {second}."),
+        _ => {
+            let last = terms.last().expect("non-empty");
+            let head = terms[..terms.len() - 1].join(", ");
+            format!("I already mentioned {head}, and {last}.")
+        }
+    }
+}
+
+/// Drop a leading copy of the vocabulary sentence when Whisper echoes the prompt.
+pub fn strip_leading_hint_echo(transcript: &str, hint: Option<&str>) -> String {
+    let text = transcript.trim();
+    if text.is_empty() {
+        return String::new();
     }
 
-    Some(format!("Vocabulary: {}", repeated.join(", ")))
+    let Some(hint) = hint.map(str::trim).filter(|value| !value.is_empty()) else {
+        return text.to_string();
+    };
+
+    if let Some(sentence) = vocabulary_sentence_from_hint(hint) {
+        let without_period = sentence.trim_end_matches('.');
+        if text.eq_ignore_ascii_case(&sentence) || text.eq_ignore_ascii_case(without_period) {
+            return String::new();
+        }
+        if let Some(inner) = without_period
+            .strip_prefix("I already mentioned ")
+            .map(str::trim)
+        {
+            let text_bare = text.trim_end_matches('.');
+            if text.eq_ignore_ascii_case(inner) || text_bare.eq_ignore_ascii_case(inner) {
+                return String::new();
+            }
+        }
+        for candidate in [sentence.as_str(), without_period] {
+            if let Some(rest) = strip_prefix_ignore_ascii_case(text, candidate) {
+                return rest
+                    .trim_start_matches([' ', ',', ';', ':', '.', '-', '—'])
+                    .trim()
+                    .to_string();
+            }
+        }
+    }
+
+    if let Some(rest) = strip_prefix_ignore_ascii_case(text, "Vocabulary:") {
+        let rest = rest.trim_start();
+        if rest.is_empty() {
+            return String::new();
+        }
+        return rest.to_string();
+    }
+
+    text.to_string()
+}
+
+fn vocabulary_sentence_from_hint(hint: &str) -> Option<String> {
+    const MARKER: &str = "I already mentioned ";
+    let start = hint.rfind(MARKER)?;
+    let slice = hint[start..].trim();
+    let end = slice.find('.').map_or(slice.len(), |idx| idx + 1);
+    let sentence = slice[..end].trim();
+    if sentence.is_empty() {
+        None
+    } else {
+        Some(sentence.to_string())
+    }
+}
+
+fn strip_prefix_ignore_ascii_case<'a>(text: &'a str, prefix: &str) -> Option<&'a str> {
+    let prefix = prefix.trim();
+    if prefix.is_empty() || text.len() < prefix.len() {
+        return None;
+    }
+
+    let (head, tail) = text.split_at(prefix.len());
+    if head.eq_ignore_ascii_case(prefix) {
+        Some(tail)
+    } else {
+        None
+    }
 }
 
 fn truncate_at_boundary(text: &str, max_chars: usize, separator: char) -> String {
@@ -233,11 +315,11 @@ mod tests {
 
         assert!(!hint.contains("coding agents"));
         assert!(hint.contains("Acme Corp"));
-        assert!(hint.ends_with("Acme Corp, Acme Corp"));
+        assert!(hint.ends_with("I already mentioned Acme Corp."));
     }
 
     #[test]
-    fn repeats_dictionary_terms_twice() {
+    fn vocabulary_is_a_finished_sentence() {
         let hint = build_transcription_hint(
             IntentProfile::General,
             None,
@@ -248,8 +330,10 @@ mod tests {
 
         assert_eq!(
             hint,
-            "Vocabulary: Social Fetch, Social Fetch, Vercel, Vercel"
+            "I already mentioned Social Fetch and Vercel."
         );
+        assert!(!hint.contains("Vocabulary:"));
+        assert!(!hint.contains("Social Fetch, Social Fetch"));
     }
 
     #[test]
@@ -265,10 +349,10 @@ mod tests {
 
         assert!(hint.contains("Social Fetch"));
         assert!(hint.contains("Vercel"));
-        assert!(hint.contains("Vocabulary:"));
-        assert!(hint.ends_with("Vercel, Vercel"));
+        assert!(hint.contains("I already mentioned"));
+        assert!(hint.ends_with("Vercel."));
         assert!(hint.len() <= MAX_HINT_CHARS);
-        let vocab_at = hint.find("Vocabulary:").expect("vocabulary last");
+        let vocab_at = hint.find("I already mentioned").expect("vocabulary last");
         assert!(vocab_at > 0);
         assert!(!hint[vocab_at..].contains("Active window"));
     }
@@ -283,10 +367,39 @@ mod tests {
         )
         .expect("hint");
 
-        let vocab_at = hint.find("Vocabulary:").expect("vocabulary");
-        assert!(hint[vocab_at..].contains("BetterAuth, BetterAuth"));
+        let vocab_at = hint.find("I already mentioned").expect("vocabulary");
+        assert!(hint[vocab_at..].contains("BetterAuth"));
         assert!(hint[..vocab_at].contains("Software engineering"));
         assert!(hint[..vocab_at].contains("desktop"));
         assert!(hint[..vocab_at].contains("session.rs"));
+    }
+
+    #[test]
+    fn strips_echoed_vocabulary_sentence_from_start() {
+        let hint = "I already mentioned Social Fetch and Vercel.";
+        let text = "I already mentioned Social Fetch and Vercel. Can you open Engine Lab?";
+        assert_eq!(
+            strip_leading_hint_echo(text, Some(hint)),
+            "Can you open Engine Lab?"
+        );
+    }
+
+    #[test]
+    fn keeps_real_speech_that_starts_with_a_dictionary_term() {
+        let hint = "I already mentioned Social Fetch and Vercel.";
+        let text = "Social Fetch is down again.";
+        assert_eq!(
+            strip_leading_hint_echo(text, Some(hint)),
+            "Social Fetch is down again."
+        );
+    }
+
+    #[test]
+    fn drops_transcript_that_is_only_the_prompt_names() {
+        let hint = "I already mentioned Social Fetch and Vercel.";
+        assert_eq!(
+            strip_leading_hint_echo("Social Fetch and Vercel.", Some(hint)),
+            ""
+        );
     }
 }

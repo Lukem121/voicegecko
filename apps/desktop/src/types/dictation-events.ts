@@ -1,22 +1,15 @@
-/** v2 dictation events — must match Rust `dictation/types.rs` exactly */
+/** Dictation events — must match Rust `dictation/types.rs` */
 
-export type InteractionModeId =
-  | 'toggle_batch'
-  | 'ptt_batch'
-  | 'flow_stream'
-  | 'hands_free'
-  | 'capsule_compose';
+export type InteractionModeId = 'toggle_batch' | 'ptt_batch';
 
-export type EngineId =
-  | 'moonshine_medium'
-  | 'parakeet_tdt_v2'
-  | 'insanely_fast_whisper';
+export type EngineId = 'insanely_fast_whisper';
 
 export type OutputTargetId =
   | 'paste_only'
   | 'box_only'
   | 'box_then_paste'
-  | 'box_confirm_paste';
+  | 'box_confirm_paste'
+  | 'score_only';
 
 export type DictationEvent =
   | {
