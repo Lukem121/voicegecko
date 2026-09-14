@@ -73,6 +73,7 @@ impl DictationEngine for GpuWhisperEngine {
             stt_log::error_fmt(ENGINE, &e);
             e
         })?;
+        let text = super::transcription_hint::strip_leading_hint_echo(&text, hint.as_deref());
 
         let latency_ms = start.elapsed().as_millis() as u64;
         stt_log::info_fmt(
