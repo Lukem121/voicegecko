@@ -27,6 +27,7 @@ import { HiGlobeAlt } from 'react-icons/hi2';
 import { SiApple } from 'react-icons/si';
 import { useGTM } from '~/hooks/use-gtm';
 import { usePostHog } from '~/hooks/use-posthog';
+import { getPrimaryDownload } from '~/lib/downloads-utils';
 import type { DownloadsData } from '~/lib/downloads-utils';
 import { SOURCES } from '~/lib/gtm/constants';
 
@@ -113,6 +114,23 @@ const systemRequirements = {
     ],
   },
 } as const;
+
+function getDownloadsToShow({
+  title,
+  available,
+  downloads,
+}: Pick<PlatformCardProps, 'title' | 'available' | 'downloads'>) {
+  if (title !== 'Windows') {
+    return downloads;
+  }
+
+  const primaryDownload = getPrimaryDownload({ available, assets: downloads });
+  if (!primaryDownload) {
+    return [];
+  }
+
+  return [primaryDownload];
+}
 
 function VotingCard({ title, description }: VotingCardProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -301,6 +319,8 @@ function PlatformCard({
   const requirements =
     systemRequirements[title as keyof typeof systemRequirements];
 
+  const downloadsToShow = getDownloadsToShow({ title, available, downloads });
+
   const handlePlatformDialogChange = (open: boolean) => {
     setIsDialogOpen(open);
   };
@@ -346,33 +366,17 @@ function PlatformCard({
 
       <CardContent className="mt-auto">
         <div className="space-y-3">
-          {(() => {
-            // For Windows, prefer .msi over .exe
-            let filteredDownloads = downloads;
-
-            if (title === 'Windows') {
-              const msiDownloads = downloads.filter((download) =>
-                download.name.endsWith('.msi')
-              );
-              if (msiDownloads.length > 0) {
-                filteredDownloads = msiDownloads;
-              } else {
-                filteredDownloads = downloads.slice(0, 1); // fallback to first download if no .msi
-              }
-            }
-
-            return filteredDownloads.map((download, index) => (
-              <button
-                className="flex w-full cursor-pointer items-center justify-center gap-3 whitespace-nowrap rounded-xl bg-primary px-6 py-4 font-semibold text-white transition-all hover:bg-primary/90"
-                key={`${download.name}-${index}`}
-                onClick={() => handleDownload(download)}
-                type="button"
-              >
-                {icon}
-                <span>{getDownloadButtonText(download)}</span>
-              </button>
-            ));
-          })()}
+          {downloadsToShow.map((download) => (
+            <button
+              className="flex w-full cursor-pointer items-center justify-center gap-3 whitespace-nowrap rounded-xl bg-primary px-6 py-4 font-semibold text-white transition-all hover:bg-primary/90"
+              key={download.name}
+              onClick={() => handleDownload(download)}
+              type="button"
+            >
+              {icon}
+              <span>{getDownloadButtonText(download)}</span>
+            </button>
+          ))}
         </div>
       </CardContent>
     </Card>
