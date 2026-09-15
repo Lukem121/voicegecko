@@ -8,6 +8,8 @@
     "dev:production": "dotenv -e ../../.env -e .env.production tauri dev",
     "dev:vite": "dotenv -e ../../.env -e .env.development vite",
     "build:vite": "tsc && vite build",
+    "build:whisper-sidecar": "node ../../scripts/build-whisper-sidecar.js",
+    "build:before": "pnpm build:whisper-sidecar && pnpm build:vite",
     "build": "dotenv -e .env.production cross-env tauri build",
     "build:development": "dotenv -e .env.development cross-env tauri build",
     "preview": "vite preview",

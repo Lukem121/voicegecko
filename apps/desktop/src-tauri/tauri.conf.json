@@ -6,7 +6,7 @@
     "frontendDist": "../dist",
     "devUrl": "http://localhost:1420",
     "beforeDevCommand": "pnpm dev:vite",
-    "beforeBuildCommand": "pnpm build:whisper-sidecar && pnpm build:vite"
+    "beforeBuildCommand": "pnpm build:before"
   },
   "app": {
     "windows": [

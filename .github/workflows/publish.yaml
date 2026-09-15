@@ -131,12 +131,18 @@ jobs:
       - name: Build Whisper sidecar
         run: |
           $out = "apps/desktop/src-tauri/resources/binaries/whisper-sidecar/win-x64"
+          if (Test-Path $out) { Remove-Item -Recurse -Force $out }
           dotnet publish sidecar/whisper-sidecar/WhisperSidecar.csproj `
-            -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true `
+            -c Release -r win-x64 --self-contained true -p:PublishSingleFile=false `
             -o $out
           Remove-Item -Force "$out/*.pdb" -ErrorAction SilentlyContinue
           if (-not (Test-Path "$out/WhisperSidecar.exe")) {
             Write-Error "WhisperSidecar.exe missing after publish"
+            exit 1
+          }
+          $native = Get-ChildItem -Path $out -Recurse -Filter "whisper.dll" | Select-Object -First 1
+          if (-not $native) {
+            Write-Error "whisper.dll missing after publish — Whisper.net native runtime was not copied"
             exit 1
           }
 

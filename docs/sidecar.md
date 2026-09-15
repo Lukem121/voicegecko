@@ -15,25 +15,25 @@ Build steps (from repo root):
 - Windows x64:
 
 ```
- dotnet publish sidecar/whisper-sidecar/WhisperSidecar.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -o apps/desktop/src-tauri/resources/binaries/whisper-sidecar/win-x64
+ dotnet publish sidecar/whisper-sidecar/WhisperSidecar.csproj -c Release -r win-x64 --self-contained true -p:PublishSingleFile=false -o apps/desktop/src-tauri/resources/binaries/whisper-sidecar/win-x64
 ```
 
 - Linux x64:
 
 ```
- dotnet publish sidecar/whisper-sidecar/WhisperSidecar.csproj -c Release -r linux-x64 --self-contained true -p:PublishSingleFile=true -o apps/desktop/src-tauri/resources/binaries/whisper-sidecar/linux-x64
+ dotnet publish sidecar/whisper-sidecar/WhisperSidecar.csproj -c Release -r linux-x64 --self-contained true -p:PublishSingleFile=false -o apps/desktop/src-tauri/resources/binaries/whisper-sidecar/linux-x64
 ```
 
 - macOS x64:
 
 ```
- dotnet publish sidecar/whisper-sidecar/WhisperSidecar.csproj -c Release -r osx-x64 --self-contained true -p:PublishSingleFile=true -o apps/desktop/src-tauri/resources/binaries/whisper-sidecar/osx-x64
+ dotnet publish sidecar/whisper-sidecar/WhisperSidecar.csproj -c Release -r osx-x64 --self-contained true -p:PublishSingleFile=false -o apps/desktop/src-tauri/resources/binaries/whisper-sidecar/osx-x64
 ```
 
 - macOS arm64:
 
 ```
- dotnet publish sidecar/whisper-sidecar/WhisperSidecar.csproj -c Release -r osx-arm64 --self-contained true -p:PublishSingleFile=true -o apps/desktop/src-tauri/resources/binaries/whisper-sidecar/osx-arm64
+ dotnet publish sidecar/whisper-sidecar/WhisperSidecar.csproj -c Release -r osx-arm64 --self-contained true -p:PublishSingleFile=false -o apps/desktop/src-tauri/resources/binaries/whisper-sidecar/osx-arm64
 ```
 
 Tauri bundle config already includes `resources/binaries/**/*`, so the sidecar ships in the app.

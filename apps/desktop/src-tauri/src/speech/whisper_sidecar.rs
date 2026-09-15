@@ -114,36 +114,35 @@ pub fn whisper_model_path_for_app(app: &AppHandle) -> Option<PathBuf> {
 }
 
 fn has_native_whisper(dir: &Path) -> bool {
-    [
-        dir.join("whisper.dll"),
-        dir.join("runtimes").join("win-x64").join("whisper.dll"),
-        dir.join("runtimes")
-            .join("win-x64")
-            .join("native")
-            .join("whisper.dll"),
-    ]
-    .iter()
-    .any(|path| path.is_file())
+    find_named_file(dir, "whisper.dll").is_some()
+}
+
+fn find_named_file(dir: &Path, file_name: &str) -> Option<PathBuf> {
+    let direct = dir.join(file_name);
+    if direct.is_file() {
+        return Some(direct);
+    }
+
+    let Ok(entries) = fs::read_dir(dir) else {
+        return None;
+    };
+
+    for entry in entries.flatten() {
+        let path = entry.path();
+        if path.is_dir() {
+            if let Some(found) = find_named_file(&path, file_name) {
+                return Some(found);
+            }
+        } else if path.file_name().is_some_and(|name| name == file_name) {
+            return Some(path);
+        }
+    }
+
+    None
 }
 
 fn sidecar_layout_valid(dir: &Path) -> bool {
-    let exe = dir.join("WhisperSidecar.exe");
-    if !exe.is_file() {
-        return false;
-    }
-
-    if has_native_whisper(dir) {
-        return true;
-    }
-
-    if dir.join("WhisperSidecar.dll").is_file() {
-        return true;
-    }
-
-    // Single-file self-contained publish embeds natives in the exe (~60MB+).
-    exe.metadata()
-        .map(|meta| meta.len() > 1_000_000)
-        .unwrap_or(false)
+    dir.join("WhisperSidecar.exe").is_file() && has_native_whisper(dir)
 }
 
 pub fn is_sidecar_installed() -> bool {
