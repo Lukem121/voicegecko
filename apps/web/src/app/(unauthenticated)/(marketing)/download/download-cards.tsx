@@ -43,6 +43,7 @@ type PlatformCardProps = {
   }>;
   downloadError?: string;
   osType: 'windows' | 'mac' | 'linux' | 'unknown';
+  version?: string;
 };
 
 type VotingCardProps = {
@@ -119,12 +120,18 @@ function getDownloadsToShow({
   title,
   available,
   downloads,
-}: Pick<PlatformCardProps, 'title' | 'available' | 'downloads'>) {
+  version,
+}: Pick<PlatformCardProps, 'title' | 'available' | 'downloads'> & {
+  version?: string;
+}) {
   if (title !== 'Windows') {
     return downloads;
   }
 
-  const primaryDownload = getPrimaryDownload({ available, assets: downloads });
+  const primaryDownload = getPrimaryDownload(
+    { available, assets: downloads },
+    version
+  );
   if (!primaryDownload) {
     return [];
   }
@@ -236,6 +243,7 @@ function PlatformCard({
   downloads,
   downloadError,
   osType,
+  version,
 }: PlatformCardProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const { trackEvent } = useGTM();
@@ -319,7 +327,12 @@ function PlatformCard({
   const requirements =
     systemRequirements[title as keyof typeof systemRequirements];
 
-  const downloadsToShow = getDownloadsToShow({ title, available, downloads });
+  const downloadsToShow = getDownloadsToShow({
+    title,
+    available,
+    downloads,
+    version,
+  });
 
   const handlePlatformDialogChange = (open: boolean) => {
     setIsDialogOpen(open);
@@ -469,6 +482,7 @@ export default function DownloadCards({
                   key={platform.key}
                   osType={platform.osType}
                   title={platform.title}
+                  version={downloadsData.version}
                 />
               );
             })}

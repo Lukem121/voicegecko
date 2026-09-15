@@ -36,15 +36,30 @@ export function formatFileSize(bytes: number): string {
   return `${Number.parseFloat((bytes / k ** i).toFixed(2))} ${sizes[i]}`;
 }
 
+function assetsMatchingVersion(
+  assets: DownloadAsset[],
+  version?: string
+): DownloadAsset[] {
+  if (!version) {
+    return assets;
+  }
+
+  const matching = assets.filter((asset) => asset.name.includes(version));
+  return matching.length > 0 ? matching : assets;
+}
+
 /**
  * Helper function to get the primary download for a platform
  */
 export function getPrimaryDownload(
-  platformDownloads: PlatformDownloads
+  platformDownloads: PlatformDownloads,
+  version?: string
 ): DownloadAsset | null {
   if (!platformDownloads.available || platformDownloads.assets.length === 0) {
     return null;
   }
+
+  const assets = assetsMatchingVersion(platformDownloads.assets, version);
 
   // For Windows, prefer .msi over .exe
   const windowsPreference = ['.msi', '.exe'];
@@ -57,34 +72,32 @@ export function getPrimaryDownload(
   let preference: string[] = [];
 
   if (
-    platformDownloads.assets.some(
+    assets.some(
       (asset) => asset.name.endsWith('.msi') || asset.name.endsWith('.exe')
     )
   ) {
     preference = windowsPreference;
   } else if (
-    platformDownloads.assets.some(
+    assets.some(
       (asset) =>
         asset.name.endsWith('.dmg') || asset.name.endsWith('.app.tar.gz')
     )
   ) {
     preference = macosPreference;
   } else if (
-    platformDownloads.assets.some(
+    assets.some(
       (asset) => asset.name.endsWith('.AppImage') || asset.name.endsWith('.deb')
     )
   ) {
     preference = linuxPreference;
   }
 
-  // Find asset based on preference
   for (const ext of preference) {
-    const asset = platformDownloads.assets.find((a) => a.name.endsWith(ext));
+    const asset = assets.find((a) => a.name.endsWith(ext));
     if (asset) {
       return asset;
     }
   }
 
-  // Return first asset if no preference matches
-  return platformDownloads.assets[0] || null;
+  return assets[0] || null;
 }

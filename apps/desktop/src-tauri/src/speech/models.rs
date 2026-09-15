@@ -259,15 +259,20 @@ pub struct SpeechSetupStatus {
     pub message: String,
     pub progress: u8,
     pub activity: String,
+    pub failed: bool,
 }
 
 #[tauri::command]
 pub fn get_speech_setup_status(app: AppHandle) -> SpeechSetupStatus {
-    let sidecar_installed = crate::speech::whisper_sidecar::is_sidecar_installed();
+    let sidecar_installed = crate::speech::whisper_sidecar::is_sidecar_available(&app);
     let selected_model_id = crate::speech::whisper_sidecar::selected_model_id(&app);
     let selected_model_ready =
         crate::modules::model_manager::model_file_path(&app, &selected_model_id).is_some();
     let ready = crate::speech::whisper_sidecar::is_ready_for_app(&app) || is_toggle_ready();
+    let live = crate::speech::download_events::current_setup_progress();
+    let setup_failed = live
+        .as_ref()
+        .is_some_and(|progress| progress.status == "error");
 
     let (waiting_on, message) = if ready && selected_model_ready {
         (
@@ -280,6 +285,11 @@ pub fn get_speech_setup_status(app: AppHandle) -> SpeechSetupStatus {
             format!(
                 "{selected_model_id} is selected but not downloaded. Dictation is using a fallback until you download it."
             ),
+        )
+    } else if !sidecar_installed && setup_failed {
+        (
+            "sidecar".to_string(),
+            "The Whisper engine could not be installed. Restart the app, or reinstall Voice Gecko.".to_string(),
         )
     } else if !sidecar_installed {
         (
@@ -300,7 +310,6 @@ pub fn get_speech_setup_status(app: AppHandle) -> SpeechSetupStatus {
         )
     };
 
-    let live = crate::speech::download_events::current_setup_progress();
     let mut progress = 0u8;
     let mut activity = message.clone();
     if let Some(live) = live {
@@ -316,7 +325,7 @@ pub fn get_speech_setup_status(app: AppHandle) -> SpeechSetupStatus {
             } else {
                 activity = format!("Downloading {label}… {progress}%");
             }
-        } else if live.status == "complete" {
+        } else if live.status == "complete" && ready {
             progress = 100;
         }
     }
@@ -345,6 +354,7 @@ pub fn get_speech_setup_status(app: AppHandle) -> SpeechSetupStatus {
         message,
         progress,
         activity,
+        failed: setup_failed && !ready,
     }
 }
 

@@ -25,7 +25,10 @@ export default function WindowsDownloadButton({
     }
 
     const windowsPlatform = downloadsData.platforms.windows;
-    const primaryDownload = getPrimaryDownload(windowsPlatform);
+    const primaryDownload = getPrimaryDownload(
+      windowsPlatform,
+      downloadsData.version
+    );
 
     if (primaryDownload) {
       const link = document.createElement('a');

@@ -115,6 +115,7 @@ export type SpeechSetupStatus = {
   message: string;
   progress: number;
   activity: string;
+  failed: boolean;
 };
 
 export async function getSpeechSetupStatus(): Promise<SpeechSetupStatus> {
