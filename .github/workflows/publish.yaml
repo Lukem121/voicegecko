@@ -142,7 +142,7 @@ jobs:
           }
           $native = Get-ChildItem -Path $out -Recurse -Filter "whisper.dll" | Select-Object -First 1
           if (-not $native) {
-            Write-Error "whisper.dll missing after publish — Whisper.net native runtime was not copied"
+            Write-Error "whisper.dll missing after publish - Whisper.net native runtime was not copied"
             exit 1
           }
 
