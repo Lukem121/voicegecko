@@ -4,6 +4,8 @@ This app uses a .NET sidecar to run Whisper via Whisper.net as a separate proces
 
 **Built outputs are gitignored** (`apps/desktop/src-tauri/resources/binaries/`, `*.pdb`). Ship source only; build before packaging or let the `publish` workflow do it.
 
+`pnpm --filter @acme/desktop build` now publishes the Windows/macOS/Linux sidecar automatically before Tauri bundles. CI still does the same step in `publish.yaml`.
+
 Build steps (from repo root):
 
 1. Install .NET 8 SDK.

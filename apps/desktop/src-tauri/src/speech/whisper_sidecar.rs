@@ -113,23 +113,34 @@ pub fn whisper_model_path_for_app(app: &AppHandle) -> Option<PathBuf> {
     crate::modules::model_manager::legacy_whisper_model_path()
 }
 
+fn has_native_whisper(dir: &Path) -> bool {
+    [
+        dir.join("whisper.dll"),
+        dir.join("runtimes").join("win-x64").join("whisper.dll"),
+        dir.join("runtimes")
+            .join("win-x64")
+            .join("native")
+            .join("whisper.dll"),
+    ]
+    .iter()
+    .any(|path| path.is_file())
+}
+
 fn sidecar_layout_valid(dir: &Path) -> bool {
     let exe = dir.join("WhisperSidecar.exe");
     if !exe.is_file() {
         return false;
     }
 
-    let native_whisper = dir.join("runtimes").join("win-x64").join("whisper.dll");
-    if !native_whisper.is_file() {
-        return false;
-    }
-
-    let managed_dll = dir.join("WhisperSidecar.dll");
-    if managed_dll.is_file() {
+    if has_native_whisper(dir) {
         return true;
     }
 
-    // Single-file self-contained publish embeds the runtime in the exe (~60MB+).
+    if dir.join("WhisperSidecar.dll").is_file() {
+        return true;
+    }
+
+    // Single-file self-contained publish embeds natives in the exe (~60MB+).
     exe.metadata()
         .map(|meta| meta.len() > 1_000_000)
         .unwrap_or(false)
@@ -328,7 +339,7 @@ pub async fn ensure_sidecar_installed(app: &AppHandle) -> Result<(), String> {
         return Ok(());
     }
 
-    Err("Whisper is not installed yet. Restart the app or open Settings → Speed & accuracy.".into())
+    Err("Whisper engine is missing from this install. Rebuild with pnpm build:whisper-sidecar, or install the full release.".into())
 }
 
 pub fn invalidate_server() {

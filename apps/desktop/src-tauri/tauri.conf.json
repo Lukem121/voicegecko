@@ -1,12 +1,12 @@
 {
   "productName": "Voice Gecko",
-  "version": "2.0.2",
+  "version": "2.0.3",
   "identifier": "com.voicegecko.desktop",
   "build": {
     "frontendDist": "../dist",
     "devUrl": "http://localhost:1420",
     "beforeDevCommand": "pnpm dev:vite",
-    "beforeBuildCommand": "pnpm build:vite"
+    "beforeBuildCommand": "pnpm build:whisper-sidecar && pnpm build:vite"
   },
   "app": {
     "windows": [
