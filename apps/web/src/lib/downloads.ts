@@ -134,27 +134,45 @@ async function fetchLatestFullRelease(): Promise<GitHubRelease | null> {
 /**
  * Process release data into the format needed for the downloads page
  */
-function processReleaseForDownloads(release: GitHubRelease): DownloadsData {
-  const platforms = {
-    windows: processAssetsForPlatform(release.assets, 'windows-x86_64'),
-    macos: {
-      available: false,
-      assets: [
-        ...processAssetsForPlatform(release.assets, 'darwin-x86_64').assets,
-        ...processAssetsForPlatform(release.assets, 'darwin-aarch64').assets,
-      ],
-    },
-    linux: processAssetsForPlatform(release.assets, 'linux-x86_64'),
-  };
+function assetsForReleaseVersion<T extends { name: string }>(
+  assets: T[],
+  version: string
+): T[] {
+  const matching = assets.filter((asset) => asset.name.includes(version));
+  return matching.length > 0 ? matching : assets;
+}
 
-  // Check if macOS has any available assets
-  platforms.macos.available = platforms.macos.assets.length > 0;
+function processReleaseForDownloads(release: GitHubRelease): DownloadsData {
+  const version = normalizeVersion(release.tag_name);
+  const windows = processAssetsForPlatform(release.assets, 'windows-x86_64');
+  const macosX64 = processAssetsForPlatform(release.assets, 'darwin-x86_64');
+  const macosArm = processAssetsForPlatform(release.assets, 'darwin-aarch64');
+  const linux = processAssetsForPlatform(release.assets, 'linux-x86_64');
+  const windowsAssets = assetsForReleaseVersion(windows.assets, version);
+  const macosAssets = assetsForReleaseVersion(
+    [...macosX64.assets, ...macosArm.assets],
+    version
+  );
+  const linuxAssets = assetsForReleaseVersion(linux.assets, version);
 
   return {
-    version: normalizeVersion(release.tag_name),
+    version,
     publishedAt: release.published_at,
     releaseNotes: release.body || undefined,
-    platforms,
+    platforms: {
+      windows: {
+        assets: windowsAssets,
+        available: windowsAssets.length > 0,
+      },
+      macos: {
+        assets: macosAssets,
+        available: macosAssets.length > 0,
+      },
+      linux: {
+        assets: linuxAssets,
+        available: linuxAssets.length > 0,
+      },
+    },
   };
 }
 

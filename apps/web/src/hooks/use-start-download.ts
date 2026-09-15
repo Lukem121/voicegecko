@@ -46,7 +46,7 @@ export function useStartDownload() {
           return;
         }
 
-        const primary = getPrimaryDownload(windows);
+        const primary = getPrimaryDownload(windows, json.data.version);
         if (!primary) {
           router.push('/download');
           return;

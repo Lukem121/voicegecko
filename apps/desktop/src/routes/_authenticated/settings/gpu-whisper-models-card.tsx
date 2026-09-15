@@ -312,12 +312,14 @@ function SpeechSetupBanner({
   waitingOn,
   progress,
   activity,
+  failed,
 }: {
   ready: boolean;
   message: string;
   waitingOn: string;
   progress: number;
   activity: string;
+  failed: boolean;
 }) {
   if (ready && waitingOn === 'none') {
     return (
@@ -327,7 +329,7 @@ function SpeechSetupBanner({
     );
   }
 
-  const showBar = !ready || waitingOn !== 'none';
+  const showBar = !failed && (!ready || waitingOn !== 'none');
 
   return (
     <div className="space-y-2 rounded-lg border border-amber-500/40 bg-amber-500/10 px-3 py-3 text-sm">
@@ -598,6 +600,7 @@ export function GpuWhisperModelsCard({
             message={setupStatus.message}
             progress={setupStatus.progress}
             ready={setupStatus.ready}
+            failed={Boolean(setupStatus.failed)}
             waitingOn={setupStatus.waitingOn}
           />
         ) : null}

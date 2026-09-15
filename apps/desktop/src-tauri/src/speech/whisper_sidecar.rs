@@ -30,8 +30,54 @@ pub fn sidecar_dir() -> PathBuf {
         .join("whisper")
 }
 
+fn sidecar_exe_in(dir: &Path) -> PathBuf {
+    dir.join("WhisperSidecar.exe")
+}
+
 pub fn sidecar_exe() -> PathBuf {
-    sidecar_dir().join("WhisperSidecar.exe")
+    sidecar_exe_in(&active_sidecar_dir())
+}
+
+fn exe_sidecar_candidates() -> Vec<PathBuf> {
+    let mut candidates = Vec::new();
+    if let Ok(exe) = std::env::current_exe() {
+        if let Some(dir) = exe.parent() {
+            candidates.push(dir.join("resources/binaries/whisper-sidecar/win-x64"));
+            candidates.push(dir.join("resources/resources/binaries/whisper-sidecar/win-x64"));
+            candidates.push(dir.join("binaries/whisper-sidecar/win-x64"));
+            candidates.push(dir.join("whisper-sidecar/win-x64"));
+        }
+    }
+    candidates.push(PathBuf::from(
+        "apps/desktop/src-tauri/resources/binaries/whisper-sidecar/win-x64",
+    ));
+    candidates.push(PathBuf::from(
+        "src-tauri/resources/binaries/whisper-sidecar/win-x64",
+    ));
+    candidates
+}
+
+fn find_bundled_sidecar(app: Option<&AppHandle>) -> Option<PathBuf> {
+    let mut candidates = exe_sidecar_candidates();
+    if let Some(app) = app {
+        candidates.extend(bundled_sidecar_dir_candidates(app));
+    }
+    candidates.into_iter().find(|dir| sidecar_layout_valid(dir))
+}
+
+fn find_valid_sidecar_dir() -> Option<PathBuf> {
+    if sidecar_layout_valid(&sidecar_dir()) {
+        return Some(sidecar_dir());
+    }
+    find_bundled_sidecar(None)
+}
+
+fn active_sidecar_dir() -> PathBuf {
+    find_valid_sidecar_dir().unwrap_or_else(sidecar_dir)
+}
+
+fn local_sidecar_ready() -> bool {
+    sidecar_layout_valid(&sidecar_dir()) && sidecar_version_matches()
 }
 
 fn version_marker_path() -> PathBuf {
@@ -67,30 +113,44 @@ pub fn whisper_model_path_for_app(app: &AppHandle) -> Option<PathBuf> {
     crate::modules::model_manager::legacy_whisper_model_path()
 }
 
+fn has_native_whisper(dir: &Path) -> bool {
+    find_named_file(dir, "whisper.dll").is_some()
+}
+
+fn find_named_file(dir: &Path, file_name: &str) -> Option<PathBuf> {
+    let direct = dir.join(file_name);
+    if direct.is_file() {
+        return Some(direct);
+    }
+
+    let Ok(entries) = fs::read_dir(dir) else {
+        return None;
+    };
+
+    for entry in entries.flatten() {
+        let path = entry.path();
+        if path.is_dir() {
+            if let Some(found) = find_named_file(&path, file_name) {
+                return Some(found);
+            }
+        } else if path.file_name().is_some_and(|name| name == file_name) {
+            return Some(path);
+        }
+    }
+
+    None
+}
+
 fn sidecar_layout_valid(dir: &Path) -> bool {
-    let exe = dir.join("WhisperSidecar.exe");
-    if !exe.is_file() {
-        return false;
-    }
-
-    let native_whisper = dir.join("runtimes").join("win-x64").join("whisper.dll");
-    if !native_whisper.is_file() {
-        return false;
-    }
-
-    let managed_dll = dir.join("WhisperSidecar.dll");
-    if managed_dll.is_file() {
-        return true;
-    }
-
-    // Single-file self-contained publish embeds the runtime in the exe (~60MB+).
-    exe.metadata()
-        .map(|meta| meta.len() > 1_000_000)
-        .unwrap_or(false)
+    dir.join("WhisperSidecar.exe").is_file() && has_native_whisper(dir)
 }
 
 pub fn is_sidecar_installed() -> bool {
-    sidecar_layout_valid(&sidecar_dir())
+    find_valid_sidecar_dir().is_some()
+}
+
+pub fn is_sidecar_available(app: &AppHandle) -> bool {
+    find_valid_sidecar_dir().is_some() || find_bundled_sidecar(Some(app)).is_some()
 }
 
 pub fn is_ready() -> bool {
@@ -98,7 +158,7 @@ pub fn is_ready() -> bool {
 }
 
 pub fn is_ready_for_app(app: &AppHandle) -> bool {
-    is_sidecar_installed() && whisper_model_path_for_app(app).is_some()
+    is_sidecar_available(app) && whisper_model_path_for_app(app).is_some()
 }
 
 fn write_version_marker() -> Result<(), String> {
@@ -254,28 +314,31 @@ pub fn ensure_whisper_model(app: &AppHandle) -> Result<Option<PathBuf>, String> 
 }
 
 pub async fn ensure_sidecar_installed(app: &AppHandle) -> Result<(), String> {
-    if is_sidecar_installed() && sidecar_version_matches() {
+    if local_sidecar_ready() {
         return Ok(());
     }
 
-    let bundled = bundled_sidecar_dir_candidates(app)
-        .into_iter()
-        .find(|dir| sidecar_layout_valid(dir));
-
-    if let Some(src_dir) = bundled {
-        install_sidecar_from_dir(app, &src_dir)?;
+    let bundled = find_bundled_sidecar(Some(app));
+    if bundled.is_some() || find_valid_sidecar_dir().is_some() {
+        if let Some(src_dir) = bundled {
+            if !local_sidecar_ready() {
+                match install_sidecar_from_dir(app, &src_dir) {
+                    Ok(()) => {}
+                    Err(error) => {
+                        stt_log::warn(
+                            ENGINE,
+                            &format!(
+                                "Using bundled WhisperSidecar; local copy failed: {error}"
+                            ),
+                        );
+                    }
+                }
+            }
+        }
         return Ok(());
     }
 
-    if is_sidecar_installed() {
-        stt_log::warn(
-            ENGINE,
-            "Using existing WhisperSidecar; bundled copy was not found to upgrade",
-        );
-        return Ok(());
-    }
-
-    Err("Whisper is not installed yet. Restart the app or open Settings → Speed & accuracy.".into())
+    Err("Whisper engine is missing from this install. Rebuild with pnpm build:whisper-sidecar, or install the full release.".into())
 }
 
 pub fn invalidate_server() {
@@ -299,8 +362,9 @@ fn start_server(model_path: &Path) -> Result<PersistentSidecar, String> {
         return Err("WhisperSidecar not installed".into());
     }
 
-    let exe = sidecar_exe();
-    let mut command = configure_hidden_command(&exe, &sidecar_dir());
+    let workdir = active_sidecar_dir();
+    let exe = sidecar_exe_in(&workdir);
+    let mut command = configure_hidden_command(&exe, &workdir);
     command
         .stdin(Stdio::piped())
         .stderr(Stdio::inherit())
@@ -459,7 +523,8 @@ pub fn transcribe_wav_file(
         return Err("WhisperSidecar not installed".into());
     }
 
-    let exe = sidecar_exe();
+    let workdir = active_sidecar_dir();
+    let exe = sidecar_exe_in(&workdir);
     stt_log::info_fmt(
         ENGINE,
         format!(
@@ -469,7 +534,7 @@ pub fn transcribe_wav_file(
         ),
     );
 
-    let mut command = configure_hidden_command(&exe, &sidecar_dir());
+    let mut command = configure_hidden_command(&exe, &workdir);
     command
         .arg("--model")
         .arg(model_path)
